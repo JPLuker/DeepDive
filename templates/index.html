@@ -16,9 +16,21 @@
   {% else %}
     <h1>Dig into an artist.</h1>
     <p class="muted">Type an artist name. DeepDive will pull your Liked Songs and their full catalog, then sort out what's already yours.</p>
-    <form class="search-row" action="{{ url_for('search') }}" method="post">
-      <input type="text" name="artist" placeholder="e.g. Fiona Apple" autofocus required>
-      <button class="btn btn-primary" type="submit">Search</button>
+    <form action="{{ url_for('search') }}" method="post">
+      <div class="search-row">
+        <input type="text" name="artist" placeholder="e.g. Fiona Apple" autofocus required>
+        <button class="btn btn-primary" type="submit">Search</button>
+      </div>
+      <div class="filter-options">
+        <label class="checkbox-option">
+          <input type="checkbox" name="exclude_live">
+          Exclude live recordings
+        </label>
+        <label class="checkbox-option">
+          <input type="checkbox" name="exclude_censored">
+          Exclude radio edits &amp; censored/clean versions
+        </label>
+      </div>
     </form>
     <p style="margin-top:24px;"><a href="{{ url_for('logout') }}" class="muted mono" style="font-size:13px;">Disconnect Spotify</a></p>
   {% endif %}

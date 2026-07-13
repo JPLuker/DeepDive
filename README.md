@@ -31,25 +31,40 @@ http://127.0.0.1:8888/callback
 
 Save, then open the app's settings and copy the **Client ID** and **Client Secret**.
 
-**2. Install dependencies**
+## Running it
+
+**Easiest — the launcher script:**
+
+```bash
+cd deepdive
+./run.sh
+```
+
+First time you run it, this sets up a virtual environment and installs
+dependencies automatically (only happens once). Every time after that, it
+just starts the app immediately. It also opens your browser to
+`http://127.0.0.1:8888` for you a couple seconds after the server comes up.
+Press `Ctrl+C` in that terminal to stop it.
+
+If double-clicking `run.sh` from your file manager does nothing (some file
+managers open scripts as text instead of running them by default), either
+run it from a terminal as above, or right-click it → Properties →
+Permissions → enable "Allow executing file as program", then double-click.
+
+**Manual, if you'd rather not use the script:**
 
 ```bash
 cd deepdive
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-```
-
-**3. Run it**
-
-```bash
 python3 app.py
 ```
 
-Open **http://127.0.0.1:8888**. Since no Spotify credentials are configured
-yet, you'll land on an in-app setup page: it shows you the exact Redirect
-URI to paste into your Spotify app's settings, and has fields to paste in
-your Client ID and Client Secret directly — no config files to open or edit.
+Either way, since no Spotify credentials are configured yet on first run,
+you'll land on an in-app setup page: it shows you the exact Redirect URI to
+paste into your Spotify app's settings, and has fields to paste in your
+Client ID and Client Secret directly — no config files to open or edit.
 Save, and you're taken straight to the search page.
 
 (A `.env` file is still used under the hood to persist these between runs,
@@ -106,6 +121,9 @@ Delete `.cache-deepdive` to fully log out and clear cached tokens.
 
 ## Troubleshooting
 
+- **`python3 -m venv venv` fails with something about `ensurepip`** — some
+  Linux distros split the venv module into a separate package. On
+  Debian/Ubuntu: `sudo apt install python3-venv`, then re-run `./run.sh`.
 - **"INVALID_CLIENT: Invalid redirect URI"** — the Redirect URI in your
   Spotify app settings must match `SPOTIPY_REDIRECT_URI` in `.env` exactly,
   including the trailing path and using `127.0.0.1` (not `localhost` —

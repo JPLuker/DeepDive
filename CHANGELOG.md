@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.3.1
+- Added: `run.sh` launcher script. Sets up the virtual environment and
+  installs dependencies automatically on first run only; every run after
+  that just starts the app. Also opens your browser automatically a
+  couple seconds after the server comes up. No more remembering the
+  venv/activate/pip/python incantation each time.
+
+## v1.3.0
+- Added: optional "Exclude live recordings" filter on search, using
+  conservative title/album pattern matching (won't false-positive on
+  songs literally titled things like "Clean" or "Live Life").
+- Added: optional "Exclude radio edits & censored/clean versions" filter,
+  same conservative pattern-matching approach.
+- Both filters apply before matching, so excluded tracks never show up as
+  a match candidate or a new-track suggestion. Results page notes how
+  many were filtered out.
+- Added: "Build a playlist from these" toggle on the results page — when
+  unchecked, DeepDive only likes the confirmed matches and skips playlist
+  creation entirely, rather than requiring you to uncheck every track.
+
 ## v1.2.0
 - Fixed: Client Secret field on the setup page was unstyled (CSS only
   targeted `input[type=text]`, not `input[type=password]`).

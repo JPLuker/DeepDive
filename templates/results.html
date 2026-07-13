@@ -8,6 +8,12 @@
     {{ duplicates|length }} possible match{{ '' if duplicates|length == 1 else 'es' }} found elsewhere in your library &middot;
     {{ new_tracks|length }} track{{ '' if new_tracks|length == 1 else 's' }} not in your library at all
   </p>
+  {% if exclude_live or exclude_censored %}
+    <p class="crate-note">
+      Filtered out {{ excluded_count }} track{{ '' if excluded_count == 1 else 's' }}
+      ({% if exclude_live and exclude_censored %}live recordings and radio edits/censored versions{% elif exclude_live %}live recordings{% else %}radio edits/censored versions{% endif %}).
+    </p>
+  {% endif %}
 
   <form action="{{ url_for('confirm') }}" method="post">
     <input type="hidden" name="result_id" value="{{ result_id }}">
@@ -39,32 +45,62 @@
       <span class="label gold">New to you</span>
       <span class="rule"></span>
     </div>
-    <p class="crate-note">Not in your Liked Songs under any release. Checked = will be added to the playlist below.</p>
+    <label class="checkbox-option" style="margin-bottom:10px;">
+      <input type="checkbox" name="create_playlist" id="create-playlist-toggle" checked>
+      Build a playlist from these
+    </label>
+    <p class="crate-note" id="new-tracks-note">Not in your Liked Songs under any release. Checked = will be added to the playlist below.</p>
 
     {% if new_tracks %}
-      {% for t in new_tracks %}
-        <div class="track-row newt">
-          <input type="checkbox" name="playlist_track" value="{{ t.id }}" id="pl-{{ t.id }}" checked>
-          <div class="track-meta">
-            <label for="pl-{{ t.id }}" class="track-name">{{ t.name }}</label>
-            <div class="track-sub">{{ t.album.name }} &middot; {{ t.album.release_date[:4] if t.album.release_date else '' }}</div>
+      <div id="new-tracks-list">
+        {% for t in new_tracks %}
+          <div class="track-row newt">
+            <input type="checkbox" name="playlist_track" value="{{ t.id }}" id="pl-{{ t.id }}" checked>
+            <div class="track-meta">
+              <label for="pl-{{ t.id }}" class="track-name">{{ t.name }}</label>
+              <div class="track-sub">{{ t.album.name }} &middot; {{ t.album.release_date[:4] if t.album.release_date else '' }}</div>
+            </div>
+            <div class="track-dur">{{ '%d:%02d' % (t.duration_ms // 60000, (t.duration_ms // 1000) % 60) }}</div>
           </div>
-          <div class="track-dur">{{ '%d:%02d' % (t.duration_ms // 60000, (t.duration_ms // 1000) % 60) }}</div>
-        </div>
-      {% endfor %}
+        {% endfor %}
+      </div>
     {% else %}
       <p class="empty-note">Nothing new &mdash; your library already covers this artist.</p>
     {% endif %}
 
-    <div class="playlist-name-field">
+    <div class="playlist-name-field" id="playlist-name-field">
       <label for="playlist_name">Playlist name</label>
       <input type="text" id="playlist_name" name="playlist_name" value="{{ default_playlist_name }}">
     </div>
 
     <div class="actions">
-      <button type="submit" class="btn btn-primary">Like selected &amp; build playlist</button>
+      <button type="submit" class="btn btn-primary" id="submit-btn">Like selected &amp; build playlist</button>
       <a href="{{ url_for('index') }}" class="btn btn-ghost">Cancel</a>
     </div>
   </form>
 </div>
+
+<script>
+  const toggle = document.getElementById('create-playlist-toggle');
+  const listEl = document.getElementById('new-tracks-list');
+  const nameField = document.getElementById('playlist-name-field');
+  const submitBtn = document.getElementById('submit-btn');
+  const note = document.getElementById('new-tracks-note');
+
+  function applyToggleState() {
+    const on = toggle.checked;
+    if (nameField) nameField.style.display = on ? '' : 'none';
+    if (listEl) {
+      listEl.style.opacity = on ? '1' : '0.45';
+      listEl.querySelectorAll('input[type=checkbox]').forEach(cb => cb.disabled = !on);
+    }
+    if (note) note.style.display = on ? '' : 'none';
+    if (submitBtn) submitBtn.textContent = on ? 'Like selected & build playlist' : 'Like selected matches';
+  }
+
+  if (toggle) {
+    toggle.addEventListener('change', applyToggleState);
+    applyToggleState();
+  }
+</script>
 {% endblock %}

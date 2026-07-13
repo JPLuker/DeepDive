@@ -47,6 +47,41 @@ def normalize_title(title: str) -> str:
     return t
 
 
+# Patterns for optional filtering. Deliberately conservative (require the
+# word to appear as a parenthetical/suffix annotation, not a bare word
+# match) to avoid false positives on song titles that legitimately contain
+# these words, e.g. Taylor Swift's "Clean" or Fleetwood Mac's "Live Life".
+_LIVE_PATTERNS = [
+    re.compile(r"\(live[^)]*\)", re.IGNORECASE),
+    re.compile(r"-\s*live\b.*$", re.IGNORECASE),
+    re.compile(r"\blive at\b", re.IGNORECASE),
+    re.compile(r"\blive from\b", re.IGNORECASE),
+    re.compile(r"\bmtv unplugged\b", re.IGNORECASE),
+]
+
+_CENSORED_PATTERNS = [
+    re.compile(r"\(radio edit\)", re.IGNORECASE),
+    re.compile(r"\(radio version\)", re.IGNORECASE),
+    re.compile(r"-\s*radio edit\b", re.IGNORECASE),
+    re.compile(r"-\s*radio version\b", re.IGNORECASE),
+    re.compile(r"\(clean(\s+version)?\)", re.IGNORECASE),
+    re.compile(r"-\s*clean(\s+version)?\s*$", re.IGNORECASE),
+    re.compile(r"\(censored(\s+version)?\)", re.IGNORECASE),
+    re.compile(r"-\s*censored(\s+version)?\s*$", re.IGNORECASE),
+]
+
+
+def is_live_recording(track: dict) -> bool:
+    name = track.get("name", "") or ""
+    album_name = (track.get("album") or {}).get("name", "") or ""
+    return any(p.search(name) for p in _LIVE_PATTERNS) or any(p.search(album_name) for p in _LIVE_PATTERNS)
+
+
+def is_radio_edit_or_censored(track: dict) -> bool:
+    name = track.get("name", "") or ""
+    return any(p.search(name) for p in _CENSORED_PATTERNS)
+
+
 def _title_similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, normalize_title(a), normalize_title(b)).ratio()
 
@@ -73,7 +108,12 @@ def build_liked_indexes(liked_tracks: list[dict]) -> dict:
     return {"by_id": by_id, "by_isrc": by_isrc, "all": liked_tracks}
 
 
-def classify_tracks(artist_tracks: list[dict], liked_index: dict) -> dict:
+def classify_tracks(
+    artist_tracks: list[dict],
+    liked_index: dict,
+    exclude_live: bool = False,
+    exclude_censored: bool = False,
+) -> dict:
     """
     Classifies each track from the artist's discography into:
       - already_liked: track is literally already in the user's Liked Songs
@@ -81,6 +121,10 @@ def classify_tracks(artist_tracks: list[dict], liked_index: dict) -> dict:
         (via ISRC or high-confidence fuzzy match) IS already liked under
         a different release -> candidate to auto-like
       - new_tracks: no match at all -> genuinely new, candidate for playlist
+
+    If exclude_live/exclude_censored are set, matching tracks are dropped
+    entirely before classification — they won't appear as matches OR as
+    new-track suggestions.
 
     Deduplicates artist_tracks by ISRC (or normalized title if no ISRC)
     first, so the same recording appearing on album + deluxe + compilation
@@ -93,11 +137,18 @@ def classify_tracks(artist_tracks: list[dict], liked_index: dict) -> dict:
     already_liked = []
     duplicate_candidates = []
     new_tracks = []
+    excluded_count = 0
 
     seen_keys = set()
 
     for t in artist_tracks:
         if not t or not t.get("id"):
+            continue
+        if exclude_live and is_live_recording(t):
+            excluded_count += 1
+            continue
+        if exclude_censored and is_radio_edit_or_censored(t):
+            excluded_count += 1
             continue
 
         if t["id"] in by_id:
@@ -146,4 +197,5 @@ def classify_tracks(artist_tracks: list[dict], liked_index: dict) -> dict:
         "already_liked": already_liked,
         "duplicate_candidates": duplicate_candidates,
         "new_tracks": new_tracks,
+        "excluded_count": excluded_count,
     }

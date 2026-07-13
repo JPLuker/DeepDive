@@ -131,7 +131,7 @@ def logout():
     return redirect(url_for("index"))
 
 
-def run_search_job(job_id, artist_name, token_info):
+def run_search_job(job_id, artist_name, token_info, exclude_live=False, exclude_censored=False):
     """Runs entirely in a background thread. Never touches Flask's session
     or request context — everything it needs is passed in directly."""
     try:
@@ -182,7 +182,10 @@ def run_search_job(job_id, artist_name, token_info):
         completed += STAGE_WEIGHTS["track_details"]
         progress.update(job_id, stage="Comparing with your library…", percent=completed)
 
-        result = matching.classify_tracks(artist_tracks, liked_index)
+        result = matching.classify_tracks(
+            artist_tracks, liked_index,
+            exclude_live=exclude_live, exclude_censored=exclude_censored,
+        )
 
         result_id = uuid.uuid4().hex
         RESULTS_CACHE[result_id] = {
@@ -190,6 +193,9 @@ def run_search_job(job_id, artist_name, token_info):
             "duplicate_candidates": result["duplicate_candidates"],
             "new_tracks": result["new_tracks"],
             "already_liked_count": len(result["already_liked"]),
+            "excluded_count": result["excluded_count"],
+            "exclude_live": exclude_live,
+            "exclude_censored": exclude_censored,
         }
         progress.finish(job_id, result_id)
 
@@ -208,9 +214,15 @@ def search():
         flash("Type an artist name first.")
         return redirect(url_for("index"))
 
+    exclude_live = request.form.get("exclude_live") == "on"
+    exclude_censored = request.form.get("exclude_censored") == "on"
+
     job_id = progress.new_job()
     thread = threading.Thread(
-        target=run_search_job, args=(job_id, artist_name, token_info), daemon=True
+        target=run_search_job,
+        args=(job_id, artist_name, token_info),
+        kwargs={"exclude_live": exclude_live, "exclude_censored": exclude_censored},
+        daemon=True,
     )
     thread.start()
 
@@ -243,6 +255,9 @@ def search_results(result_id):
         duplicates=cached["duplicate_candidates"],
         new_tracks=cached["new_tracks"],
         already_liked_count=cached["already_liked_count"],
+        excluded_count=cached.get("excluded_count", 0),
+        exclude_live=cached.get("exclude_live", False),
+        exclude_censored=cached.get("exclude_censored", False),
         default_playlist_name=f"DeepDive: {cached['artist']['name']}",
     )
 
@@ -262,7 +277,8 @@ def confirm():
     sp = sc.get_client(token_info)
 
     like_ids = request.form.getlist("like_track")
-    playlist_ids = request.form.getlist("playlist_track")
+    create_playlist = request.form.get("create_playlist") == "on"
+    playlist_ids = request.form.getlist("playlist_track") if create_playlist else []
     playlist_name = request.form.get("playlist_name", "").strip() or cached["artist"]["name"]
 
     liked_now_count = 0
