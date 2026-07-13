@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DeepDive</title>
+<style>
+  body {
+    margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: #231927; color: #F6EFE4; font-family: system-ui, sans-serif; text-align: center;
+  }
+  p { opacity: 0.7; font-size: 14px; }
+</style>
+</head>
+<body>
+  <div>
+    <p>{{ message }}</p>
+    <p><a href="{{ url_for('index') }}" style="color:#D9A441;">Continue</a></p>
+  </div>
+  <script>
+    // If this loaded inside the popup window we opened for auth, tell the
+    // main tab we're done and close ourselves. Otherwise (e.g. someone
+    // opened this URL directly, or the popup got blocked and Spotify
+    // navigated the main tab instead) just fall through to the link above.
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage(
+        { source: "deepdive-auth", ok: {{ "true" if ok else "false" }} },
+        window.location.origin
+      );
+      window.close();
+    } else if ({{ "true" if ok else "false" }}) {
+      window.location.href = "{{ url_for('index') }}";
+    }
+  </script>
+</body>
+</html>

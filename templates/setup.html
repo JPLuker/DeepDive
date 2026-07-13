@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}DeepDive · Setup{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Connect DeepDive to your Spotify app.</h1>
+  <p class="muted">
+    This is a one-time step. Spotify requires every app to have its own
+    credentials &mdash; there's no way around creating one, but from here on
+    everything happens in this page, no config files to edit.
+  </p>
+
+  <div class="crate-header">
+    <span class="label gold">1</span>
+    <span class="rule"></span>
+  </div>
+  <p style="margin-top:4px;">
+    Open the <a href="https://developer.spotify.com/dashboard" target="_blank" style="color:var(--teal); text-decoration:underline;">Spotify Developer Dashboard</a>
+    and click <strong>Create app</strong>. Any name/description is fine.
+  </p>
+
+  <div class="crate-header">
+    <span class="label gold">2</span>
+    <span class="rule"></span>
+  </div>
+  <p style="margin-top:4px;">In the app's settings, add this exact Redirect URI:</p>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <input type="text" id="redirect-uri" value="{{ redirect_uri }}" readonly
+           style="font-family:'IBM Plex Mono',monospace; font-size:13px; background:var(--parchment-dim); border-color:var(--line);">
+    <button type="button" class="btn btn-ghost" id="copy-btn" style="white-space:nowrap;">Copy</button>
+  </div>
+  <p class="crate-note" id="copy-confirm" style="display:none; color:var(--teal);">Copied.</p>
+  <p class="crate-note">Save the app settings after adding it.</p>
+
+  <div class="crate-header">
+    <span class="label gold">3</span>
+    <span class="rule"></span>
+  </div>
+  <p style="margin-top:4px;">Paste the app's Client ID and Client Secret below (find Client Secret via "View client secret" on the app's page):</p>
+
+  {% if already_configured %}
+    <p class="crate-note" style="color:var(--teal);">Currently configured with Client ID ending in &hellip;{{ current_client_id[-6:] }}.</p>
+  {% endif %}
+
+  <form method="post" style="margin-top:16px;">
+    <div class="playlist-name-field">
+      <label for="client_id">Client ID</label>
+      <input type="text" id="client_id" name="client_id" placeholder="e.g. 71f301b25c88447a90397ee5b5c58edd" autocomplete="off" required>
+    </div>
+    <div class="playlist-name-field">
+      <label for="client_secret">Client Secret</label>
+      <input type="password" id="client_secret" name="client_secret" placeholder="paste your client secret" autocomplete="off" required>
+    </div>
+    <div class="actions" style="margin-top:8px;">
+      <button type="submit" class="btn btn-primary">Save &amp; continue</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  document.getElementById('copy-btn').addEventListener('click', function () {
+    const input = document.getElementById('redirect-uri');
+    input.select();
+    navigator.clipboard.writeText(input.value).then(function () {
+      document.getElementById('copy-confirm').style.display = 'block';
+      setTimeout(() => document.getElementById('copy-confirm').style.display = 'none', 2000);
+    });
+  });
+</script>
+{% endblock %}

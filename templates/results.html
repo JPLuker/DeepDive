@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}DeepDive · {{ artist.name }}{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>{{ artist.name }}</h1>
+  <p class="muted">
+    {{ already_liked_count }} track{{ '' if already_liked_count == 1 else 's' }} already liked directly &middot;
+    {{ duplicates|length }} possible match{{ '' if duplicates|length == 1 else 'es' }} found elsewhere in your library &middot;
+    {{ new_tracks|length }} track{{ '' if new_tracks|length == 1 else 's' }} not in your library at all
+  </p>
+
+  <form action="{{ url_for('confirm') }}" method="post">
+    <input type="hidden" name="result_id" value="{{ result_id }}">
+
+    <div class="crate-header">
+      <span class="label teal">Matches</span>
+      <span class="rule"></span>
+    </div>
+    <p class="crate-note">Same recording as something you've already liked, found under a different release. Checked = will be added to your Liked Songs.</p>
+
+    {% if duplicates %}
+      {% for d in duplicates %}
+        {% set t = d.track %}
+        <div class="track-row dup">
+          <input type="checkbox" name="like_track" value="{{ t.id }}" id="like-{{ t.id }}" checked>
+          <div class="track-meta">
+            <label for="like-{{ t.id }}" class="track-name">{{ t.name }}</label>
+            <div class="track-sub">{{ t.album.name }} &middot; {{ t.album.release_date[:4] if t.album.release_date else '' }}</div>
+            <div class="track-match">↳ matches your liked "{{ d.matched_liked_track.name }}" ({{ d.match_basis }})</div>
+          </div>
+          <div class="track-dur">{{ '%d:%02d' % (t.duration_ms // 60000, (t.duration_ms // 1000) % 60) }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty-note">No cross-release matches found &mdash; nothing to reconcile here.</p>
+    {% endif %}
+
+    <div class="crate-header">
+      <span class="label gold">New to you</span>
+      <span class="rule"></span>
+    </div>
+    <p class="crate-note">Not in your Liked Songs under any release. Checked = will be added to the playlist below.</p>
+
+    {% if new_tracks %}
+      {% for t in new_tracks %}
+        <div class="track-row newt">
+          <input type="checkbox" name="playlist_track" value="{{ t.id }}" id="pl-{{ t.id }}" checked>
+          <div class="track-meta">
+            <label for="pl-{{ t.id }}" class="track-name">{{ t.name }}</label>
+            <div class="track-sub">{{ t.album.name }} &middot; {{ t.album.release_date[:4] if t.album.release_date else '' }}</div>
+          </div>
+          <div class="track-dur">{{ '%d:%02d' % (t.duration_ms // 60000, (t.duration_ms // 1000) % 60) }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty-note">Nothing new &mdash; your library already covers this artist.</p>
+    {% endif %}
+
+    <div class="playlist-name-field">
+      <label for="playlist_name">Playlist name</label>
+      <input type="text" id="playlist_name" name="playlist_name" value="{{ default_playlist_name }}">
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn btn-primary">Like selected &amp; build playlist</button>
+      <a href="{{ url_for('index') }}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

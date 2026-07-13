@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}DeepDive · Searching{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Digging through {{ artist_name }}…</h1>
+  <p class="muted">This can take a while for artists with large catalogs &mdash; DeepDive is reading every release track by track.</p>
+
+  <div class="progress-stage" id="stage-label">Starting…</div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+  <div class="progress-meta">
+    <span id="progress-pct">0%</span>
+    <span id="progress-elapsed">0s</span>
+  </div>
+
+  <div id="error-box" style="display:none; margin-top:24px;">
+    <p class="mono" id="error-text" style="color:#8a3b3b;"></p>
+    <a href="{{ url_for('index') }}" class="btn btn-ghost">Back</a>
+  </div>
+</div>
+
+<script>
+  const jobId = {{ job_id | tojson }};
+  const startTime = Date.now();
+  const fill = document.getElementById('progress-fill');
+  const pctLabel = document.getElementById('progress-pct');
+  const stageLabel = document.getElementById('stage-label');
+  const elapsedLabel = document.getElementById('progress-elapsed');
+  const errorBox = document.getElementById('error-box');
+  const errorText = document.getElementById('error-text');
+
+  function tickElapsed() {
+    const s = Math.floor((Date.now() - startTime) / 1000);
+    elapsedLabel.textContent = s < 60 ? (s + 's') : (Math.floor(s / 60) + 'm ' + (s % 60) + 's');
+  }
+  setInterval(tickElapsed, 1000);
+
+  async function poll() {
+    try {
+      const res = await fetch(`/search/progress/${jobId}`);
+      if (!res.ok) {
+        throw new Error('lost track of this search');
+      }
+      const data = await res.json();
+
+      fill.style.width = data.percent + '%';
+      pctLabel.textContent = data.percent + '%';
+      if (data.stage) stageLabel.textContent = data.stage;
+
+      if (data.status === 'done') {
+        stageLabel.textContent = 'Done — loading results…';
+        window.location.href = `/search/results/${data.result_id}`;
+        return;
+      }
+      if (data.status === 'error') {
+        errorBox.style.display = 'block';
+        errorText.textContent = data.error || 'Something went wrong.';
+        return;
+      }
+      setTimeout(poll, 600);
+    } catch (e) {
+      errorBox.style.display = 'block';
+      errorText.textContent = 'Lost connection to the search. It may still be running — try going back and checking again.';
+    }
+  }
+  poll();
+</script>
+{% endblock %}

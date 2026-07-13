@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}DeepDive · Done{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Done digging.</h1>
+  <p>
+    {% if liked_now_count %}
+      Added {{ liked_now_count }} track{{ '' if liked_now_count == 1 else 's' }} to your Liked Songs.
+    {% else %}
+      No tracks were added to your Liked Songs.
+    {% endif %}
+  </p>
+
+  {% if playlist_url %}
+    <p>
+      {% if playlist_reused %}
+        Added {{ added_count }} new track{{ '' if added_count == 1 else 's' }} to your existing playlist for {{ artist.name }}.
+      {% else %}
+        Built a new playlist of {{ added_count }} track{{ '' if added_count == 1 else 's' }} from {{ artist.name }}.
+      {% endif %}
+    </p>
+
+    {% if already_present_count %}
+      <div class="flash" style="background: rgba(63,113,104,0.12); border-color: var(--teal); color: var(--ink);">
+        {{ already_present_count }} track{{ '' if already_present_count == 1 else 's' }}
+        {{ 'was' if already_present_count == 1 else 'were' }} already in this playlist from a previous run,
+        so {{ 'it was' if already_present_count == 1 else 'they were' }} skipped &mdash; no duplicates added.
+      </div>
+    {% endif %}
+
+    <a href="{{ playlist_url }}" target="_blank" class="btn btn-primary" style="margin-top:20px;">Open playlist in Spotify</a>
+  {% else %}
+    <p class="muted">No playlist was created (nothing was selected).</p>
+  {% endif %}
+
+  <div class="actions">
+    <a href="{{ url_for('index') }}" class="btn btn-ghost">Search another artist</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}DeepDive{% endblock %}
+{% block content %}
+<div class="card">
+  {% if not authed %}
+    <h1>Reconcile your library with an artist's full catalog.</h1>
+    <p>DeepDive checks an artist's discography against your Liked Songs, finds
+      recordings you've already liked under a different release (album cut vs.
+      standalone single, EP, or reissue), and lets you fold in the ones you're
+      missing &mdash; then builds a playlist of everything you still haven't liked.</p>
+    <button id="connect-btn" class="btn btn-primary" type="button">Connect Spotify</button>
+    <p class="crate-note" id="popup-hint" style="display:none; margin-top:14px;">
+      A popup was blocked by your browser &mdash;
+      <a href="{{ url_for('login') }}" style="color: var(--teal); text-decoration: underline;">click here to connect instead</a>.
+    </p>
+  {% else %}
+    <h1>Dig into an artist.</h1>
+    <p class="muted">Type an artist name. DeepDive will pull your Liked Songs and their full catalog, then sort out what's already yours.</p>
+    <form class="search-row" action="{{ url_for('search') }}" method="post">
+      <input type="text" name="artist" placeholder="e.g. Fiona Apple" autofocus required>
+      <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+    <p style="margin-top:24px;"><a href="{{ url_for('logout') }}" class="muted mono" style="font-size:13px;">Disconnect Spotify</a></p>
+  {% endif %}
+</div>
+
+{% if not authed %}
+<script>
+  document.getElementById('connect-btn').addEventListener('click', function () {
+    const w = 480, h = 720;
+    const left = window.screenX + (window.outerWidth - w) / 2;
+    const top = window.screenY + (window.outerHeight - h) / 2;
+    const popup = window.open(
+      "{{ url_for('login') }}",
+      "deepdive-spotify-auth",
+      `width=${w},height=${h},left=${left},top=${top}`
+    );
+
+    if (!popup) {
+      document.getElementById('popup-hint').style.display = 'block';
+      return;
+    }
+
+    function onMessage(event) {
+      if (event.origin !== window.location.origin) return;
+      if (!event.data || event.data.source !== 'deepdive-auth') return;
+      window.removeEventListener('message', onMessage);
+      if (event.data.ok) {
+        window.location.reload();
+      }
+    }
+    window.addEventListener('message', onMessage);
+
+    // Fallback: if the user closes the popup manually without it ever
+    // posting a message (e.g. they cancelled), nothing bad happens —
+    // the page just stays as-is and they can click Connect again.
+  });
+</script>
+{% endif %}
+{% endblock %}
