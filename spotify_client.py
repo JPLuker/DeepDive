@@ -18,7 +18,10 @@ import spotipy
 from spotipy.exceptions import SpotifyException
 from spotipy.oauth2 import SpotifyOAuth
 
-SCOPE = "user-library-read user-library-modify playlist-modify-private playlist-modify-public"
+SCOPE = (
+    "user-library-read user-library-modify playlist-modify-private "
+    "playlist-modify-public user-top-read user-read-recently-played"
+)
 
 # spotipy's own default is 5s, which is easy to trip on a slow connection
 # or a heavier batch request. 20s gives real requests room to complete.
@@ -204,6 +207,11 @@ def like_tracks(sp: spotipy.Spotify, track_ids: list[str]):
         _call(sp.current_user_saved_tracks_add, tracks=batch)
 
 
+def unlike_tracks(sp: spotipy.Spotify, track_ids: list[str]):
+    for batch in _chunk(track_ids, 50):
+        _call(sp.current_user_saved_tracks_delete, tracks=batch)
+
+
 def add_tracks_to_playlist_deduped(sp: spotipy.Spotify, name: str, description: str, track_ids: list[str]) -> dict:
     """
     Creates the playlist if it doesn't exist yet, or reuses an existing
@@ -250,3 +258,37 @@ def add_tracks_to_playlist_deduped(sp: spotipy.Spotify, name: str, description: 
         "added_count": len(to_add),
         "already_present_count": already_present_count,
     }
+
+
+def get_distinct_liked_artists(liked_tracks: list[dict]) -> list[dict]:
+    """Every distinct primary artist across the user's Liked Songs, in
+    order of first appearance. Used to drive the full-library scrub."""
+    seen = {}
+    for t in liked_tracks:
+        artists = t.get("artists") or []
+        if not artists:
+            continue
+        a = artists[0]
+        if a.get("id") and a["id"] not in seen:
+            seen[a["id"]] = {"id": a["id"], "name": a["name"]}
+    return list(seen.values())
+
+
+def get_top_artists(sp: spotipy.Spotify, time_range: str = "medium_term", limit: int = 20) -> list[dict]:
+    """time_range: short_term (~4wk), medium_term (~6mo), long_term (years)."""
+    res = _call(sp.current_user_top_artists, time_range=time_range, limit=limit)
+    return res.get("items", [])
+
+
+def get_recently_played_artists(sp: spotipy.Spotify, limit: int = 50) -> list[dict]:
+    res = _call(sp.current_user_recently_played, limit=limit)
+    seen = {}
+    for item in res.get("items", []):
+        track = item.get("track") or {}
+        artists = track.get("artists") or []
+        if not artists:
+            continue
+        a = artists[0]
+        if a.get("id") and a["id"] not in seen:
+            seen[a["id"]] = {"id": a["id"], "name": a["name"]}
+    return list(seen.values())

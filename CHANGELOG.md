@@ -1,5 +1,39 @@
 # Changelog
 
+## v1.5.0
+- Added: "Exclude instrumentals" and "Exclude a cappella versions" filters,
+  available on both single-artist search and the full library scrub.
+  Same conservative pattern-matching approach as the existing live/
+  censored filters (won't false-positive on a song literally titled
+  "Instrumental").
+- Added: "Count remasters as duplicates of the original" checkbox. Off by
+  default — remasters usually carry a different ISRC than the original
+  recording, so by default they're only matched if they happen to share
+  the exact ISRC (unusual). With this on, DeepDive will also title-match
+  a remaster against your liked tracks the same way it already does for
+  tracks missing an ISRC, so "liked the original, missed the remaster"
+  (or vice versa) gets caught as a duplicate candidate instead of showing
+  up as a new track.
+
+## v1.4.0
+- Added: **quick duplicate check** — scans your existing Liked Songs
+  against each other (no catalog crawling) to find songs you've already
+  liked twice under different releases. Fast, review-and-unlike workflow.
+- Added: **full library scrub** — crawls every distinct artist in your
+  Liked Songs the same way single-artist search does, to catch every
+  cross-release duplicate and every new track across your entire library.
+  This is genuinely slow for large libraries (potentially 30-60+ minutes)
+  since it's equivalent to running a search once per artist — but it's
+  cancellable at any time and keeps whatever was found before cancelling.
+  One artist failing to fetch no longer kills the whole scrub.
+- Added: **listening-based artist suggestions** on the home page, pulled
+  from your top artists and recently-played tracks — one click to search
+  any of them.
+- These new features require two additional Spotify permission scopes
+  (`user-top-read`, `user-read-recently-played`). Existing sessions are
+  automatically detected as outdated and prompted to reconnect rather
+  than silently failing later.
+
 ## v1.3.1
 - Added: `run.sh` launcher script. Sets up the virtual environment and
   installs dependencies automatically on first run only; every run after

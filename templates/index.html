@@ -30,11 +30,89 @@
           <input type="checkbox" name="exclude_censored">
           Exclude radio edits &amp; censored/clean versions
         </label>
+        <label class="checkbox-option">
+          <input type="checkbox" name="exclude_instrumental">
+          Exclude instrumentals
+        </label>
+        <label class="checkbox-option">
+          <input type="checkbox" name="exclude_acappella">
+          Exclude a cappella versions
+        </label>
+        <label class="checkbox-option">
+          <input type="checkbox" name="match_remasters">
+          Count remasters as duplicates of the original
+        </label>
       </div>
     </form>
+
+    {% if suggestions %}
+      <p class="crate-note" style="margin-top:22px;">Based on what you've been listening to:</p>
+      <div class="pill-row">
+        {% for name in suggestions %}
+          <form action="{{ url_for('search') }}" method="post" style="display:inline;">
+            <input type="hidden" name="artist" value="{{ name }}">
+            <button type="submit" class="pill">{{ name }}</button>
+          </form>
+        {% endfor %}
+      </div>
+    {% elif suggestions_error %}
+      <p class="crate-note" style="margin-top:22px;">
+        Couldn't load listening-based suggestions &mdash; try
+        <a href="{{ url_for('logout') }}" style="color:var(--teal); text-decoration:underline;">reconnecting Spotify</a>
+        to grant the newer permissions this needs.
+      </p>
+    {% endif %}
+
     <p style="margin-top:24px;"><a href="{{ url_for('logout') }}" class="muted mono" style="font-size:13px;">Disconnect Spotify</a></p>
   {% endif %}
 </div>
+
+{% if authed %}
+<div class="card">
+  <h2>Scan your whole library</h2>
+  <p class="muted">Instead of one artist at a time.</p>
+
+  <div class="crate-header">
+    <span class="label teal">Quick</span>
+    <span class="rule"></span>
+  </div>
+  <p class="crate-note">Checks your existing Liked Songs against each other for duplicates you've already liked twice under different releases. Takes seconds.</p>
+  <form action="{{ url_for('quick_scan') }}" method="post">
+    <button type="submit" class="btn btn-ghost">Run quick duplicate check</button>
+  </form>
+
+  <div class="crate-header">
+    <span class="label gold">Comprehensive</span>
+    <span class="rule"></span>
+  </div>
+  <p class="crate-note">Crawls every artist in your Liked Songs the same way a single search does &mdash; catches everything, but for a large, varied library this can take 30-60+ minutes. Cancellable any time.</p>
+  <form action="{{ url_for('full_scrub_start') }}" method="post">
+    <div class="filter-options" style="margin-bottom:16px;">
+      <label class="checkbox-option">
+        <input type="checkbox" name="exclude_live">
+        Exclude live recordings
+      </label>
+      <label class="checkbox-option">
+        <input type="checkbox" name="exclude_censored">
+        Exclude radio edits &amp; censored/clean versions
+      </label>
+      <label class="checkbox-option">
+        <input type="checkbox" name="exclude_instrumental">
+        Exclude instrumentals
+      </label>
+      <label class="checkbox-option">
+        <input type="checkbox" name="exclude_acappella">
+        Exclude a cappella versions
+      </label>
+      <label class="checkbox-option">
+        <input type="checkbox" name="match_remasters">
+        Count remasters as duplicates of the original
+      </label>
+    </div>
+    <button type="submit" class="btn btn-ghost">Run full library scrub</button>
+  </form>
+</div>
+{% endif %}
 
 {% if not authed %}
 <script>

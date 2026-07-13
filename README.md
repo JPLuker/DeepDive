@@ -89,6 +89,29 @@ DeepDive only pulls the artist's own **albums and singles**, not tracks
 where they merely "appear on" someone else's release (guest features,
 compilations), to keep results focused on their own catalog.
 
+## Scanning your whole library, not just one artist
+
+Below the search box on the home page:
+
+- **Quick duplicate check** — compares your existing Liked Songs against
+  each other for songs you've already liked twice under different
+  releases. Takes seconds; nothing gets unliked without you checking a
+  box first.
+- **Full library scrub** — runs the same crawl the single-artist search
+  does, once per distinct artist in your Liked Songs. This is thorough
+  but genuinely slow for a large, varied library — budget for it to
+  possibly take 30-60+ minutes. You can cancel at any point and still
+  see whatever was found up to that point.
+
+You'll also see artist suggestions pulled from your recent listening
+activity and top artists, each one click away from a search.
+
+**Note:** these features need two additional Spotify permissions beyond
+what earlier versions requested. If you're upgrading from an older
+version, DeepDive will notice your existing connection is missing them
+and prompt you to reconnect — just click Connect Spotify again and
+approve the updated permissions.
+
 ## Re-running for the same artist
 
 If you run DeepDive again for an artist you've already built a playlist

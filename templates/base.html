@@ -219,6 +219,27 @@
     padding-top: 2px;
   }
 
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .pill:hover { border-color: var(--teal); color: var(--teal); }
+
   .checkbox-option {
     display: flex;
     align-items: center;

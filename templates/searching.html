@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}DeepDive · Searching{% endblock %}
+{% block title %}DeepDive · Working{% endblock %}
 {% block content %}
 <div class="card">
-  <h1>Digging through {{ artist_name }}…</h1>
-  <p class="muted">This can take a while for artists with large catalogs &mdash; DeepDive is reading every release track by track.</p>
+  <h1>{{ heading }}</h1>
+  <p class="muted">{{ subheading }}</p>
 
   <div class="progress-stage" id="stage-label">Starting…</div>
   <div class="progress-track">
@@ -14,6 +14,12 @@
     <span id="progress-elapsed">0s</span>
   </div>
 
+  {% if show_cancel %}
+    <div class="actions" style="margin-top:20px;">
+      <button type="button" class="btn btn-ghost" id="cancel-btn">Cancel</button>
+    </div>
+  {% endif %}
+
   <div id="error-box" style="display:none; margin-top:24px;">
     <p class="mono" id="error-text" style="color:#8a3b3b;"></p>
     <a href="{{ url_for('index') }}" class="btn btn-ghost">Back</a>
@@ -22,6 +28,10 @@
 
 <script>
   const jobId = {{ job_id | tojson }};
+  const progressUrl = {{ progress_url | tojson }};
+  const resultsUrlPrefix = {{ results_url_prefix | tojson }};
+  {% if show_cancel %}const cancelUrl = {{ cancel_url | tojson }};{% endif %}
+
   const startTime = Date.now();
   const fill = document.getElementById('progress-fill');
   const pctLabel = document.getElementById('progress-pct');
@@ -29,6 +39,7 @@
   const elapsedLabel = document.getElementById('progress-elapsed');
   const errorBox = document.getElementById('error-box');
   const errorText = document.getElementById('error-text');
+  const cancelBtn = document.getElementById('cancel-btn');
 
   function tickElapsed() {
     const s = Math.floor((Date.now() - startTime) / 1000);
@@ -36,11 +47,19 @@
   }
   setInterval(tickElapsed, 1000);
 
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', function () {
+      cancelBtn.disabled = true;
+      cancelBtn.textContent = 'Cancelling\u2026 (finishing current artist)';
+      fetch(cancelUrl, { method: 'POST' }).catch(() => {});
+    });
+  }
+
   async function poll() {
     try {
-      const res = await fetch(`/search/progress/${jobId}`);
+      const res = await fetch(progressUrl);
       if (!res.ok) {
-        throw new Error('lost track of this search');
+        throw new Error('lost track of this job');
       }
       const data = await res.json();
 
@@ -48,9 +67,11 @@
       pctLabel.textContent = data.percent + '%';
       if (data.stage) stageLabel.textContent = data.stage;
 
-      if (data.status === 'done') {
-        stageLabel.textContent = 'Done — loading results…';
-        window.location.href = `/search/results/${data.result_id}`;
+      if (data.status === 'done' || data.status === 'cancelled') {
+        stageLabel.textContent = data.status === 'cancelled'
+          ? 'Cancelled \u2014 loading what was found so far\u2026'
+          : 'Done \u2014 loading results\u2026';
+        window.location.href = resultsUrlPrefix + data.result_id;
         return;
       }
       if (data.status === 'error') {
@@ -58,10 +79,10 @@
         errorText.textContent = data.error || 'Something went wrong.';
         return;
       }
-      setTimeout(poll, 600);
+      setTimeout(poll, 700);
     } catch (e) {
       errorBox.style.display = 'block';
-      errorText.textContent = 'Lost connection to the search. It may still be running — try going back and checking again.';
+      errorText.textContent = 'Lost connection while checking progress. It may still be running \u2014 try going back and checking again.';
     }
   }
   poll();

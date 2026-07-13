@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}DeepDive · Done{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Done.</h1>
+  <p>
+    {% if unliked_count %}
+      Removed {{ unliked_count }} duplicate track{{ '' if unliked_count == 1 else 's' }} from your Liked Songs.
+    {% else %}
+      Nothing was unliked.
+    {% endif %}
+  </p>
+  <div class="actions">
+    <a href="{{ url_for('index') }}" class="btn btn-ghost">Back home</a>
+  </div>
+</div>
+{% endblock %}

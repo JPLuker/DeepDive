@@ -32,13 +32,13 @@ CLIENT_ID = os.environ.get("SPOTIPY_CLIENT_ID")
 CLIENT_SECRET = os.environ.get("SPOTIPY_CLIENT_SECRET")
 REDIRECT_URI = os.environ.get("SPOTIPY_REDIRECT_URI", "http://127.0.0.1:8888/callback")
 
-# In-memory cache of search results, keyed by a short-lived result id.
+# In-memory cache of search/scan results, keyed by a short-lived result id.
 # Fine for a single-user, locally-run app; avoids stuffing large payloads
 # into the session cookie.
 RESULTS_CACHE: dict[str, dict] = {}
 
-# Relative weight each search stage contributes to the overall progress bar.
-# Must sum to 100.
+# Relative weight each single-artist search stage contributes to its
+# progress bar. Must sum to 100.
 STAGE_WEIGHTS = {
     "find_artist": 5,
     "liked_songs": 20,
@@ -57,11 +57,24 @@ def get_oauth():
     return sc.make_oauth(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
 
 
+def _token_has_required_scope(token_info) -> bool:
+    granted = set((token_info.get("scope") or "").split())
+    required = set(sc.SCOPE.split())
+    return required.issubset(granted)
+
+
 def get_token():
-    """Returns a valid token dict, refreshing if needed, or None if not authed."""
+    """Returns a valid token dict, refreshing if needed, or None if not
+    authed. Also treats a token granted under an older/narrower scope
+    (e.g. before the top-artists/recently-played permissions were added)
+    as not authed, so the user gets prompted to reconnect and grant the
+    new permissions rather than hitting confusing 403s later."""
     oauth = get_oauth()
     token_info = session.get("token_info")
     if not token_info:
+        return None
+    if not _token_has_required_scope(token_info):
+        session.pop("token_info", None)
         return None
     if oauth.is_token_expired(token_info):
         token_info = oauth.refresh_access_token(token_info["refresh_token"])
@@ -73,8 +86,31 @@ def get_token():
 def index():
     if not credentials_configured():
         return redirect(url_for("setup"))
+
     token_info = get_token()
-    return render_template("index.html", authed=bool(token_info))
+    suggestions = []
+    suggestions_error = None
+
+    if token_info:
+        try:
+            sp = sc.get_client(token_info)
+            top = sc.get_top_artists(sp, time_range="medium_term", limit=10)
+            recent = sc.get_recently_played_artists(sp, limit=50)
+            seen = {}
+            for a in top:
+                seen.setdefault(a["id"], a["name"])
+            for a in recent:
+                seen.setdefault(a["id"], a["name"])
+            suggestions = list(seen.values())[:12]
+        except Exception as e:
+            suggestions_error = str(e)
+
+    return render_template(
+        "index.html",
+        authed=bool(token_info),
+        suggestions=suggestions,
+        suggestions_error=suggestions_error,
+    )
 
 
 @app.route("/setup", methods=["GET", "POST"])
@@ -131,7 +167,12 @@ def logout():
     return redirect(url_for("index"))
 
 
-def run_search_job(job_id, artist_name, token_info, exclude_live=False, exclude_censored=False):
+# ---------------------------------------------------------------------
+# Single-artist search (original flow)
+# ---------------------------------------------------------------------
+
+def run_search_job(job_id, artist_name, token_info, exclude_live=False, exclude_censored=False,
+                    exclude_instrumental=False, exclude_acappella=False, match_remasters=False):
     """Runs entirely in a background thread. Never touches Flask's session
     or request context — everything it needs is passed in directly."""
     try:
@@ -185,10 +226,13 @@ def run_search_job(job_id, artist_name, token_info, exclude_live=False, exclude_
         result = matching.classify_tracks(
             artist_tracks, liked_index,
             exclude_live=exclude_live, exclude_censored=exclude_censored,
+            exclude_instrumental=exclude_instrumental, exclude_acappella=exclude_acappella,
+            match_remasters=match_remasters,
         )
 
         result_id = uuid.uuid4().hex
         RESULTS_CACHE[result_id] = {
+            "mode": "search",
             "artist": artist,
             "duplicate_candidates": result["duplicate_candidates"],
             "new_tracks": result["new_tracks"],
@@ -196,6 +240,9 @@ def run_search_job(job_id, artist_name, token_info, exclude_live=False, exclude_
             "excluded_count": result["excluded_count"],
             "exclude_live": exclude_live,
             "exclude_censored": exclude_censored,
+            "exclude_instrumental": exclude_instrumental,
+            "exclude_acappella": exclude_acappella,
+            "match_remasters": match_remasters,
         }
         progress.finish(job_id, result_id)
 
@@ -216,17 +263,31 @@ def search():
 
     exclude_live = request.form.get("exclude_live") == "on"
     exclude_censored = request.form.get("exclude_censored") == "on"
+    exclude_instrumental = request.form.get("exclude_instrumental") == "on"
+    exclude_acappella = request.form.get("exclude_acappella") == "on"
+    match_remasters = request.form.get("match_remasters") == "on"
 
     job_id = progress.new_job()
-    thread = threading.Thread(
+    threading.Thread(
         target=run_search_job,
         args=(job_id, artist_name, token_info),
-        kwargs={"exclude_live": exclude_live, "exclude_censored": exclude_censored},
+        kwargs={
+            "exclude_live": exclude_live, "exclude_censored": exclude_censored,
+            "exclude_instrumental": exclude_instrumental, "exclude_acappella": exclude_acappella,
+            "match_remasters": match_remasters,
+        },
         daemon=True,
-    )
-    thread.start()
+    ).start()
 
-    return render_template("searching.html", job_id=job_id, artist_name=artist_name)
+    return render_template(
+        "searching.html",
+        job_id=job_id,
+        heading=f"Digging through {artist_name}…",
+        subheading="This can take a while for artists with large catalogs — DeepDive is reading every release track by track.",
+        progress_url=url_for("search_progress", job_id=job_id),
+        results_url_prefix="/search/results/",
+        show_cancel=False,
+    )
 
 
 @app.route("/search/progress/<job_id>")
@@ -244,7 +305,7 @@ def search_results(result_id):
         return redirect(url_for("login"))
 
     cached = RESULTS_CACHE.get(result_id)
-    if not cached:
+    if not cached or cached.get("mode") != "search":
         flash("That search has expired \u2014 please search again.")
         return redirect(url_for("index"))
 
@@ -258,6 +319,9 @@ def search_results(result_id):
         excluded_count=cached.get("excluded_count", 0),
         exclude_live=cached.get("exclude_live", False),
         exclude_censored=cached.get("exclude_censored", False),
+        exclude_instrumental=cached.get("exclude_instrumental", False),
+        exclude_acappella=cached.get("exclude_acappella", False),
+        match_remasters=cached.get("match_remasters", False),
         default_playlist_name=f"DeepDive: {cached['artist']['name']}",
     )
 
@@ -308,6 +372,322 @@ def confirm():
     return render_template(
         "done.html",
         artist=cached["artist"],
+        liked_now_count=liked_now_count,
+        playlist_url=playlist_url,
+        playlist_reused=playlist_reused,
+        added_count=added_count,
+        already_present_count=already_present_count,
+    )
+
+
+# ---------------------------------------------------------------------
+# Quick scan: duplicates within your existing Liked Songs (fast, no
+# catalog crawling — just compares tracks you've already fetched).
+# ---------------------------------------------------------------------
+
+def run_quick_scan_job(job_id, token_info):
+    try:
+        sp = sc.get_client(token_info)
+        progress.update(job_id, stage="Reading your Liked Songs…", percent=5)
+
+        def on_progress(current, total):
+            frac = min(1.0, current / max(total, 1))
+            progress.update(job_id, percent=5 + 80 * frac)
+
+        liked_tracks = sc.get_all_liked_tracks(sp, on_progress=on_progress)
+
+        progress.update(job_id, stage="Comparing your liked songs against each other…", percent=90)
+        groups = matching.find_duplicate_groups_in_liked(liked_tracks)
+
+        result_id = uuid.uuid4().hex
+        RESULTS_CACHE[result_id] = {"mode": "quick_scan", "groups": groups}
+        progress.finish(job_id, result_id)
+    except Exception as e:
+        progress.fail(job_id, f"Something went wrong: {e}")
+
+
+@app.route("/quick-scan", methods=["POST"])
+def quick_scan():
+    token_info = get_token()
+    if not token_info:
+        return redirect(url_for("login"))
+
+    job_id = progress.new_job()
+    threading.Thread(target=run_quick_scan_job, args=(job_id, token_info), daemon=True).start()
+
+    return render_template(
+        "searching.html",
+        job_id=job_id,
+        heading="Checking your Liked Songs for duplicates…",
+        subheading="Comparing tracks you've already liked against each other \u2014 no catalog crawling, this should be quick.",
+        progress_url=url_for("quick_scan_progress", job_id=job_id),
+        results_url_prefix="/quick-scan/results/",
+        show_cancel=False,
+    )
+
+
+@app.route("/quick-scan/progress/<job_id>")
+def quick_scan_progress(job_id):
+    job = progress.get(job_id)
+    if not job:
+        return jsonify({"status": "error", "error": "Unknown or expired scan."}), 404
+    return jsonify(job)
+
+
+@app.route("/quick-scan/results/<result_id>")
+def quick_scan_results(result_id):
+    token_info = get_token()
+    if not token_info:
+        return redirect(url_for("login"))
+
+    cached = RESULTS_CACHE.get(result_id)
+    if not cached or cached.get("mode") != "quick_scan":
+        flash("That scan has expired \u2014 please run it again.")
+        return redirect(url_for("index"))
+
+    return render_template("quick_scan_results.html", result_id=result_id, groups=cached["groups"])
+
+
+@app.route("/quick-scan/confirm", methods=["POST"])
+def quick_scan_confirm():
+    token_info = get_token()
+    if not token_info:
+        return redirect(url_for("login"))
+
+    sp = sc.get_client(token_info)
+    unlike_ids = request.form.getlist("unlike_track")
+    if unlike_ids:
+        sc.unlike_tracks(sp, unlike_ids)
+
+    result_id = request.form.get("result_id")
+    RESULTS_CACHE.pop(result_id, None)
+
+    return render_template("quick_scan_done.html", unliked_count=len(unlike_ids))
+
+
+# ---------------------------------------------------------------------
+# Full library scrub: crawls every distinct artist in your Liked Songs.
+# Slow (potentially 30-60+ min for a large, diverse library) since it's
+# equivalent to running the single-artist search once per artist — but
+# genuinely comprehensive. Cancellable; keeps whatever it found so far.
+# ---------------------------------------------------------------------
+
+def run_full_scrub_job(job_id, token_info, exclude_live=False, exclude_censored=False,
+                        exclude_instrumental=False, exclude_acappella=False, match_remasters=False):
+    try:
+        sp = sc.get_client(token_info)
+
+        progress.update(job_id, stage="Reading your Liked Songs…", percent=1)
+        liked_tracks = sc.get_all_liked_tracks(sp)
+        liked_index = matching.build_liked_indexes(liked_tracks)
+
+        artists = sc.get_distinct_liked_artists(liked_tracks)
+        total_artists = len(artists) or 1
+
+        all_duplicates = []
+        all_new_tracks = []
+        per_artist_summary = []
+        artists_scanned = 0
+        cancelled = False
+
+        for i, artist in enumerate(artists, start=1):
+            if progress.is_cancel_requested(job_id):
+                cancelled = True
+                break
+
+            base_percent = (i - 1) / total_artists * 100
+            progress.update(
+                job_id,
+                stage=f"[{i}/{total_artists}] {artist['name']}: finding releases\u2026",
+                percent=base_percent,
+            )
+
+            try:
+                album_ids = sc.get_artist_album_ids(sp, artist["id"])
+                progress.update(
+                    job_id,
+                    stage=f"[{i}/{total_artists}] {artist['name']}: reading track lists\u2026",
+                )
+                track_ids = sc.get_track_ids_from_albums(sp, album_ids)
+                progress.update(
+                    job_id,
+                    stage=f"[{i}/{total_artists}] {artist['name']}: fetching track details\u2026",
+                )
+                full_tracks = sc.get_full_tracks(sp, track_ids)
+
+                result = matching.classify_tracks(
+                    full_tracks, liked_index,
+                    exclude_live=exclude_live, exclude_censored=exclude_censored,
+                    exclude_instrumental=exclude_instrumental, exclude_acappella=exclude_acappella,
+                    match_remasters=match_remasters,
+                )
+                for d in result["duplicate_candidates"]:
+                    d["artist_name"] = artist["name"]
+                    all_duplicates.append(d)
+                all_new_tracks.extend(result["new_tracks"])
+
+                if result["duplicate_candidates"] or result["new_tracks"]:
+                    per_artist_summary.append({
+                        "name": artist["name"],
+                        "matches": len(result["duplicate_candidates"]),
+                        "new": len(result["new_tracks"]),
+                    })
+            except Exception as artist_err:
+                # One artist failing shouldn't kill the whole scrub.
+                per_artist_summary.append({
+                    "name": artist["name"], "matches": 0, "new": 0, "error": str(artist_err)
+                })
+
+            artists_scanned += 1
+            progress.update(job_id, percent=i / total_artists * 100)
+
+        result_id = uuid.uuid4().hex
+        RESULTS_CACHE[result_id] = {
+            "mode": "full_scrub",
+            "duplicate_candidates": all_duplicates,
+            "new_tracks": all_new_tracks,
+            "per_artist_summary": per_artist_summary,
+            "artists_scanned": artists_scanned,
+            "artists_total": total_artists,
+            "exclude_live": exclude_live,
+            "exclude_censored": exclude_censored,
+            "exclude_instrumental": exclude_instrumental,
+            "exclude_acappella": exclude_acappella,
+            "match_remasters": match_remasters,
+        }
+
+        if cancelled:
+            progress.cancel(job_id, result_id=result_id)
+        else:
+            progress.finish(job_id, result_id)
+
+    except Exception as e:
+        progress.fail(job_id, f"Something went wrong: {e}")
+
+
+@app.route("/full-scrub/start", methods=["POST"])
+def full_scrub_start():
+    token_info = get_token()
+    if not token_info:
+        return redirect(url_for("login"))
+
+    exclude_live = request.form.get("exclude_live") == "on"
+    exclude_censored = request.form.get("exclude_censored") == "on"
+    exclude_instrumental = request.form.get("exclude_instrumental") == "on"
+    exclude_acappella = request.form.get("exclude_acappella") == "on"
+    match_remasters = request.form.get("match_remasters") == "on"
+
+    job_id = progress.new_job()
+    threading.Thread(
+        target=run_full_scrub_job,
+        args=(job_id, token_info),
+        kwargs={
+            "exclude_live": exclude_live, "exclude_censored": exclude_censored,
+            "exclude_instrumental": exclude_instrumental, "exclude_acappella": exclude_acappella,
+            "match_remasters": match_remasters,
+        },
+        daemon=True,
+    ).start()
+
+    return render_template(
+        "searching.html",
+        job_id=job_id,
+        heading="Scrubbing your full library\u2026",
+        subheading="Crawling every artist in your Liked Songs \u2014 for a large, diverse library this can genuinely take a while. You can cancel any time and keep whatever's been found so far.",
+        progress_url=url_for("full_scrub_progress", job_id=job_id),
+        results_url_prefix="/full-scrub/results/",
+        show_cancel=True,
+        cancel_url=url_for("full_scrub_cancel", job_id=job_id),
+    )
+
+
+@app.route("/full-scrub/progress/<job_id>")
+def full_scrub_progress(job_id):
+    job = progress.get(job_id)
+    if not job:
+        return jsonify({"status": "error", "error": "Unknown or expired scan."}), 404
+    return jsonify(job)
+
+
+@app.route("/full-scrub/cancel/<job_id>", methods=["POST"])
+def full_scrub_cancel(job_id):
+    progress.request_cancel(job_id)
+    return jsonify({"ok": True})
+
+
+@app.route("/full-scrub/results/<result_id>")
+def full_scrub_results(result_id):
+    token_info = get_token()
+    if not token_info:
+        return redirect(url_for("login"))
+
+    cached = RESULTS_CACHE.get(result_id)
+    if not cached or cached.get("mode") != "full_scrub":
+        flash("That scan has expired \u2014 please run it again.")
+        return redirect(url_for("index"))
+
+    return render_template(
+        "full_scrub_results.html",
+        result_id=result_id,
+        duplicates=cached["duplicate_candidates"],
+        new_tracks=cached["new_tracks"],
+        per_artist_summary=cached["per_artist_summary"],
+        artists_scanned=cached["artists_scanned"],
+        artists_total=cached["artists_total"],
+        exclude_live=cached.get("exclude_live", False),
+        exclude_censored=cached.get("exclude_censored", False),
+        exclude_instrumental=cached.get("exclude_instrumental", False),
+        exclude_acappella=cached.get("exclude_acappella", False),
+        match_remasters=cached.get("match_remasters", False),
+        default_playlist_name="DeepDive: Full Library Scrub",
+    )
+
+
+@app.route("/full-scrub/confirm", methods=["POST"])
+def full_scrub_confirm():
+    token_info = get_token()
+    if not token_info:
+        return redirect(url_for("login"))
+
+    result_id = request.form.get("result_id")
+    cached = RESULTS_CACHE.get(result_id)
+    if not cached:
+        flash("That scan has expired \u2014 please run it again.")
+        return redirect(url_for("index"))
+
+    sp = sc.get_client(token_info)
+
+    like_ids = request.form.getlist("like_track")
+    create_playlist = request.form.get("create_playlist") == "on"
+    playlist_ids = request.form.getlist("playlist_track") if create_playlist else []
+    playlist_name = request.form.get("playlist_name", "").strip() or "DeepDive: Full Library Scrub"
+
+    liked_now_count = 0
+    if like_ids:
+        sc.like_tracks(sp, like_ids)
+        liked_now_count = len(like_ids)
+
+    playlist_url = None
+    playlist_reused = False
+    already_present_count = 0
+    added_count = 0
+    if playlist_ids:
+        pl = sc.add_tracks_to_playlist_deduped(
+            sp,
+            playlist_name,
+            f"Auto-built by DeepDive's full library scrub on {datetime.now().strftime('%Y-%m-%d')}.",
+            playlist_ids,
+        )
+        playlist_url = pl["url"]
+        playlist_reused = pl["reused"]
+        already_present_count = pl["already_present_count"]
+        added_count = pl["added_count"]
+
+    RESULTS_CACHE.pop(result_id, None)
+
+    return render_template(
+        "done.html",
+        artist={"name": "your library"},
         liked_now_count=liked_now_count,
         playlist_url=playlist_url,
         playlist_reused=playlist_reused,

@@ -1,12 +1,13 @@
 {% extends "base.html" %}
-{% block title %}DeepDive · {{ artist.name }}{% endblock %}
+{% block title %}DeepDive · Full library scrub{% endblock %}
 {% block content %}
 <div class="card">
-  <h1>{{ artist.name }}</h1>
+  <h1>Full library scrub</h1>
   <p class="muted">
-    {{ already_liked_count }} track{{ '' if already_liked_count == 1 else 's' }} already liked directly &middot;
-    {{ duplicates|length }} possible match{{ '' if duplicates|length == 1 else 'es' }} found elsewhere in your library &middot;
-    {{ new_tracks|length }} track{{ '' if new_tracks|length == 1 else 's' }} not in your library at all
+    Scanned {{ artists_scanned }} of {{ artists_total }} artist{{ '' if artists_total == 1 else 's' }} in your Liked Songs
+    {% if artists_scanned < artists_total %}(stopped early){% endif %}
+    &middot; {{ duplicates|length }} possible match{{ '' if duplicates|length == 1 else 'es' }}
+    &middot; {{ new_tracks|length }} new track{{ '' if new_tracks|length == 1 else 's' }} found
   </p>
   {% set active_filters = [] %}
   {% if exclude_live %}{% set _ = active_filters.append('live recordings') %}{% endif %}
@@ -14,16 +15,20 @@
   {% if exclude_instrumental %}{% set _ = active_filters.append('instrumentals') %}{% endif %}
   {% if exclude_acappella %}{% set _ = active_filters.append('a cappella versions') %}{% endif %}
   {% if active_filters %}
-    <p class="crate-note">
-      Filtered out {{ excluded_count }} track{{ '' if excluded_count == 1 else 's' }}
-      ({{ active_filters | join(', ') }}).
-    </p>
+    <p class="crate-note">Filtered out {{ active_filters | join(', ') }} throughout.</p>
   {% endif %}
   {% if match_remasters %}
     <p class="crate-note">Remasters are being counted as duplicates of the original recording where titles match.</p>
   {% endif %}
 
-  <form action="{{ url_for('confirm') }}" method="post">
+  {% set errored = per_artist_summary | selectattr('error', 'defined') | list %}
+  {% if errored %}
+    <p class="crate-note" style="color:#8a3b3b;">
+      {{ errored|length }} artist{{ '' if errored|length == 1 else 's' }} couldn't be scanned and {{ 'was' if errored|length == 1 else 'were' }} skipped (a transient API issue) &mdash; everything else completed normally.
+    </p>
+  {% endif %}
+
+  <form action="{{ url_for('full_scrub_confirm') }}" method="post">
     <input type="hidden" name="result_id" value="{{ result_id }}">
 
     <div class="crate-header">
@@ -39,14 +44,14 @@
           <input type="checkbox" name="like_track" value="{{ t.id }}" id="like-{{ t.id }}" checked>
           <div class="track-meta">
             <label for="like-{{ t.id }}" class="track-name">{{ t.name }}</label>
-            <div class="track-sub">{{ t.album.name }} &middot; {{ t.album.release_date[:4] if t.album.release_date else '' }}</div>
+            <div class="track-sub">{{ d.artist_name }} &middot; {{ t.album.name }}</div>
             <div class="track-match">↳ matches your liked "{{ d.matched_liked_track.name }}" ({{ d.match_basis }})</div>
           </div>
           <div class="track-dur">{{ '%d:%02d' % (t.duration_ms // 60000, (t.duration_ms // 1000) % 60) }}</div>
         </div>
       {% endfor %}
     {% else %}
-      <p class="empty-note">No cross-release matches found &mdash; nothing to reconcile here.</p>
+      <p class="empty-note">No cross-release matches found.</p>
     {% endif %}
 
     <div class="crate-header">
@@ -54,35 +59,37 @@
       <span class="rule"></span>
     </div>
     <label class="checkbox-option" style="margin-bottom:10px;">
-      <input type="checkbox" name="create_playlist" id="create-playlist-toggle" checked>
+      <input type="checkbox" name="create_playlist" id="create-playlist-toggle">
       Build a playlist from these
     </label>
-    <p class="crate-note" id="new-tracks-note">Not in your Liked Songs under any release. Checked = will be added to the playlist below.</p>
+    <p class="crate-note" id="new-tracks-note">
+      Not in your Liked Songs under any release, across your whole library. Off by default since this list can be large &mdash; check the box above if you want a playlist built from it.
+    </p>
 
     {% if new_tracks %}
       <div id="new-tracks-list">
         {% for t in new_tracks %}
           <div class="track-row newt">
-            <input type="checkbox" name="playlist_track" value="{{ t.id }}" id="pl-{{ t.id }}" checked>
+            <input type="checkbox" name="playlist_track" value="{{ t.id }}" id="pl-{{ t.id }}" checked disabled>
             <div class="track-meta">
               <label for="pl-{{ t.id }}" class="track-name">{{ t.name }}</label>
-              <div class="track-sub">{{ t.album.name }} &middot; {{ t.album.release_date[:4] if t.album.release_date else '' }}</div>
+              <div class="track-sub">{{ t.artists[0].name if t.artists else '' }} &middot; {{ t.album.name if t.album else '' }}</div>
             </div>
             <div class="track-dur">{{ '%d:%02d' % (t.duration_ms // 60000, (t.duration_ms // 1000) % 60) }}</div>
           </div>
         {% endfor %}
       </div>
     {% else %}
-      <p class="empty-note">Nothing new &mdash; your library already covers this artist.</p>
+      <p class="empty-note">Nothing new found.</p>
     {% endif %}
 
-    <div class="playlist-name-field" id="playlist-name-field">
+    <div class="playlist-name-field" id="playlist-name-field" style="display:none;">
       <label for="playlist_name">Playlist name</label>
       <input type="text" id="playlist_name" name="playlist_name" value="{{ default_playlist_name }}">
     </div>
 
     <div class="actions">
-      <button type="submit" class="btn btn-primary" id="submit-btn">Like selected &amp; build playlist</button>
+      <button type="submit" class="btn btn-primary" id="submit-btn">Like selected matches</button>
       <a href="{{ url_for('index') }}" class="btn btn-ghost">Cancel</a>
     </div>
   </form>
@@ -93,7 +100,6 @@
   const listEl = document.getElementById('new-tracks-list');
   const nameField = document.getElementById('playlist-name-field');
   const submitBtn = document.getElementById('submit-btn');
-  const note = document.getElementById('new-tracks-note');
 
   function applyToggleState() {
     const on = toggle.checked;
@@ -102,7 +108,6 @@
       listEl.style.opacity = on ? '1' : '0.45';
       listEl.querySelectorAll('input[type=checkbox]').forEach(cb => cb.disabled = !on);
     }
-    if (note) note.style.display = on ? '' : 'none';
     if (submitBtn) submitBtn.textContent = on ? 'Like selected & build playlist' : 'Like selected matches';
   }
 

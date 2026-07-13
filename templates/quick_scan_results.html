@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}DeepDive · Duplicate check{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Duplicate check</h1>
+
+  {% if groups %}
+    <p class="muted">
+      Found {{ groups|length }} song{{ '' if groups|length == 1 else 's' }} you've liked more than once
+      under different releases.
+    </p>
+    <p class="crate-note">Nothing is unliked automatically. Check the version(s) you want to remove and leave at least one unchecked per group so the song stays in your library.</p>
+
+    <form action="{{ url_for('quick_scan_confirm') }}" method="post">
+      <input type="hidden" name="result_id" value="{{ result_id }}">
+
+      {% for g in groups %}
+        <div class="crate-header">
+          <span class="label teal">Group {{ loop.index }}</span>
+          <span class="rule"></span>
+        </div>
+        <p class="crate-note">
+          Matched by {{ 'exact same recording (ISRC)' if g.basis == 'isrc' else 'title & duration similarity' }}.
+        </p>
+        {% for t in g.tracks %}
+          <div class="track-row dup">
+            <input type="checkbox" name="unlike_track" value="{{ t.id }}" id="un-{{ t.id }}">
+            <div class="track-meta">
+              <label for="un-{{ t.id }}" class="track-name">{{ t.name }}</label>
+              <div class="track-sub">{{ t.album.name if t.album else '' }}{% if t.artists %} &middot; {{ t.artists[0].name }}{% endif %}</div>
+            </div>
+            <div class="track-dur">{{ '%d:%02d' % (t.duration_ms // 60000, (t.duration_ms // 1000) % 60) }}</div>
+          </div>
+        {% endfor %}
+      {% endfor %}
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">Unlike selected</button>
+        <a href="{{ url_for('index') }}" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  {% else %}
+    <p class="empty-note">No duplicates found within your Liked Songs &mdash; you're clean.</p>
+    <div class="actions">
+      <a href="{{ url_for('index') }}" class="btn btn-ghost">Back</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
