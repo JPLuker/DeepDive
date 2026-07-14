@@ -70,22 +70,7 @@
 {% if authed %}
 <div class="card">
   <h2>Scan your whole library</h2>
-  <p class="muted">Instead of one artist at a time.</p>
-
-  <div class="crate-header">
-    <span class="label teal">Quick</span>
-    <span class="rule"></span>
-  </div>
-  <p class="crate-note">Checks your existing Liked Songs against each other for duplicates you've already liked twice under different releases. Takes seconds.</p>
-  <form action="{{ url_for('quick_scan') }}" method="post">
-    <button type="submit" class="btn btn-ghost">Run quick duplicate check</button>
-  </form>
-
-  <div class="crate-header">
-    <span class="label gold">Comprehensive</span>
-    <span class="rule"></span>
-  </div>
-  <p class="crate-note">Crawls every artist in your Liked Songs the same way a single search does &mdash; catches everything, but for a large, varied library this can take 30-60+ minutes. Cancellable any time.</p>
+  <p class="muted">Crawls every artist in your Liked Songs the same way a single search does &mdash; catches everything, but for a large, varied library this can take 30-60+ minutes. Cancellable any time.</p>
   <form action="{{ url_for('full_scrub_start') }}" method="post">
     <div class="filter-options" style="margin-bottom:16px;">
       <label class="checkbox-option">

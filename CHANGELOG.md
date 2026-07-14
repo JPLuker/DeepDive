@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.6.0
+- Removed: **Quick duplicate check**. This feature scanned existing
+  Liked Songs for accidental double-likes and offered to *unlike* one
+  copy — a cleanup tool, not a discovery tool. In practice this wasn't
+  wanted and was easily confused with Full library scrub (which finds
+  and *likes* missing versions) since both lived under "Scan your whole
+  library." Removed entirely, including its route, background job,
+  templates, and the now-unused `find_duplicate_groups_in_liked()` /
+  `unlike_tracks()` helpers, rather than leaving dead code around.
+  Full library scrub is unaffected and is now the only option in that
+  section of the home page.
+
 ## v1.5.0
 - Added: "Exclude instrumentals" and "Exclude a cappella versions" filters,
   available on both single-artist search and the full library scrub.

@@ -207,11 +207,6 @@ def like_tracks(sp: spotipy.Spotify, track_ids: list[str]):
         _call(sp.current_user_saved_tracks_add, tracks=batch)
 
 
-def unlike_tracks(sp: spotipy.Spotify, track_ids: list[str]):
-    for batch in _chunk(track_ids, 50):
-        _call(sp.current_user_saved_tracks_delete, tracks=batch)
-
-
 def add_tracks_to_playlist_deduped(sp: spotipy.Spotify, name: str, description: str, track_ids: list[str]) -> dict:
     """
     Creates the playlist if it doesn't exist yet, or reuses an existing
