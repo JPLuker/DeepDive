@@ -228,6 +228,7 @@
   .pill {
     display: inline-flex;
     align-items: center;
+    gap: 6px;
     font-family: 'Inter', sans-serif;
     font-size: 13px;
     font-weight: 500;
@@ -239,6 +240,14 @@
     cursor: pointer;
   }
   .pill:hover { border-color: var(--teal); color: var(--teal); }
+  .pill-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 2px;
+    vertical-align: middle;
+  }
 
   .checkbox-option {
     display: flex;

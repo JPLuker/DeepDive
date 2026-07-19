@@ -48,10 +48,15 @@
     {% if suggestions %}
       <p class="crate-note" style="margin-top:22px;">Based on what you've been listening to:</p>
       <div class="pill-row">
-        {% for name in suggestions %}
+        {% for s in suggestions %}
           <form action="{{ url_for('search') }}" method="post" style="display:inline;">
-            <input type="hidden" name="artist" value="{{ name }}">
-            <button type="submit" class="pill">{{ name }}</button>
+            <input type="hidden" name="artist" value="{{ s.name }}">
+            <button type="submit" class="pill">
+              {% if s.image_url %}
+                <img src="{{ s.image_url }}" alt="" class="pill-avatar">
+              {% endif %}
+              {{ s.name }}
+            </button>
           </form>
         {% endfor %}
       </div>

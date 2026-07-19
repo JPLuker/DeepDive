@@ -23,9 +23,16 @@
 
   {% set errored = per_artist_summary | selectattr('error', 'defined') | list %}
   {% if errored %}
-    <p class="crate-note" style="color:#8a3b3b;">
-      {{ errored|length }} artist{{ '' if errored|length == 1 else 's' }} couldn't be scanned and {{ 'was' if errored|length == 1 else 'were' }} skipped (a transient API issue) &mdash; everything else completed normally.
-    </p>
+    <div class="crate-note" style="color:#8a3b3b;">
+      <p style="margin-bottom:6px;">
+        {{ errored|length }} artist{{ '' if errored|length == 1 else 's' }} couldn't be fully scanned and {{ 'was' if errored|length == 1 else 'were' }} skipped &mdash; everything else completed normally:
+      </p>
+      <ul style="margin:0 0 0 18px; padding:0;">
+        {% for a in errored %}
+          <li>{{ a.name }} &mdash; {{ a.error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
   {% endif %}
 
   <form action="{{ url_for('full_scrub_confirm') }}" method="post">

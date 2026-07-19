@@ -2,11 +2,28 @@
 {% block title %}DeepDive · Done{% endblock %}
 {% block content %}
 <div class="card">
-  <h1>Done digging.</h1>
+  <h1>{% if like_error or playlist_error %}Partly done.{% else %}Done digging.{% endif %}</h1>
+
+  {% if like_error %}
+    <div class="flash" style="background: rgba(138,59,59,0.10); border-color:#8a3b3b; color: var(--ink);">
+      <strong>Couldn't add tracks to your Liked Songs.</strong>
+      <div class="mono" style="font-size:12.5px; margin-top:6px;">{{ like_error }}</div>
+    </div>
+  {% endif %}
+  {% if playlist_error %}
+    <div class="flash" style="background: rgba(138,59,59,0.10); border-color:#8a3b3b; color: var(--ink);">
+      <strong>Couldn't build the playlist.</strong>
+      <div class="mono" style="font-size:12.5px; margin-top:6px;">{{ playlist_error }}</div>
+    </div>
+  {% endif %}
+  {% if like_error or playlist_error %}
+    <p class="crate-note">Your results haven't been discarded &mdash; go back and try again without re-running the search.</p>
+  {% endif %}
+
   <p>
     {% if liked_now_count %}
       Added {{ liked_now_count }} track{{ '' if liked_now_count == 1 else 's' }} to your Liked Songs.
-    {% else %}
+    {% elif not like_error %}
       No tracks were added to your Liked Songs.
     {% endif %}
   </p>
@@ -29,7 +46,7 @@
     {% endif %}
 
     <a href="{{ playlist_url }}" target="_blank" class="btn btn-primary" style="margin-top:20px;">Open playlist in Spotify</a>
-  {% else %}
+  {% elif not playlist_error %}
     <p class="muted">No playlist was created (nothing was selected).</p>
   {% endif %}
 

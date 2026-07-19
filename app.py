@@ -1,6 +1,7 @@
 import os
 import secrets
 import threading
+import time
 import uuid
 from datetime import datetime
 
@@ -39,14 +40,84 @@ RESULTS_CACHE: dict[str, dict] = {}
 
 # Relative weight each single-artist search stage contributes to its
 # progress bar. Must sum to 100.
+# Reweighted for the February 2026 API. Reading the artist's catalog is
+# now the dominant cost: batch album fetches are gone, so it's one
+# request per album. Confirming candidates costs one request per
+# candidate, but candidates are few by design (see matching.py).
 STAGE_WEIGHTS = {
     "find_artist": 5,
     "liked_songs": 20,
-    "list_releases": 10,
-    "track_lists": 25,
-    "track_details": 35,
+    "catalog": 50,
+    "confirm": 20,
     "classify": 5,
 }
+
+# Hard ceiling on how long the full-library scrub will spend on any one
+# artist before giving up and moving on. Without this, a single artist
+# with a huge back-catalog (or one hitting persistent API slowness)
+# could stall the entire scrub indefinitely with no way to tell "still
+# working" apart from "actually stuck."
+ARTIST_TIME_BUDGET_SECONDS = 300
+
+# Same idea, applied to every individual network stage (not just the
+# full-scrub's per-artist crawl) — a single Spotify API call getting
+# stuck should never be able to hang a job forever, regardless of which
+# job type or which stage it happens in.
+#
+# Deliberately generous: a *stage* here can be 100+ paginated requests
+# (reading a large Liked Songs library), so a legitimately slow-but-
+# working stage must not get killed. Genuine per-request hangs are
+# already handled much tighter, at the request level, inside
+# spotify_client._call() (HARD_CALL_TIMEOUT). This is only a last-
+# resort backstop against a pathological stage that never ends.
+STAGE_TIMEOUT_SECONDS = 1800
+
+# The home page's listening-based suggestions load synchronously as
+# part of a normal page request — no progress bar, no background job.
+# They're a nice-to-have, not core functionality, so they get a much
+# shorter timeout: the page should never sit there for minutes just to
+# render "Connect Spotify" or the search box. If this trips, suggestions
+# are silently skipped rather than blocking the page.
+SUGGESTIONS_TIMEOUT_SECONDS = 8
+
+
+def run_with_timeout(fn, timeout_seconds, *args, **kwargs):
+    """
+    Runs fn(*args, **kwargs) with a hard wall-clock deadline, regardless
+    of what's actually happening inside — unlike a cooperative check
+    (which does nothing if the stuck call never calls back at all), this
+    genuinely stops waiting after timeout_seconds no matter the cause.
+
+    Uses a daemon thread specifically (not concurrent.futures.
+    ThreadPoolExecutor): Python registers a global atexit hook that
+    joins every thread a ThreadPoolExecutor ever created, so an
+    abandoned/hung call made that way would eventually block the whole
+    Flask process from exiting cleanly. A plain daemon thread has no
+    such problem — Python can just let it go at process exit.
+
+    Raises TimeoutError if fn doesn't finish in time. The abandoned
+    thread (if any) keeps running harmlessly in the background and
+    can no longer block anything else.
+    """
+    result_holder = {}
+
+    def _run():
+        try:
+            result_holder["result"] = fn(*args, **kwargs)
+        except Exception as inner_err:
+            result_holder["error"] = inner_err
+
+    worker = threading.Thread(target=_run, daemon=True)
+    worker.start()
+    worker.join(timeout=timeout_seconds)
+
+    if worker.is_alive():
+        raise TimeoutError(
+            f"This step took longer than {timeout_seconds // 60} minute(s) and was abandoned."
+        )
+    if "error" in result_holder:
+        raise result_holder["error"]
+    return result_holder["result"]
 
 
 def credentials_configured() -> bool:
@@ -77,7 +148,17 @@ def get_token():
         session.pop("token_info", None)
         return None
     if oauth.is_token_expired(token_info):
-        token_info = oauth.refresh_access_token(token_info["refresh_token"])
+        try:
+            token_info = run_with_timeout(
+                oauth.refresh_access_token, SUGGESTIONS_TIMEOUT_SECONDS, token_info["refresh_token"]
+            )
+        except Exception:
+            # Can't refresh right now (hung/failed network call) — treat
+            # as not authed rather than hanging every single page load
+            # indefinitely. The user just has to reconnect; that's a far
+            # better failure mode than the whole app becoming unusable.
+            session.pop("token_info", None)
+            return None
         session["token_info"] = token_info
     return token_info
 
@@ -94,14 +175,40 @@ def index():
     if token_info:
         try:
             sp = sc.get_client(token_info)
-            top = sc.get_top_artists(sp, time_range="medium_term", limit=10)
-            recent = sc.get_recently_played_artists(sp, limit=50)
+            top = run_with_timeout(sc.get_top_artists, SUGGESTIONS_TIMEOUT_SECONDS, sp, time_range="medium_term", limit=10)
+            recent = run_with_timeout(sc.get_recently_played_artists, SUGGESTIONS_TIMEOUT_SECONDS, sp, limit=50)
+
+            def smallest_image(images):
+                # Spotify returns images largest-first; the smallest is
+                # plenty for a little avatar and keeps the page light.
+                return images[-1]["url"] if images else None
+
             seen = {}
             for a in top:
-                seen.setdefault(a["id"], a["name"])
+                # /me/top/artists already returns full artist objects,
+                # images included — no extra call needed for these.
+                seen.setdefault(a["id"], {"id": a["id"], "name": a["name"], "image_url": smallest_image(a.get("images"))})
             for a in recent:
-                seen.setdefault(a["id"], a["name"])
+                # Recently-played tracks only carry simplified artist
+                # objects (id/name, no images) — flagged for a follow-up
+                # batch fetch below.
+                seen.setdefault(a["id"], {"id": a["id"], "name": a["name"], "image_url": None})
+
             suggestions = list(seen.values())[:12]
+
+            missing_image_ids = [s["id"] for s in suggestions if s["image_url"] is None]
+            if missing_image_ids:
+                try:
+                    details = run_with_timeout(sc.get_artists_by_ids, SUGGESTIONS_TIMEOUT_SECONDS, sp, missing_image_ids)
+                    image_by_id = {a["id"]: smallest_image(a.get("images")) for a in details}
+                    for s in suggestions:
+                        if s["image_url"] is None:
+                            s["image_url"] = image_by_id.get(s["id"])
+                except Exception:
+                    # Photos are a nice-to-have — if this particular call
+                    # fails, fall back to text-only pills rather than
+                    # losing the suggestions entirely.
+                    pass
         except Exception as e:
             suggestions_error = str(e)
 
@@ -174,7 +281,13 @@ def logout():
 def run_search_job(job_id, artist_name, token_info, exclude_live=False, exclude_censored=False,
                     exclude_instrumental=False, exclude_acappella=False, match_remasters=False):
     """Runs entirely in a background thread. Never touches Flask's session
-    or request context — everything it needs is passed in directly."""
+    or request context — everything it needs is passed in directly.
+
+    Two-phase since the February 2026 API changes removed batch track
+    fetches: the catalog is read cheaply without ISRCs, narrowed to
+    plausible duplicates, and only those few tracks are re-fetched
+    individually to get real ISRCs. See matching.py for the reasoning.
+    """
     try:
         sp = sc.get_client(token_info)
         completed = 0
@@ -188,56 +301,72 @@ def run_search_job(job_id, artist_name, token_info, exclude_live=False, exclude_
             return cb
 
         progress.update(job_id, stage=f'Finding "{artist_name}" on Spotify…', percent=completed)
-        artist = sc.find_artist(sp, artist_name)
+        artist = run_with_timeout(sc.find_artist, STAGE_TIMEOUT_SECONDS, sp, artist_name)
         completed += STAGE_WEIGHTS["find_artist"]
         if not artist:
             progress.fail(job_id, f'No Spotify artist found matching "{artist_name}".')
             return
         progress.update(job_id, percent=completed)
 
-        liked_tracks = sc.get_all_liked_tracks(
-            sp, on_progress=stage_callback("liked_songs", "Reading your Liked Songs…")
+        progress.update(job_id, stage="Reading your Liked Songs…")
+        liked_tracks = run_with_timeout(
+            sc.get_all_liked_tracks, STAGE_TIMEOUT_SECONDS, sp,
+            on_progress=stage_callback("liked_songs", "Reading your Liked Songs…")
         )
         completed += STAGE_WEIGHTS["liked_songs"]
         liked_index = matching.build_liked_indexes(liked_tracks)
         progress.update(job_id, percent=completed)
 
-        album_ids = sc.get_artist_album_ids(
-            sp, artist["id"],
-            on_progress=stage_callback("list_releases", f"Finding {artist['name']}'s releases…")
+        # Phase 0: read the catalog. One request per release — the
+        # expensive part now, hence the biggest slice of the bar.
+        progress.update(job_id, stage=f"Reading {artist['name']}'s releases…")
+        catalog_tracks = run_with_timeout(
+            sc.get_artist_catalog_tracks, STAGE_TIMEOUT_SECONDS, sp, artist["id"],
+            on_progress=stage_callback("catalog", f"Reading {artist['name']}'s releases…")
         )
-        completed += STAGE_WEIGHTS["list_releases"]
+        completed += STAGE_WEIGHTS["catalog"]
         progress.update(job_id, percent=completed)
 
-        artist_track_ids = sc.get_track_ids_from_albums(
-            sp, album_ids,
-            on_progress=stage_callback("track_lists", f"Reading {artist['name']}'s track lists…")
-        )
-        completed += STAGE_WEIGHTS["track_lists"]
-        progress.update(job_id, percent=completed)
-
-        artist_tracks = sc.get_full_tracks(
-            sp, artist_track_ids,
-            on_progress=stage_callback("track_details", "Fetching track details…")
-        )
-        completed += STAGE_WEIGHTS["track_details"]
-        progress.update(job_id, stage="Comparing with your library…", percent=completed)
-
-        result = matching.classify_tracks(
-            artist_tracks, liked_index,
+        # Phase 1: narrow to plausible duplicates. Free — no API calls.
+        progress.update(job_id, stage="Comparing with your library…")
+        phase1 = matching.find_candidates(
+            catalog_tracks, liked_index,
             exclude_live=exclude_live, exclude_censored=exclude_censored,
             exclude_instrumental=exclude_instrumental, exclude_acappella=exclude_acappella,
-            match_remasters=match_remasters,
         )
+
+        # Phase 2: only candidates get an individual ISRC lookup.
+        candidate_ids = [c["track"]["id"] for c in phase1["candidates"]]
+        if candidate_ids:
+            progress.update(
+                job_id,
+                stage=f"Checking {len(candidate_ids)} possible match{'' if len(candidate_ids) == 1 else 'es'}…",
+            )
+            full_tracks = run_with_timeout(
+                sc.get_tracks_with_isrc, STAGE_TIMEOUT_SECONDS, sp, candidate_ids,
+                on_progress=stage_callback("confirm", f"Checking {len(candidate_ids)} possible matches…")
+            )
+        else:
+            full_tracks = []
+        completed += STAGE_WEIGHTS["confirm"]
+
+        phase2 = matching.confirm_candidates(
+            full_tracks, phase1["candidates"], liked_index, match_remasters=match_remasters,
+        )
+
+        # Tracks that resembled nothing liked, plus ones whose ISRC
+        # proved they're a different recording after all.
+        new_tracks = phase1["new_tracks"] + phase2["new_tracks"]
+        progress.update(job_id, percent=100, stage="Done")
 
         result_id = uuid.uuid4().hex
         RESULTS_CACHE[result_id] = {
             "mode": "search",
             "artist": artist,
-            "duplicate_candidates": result["duplicate_candidates"],
-            "new_tracks": result["new_tracks"],
-            "already_liked_count": len(result["already_liked"]),
-            "excluded_count": result["excluded_count"],
+            "duplicate_candidates": phase2["duplicate_candidates"],
+            "new_tracks": new_tracks,
+            "already_liked_count": len(phase1["already_liked"]),
+            "excluded_count": phase1["excluded_count"],
             "exclude_live": exclude_live,
             "exclude_censored": exclude_censored,
             "exclude_instrumental": exclude_instrumental,
@@ -346,28 +475,46 @@ def confirm():
     playlist_name = request.form.get("playlist_name", "").strip() or cached["artist"]["name"]
 
     liked_now_count = 0
-    if like_ids:
-        sc.like_tracks(sp, like_ids)
-        liked_now_count = len(like_ids)
-
     playlist_url = None
     playlist_reused = False
     already_present_count = 0
     added_count = 0
-    if playlist_ids:
-        pl = sc.add_tracks_to_playlist_deduped(
-            sp,
-            playlist_name,
-            f"Auto-built by DeepDive from {cached['artist']['name']}'s catalog on "
-            f"{datetime.now().strftime('%Y-%m-%d')}.",
-            playlist_ids,
-        )
-        playlist_url = pl["url"]
-        playlist_reused = pl["reused"]
-        already_present_count = pl["already_present_count"]
-        added_count = pl["added_count"]
 
-    RESULTS_CACHE.pop(result_id, None)
+    # Liking and playlist-building are handled separately and never
+    # allowed to raise: if one half fails, the other half's result is
+    # still reported rather than the whole page becoming a 500 and
+    # throwing away results that took minutes to produce.
+    like_error = None
+    playlist_error = None
+
+    if like_ids:
+        try:
+            sc.like_tracks(sp, like_ids)
+            liked_now_count = len(like_ids)
+        except Exception as e:
+            like_error = str(e)
+
+    if playlist_ids:
+        try:
+            pl = sc.add_tracks_to_playlist_deduped(
+                sp,
+                playlist_name,
+                f"Auto-built by DeepDive from {cached['artist']['name']}'s catalog on "
+                f"{datetime.now().strftime('%Y-%m-%d')}.",
+                playlist_ids,
+            )
+            playlist_url = pl["url"]
+            playlist_reused = pl["reused"]
+            already_present_count = pl["already_present_count"]
+            added_count = pl["added_count"]
+        except Exception as e:
+            playlist_error = str(e)
+
+    # Only discard the cached results if everything actually worked —
+    # otherwise the user can go back and retry instead of re-running the
+    # whole search.
+    if not like_error and not playlist_error:
+        RESULTS_CACHE.pop(result_id, None)
 
     return render_template(
         "done.html",
@@ -377,6 +524,8 @@ def confirm():
         playlist_reused=playlist_reused,
         added_count=added_count,
         already_present_count=already_present_count,
+        like_error=like_error,
+        playlist_error=playlist_error,
     )
 
 
@@ -393,7 +542,7 @@ def run_full_scrub_job(job_id, token_info, exclude_live=False, exclude_censored=
         sp = sc.get_client(token_info)
 
         progress.update(job_id, stage="Reading your Liked Songs…", percent=1)
-        liked_tracks = sc.get_all_liked_tracks(sp)
+        liked_tracks = run_with_timeout(sc.get_all_liked_tracks, STAGE_TIMEOUT_SECONDS, sp)
         liked_index = matching.build_liked_indexes(liked_tracks)
 
         artists = sc.get_distinct_liked_artists(liked_tracks)
@@ -417,25 +566,72 @@ def run_full_scrub_job(job_id, token_info, exclude_live=False, exclude_censored=
                 percent=base_percent,
             )
 
-            try:
-                album_ids = sc.get_artist_album_ids(sp, artist["id"])
+            def crawl_this_artist():
+                # Same two-phase flow as single-artist search — see
+                # run_search_job() and matching.py for why.
                 progress.update(
                     job_id,
-                    stage=f"[{i}/{total_artists}] {artist['name']}: reading track lists\u2026",
+                    stage=f"[{i}/{total_artists}] {artist['name']}: reading releases\u2026",
                 )
-                track_ids = sc.get_track_ids_from_albums(sp, album_ids)
-                progress.update(
-                    job_id,
-                    stage=f"[{i}/{total_artists}] {artist['name']}: fetching track details\u2026",
-                )
-                full_tracks = sc.get_full_tracks(sp, track_ids)
+                catalog_tracks = sc.get_artist_catalog_tracks(sp, artist["id"])
 
-                result = matching.classify_tracks(
-                    full_tracks, liked_index,
+                phase1 = matching.find_candidates(
+                    catalog_tracks, liked_index,
                     exclude_live=exclude_live, exclude_censored=exclude_censored,
                     exclude_instrumental=exclude_instrumental, exclude_acappella=exclude_acappella,
+                )
+
+                candidate_ids = [c["track"]["id"] for c in phase1["candidates"]]
+                if candidate_ids:
+                    progress.update(
+                        job_id,
+                        stage=f"[{i}/{total_artists}] {artist['name']}: checking {len(candidate_ids)} possible matches\u2026",
+                    )
+                    full_tracks = sc.get_tracks_with_isrc(sp, candidate_ids)
+                else:
+                    full_tracks = []
+
+                phase2 = matching.confirm_candidates(
+                    full_tracks, phase1["candidates"], liked_index,
                     match_remasters=match_remasters,
                 )
+                return {
+                    "duplicate_candidates": phase2["duplicate_candidates"],
+                    "new_tracks": phase1["new_tracks"] + phase2["new_tracks"],
+                }
+
+            try:
+                # A fresh daemon thread per artist — daemon=True specifically
+                # so an abandoned/hung thread can never block the Flask
+                # process from exiting cleanly later (a plain
+                # ThreadPoolExecutor doesn't have this property: it
+                # registers a global atexit hook that joins every thread
+                # it ever created, so an abandoned worker would eventually
+                # hang process shutdown even with shutdown(wait=False)).
+                # thread.join(timeout=...) enforces a real wall-clock
+                # deadline regardless of what's happening inside the stuck
+                # call — unlike a cooperative check, this doesn't depend on
+                # the stuck code ever returning control to check in.
+                result_holder = {}
+
+                def _run():
+                    try:
+                        result_holder["result"] = crawl_this_artist()
+                    except Exception as inner_err:
+                        result_holder["error"] = inner_err
+
+                worker = threading.Thread(target=_run, daemon=True)
+                worker.start()
+                worker.join(timeout=ARTIST_TIME_BUDGET_SECONDS)
+
+                if worker.is_alive():
+                    raise TimeoutError(
+                        f"Still going after {ARTIST_TIME_BUDGET_SECONDS // 60} minutes on this artist — skipped so the rest of the scrub isn't blocked."
+                    )
+                if "error" in result_holder:
+                    raise result_holder["error"]
+                result = result_holder["result"]
+
                 for d in result["duplicate_candidates"]:
                     d["artist_name"] = artist["name"]
                     all_duplicates.append(d)
@@ -508,7 +704,7 @@ def full_scrub_start():
         "searching.html",
         job_id=job_id,
         heading="Scrubbing your full library\u2026",
-        subheading="Crawling every artist in your Liked Songs \u2014 for a large, diverse library this can genuinely take a while. You can cancel any time and keep whatever's been found so far.",
+        subheading="Crawling every artist in your Liked Songs \u2014 for a large, diverse library this can genuinely take a while. Any single artist that's still going after 5 minutes gets skipped so it can't block the rest. You can cancel any time and keep whatever's been found so far.",
         progress_url=url_for("full_scrub_progress", job_id=job_id),
         results_url_prefix="/full-scrub/results/",
         show_cancel=True,
@@ -578,27 +774,37 @@ def full_scrub_confirm():
     playlist_name = request.form.get("playlist_name", "").strip() or "DeepDive: Full Library Scrub"
 
     liked_now_count = 0
-    if like_ids:
-        sc.like_tracks(sp, like_ids)
-        liked_now_count = len(like_ids)
-
     playlist_url = None
     playlist_reused = False
     already_present_count = 0
     added_count = 0
-    if playlist_ids:
-        pl = sc.add_tracks_to_playlist_deduped(
-            sp,
-            playlist_name,
-            f"Auto-built by DeepDive's full library scrub on {datetime.now().strftime('%Y-%m-%d')}.",
-            playlist_ids,
-        )
-        playlist_url = pl["url"]
-        playlist_reused = pl["reused"]
-        already_present_count = pl["already_present_count"]
-        added_count = pl["added_count"]
+    like_error = None
+    playlist_error = None
 
-    RESULTS_CACHE.pop(result_id, None)
+    if like_ids:
+        try:
+            sc.like_tracks(sp, like_ids)
+            liked_now_count = len(like_ids)
+        except Exception as e:
+            like_error = str(e)
+
+    if playlist_ids:
+        try:
+            pl = sc.add_tracks_to_playlist_deduped(
+                sp,
+                playlist_name,
+                f"Auto-built by DeepDive's full library scrub on {datetime.now().strftime('%Y-%m-%d')}.",
+                playlist_ids,
+            )
+            playlist_url = pl["url"]
+            playlist_reused = pl["reused"]
+            already_present_count = pl["already_present_count"]
+            added_count = pl["added_count"]
+        except Exception as e:
+            playlist_error = str(e)
+
+    if not like_error and not playlist_error:
+        RESULTS_CACHE.pop(result_id, None)
 
     return render_template(
         "done.html",
@@ -608,6 +814,8 @@ def full_scrub_confirm():
         playlist_reused=playlist_reused,
         added_count=added_count,
         already_present_count=already_present_count,
+        like_error=like_error,
+        playlist_error=playlist_error,
     )
 
 

@@ -17,6 +17,24 @@ clicking confirm.
 Tested on Linux (Python 3.10+). Should also run on macOS/Windows unchanged,
 but Linux is the supported target.
 
+## Important: February 2026 Spotify API changes
+
+Spotify restricted Development Mode apps in February/March 2026 — and
+since DeepDive's whole model is "each user creates their own Spotify
+app," that's the mode DeepDive runs in. Two consequences worth knowing:
+
+- **Spotify Premium is required.** Development Mode apps require the app
+  owner to have an active Premium subscription. If it lapses, the app
+  stops working until it resumes.
+- **Bulk fetching is gone.** Batch endpoints were removed, so reading an
+  artist's catalog now costs roughly one request per release. Single-
+  artist search is fine. **Full library scrub is much slower than it
+  used to be** and may not be practical for very large libraries.
+
+DeepDive still matches on ISRC — that field was removed in the February
+changes and then reverted, so it survives. See `CHANGELOG.md` (v1.7.0)
+for how matching was restructured to keep ISRC precision affordable.
+
 ## Setup
 
 **1. Create a Spotify app** (free, ~2 minutes)
