@@ -4,30 +4,48 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}DeepDive{% endblock %}</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  @font-face {
+    font-family: 'Martius';
+    src: url('{{ url_for('static', filename='fonts/Martius-LV9L4.ttf') }}') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+</style>
 <style>
   :root {
-    --ink: #231927;
-    --ink-soft: #3a2c3f;
-    --parchment: #F6EFE4;
-    --parchment-dim: #EAE1D2;
-    --gold: #D9A441;
-    --gold-deep: #B8842E;
-    --teal: #3F7168;
-    --teal-soft: #E4EEEC;
-    --line: rgba(35, 25, 39, 0.14);
-    --line-on-ink: rgba(246, 239, 228, 0.16);
-    --radius: 3px;
+    --ink: #0A0A0A;
+    --paper: #FFFFFF;
+    --surface: #F5F5F5;
+    --line: rgba(10, 10, 10, 0.16);
+    --line-strong: #0A0A0A;
+    --muted: rgba(10, 10, 10, 0.55);
+    --muted-soft: rgba(10, 10, 10, 0.4);
+    --teal: #2F7A6F;
+    --teal-soft: #E7F1EF;
+    --gold: #B8842E;
+    --gold-soft: #FBF0DE;
+    --danger: #A5342A;
+    --accent-top: #01A8FF;
+    --accent-bottom: #0F07FF;
+    --accent: #0B54FF;
+    --accent-gradient: linear-gradient(180deg, var(--accent-top), var(--accent-bottom));
+    --radius: 14px;
+    --radius-lg: 22px;
+    --radius-pill: 999px;
   }
 
   * { box-sizing: border-box; }
 
   body {
     margin: 0;
-    background: var(--ink);
-    color: var(--parchment);
+    background: var(--paper);
+    color: var(--ink);
     font-family: 'Inter', system-ui, sans-serif;
     min-height: 100vh;
   }
@@ -40,70 +58,160 @@
     padding: 0 24px 80px;
   }
 
-  header.masthead {
-    padding: 48px 24px 28px;
+  /* ---- top bar + nav drawer ---- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 22px 24px;
     max-width: 760px;
     margin: 0 auto;
-    border-bottom: 1px solid var(--line-on-ink);
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
   }
+  .menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+  .menu-btn:hover { background: var(--surface); }
+  .menu-btn svg { width: 24px; height: 24px; }
 
   .wordmark {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    font-size: 28px;
-    letter-spacing: -0.01em;
-    color: var(--parchment);
+    font-family: 'Martius', 'Inter', sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    color: var(--ink);
     text-decoration: none;
-    display: flex;
-    align-items: baseline;
-    gap: 2px;
+    font-size: 22px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
-  .wordmark .dive { color: var(--gold); font-style: italic; font-weight: 500; }
+  .wordmark-icon { height: 1.5em; width: auto; display: block; }
+  .wordmark-hero {
+    font-family: 'Martius', 'Inter', sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 76px;
+    line-height: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+  }
+  .wordmark-hero-icon { height: 100px; width: auto; display: block; }
 
-  .tagline {
+  .nav-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 10, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 40;
+  }
+  .nav-backdrop.open { opacity: 1; pointer-events: auto; }
+
+  .nav-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(300px, 84vw);
+    background: var(--paper);
+    border-right: 1px solid var(--line);
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    z-index: 50;
+    padding: 22px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav-drawer.open { transform: translateX(0); }
+
+  .nav-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 12px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .nav-link:hover { background: var(--surface); }
+  .nav-link svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+  .nav-divider {
+    height: 1px;
+    background: var(--line);
+    margin: 10px 4px;
+  }
+
+  .nav-sub {
+    padding: 4px 12px 10px;
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: rgba(246,239,228,0.55);
+    color: var(--muted-soft);
   }
 
   .flash {
     max-width: 760px;
-    margin: 20px auto 0;
+    margin: 0 auto 20px;
     padding: 12px 16px;
-    background: rgba(217, 164, 65, 0.14);
+    background: var(--gold-soft);
     border: 1px solid var(--gold);
-    color: var(--parchment);
+    color: var(--ink);
     border-radius: var(--radius);
     font-size: 14px;
   }
 
   .card {
-    background: var(--parchment);
+    background: var(--paper);
     color: var(--ink);
-    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
     padding: 32px;
-    margin-top: 32px;
+    margin-top: 24px;
   }
 
   h1, h2, h3 {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
     margin: 0 0 12px;
     line-height: 1.15;
+    letter-spacing: -0.01em;
   }
-  h1 { font-size: 30px; }
-  h2 { font-size: 20px; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 18px; }
 
   p { line-height: 1.55; }
 
-  .muted { color: rgba(35,25,39,0.6); }
+  .muted { color: var(--muted); }
   .mono { font-family: 'IBM Plex Mono', monospace; }
 
   .btn {
@@ -114,19 +222,20 @@
     font-weight: 600;
     font-size: 14px;
     padding: 12px 22px;
-    border-radius: var(--radius);
-    border: none;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--ink);
     cursor: pointer;
     text-decoration: none;
   }
   .btn-primary {
-    background: var(--gold);
-    color: var(--ink);
+    background: var(--accent-gradient);
+    color: #fff;
+    border-color: transparent;
   }
-  .btn-primary:hover { background: var(--gold-deep); }
+  .btn-primary:hover { filter: brightness(0.92); }
   .btn-ghost {
     background: transparent;
-    border: 1px solid var(--line);
+    border: 1.5px solid var(--line);
     color: var(--ink);
   }
   .btn-ghost:hover { border-color: var(--ink); }
@@ -136,20 +245,20 @@
     font-size: 16px;
     padding: 13px 14px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
+    border: 1.5px solid var(--line);
     background: #fff;
     color: var(--ink);
     width: 100%;
   }
-  input[type=text]:focus, input[type=password]:focus, button:focus, a:focus {
-    outline: 2px solid var(--teal);
+  input[type=text]:focus, input[type=password]:focus, button:focus, a:focus, select:focus {
+    outline: 2px solid var(--ink);
     outline-offset: 2px;
   }
 
   .search-row { display: flex; gap: 10px; margin-top: 20px; }
   .search-row input { flex: 1; }
 
-  /* ---- crate section headers ---- */
+  /* ---- section headers ---- */
   .crate-header {
     display: flex;
     align-items: center;
@@ -163,14 +272,15 @@
     letter-spacing: 0.1em;
     text-transform: uppercase;
     padding: 4px 8px;
-    border-radius: 2px;
+    border-radius: 4px;
+    border: 1px solid currentColor;
   }
-  .crate-header .label.gold { background: var(--gold); color: var(--ink); }
-  .crate-header .label.teal { background: var(--teal); color: var(--parchment); }
+  .crate-header .label.gold { background: var(--gold-soft); color: var(--gold); }
+  .crate-header .label.teal { background: var(--teal-soft); color: var(--teal); }
   .crate-header .rule { flex: 1; height: 1px; background: var(--line); }
-  .crate-note { font-size: 13px; color: rgba(35,25,39,0.6); margin: -4px 0 16px; }
+  .crate-note { font-size: 13px; color: var(--muted); margin: -4px 0 16px; }
 
-  /* ---- index-card track rows ---- */
+  /* ---- track rows ---- */
   .track-row {
     display: flex;
     align-items: flex-start;
@@ -183,7 +293,7 @@
     content: "";
     width: 3px;
     align-self: stretch;
-    background: var(--parchment-dim);
+    background: var(--surface);
     border-radius: 2px;
     flex-shrink: 0;
   }
@@ -194,7 +304,7 @@
     margin-top: 3px;
     width: 17px;
     height: 17px;
-    accent-color: var(--teal);
+    accent-color: var(--accent);
     flex-shrink: 0;
   }
 
@@ -202,7 +312,7 @@
   .track-name { font-weight: 600; font-size: 15px; }
   .track-sub {
     font-size: 12.5px;
-    color: rgba(35,25,39,0.62);
+    color: var(--muted);
     margin-top: 2px;
   }
   .track-match {
@@ -214,17 +324,13 @@
   .track-dur {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12.5px;
-    color: rgba(35,25,39,0.5);
+    color: var(--muted-soft);
     flex-shrink: 0;
     padding-top: 2px;
   }
 
-  .pill-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 14px;
-  }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .pill-wrap { position: relative; }
   .pill {
     display: inline-flex;
     align-items: center;
@@ -233,13 +339,13 @@
     font-size: 13px;
     font-weight: 500;
     padding: 7px 14px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: transparent;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--line);
+    background: var(--paper);
     color: var(--ink);
     cursor: pointer;
   }
-  .pill:hover { border-color: var(--teal); color: var(--teal); }
+  .pill:hover { border-color: var(--ink); }
   .pill-avatar {
     width: 20px;
     height: 20px;
@@ -247,7 +353,29 @@
     object-fit: cover;
     margin-right: 2px;
     vertical-align: middle;
+    background: var(--surface);
   }
+  .pill-icon-btn {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--paper);
+    border: 1.5px solid var(--paper);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+  }
+  .pill-wrap:hover .pill-icon-btn,
+  .pill-icon-btn:focus { display: inline-flex; }
+  .pill-icon-btn.done-btn { background: var(--teal); }
 
   .checkbox-option {
     display: flex;
@@ -261,7 +389,7 @@
   .checkbox-option input[type=checkbox] {
     width: 16px;
     height: 16px;
-    accent-color: var(--teal);
+    accent-color: var(--accent);
     flex-shrink: 0;
   }
   .filter-options {
@@ -271,6 +399,59 @@
     margin-top: 16px;
   }
 
+  .sort-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 14px;
+  }
+  .sort-row label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .sort-select {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 7px 10px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+  }
+
+  .watchlist-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .watchlist-row.watchlist-done .watchlist-name {
+    color: var(--muted-soft);
+    text-decoration: line-through;
+  }
+  .watchlist-name {
+    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .watchlist-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn-small {
+    padding: 7px 12px;
+    font-size: 12.5px;
+  }
+
   .playlist-name-field { margin: 28px 0 20px; }
   .playlist-name-field label {
     display: block;
@@ -278,31 +459,31 @@
     font-size: 11px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: rgba(35,25,39,0.6);
+    color: var(--muted);
     margin-bottom: 6px;
   }
 
   .empty-note {
     font-size: 14px;
-    color: rgba(35,25,39,0.55);
+    color: var(--muted);
     padding: 10px 0 4px;
     font-style: italic;
   }
 
   .actions { margin-top: 32px; display: flex; gap: 12px; align-items: center; }
 
-  /* ---- progress bar (tape-counter styled) ---- */
+  /* ---- progress bar ---- */
   .progress-track {
-    background: var(--parchment-dim);
-    border-radius: 999px;
+    background: var(--surface);
+    border-radius: var(--radius-pill);
     height: 10px;
     overflow: hidden;
     margin: 28px 0 12px;
   }
   .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--teal), var(--gold));
-    border-radius: 999px;
+    background: var(--accent-gradient);
+    border-radius: var(--radius-pill);
     width: 0%;
     transition: width 0.35s ease;
   }
@@ -312,7 +493,7 @@
     align-items: baseline;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12.5px;
-    color: rgba(35,25,39,0.65);
+    color: var(--muted);
   }
   .progress-stage {
     font-size: 15px;
@@ -323,14 +504,14 @@
   }
 
   code.env {
-    background: var(--parchment-dim);
+    background: var(--surface);
     padding: 2px 6px;
-    border-radius: 2px;
+    border-radius: 4px;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 13px;
   }
   pre {
-    background: var(--parchment-dim);
+    background: var(--surface);
     padding: 14px 16px;
     border-radius: var(--radius);
     overflow-x: auto;
@@ -338,24 +519,176 @@
     font-size: 13px;
     line-height: 1.6;
   }
+
+  /* ---- search bar + autofill (home page) ---- */
+  .search-shell { position: relative; max-width: 620px; margin: 28px auto 0; }
+  .search-pill-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 2.5px solid var(--ink);
+    border-radius: 32px;
+    padding: 6px 8px 6px 22px;
+    background: var(--paper);
+  }
+  .search-pill-form input[type=text] {
+    border: none;
+    padding: 10px 0;
+    font-size: 16px;
+  }
+  .search-pill-form input[type=text]:focus { outline: none; }
+  .search-icon-btn, .settings-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent-gradient);
+    color: var(--paper);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .settings-icon-btn {
+    background: transparent;
+    color: var(--ink);
+    border: 1.5px solid var(--line);
+  }
+  .settings-icon-btn:hover { border-color: var(--ink); }
+  .search-icon-btn svg, .settings-icon-btn svg { width: 20px; height: 20px; }
+
+  .autofill-list {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 8px;
+    right: 8px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius);
+    overflow: hidden;
+    z-index: 20;
+    display: none;
+  }
+  .autofill-list.open { display: block; }
+  .autofill-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .autofill-item:last-child { border-bottom: none; }
+  .autofill-item:hover, .autofill-item.active { background: var(--surface); }
+  .autofill-item img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--surface);
+  }
+
+  .settings-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 300px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius);
+    padding: 16px;
+    z-index: 25;
+    display: none;
+  }
+  .settings-panel.open { display: block; }
+  .settings-panel-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
 </style>
 </head>
 <body>
-  <header class="masthead">
-    <a href="{{ url_for('index') }}" class="wordmark">Deep<span class="dive">Dive</span></a>
-    <span class="tagline">catalog reconciliation for your liked songs</span>
-  </header>
+  <div class="nav-backdrop" id="nav-backdrop"></div>
+  <nav class="nav-drawer" id="nav-drawer" aria-label="Main menu">
+    <div class="nav-drawer-header">
+      <a href="{{ url_for('index') }}" class="wordmark"><img src="{{ url_for('static', filename='img/dd-logo.png') }}" alt="" class="wordmark-icon">DeepDive</a>
+      <button type="button" class="menu-btn" id="nav-close-btn" aria-label="Close menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>
+      </button>
+    </div>
+    <a href="{{ url_for('index') }}" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Search
+    </a>
+    <a href="{{ url_for('full_scrub_form') }}" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+      Full Library Scan
+    </a>
+    <a href="{{ url_for('watchlist_view') }}" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      To-Do List
+    </a>
+    <a href="{{ url_for('setup') }}" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Configuration
+    </a>
+    <div class="nav-divider"></div>
+    <a href="{{ url_for('logout') }}" class="nav-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Disconnect Spotify
+    </a>
+    <div class="nav-sub">DeepDive &middot; catalog reconciliation</div>
+  </nav>
+
+  <div class="topbar">
+    <button type="button" class="menu-btn" id="nav-open-btn" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <a href="{{ url_for('index') }}" class="wordmark"><img src="{{ url_for('static', filename='img/dd-logo.png') }}" alt="" class="wordmark-icon">DeepDive</a>
+  </div>
 
   {% with messages = get_flashed_messages() %}
     {% if messages %}
-      {% for m in messages %}
-        <div class="flash">{{ m }}</div>
-      {% endfor %}
+      <div class="wrap" style="padding-bottom:0;">
+        {% for m in messages %}
+          <div class="flash">{{ m }}</div>
+        {% endfor %}
+      </div>
     {% endif %}
   {% endwith %}
 
   <div class="wrap">
     {% block content %}{% endblock %}
   </div>
+
+  <script>
+    (function () {
+      const openBtn = document.getElementById('nav-open-btn');
+      const closeBtn = document.getElementById('nav-close-btn');
+      const drawer = document.getElementById('nav-drawer');
+      const backdrop = document.getElementById('nav-backdrop');
+
+      function openNav() {
+        drawer.classList.add('open');
+        backdrop.classList.add('open');
+      }
+      function closeNav() {
+        drawer.classList.remove('open');
+        backdrop.classList.remove('open');
+      }
+      if (openBtn) openBtn.addEventListener('click', openNav);
+      if (closeBtn) closeBtn.addEventListener('click', closeNav);
+      if (backdrop) backdrop.addEventListener('click', closeNav);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeNav();
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -198,6 +198,31 @@ def _get(sp, path_or_url, params=None):
     return _call(_request, sp, "GET", path_or_url, params)
 
 
+def health_check(sp):
+    """Cheap synchronous checks that this token can actually do what a
+    search/scrub is about to ask of it. Added after the playlist scope
+    bug (v1.7.2) shipped a token that looked fine (had a valid access
+    token, refreshed fine) but 403'd on GET /me/playlists a full search
+    later, once results were already sitting there ready to confirm.
+
+    Exercises one read from each scope area DeepDive depends on:
+      - GET /me                 basic auth is working at all
+      - GET /me/tracks?limit=1  user-library-read
+      - GET /me/playlists?limit=1  playlist-read-private
+
+    Raises SpotifyException (or a network error) on the first failure;
+    callers should run this before starting a long job, not during one,
+    so a problem is a few seconds of delay instead of a wasted scan.
+    Write scopes (library-modify, playlist-modify-*) aren't tested here
+    since there's no side-effect-free way to probe a write endpoint —
+    those still surface at confirm time if something's wrong, same as
+    before.
+    """
+    _get(sp, "me")
+    _get(sp, "me/tracks", {"limit": 1})
+    _get(sp, "me/playlists", {"limit": 1})
+
+
 # ---------------------------------------------------------------------
 # Reads
 # ---------------------------------------------------------------------
@@ -237,6 +262,29 @@ def find_artist(sp, name: str) -> dict | None:
         if a["name"].lower() == name.lower():
             return a
     return items[0]
+
+
+def search_artists(sp, query: str, limit: int = 6) -> list[dict]:
+    """Live artist search for the search-bar autofill dropdown. Unlike
+    find_artist (which resolves ONE artist for an actual scan), this
+    returns several candidates as the user types, so it deliberately
+    does not filter/rank beyond what Spotify's own relevance ordering
+    already gives us -- the person picks the right one visually.
+    """
+    if not query or not query.strip():
+        return []
+    results = _get(sp, "search", {"q": query.strip(), "type": "artist", "limit": limit})
+    items = (results.get("artists") or {}).get("items") or []
+    out = []
+    for a in items:
+        images = a.get("images") or []
+        out.append({
+            "id": a.get("id"),
+            "name": a.get("name"),
+            # Smallest image is plenty for a little autofill row icon.
+            "image_url": images[-1]["url"] if images else None,
+        })
+    return out
 
 
 def get_artist_album_ids(sp, artist_id: str, on_progress=None) -> list[str]:

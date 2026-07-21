@@ -1,5 +1,122 @@
 # Changelog
 
+## v1.10.1
+- Fixed: every single-artist search and full library scrub was broken
+  entirely (`Something went wrong: name 'get_artist_album_ids' is not
+  defined`), since v1.9.0. Cause: an earlier edit that inserted
+  `search_artists()` used a find-and-replace that matched only
+  `get_artist_album_ids`'s function *signature* line, not its body —
+  which deleted the `def` line but left the body still sitting in the
+  file, now with no function heading above it. Because the orphaned
+  body was still indented, Python silently attached it as unreachable
+  code at the end of `search_artists()` (after its `return`) instead of
+  raising an import-time error, so nothing caught it until an actual
+  scan hit the missing function name at runtime. Restored the missing
+  `def` line. Added a check across every `.py` file for this exact
+  failure signature (indented code stranded after a top-level `return`
+  with no enclosing `def`) — none found elsewhere — and cross-checked
+  every `sc.*` reference in `app.py` against real functions in
+  `spotify_client.py`. Verified by actually running both
+  `run_search_job` and `run_full_scrub_job` end-to-end with only the
+  network boundary (`_get`) mocked, not the higher-level functions —
+  the gap in test depth that let this ship in the first place.
+
+## v1.10.0
+- Replaced the placeholder wordmark font (Anton, a Google Fonts
+  approximation of the concept image) with the actual Martius font
+  file, embedded via `@font-face` from `static/fonts/`.
+- Added the real "D" logo mark (waveform-through-letterform, blue
+  gradient, from the provided artwork) as an actual asset:
+  `static/img/dd-logo.png` (cropped tight to content) and a separate
+  centered `static/img/favicon.png` for the browser tab icon. Appears
+  next to "DeepDive" in the small top-bar wordmark on every page, above
+  the big wordmark on the home hero, and as the favicon.
+- Pulled the logo's blue gradient (sampled directly from the artwork:
+  `#01A8FF` \u2192 `#0F07FF`) into the UI as the accent color: primary
+  buttons, the search-bar submit button, the progress bar fill, the
+  "+" add-to-watchlist badge, and checkbox/radio accent colors. Black
+  outlines, white space, and body text stay as they were — this
+  mirrors the logo's own palette (black stroke, blue fill, white
+  ground) rather than introducing a separate new color scheme.
+
+## v1.9.0
+- **Complete visual rebuild**, from a concept design: monochrome
+  black-on-white throughout (every page, not just the home screen),
+  bold condensed wordmark, pill-shaped search bar, circular avatar
+  pills for artists. Replaces the previous plum/parchment/gold-teal
+  "crate-digging" identity entirely.
+- Added: slide-out nav drawer (gear icon, top-left, every page) with
+  Search, Full Library Scan, To-Do List, and Configuration. Filter
+  checkboxes and the full-scrub trigger moved off the home page into
+  their own destinations under this menu — the home page is now just
+  search + recommendations.
+- Added: per-search options (exclude live/censored/instrumental/a
+  cappella, count remasters as duplicates) live in a small panel next
+  to the search bar now, opened by a settings icon beside the search
+  button, instead of a checkbox list under the search box.
+- Added: search-bar autofill. Typing 2+ characters queries a new
+  `/search/autocomplete` endpoint (debounced, live Spotify artist
+  search) and shows a dropdown to pick from; arrow keys + Enter work.
+  Deliberately NOT filtered against the To-Do list's "dove into"
+  artists — autofill is a direct Spotify search, not a recommendation
+  pool, so it can still find an artist you've told DeepDive to stop
+  suggesting. Recommendation pools (top artists, recently played, the
+  To-Dive row) ARE filtered against "dove into" status.
+- Added: home page now shows a "From your To-Dive list" row above the
+  regular listening-based suggestions, pulled from the To-Do List's
+  pending entries. Each pill there is click-to-search, same as a
+  regular suggestion, with a small checkmark badge (visible on hover)
+  to mark it as dove into directly from the home page. Regular
+  suggestion pills got the mirror feature: a small "+" badge to add
+  that artist to the To-Do list on the spot, capturing its Spotify id
+  and avatar immediately (no extra lookup needed later).
+- Added: watchlist entries now carry an optional Spotify artist id +
+  avatar. Entries added via a pill's "+" get this immediately; entries
+  added by free-typed name (still possible from the To-Do List page)
+  get it resolved lazily, a few at a time per home-page load, and
+  cached to `watchlist.json` so the lookup only ever happens once.
+- Added: "mark as dove into" now fully removes that artist from every
+  home-page recommendation source — not just the To-Do list row, but
+  also filtered out of the top-artists/recently-played suggestion row
+  even if Spotify keeps returning it. Reversible: the new dedicated
+  To-Do List page (nav drawer) has a collapsible "Completed" section
+  listing everything marked dove into, each with Undo (back to
+  pending) and Remove permanently.
+- Behavior note: "mark as dove into" and "remove" are now different
+  actions. Previously (v1.8.0) the only watchlist states were pending/
+  done with no distinct home-page treatment; done entries were still
+  visible on the home page's watchlist card. Now, done means fully
+  hidden from recommendations, with the Completed section as the only
+  place to see or undo it.
+
+## v1.8.0
+- Added: **To-Dive-Into List** on the home page — a persistent watchlist
+  of artists to come back to later. Add a name, it survives restarts
+  (stored in `watchlist.json`, gitignored like `.env`/`.cache-deepdive`
+  since it's per-user data), and each entry has a one-click "Search now"
+  plus a "Mark as dove into" toggle to keep history without deleting.
+- Added: sort control on the "New to you" list (both single-artist
+  search and full library scrub) — release date (newest/oldest first)
+  or title, alongside the existing "as found" order. Client-side only;
+  purely display order, doesn't affect what gets liked or playlisted.
+  Sorting by popularity isn't possible — Spotify removed the
+  `popularity` field from track/album objects in the Feb 2026 changes,
+  so the data doesn't exist to sort by anymore.
+- Added: a quick connection health check (`GET /me`, one saved track,
+  one playlist — covering the three scope areas DeepDive actually
+  depends on) runs before a search or full scrub starts, so a token or
+  scope problem surfaces in a few seconds instead of after a long scan,
+  or worse, only once you try to confirm results (see v1.7.2).
+- Added: the browser tab title now shows the live progress percentage
+  while a search or scrub is running, so it's visible without the tab
+  being focused.
+- Not implemented: integrating with Spotify's editorial "This Is
+  [Artist]" playlists. Blocked by the Feb 2026 API changes, not
+  difficulty — `GET /playlists/{id}/items` is documented as only
+  available for playlists the user owns or collaborates on, and
+  DeepDive doesn't own Spotify's editorial playlists. No workaround
+  within Development Mode.
+
 ## v1.7.3
 - Fixed: catalog tracks could vanish from search results entirely —
   not shown as a match, not shown as new, nothing. Root cause was in

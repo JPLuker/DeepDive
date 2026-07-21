@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}DeepDive · Full library scan{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Scan your whole library</h1>
+  <p class="muted">Crawls every artist in your Liked Songs the same way a single search does &mdash; catches everything, but for a large, varied library this can take 30-60+ minutes. Cancellable any time.</p>
+  <form action="{{ url_for('full_scrub_start') }}" method="post">
+    <div class="filter-options" style="margin-bottom:20px;">
+      <label class="checkbox-option">
+        <input type="checkbox" name="exclude_live">
+        Exclude live recordings
+      </label>
+      <label class="checkbox-option">
+        <input type="checkbox" name="exclude_censored">
+        Exclude radio edits &amp; censored/clean versions
+      </label>
+      <label class="checkbox-option">
+        <input type="checkbox" name="exclude_instrumental">
+        Exclude instrumentals
+      </label>
+      <label class="checkbox-option">
+        <input type="checkbox" name="exclude_acappella">
+        Exclude a cappella versions
+      </label>
+      <label class="checkbox-option">
+        <input type="checkbox" name="match_remasters">
+        Count remasters as duplicates of the original
+      </label>
+    </div>
+    <div class="actions" style="margin-top:0;">
+      <button type="submit" class="btn btn-primary">Run full library scrub</button>
+      <a href="{{ url_for('index') }}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

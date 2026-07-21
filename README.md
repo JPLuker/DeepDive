@@ -107,22 +107,76 @@ DeepDive only pulls the artist's own **albums and singles**, not tracks
 where they merely "appear on" someone else's release (guest features,
 compilations), to keep results focused on their own catalog.
 
+## Getting around
+
+As of v1.9.0, DeepDive's home page is just a search bar and
+recommendations — everything else lives behind the gear icon in the
+top-left corner, which opens a slide-out menu:
+
+- **Search** — back to the home page.
+- **Full Library Scan** — the full-library scrub (see below).
+- **To-Do List** — your full To-Dive-Into List (see below).
+- **Configuration** — revisit your Spotify Client ID/Secret any time,
+  not just on first run.
+- **Disconnect Spotify** — same as before.
+
+Per-search options (exclude live/censored/instrumental/a cappella,
+count remasters as duplicates) live in a small panel next to the search
+bar now — click the sliders icon beside the search button to open it.
+
+The search bar also has autofill: type a couple of characters and a
+dropdown of matching Spotify artists appears (arrow keys + Enter work,
+or just click one). This queries Spotify directly and isn't filtered by
+your To-Do list status, so it can still find an artist you've marked as
+dove into — it's a search tool, not a recommendation feed.
+
 ## Scanning your whole library, not just one artist
 
-Below the search box on the home page, **full library scrub** runs the
-same crawl the single-artist search does, once per distinct artist in
-your Liked Songs. This is thorough but genuinely slow for a large,
-varied library — budget for it to possibly take 30-60+ minutes. You can
-cancel at any point and still see whatever was found up to that point.
+**Full library scan** (gear menu) runs the same crawl the single-artist
+search does, once per distinct artist in your Liked Songs. This is
+thorough but genuinely slow for a large, varied library — budget for it
+to possibly take 30-60+ minutes. You can cancel at any point and still
+see whatever was found up to that point.
 
-You'll also see artist suggestions pulled from your recent listening
-activity and top artists, each one click away from a search.
+On the home page you'll also see artist suggestions pulled from your
+recent listening activity and top artists, each one click away from a
+search.
+
+Before either kind of scan starts, DeepDive runs a quick connection
+check (a handful of cheap API calls covering the permissions it needs)
+so a token or scope problem shows up in a few seconds, not 30 minutes
+into a scrub or at the very end when you go to confirm results.
 
 **Note:** these features need two additional Spotify permissions beyond
 what earlier versions requested. If you're upgrading from an older
 version, DeepDive will notice your existing connection is missing them
 and prompt you to reconnect — just click Connect Spotify again and
 approve the updated permissions.
+
+## To-Dive-Into List
+
+A watchlist for artists you want to come back to later, reachable from
+the gear menu ("To-Do List") and previewed right on the home page above
+your regular suggestions. Add a name and it sticks around across
+restarts (stored locally in `watchlist.json`, never sent anywhere).
+
+- On the home page, a pill's small **+** badge (hover to reveal) adds
+  that suggested artist straight to the list.
+- Each entry has a one-click **Search now**.
+- **Mark as dove into** removes the artist from every recommendation
+  source on the home page — the To-Dive row and the regular
+  listening-based suggestions both stop showing it, even if Spotify
+  keeps returning it as a top artist. It's not gone for good: the
+  To-Do List page has a collapsible **Completed** section with
+  **Undo** and **Remove permanently** for anything marked dove into.
+
+## Sorting the "New to you" list
+
+On both single-artist search and full library scrub results, the "New
+to you" section has a sort control — release date (newest or oldest
+first) or title, in addition to the default "as found" order. This
+reorders what's shown; it doesn't change which tracks get liked or
+added to the playlist, only the order you review them in.
 
 ## Re-running for the same artist
 
@@ -153,6 +207,8 @@ Everything runs locally on your machine. Your Spotify tokens are stored in
 your Flask session cookie and a local `.cache-deepdive` file (created on
 first login) — nothing is sent anywhere except directly to Spotify's API.
 Delete `.cache-deepdive` to fully log out and clear cached tokens.
+Your To-Dive-Into List is stored locally in `watchlist.json`, same idea
+— delete it to clear the list.
 
 ## Troubleshooting
 

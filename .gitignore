@@ -1,5 +1,6 @@
 .env
 .cache-deepdive
+watchlist.json
 venv/
 __pycache__/
 *.pyc

@@ -60,9 +60,19 @@
     <p class="crate-note" id="new-tracks-note">Not in your Liked Songs under any release. Checked = will be added to the playlist below.</p>
 
     {% if new_tracks %}
+      <div class="sort-row">
+        <label for="new-tracks-sort">Sort by</label>
+        <select id="new-tracks-sort" class="sort-select">
+          <option value="found">As found</option>
+          <option value="date-desc">Release date (newest first)</option>
+          <option value="date-asc">Release date (oldest first)</option>
+          <option value="title">Title (A\u2013Z)</option>
+        </select>
+      </div>
       <div id="new-tracks-list">
         {% for t in new_tracks %}
-          <div class="track-row newt">
+          <div class="track-row newt" data-original-index="{{ loop.index0 }}"
+               data-release-date="{{ t.album.release_date or '' }}" data-title="{{ t.name | lower }}">
             <input type="checkbox" name="playlist_track" value="{{ t.id }}" id="pl-{{ t.id }}" checked>
             <div class="track-meta">
               <label for="pl-{{ t.id }}" class="track-name">{{ t.name }}</label>
@@ -109,6 +119,26 @@
   if (toggle) {
     toggle.addEventListener('change', applyToggleState);
     applyToggleState();
+  }
+
+  const sortSelect = document.getElementById('new-tracks-sort');
+  function applySort() {
+    if (!sortSelect || !listEl) return;
+    const mode = sortSelect.value;
+    const rows = Array.from(listEl.children);
+    if (mode === 'date-desc') {
+      rows.sort((a, b) => (b.dataset.releaseDate || '').localeCompare(a.dataset.releaseDate || ''));
+    } else if (mode === 'date-asc') {
+      rows.sort((a, b) => (a.dataset.releaseDate || '').localeCompare(b.dataset.releaseDate || ''));
+    } else if (mode === 'title') {
+      rows.sort((a, b) => (a.dataset.title || '').localeCompare(b.dataset.title || ''));
+    } else {
+      rows.sort((a, b) => Number(a.dataset.originalIndex) - Number(b.dataset.originalIndex));
+    }
+    rows.forEach(r => listEl.appendChild(r));
+  }
+  if (sortSelect) {
+    sortSelect.addEventListener('change', applySort);
   }
 </script>
 {% endblock %}

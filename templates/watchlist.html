@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}DeepDive · To-Do List{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>To-Dive-Into List</h1>
+  <p class="muted">Bands on your radar &mdash; add them now, come back and search whenever. Artists marked as dove into stop showing up as recommendations anywhere on the home page.</p>
+
+  <form action="{{ url_for('watchlist_add') }}" method="post" class="search-row" style="margin-top:16px;">
+    <input type="text" name="artist_name" placeholder="e.g. Big Thief" required>
+    <button class="btn btn-primary" type="submit">Add</button>
+  </form>
+
+  {% if watchlist_pending %}
+    <div class="crate-header">
+      <span class="label gold">To dive into</span>
+      <span class="rule"></span>
+    </div>
+    {% for entry in watchlist_pending %}
+      <div class="watchlist-row">
+        <span class="watchlist-name">
+          {% if entry.image_url %}<img src="{{ entry.image_url }}" alt="" class="pill-avatar">{% endif %}
+          {{ entry.name }}
+        </span>
+        <div class="watchlist-actions">
+          <form action="{{ url_for('search') }}" method="post">
+            <input type="hidden" name="artist" value="{{ entry.name }}">
+            <button type="submit" class="btn btn-ghost btn-small">Search now</button>
+          </form>
+          <form action="{{ url_for('watchlist_toggle') }}" method="post">
+            <input type="hidden" name="entry_id" value="{{ entry.id }}">
+            <button type="submit" class="btn btn-ghost btn-small">Mark as dove into</button>
+          </form>
+          <form action="{{ url_for('watchlist_remove') }}" method="post">
+            <input type="hidden" name="entry_id" value="{{ entry.id }}">
+            <button type="submit" class="btn btn-ghost btn-small">Remove</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="empty-note" style="margin-top:16px;">Nothing on your list yet.</p>
+  {% endif %}
+
+  {% if watchlist_done %}
+    <details style="margin-top:32px;">
+      <summary class="crate-note mono" style="cursor:pointer; margin-bottom:8px; list-style:revert;">
+        Completed ({{ watchlist_done|length }})
+      </summary>
+      {% for entry in watchlist_done %}
+        <div class="watchlist-row watchlist-done">
+          <span class="watchlist-name">
+            {% if entry.image_url %}<img src="{{ entry.image_url }}" alt="" class="pill-avatar">{% endif %}
+            {{ entry.name }}
+          </span>
+          <div class="watchlist-actions">
+            <form action="{{ url_for('watchlist_toggle') }}" method="post">
+              <input type="hidden" name="entry_id" value="{{ entry.id }}">
+              <button type="submit" class="btn btn-ghost btn-small">Undo</button>
+            </form>
+            <form action="{{ url_for('watchlist_remove') }}" method="post">
+              <input type="hidden" name="entry_id" value="{{ entry.id }}">
+              <button type="submit" class="btn btn-ghost btn-small">Remove permanently</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </details>
+  {% endif %}
+</div>
+{% endblock %}

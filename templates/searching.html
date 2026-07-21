@@ -66,17 +66,20 @@
       fill.style.width = data.percent + '%';
       pctLabel.textContent = data.percent + '%';
       if (data.stage) stageLabel.textContent = data.stage;
+      document.title = '(' + data.percent + '%) DeepDive \u00b7 Working';
 
       if (data.status === 'done' || data.status === 'cancelled') {
         stageLabel.textContent = data.status === 'cancelled'
           ? 'Cancelled \u2014 loading what was found so far\u2026'
           : 'Done \u2014 loading results\u2026';
+        document.title = 'DeepDive \u00b7 Done';
         window.location.href = resultsUrlPrefix + data.result_id;
         return;
       }
       if (data.status === 'error') {
         errorBox.style.display = 'block';
         errorText.textContent = data.error || 'Something went wrong.';
+        document.title = 'DeepDive \u00b7 Error';
         return;
       }
       setTimeout(poll, 700);

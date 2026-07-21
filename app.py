@@ -11,6 +11,7 @@ from flask import Flask, render_template, request, redirect, session, url_for, f
 import spotify_client as sc
 import matching
 import progress
+import watchlist
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DOTENV_PATH = os.path.join(BASE_DIR, ".env")
@@ -79,6 +80,12 @@ STAGE_TIMEOUT_SECONDS = 1800
 # render "Connect Spotify" or the search box. If this trips, suggestions
 # are silently skipped rather than blocking the page.
 SUGGESTIONS_TIMEOUT_SECONDS = 8
+
+# spotify_client.health_check() runs synchronously before a search/scrub
+# job is even started, so a scope/auth problem is caught in a few
+# seconds instead of after a long scan finishes. Short on purpose — this
+# is 3 cheap single-item reads, not a real network stage.
+HEALTH_CHECK_TIMEOUT_SECONDS = 15
 
 
 def run_with_timeout(fn, timeout_seconds, *args, **kwargs):
@@ -163,6 +170,21 @@ def get_token():
     return token_info
 
 
+def _smallest_image(images):
+    # Spotify returns images largest-first; the smallest is plenty for a
+    # little avatar and keeps the page light.
+    return images[-1]["url"] if images else None
+
+
+# How many pending To-Dive entries to resolve a Spotify artist id/avatar
+# for on any single home-page load. Resolution is cached back to
+# watchlist.json (watchlist.set_details) so it only ever costs a lookup
+# once per entry -- this cap just keeps a large watchlist from turning
+# the home page into a slow scan the first time it's viewed after a lot
+# of entries were added.
+WATCHLIST_ENRICH_PER_LOAD = 5
+
+
 @app.route("/")
 def index():
     if not credentials_configured():
@@ -172,36 +194,37 @@ def index():
     suggestions = []
     suggestions_error = None
 
+    watchlist_entries = watchlist.list_entries(BASE_DIR)
+    watchlist_pending = [e for e in watchlist_entries if e.get("status") != "done"]
+    watchlist_done = [e for e in watchlist_entries if e.get("status") == "done"]
+    pending_names = {e["name"].strip().lower() for e in watchlist_pending}
+    done_names = {e["name"].strip().lower() for e in watchlist_done}
+
     if token_info:
         try:
             sp = sc.get_client(token_info)
             top = run_with_timeout(sc.get_top_artists, SUGGESTIONS_TIMEOUT_SECONDS, sp, time_range="medium_term", limit=10)
             recent = run_with_timeout(sc.get_recently_played_artists, SUGGESTIONS_TIMEOUT_SECONDS, sp, limit=50)
 
-            def smallest_image(images):
-                # Spotify returns images largest-first; the smallest is
-                # plenty for a little avatar and keeps the page light.
-                return images[-1]["url"] if images else None
-
             seen = {}
             for a in top:
                 # /me/top/artists already returns full artist objects,
                 # images included — no extra call needed for these.
-                seen.setdefault(a["id"], {"id": a["id"], "name": a["name"], "image_url": smallest_image(a.get("images"))})
+                seen.setdefault(a["id"], {"id": a["id"], "name": a["name"], "image_url": _smallest_image(a.get("images"))})
             for a in recent:
                 # Recently-played tracks only carry simplified artist
                 # objects (id/name, no images) — flagged for a follow-up
                 # batch fetch below.
                 seen.setdefault(a["id"], {"id": a["id"], "name": a["name"], "image_url": None})
 
-            suggestions = list(seen.values())[:12]
+            all_suggestions = list(seen.values())
 
-            missing_image_ids = [s["id"] for s in suggestions if s["image_url"] is None]
+            missing_image_ids = [s["id"] for s in all_suggestions if s["image_url"] is None]
             if missing_image_ids:
                 try:
                     details = run_with_timeout(sc.get_artists_by_ids, SUGGESTIONS_TIMEOUT_SECONDS, sp, missing_image_ids)
-                    image_by_id = {a["id"]: smallest_image(a.get("images")) for a in details}
-                    for s in suggestions:
+                    image_by_id = {a["id"]: _smallest_image(a.get("images")) for a in details}
+                    for s in all_suggestions:
                         if s["image_url"] is None:
                             s["image_url"] = image_by_id.get(s["id"])
                 except Exception:
@@ -209,14 +232,45 @@ def index():
                     # fails, fall back to text-only pills rather than
                     # losing the suggestions entirely.
                     pass
+
+            # An artist already sitting in the To-Dive row shouldn't also
+            # show up again in the row below it, and an artist marked
+            # "dove into" shouldn't be suggested anywhere on the home
+            # page at all (autofill is unaffected -- that's a live
+            # Spotify search, not pulled from this pool).
+            suggestions = [
+                s for s in all_suggestions
+                if s["name"].strip().lower() not in pending_names
+                and s["name"].strip().lower() not in done_names
+            ][:12]
         except Exception as e:
             suggestions_error = str(e)
+
+        # Lazily resolve a Spotify artist id/avatar for pending entries
+        # that don't have one yet (added by free-typed name, e.g. via
+        # the To-Do List page, rather than a suggestion pill's "+").
+        to_resolve = [e for e in watchlist_pending if not e.get("spotify_id")][:WATCHLIST_ENRICH_PER_LOAD]
+        for entry in to_resolve:
+            try:
+                sp = sc.get_client(token_info)
+                artist = run_with_timeout(sc.find_artist, SUGGESTIONS_TIMEOUT_SECONDS, sp, entry["name"])
+                if artist:
+                    image_url = _smallest_image(artist.get("images"))
+                    watchlist.set_details(BASE_DIR, entry["id"], artist["id"], image_url)
+                    entry["spotify_id"] = artist["id"]
+                    entry["image_url"] = image_url
+            except Exception:
+                # Not critical -- the pill just falls back to a text-only
+                # look and we'll try again on a future page load.
+                pass
 
     return render_template(
         "index.html",
         authed=bool(token_info),
         suggestions=suggestions,
         suggestions_error=suggestions_error,
+        watchlist_pending=watchlist_pending,
+        watchlist_done=watchlist_done,
     )
 
 
@@ -272,6 +326,77 @@ def callback():
 def logout():
     session.clear()
     return redirect(url_for("index"))
+
+
+# ---------------------------------------------------------------------
+# To-Dive-Into List: a persistent watchlist of artists to come back to.
+# Doesn't touch Spotify for add/toggle/remove -- just local bookkeeping
+# (see watchlist.py). The home page's lazy-enrichment step is the only
+# part of this that talks to Spotify.
+# ---------------------------------------------------------------------
+
+@app.route("/watchlist")
+def watchlist_view():
+    entries = watchlist.list_entries(BASE_DIR)
+    pending = [e for e in entries if e.get("status") != "done"]
+    done = [e for e in entries if e.get("status") == "done"]
+    return render_template("watchlist.html", watchlist_pending=pending, watchlist_done=done)
+
+
+@app.route("/watchlist/add", methods=["POST"])
+def watchlist_add():
+    name = request.form.get("artist_name", "").strip()
+    if not name:
+        flash("Type an artist name first.")
+        return redirect(request.referrer or url_for("index"))
+    spotify_id = request.form.get("spotify_id", "").strip() or None
+    image_url = request.form.get("image_url", "").strip() or None
+    watchlist.add(BASE_DIR, name, spotify_id=spotify_id, image_url=image_url)
+    return redirect(request.referrer or url_for("index"))
+
+
+@app.route("/watchlist/toggle", methods=["POST"])
+def watchlist_toggle():
+    entry_id = request.form.get("entry_id", "").strip()
+    if entry_id:
+        watchlist.toggle_status(BASE_DIR, entry_id)
+    return redirect(request.referrer or url_for("index"))
+
+
+@app.route("/watchlist/remove", methods=["POST"])
+def watchlist_remove():
+    entry_id = request.form.get("entry_id", "").strip()
+    if entry_id:
+        watchlist.remove(BASE_DIR, entry_id)
+    return redirect(request.referrer or url_for("index"))
+
+
+# ---------------------------------------------------------------------
+# Search-bar autofill: live artist search as the user types, debounced
+# client-side. Separate from the recommendation pools on the home page
+# (top artists / recently played / To-Dive) -- this is a direct,
+# unfiltered Spotify search, so it can still surface an artist you've
+# marked "dove into" even though the home page won't suggest them
+# anymore. That's intentional (see the concept discussion): "dove into"
+# means "stop recommending this to me," not "hide it from search."
+# ---------------------------------------------------------------------
+
+@app.route("/search/autocomplete")
+def search_autocomplete():
+    token_info = get_token()
+    if not token_info:
+        return jsonify([])
+    query = request.args.get("q", "").strip()
+    if len(query) < 2:
+        return jsonify([])
+    try:
+        sp = sc.get_client(token_info)
+        results = run_with_timeout(sc.search_artists, SUGGESTIONS_TIMEOUT_SECONDS, sp, query, 6)
+        return jsonify(results)
+    except Exception:
+        # Autofill is a nice-to-have -- fail quiet, the person can still
+        # just type the full name and hit search.
+        return jsonify([])
 
 
 # ---------------------------------------------------------------------
@@ -395,6 +520,12 @@ def search():
     exclude_instrumental = request.form.get("exclude_instrumental") == "on"
     exclude_acappella = request.form.get("exclude_acappella") == "on"
     match_remasters = request.form.get("match_remasters") == "on"
+
+    try:
+        run_with_timeout(sc.health_check, HEALTH_CHECK_TIMEOUT_SECONDS, sc.get_client(token_info))
+    except Exception as e:
+        flash(f"Couldn't start the search \u2014 Spotify connection check failed: {e}")
+        return redirect(url_for("index"))
 
     job_id = progress.new_job()
     threading.Thread(
@@ -676,6 +807,14 @@ def run_full_scrub_job(job_id, token_info, exclude_live=False, exclude_censored=
         progress.fail(job_id, f"Something went wrong: {e}")
 
 
+@app.route("/full-scrub")
+def full_scrub_form():
+    token_info = get_token()
+    if not token_info:
+        return redirect(url_for("login"))
+    return render_template("full_scrub_form.html")
+
+
 @app.route("/full-scrub/start", methods=["POST"])
 def full_scrub_start():
     token_info = get_token()
@@ -687,6 +826,12 @@ def full_scrub_start():
     exclude_instrumental = request.form.get("exclude_instrumental") == "on"
     exclude_acappella = request.form.get("exclude_acappella") == "on"
     match_remasters = request.form.get("match_remasters") == "on"
+
+    try:
+        run_with_timeout(sc.health_check, HEALTH_CHECK_TIMEOUT_SECONDS, sc.get_client(token_info))
+    except Exception as e:
+        flash(f"Couldn't start the scrub \u2014 Spotify connection check failed: {e}")
+        return redirect(url_for("index"))
 
     job_id = progress.new_job()
     threading.Thread(

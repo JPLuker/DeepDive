@@ -1,140 +1,259 @@
 {% extends "base.html" %}
 {% block title %}DeepDive{% endblock %}
 {% block content %}
-<div class="card">
-  {% if not authed %}
-    <h1>Reconcile your library with an artist's full catalog.</h1>
-    <p>DeepDive checks an artist's discography against your Liked Songs, finds
-      recordings you've already liked under a different release (album cut vs.
-      standalone single, EP, or reissue), and lets you fold in the ones you're
-      missing &mdash; then builds a playlist of everything you still haven't liked.</p>
-    <button id="connect-btn" class="btn btn-primary" type="button">Connect Spotify</button>
+
+{% if not authed %}
+  <div style="margin-top:60px; text-align:center;">
+    <span class="wordmark-hero"><img src="{{ url_for('static', filename='img/dd-logo.png') }}" alt="" class="wordmark-hero-icon">DeepDive</span>
+    <p class="muted" style="max-width:460px; margin:20px auto 0;">
+      DeepDive checks an artist's discography against your Liked Songs, finds
+      recordings you've already liked under a different release, and lets you
+      fold in the ones you're missing &mdash; then builds a playlist of
+      everything you still haven't liked.
+    </p>
+    <button id="connect-btn" class="btn btn-primary" type="button" style="margin-top:26px;">Connect Spotify</button>
     <p class="crate-note" id="popup-hint" style="display:none; margin-top:14px;">
       A popup was blocked by your browser &mdash;
       <a href="{{ url_for('login') }}" style="color: var(--teal); text-decoration: underline;">click here to connect instead</a>.
     </p>
-  {% else %}
-    <h1>Dig into an artist.</h1>
-    <p class="muted">Type an artist name. DeepDive will pull your Liked Songs and their full catalog, then sort out what's already yours.</p>
-    <form action="{{ url_for('search') }}" method="post">
-      <div class="search-row">
-        <input type="text" name="artist" placeholder="e.g. Fiona Apple" autofocus required>
-        <button class="btn btn-primary" type="submit">Search</button>
+  </div>
+
+  <script>
+    document.getElementById('connect-btn').addEventListener('click', function () {
+      const w = 480, h = 720;
+      const left = window.screenX + (window.outerWidth - w) / 2;
+      const top = window.screenY + (window.outerHeight - h) / 2;
+      const popup = window.open(
+        "{{ url_for('login') }}",
+        "deepdive-spotify-auth",
+        `width=${w},height=${h},left=${left},top=${top}`
+      );
+
+      if (!popup) {
+        document.getElementById('popup-hint').style.display = 'block';
+        return;
+      }
+
+      function onMessage(event) {
+        if (event.origin !== window.location.origin) return;
+        if (!event.data || event.data.source !== 'deepdive-auth') return;
+        window.removeEventListener('message', onMessage);
+        if (event.data.ok) {
+          window.location.reload();
+        }
+      }
+      window.addEventListener('message', onMessage);
+    });
+  </script>
+
+{% else %}
+  <div style="margin-top:40px; text-align:center;">
+    <span class="wordmark-hero"><img src="{{ url_for('static', filename='img/dd-logo.png') }}" alt="" class="wordmark-hero-icon">DeepDive</span>
+  </div>
+
+  <div class="search-shell">
+    <form action="{{ url_for('search') }}" method="post" id="search-form" autocomplete="off">
+      <div class="search-pill-form">
+        <input type="text" name="artist" id="artist-input" placeholder="Search an artist" autofocus required>
+        <button type="button" class="settings-icon-btn" id="settings-toggle-btn" aria-label="Search options" title="Search options">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+        </button>
+        <button type="submit" class="search-icon-btn" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
       </div>
-      <div class="filter-options">
-        <label class="checkbox-option">
-          <input type="checkbox" name="exclude_live">
-          Exclude live recordings
-        </label>
-        <label class="checkbox-option">
-          <input type="checkbox" name="exclude_censored">
-          Exclude radio edits &amp; censored/clean versions
-        </label>
-        <label class="checkbox-option">
-          <input type="checkbox" name="exclude_instrumental">
-          Exclude instrumentals
-        </label>
-        <label class="checkbox-option">
-          <input type="checkbox" name="exclude_acappella">
-          Exclude a cappella versions
-        </label>
-        <label class="checkbox-option">
-          <input type="checkbox" name="match_remasters">
-          Count remasters as duplicates of the original
-        </label>
+
+      <div class="autofill-list" id="autofill-list"></div>
+
+      <div class="settings-panel" id="settings-panel">
+        <div class="settings-panel-title">Search options</div>
+        <div class="filter-options">
+          <label class="checkbox-option">
+            <input type="checkbox" name="exclude_live">
+            Exclude live recordings
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" name="exclude_censored">
+            Exclude radio edits &amp; censored/clean versions
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" name="exclude_instrumental">
+            Exclude instrumentals
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" name="exclude_acappella">
+            Exclude a cappella versions
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" name="match_remasters">
+            Count remasters as duplicates of the original
+          </label>
+        </div>
       </div>
     </form>
+  </div>
 
-    {% if suggestions %}
-      <p class="crate-note" style="margin-top:22px;">Based on what you've been listening to:</p>
-      <div class="pill-row">
-        {% for s in suggestions %}
-          <form action="{{ url_for('search') }}" method="post" style="display:inline;">
+  {% if watchlist_pending %}
+    <p class="crate-note" style="margin-top:32px; text-align:center;">From your To-Dive list:</p>
+    <div class="pill-row" style="justify-content:center;">
+      {% for entry in watchlist_pending %}
+        <div class="pill-wrap">
+          <form action="{{ url_for('search') }}" method="post">
+            <input type="hidden" name="artist" value="{{ entry.name }}">
+            <button type="submit" class="pill">
+              {% if entry.image_url %}<img src="{{ entry.image_url }}" alt="" class="pill-avatar">{% endif %}
+              {{ entry.name }}
+            </button>
+          </form>
+          <form action="{{ url_for('watchlist_toggle') }}" method="post">
+            <input type="hidden" name="entry_id" value="{{ entry.id }}">
+            <button type="submit" class="pill-icon-btn done-btn" title="Mark as dove into" aria-label="Mark as dove into">&#10003;</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if suggestions %}
+    <p class="crate-note" style="margin-top:28px; text-align:center;">Based on what you've been listening to:</p>
+    <div class="pill-row" style="justify-content:center;">
+      {% for s in suggestions %}
+        <div class="pill-wrap">
+          <form action="{{ url_for('search') }}" method="post">
             <input type="hidden" name="artist" value="{{ s.name }}">
             <button type="submit" class="pill">
-              {% if s.image_url %}
-                <img src="{{ s.image_url }}" alt="" class="pill-avatar">
-              {% endif %}
+              {% if s.image_url %}<img src="{{ s.image_url }}" alt="" class="pill-avatar">{% endif %}
               {{ s.name }}
             </button>
           </form>
-        {% endfor %}
-      </div>
-    {% elif suggestions_error %}
-      <p class="crate-note" style="margin-top:22px;">
-        Couldn't load listening-based suggestions &mdash; try
-        <a href="{{ url_for('logout') }}" style="color:var(--teal); text-decoration:underline;">reconnecting Spotify</a>
-        to grant the newer permissions this needs.
-      </p>
-    {% endif %}
-
-    <p style="margin-top:24px;"><a href="{{ url_for('logout') }}" class="muted mono" style="font-size:13px;">Disconnect Spotify</a></p>
-  {% endif %}
-</div>
-
-{% if authed %}
-<div class="card">
-  <h2>Scan your whole library</h2>
-  <p class="muted">Crawls every artist in your Liked Songs the same way a single search does &mdash; catches everything, but for a large, varied library this can take 30-60+ minutes. Cancellable any time.</p>
-  <form action="{{ url_for('full_scrub_start') }}" method="post">
-    <div class="filter-options" style="margin-bottom:16px;">
-      <label class="checkbox-option">
-        <input type="checkbox" name="exclude_live">
-        Exclude live recordings
-      </label>
-      <label class="checkbox-option">
-        <input type="checkbox" name="exclude_censored">
-        Exclude radio edits &amp; censored/clean versions
-      </label>
-      <label class="checkbox-option">
-        <input type="checkbox" name="exclude_instrumental">
-        Exclude instrumentals
-      </label>
-      <label class="checkbox-option">
-        <input type="checkbox" name="exclude_acappella">
-        Exclude a cappella versions
-      </label>
-      <label class="checkbox-option">
-        <input type="checkbox" name="match_remasters">
-        Count remasters as duplicates of the original
-      </label>
+          <form action="{{ url_for('watchlist_add') }}" method="post">
+            <input type="hidden" name="artist_name" value="{{ s.name }}">
+            <input type="hidden" name="spotify_id" value="{{ s.id }}">
+            <input type="hidden" name="image_url" value="{{ s.image_url or '' }}">
+            <button type="submit" class="pill-icon-btn" title="Add to To-Dive list" aria-label="Add to To-Dive list">+</button>
+          </form>
+        </div>
+      {% endfor %}
     </div>
-    <button type="submit" class="btn btn-ghost">Run full library scrub</button>
-  </form>
-</div>
-{% endif %}
+  {% elif suggestions_error %}
+    <p class="crate-note" style="margin-top:28px; text-align:center;">
+      Couldn't load listening-based suggestions &mdash; try
+      <a href="{{ url_for('logout') }}" style="color:var(--teal); text-decoration:underline;">reconnecting Spotify</a>
+      to grant the newer permissions this needs.
+    </p>
+  {% endif %}
 
-{% if not authed %}
-<script>
-  document.getElementById('connect-btn').addEventListener('click', function () {
-    const w = 480, h = 720;
-    const left = window.screenX + (window.outerWidth - w) / 2;
-    const top = window.screenY + (window.outerHeight - h) / 2;
-    const popup = window.open(
-      "{{ url_for('login') }}",
-      "deepdive-spotify-auth",
-      `width=${w},height=${h},left=${left},top=${top}`
-    );
+  <script>
+    // Search options panel: click the sliders icon to toggle; click
+    // anywhere outside, or press Escape, to close it again.
+    (function () {
+      const toggleBtn = document.getElementById('settings-toggle-btn');
+      const panel = document.getElementById('settings-panel');
+      if (!toggleBtn || !panel) return;
 
-    if (!popup) {
-      document.getElementById('popup-hint').style.display = 'block';
-      return;
-    }
+      toggleBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        panel.classList.toggle('open');
+      });
+      document.addEventListener('click', function (e) {
+        if (!panel.contains(e.target) && e.target !== toggleBtn) {
+          panel.classList.remove('open');
+        }
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') panel.classList.remove('open');
+      });
+    })();
 
-    function onMessage(event) {
-      if (event.origin !== window.location.origin) return;
-      if (!event.data || event.data.source !== 'deepdive-auth') return;
-      window.removeEventListener('message', onMessage);
-      if (event.data.ok) {
-        window.location.reload();
+    // Search-bar autofill: debounced live artist search as you type.
+    (function () {
+      const input = document.getElementById('artist-input');
+      const list = document.getElementById('autofill-list');
+      const form = document.getElementById('search-form');
+      if (!input || !list || !form) return;
+
+      let debounceTimer = null;
+      let currentItems = [];
+      let activeIndex = -1;
+
+      function closeList() {
+        list.classList.remove('open');
+        list.innerHTML = '';
+        currentItems = [];
+        activeIndex = -1;
       }
-    }
-    window.addEventListener('message', onMessage);
 
-    // Fallback: if the user closes the popup manually without it ever
-    // posting a message (e.g. they cancelled), nothing bad happens —
-    // the page just stays as-is and they can click Connect again.
-  });
-</script>
+      function renderList(items) {
+        currentItems = items;
+        activeIndex = -1;
+        if (!items.length) {
+          closeList();
+          return;
+        }
+        list.innerHTML = items.map((item, i) => `
+          <div class="autofill-item" data-index="${i}">
+            ${item.image_url ? `<img src="${item.image_url}" alt="">` : ''}
+            <span>${item.name}</span>
+          </div>
+        `).join('');
+        list.classList.add('open');
+        list.querySelectorAll('.autofill-item').forEach(el => {
+          el.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+            const item = currentItems[Number(el.dataset.index)];
+            selectItem(item);
+          });
+        });
+      }
+
+      function selectItem(item) {
+        input.value = item.name;
+        closeList();
+        form.submit();
+      }
+
+      input.addEventListener('input', function () {
+        const q = input.value.trim();
+        clearTimeout(debounceTimer);
+        if (q.length < 2) {
+          closeList();
+          return;
+        }
+        debounceTimer = setTimeout(async () => {
+          try {
+            const res = await fetch('/search/autocomplete?q=' + encodeURIComponent(q));
+            if (!res.ok) return;
+            const items = await res.json();
+            renderList(items);
+          } catch (e) {
+            closeList();
+          }
+        }, 250);
+      });
+
+      input.addEventListener('keydown', function (e) {
+        if (!list.classList.contains('open')) return;
+        const els = Array.from(list.querySelectorAll('.autofill-item'));
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          activeIndex = Math.min(activeIndex + 1, els.length - 1);
+          els.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          activeIndex = Math.max(activeIndex - 1, 0);
+          els.forEach((el, i) => el.classList.toggle('active', i === activeIndex));
+        } else if (e.key === 'Enter' && activeIndex >= 0) {
+          e.preventDefault();
+          selectItem(currentItems[activeIndex]);
+        } else if (e.key === 'Escape') {
+          closeList();
+        }
+      });
+
+      document.addEventListener('click', function (e) {
+        if (!list.contains(e.target) && e.target !== input) closeList();
+      });
+    })();
+  </script>
 {% endif %}
 {% endblock %}
