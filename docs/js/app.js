@@ -62,7 +62,6 @@ function setTitle(t) { document.title = t; }
 // ---- theme toggle (light / dark / system) ----
 (function initTheme() {
   const KEY = "deepdive_theme";
-  const btns = Array.from(document.querySelectorAll("[data-theme-choice]"));
   const mql = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
 
   function resolve(pref) {
@@ -70,20 +69,25 @@ function setTitle(t) { document.title = t; }
     if (pref === "light") return false;
     return !!(mql && mql.matches); // system
   }
-  function apply(pref) {
-    const dark = resolve(pref);
-    if (dark) document.documentElement.setAttribute("data-theme", "dark");
-    else document.documentElement.removeAttribute("data-theme");
-    btns.forEach((b) => b.classList.toggle("active", b.dataset.themeChoice === pref));
-  }
   function current() { try { return localStorage.getItem(KEY) || "system"; } catch (e) { return "system"; } }
+  function apply(pref) {
+    if (resolve(pref)) document.documentElement.setAttribute("data-theme", "dark");
+    else document.documentElement.removeAttribute("data-theme");
+    document.querySelectorAll("[data-theme-choice]").forEach((b) =>
+      b.classList.toggle("active", b.dataset.themeChoice === pref));
+  }
 
-  btns.forEach((b) => b.addEventListener("click", () => {
-    const pref = b.dataset.themeChoice;
-    try { localStorage.setItem(KEY, pref); } catch (e) {}
+  // Event delegation: one listener on the document, so it works no matter
+  // when the theme buttons were added to the DOM (avoids any load-order
+  // race between this and the buttons existing).
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest && e.target.closest("[data-theme-choice]");
+    if (!btn) return;
+    const pref = btn.dataset.themeChoice;
+    try { localStorage.setItem(KEY, pref); } catch (err) {}
     apply(pref);
-  }));
-  // When in system mode, follow live OS changes.
+  });
+
   if (mql) mql.addEventListener("change", () => { if (current() === "system") apply("system"); });
 
   apply(current());
