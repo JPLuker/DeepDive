@@ -59,6 +59,36 @@ function setTitle(t) { document.title = t; }
   });
 })();
 
+// ---- theme toggle (light / dark / system) ----
+(function initTheme() {
+  const KEY = "deepdive_theme";
+  const btns = Array.from(document.querySelectorAll("[data-theme-choice]"));
+  const mql = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+
+  function resolve(pref) {
+    if (pref === "dark") return true;
+    if (pref === "light") return false;
+    return !!(mql && mql.matches); // system
+  }
+  function apply(pref) {
+    const dark = resolve(pref);
+    if (dark) document.documentElement.setAttribute("data-theme", "dark");
+    else document.documentElement.removeAttribute("data-theme");
+    btns.forEach((b) => b.classList.toggle("active", b.dataset.themeChoice === pref));
+  }
+  function current() { try { return localStorage.getItem(KEY) || "system"; } catch (e) { return "system"; } }
+
+  btns.forEach((b) => b.addEventListener("click", () => {
+    const pref = b.dataset.themeChoice;
+    try { localStorage.setItem(KEY, pref); } catch (e) {}
+    apply(pref);
+  }));
+  // When in system mode, follow live OS changes.
+  if (mql) mql.addEventListener("change", () => { if (current() === "system") apply("system"); });
+
+  apply(current());
+})();
+
 function navigate(view) {
   if (!auth.getClientId()) return renderSetup();
   if (!auth.isLoggedIn()) return renderConnect();

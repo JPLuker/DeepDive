@@ -5,6 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DeepDive</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
+<script>
+  /* Runs before the page paints so there is never a flash of the light
+     theme ("flashbang") before the dark one applies. Reads the saved
+     preference (light | dark | system); for system, resolves against the
+     OS setting. Kept tiny and inline on purpose — it must run first. */
+  (function () {
+    try {
+      var pref = localStorage.getItem('deepdive_theme') || 'system';
+      var dark = pref === 'dark' ||
+        (pref === 'system' && window.matchMedia &&
+         window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+    } catch (e) {}
+  })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -21,6 +36,20 @@
     --accent-top:#01A8FF; --accent-bottom:#0F07FF; --accent:#0B54FF;
     --accent-gradient:linear-gradient(180deg,var(--accent-top),var(--accent-bottom));
     --radius:14px; --radius-lg:22px; --radius-pill:999px;
+  }
+  /* Dark theme — soft charcoal, not true black (avoids the harsh
+     halation of light text on pure black). Only colour tokens change;
+     every component reads these variables, so nothing else needs edits.
+     The blue accent is nudged brighter so it still pops on charcoal. */
+  :root[data-theme="dark"] {
+    --ink:#EAEAEA; --paper:#15171B; --surface:#22262D;
+    --line:rgba(255,255,255,0.14); --muted:rgba(235,235,235,0.58); --muted-soft:rgba(235,235,235,0.4);
+    --teal:#5FB6A8; --teal-soft:#1C2E2B; --gold:#D6A24E; --gold-soft:#2E2718; --danger:#E0776B;
+    --accent-top:#2FB6FF; --accent-bottom:#3B5BFF; --accent:#3E7BFF;
+  }
+  html { background:var(--paper); }
+  body, .card, .nav-drawer, input, .sort-select, .pill, .autofill-list, .settings-panel {
+    transition: background-color .2s ease, color .2s ease, border-color .2s ease;
   }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
@@ -47,6 +76,10 @@
   .nav-link svg { width:20px; height:20px; flex-shrink:0; }
   .nav-divider { height:1px; background:var(--line); margin:10px 4px; }
   .nav-sub { padding:4px 12px 10px; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted-soft); }
+  .theme-toggle { display:flex; gap:6px; padding:0 12px 4px; }
+  .theme-opt { flex:1; font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; padding:8px 4px; border-radius:var(--radius); border:1.5px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }
+  .theme-opt:hover { border-color:var(--ink); color:var(--ink); }
+  .theme-opt.active { background:var(--accent-gradient); color:#fff; border-color:transparent; }
 
   .flash { max-width:760px; margin:0 auto 20px; padding:12px 16px; background:var(--gold-soft); border:1px solid var(--gold); color:var(--ink); border-radius:var(--radius); font-size:14px; }
   .flash.error { background:#fbe9e7; border-color:var(--danger); }
@@ -154,6 +187,13 @@
     <button class="nav-link" data-nav="scrub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>Full Library Scan</button>
     <button class="nav-link" data-nav="watchlist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>To-Do List</button>
     <button class="nav-link" data-nav="setup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Configuration</button>
+    <div class="nav-divider"></div>
+    <div class="nav-sub" style="padding-bottom:6px;">Theme</div>
+    <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Theme">
+      <button class="theme-opt" data-theme-choice="light">Light</button>
+      <button class="theme-opt" data-theme-choice="dark">Dark</button>
+      <button class="theme-opt" data-theme-choice="system">System</button>
+    </div>
     <div class="nav-divider"></div>
     <button class="nav-link" data-nav="logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Disconnect Spotify</button>
     <div class="nav-sub">DeepDive · catalog reconciliation</div>
