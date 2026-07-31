@@ -246,41 +246,22 @@ async function renderHome() {
     </div>
     <div id="todive-row"></div>
     <div id="suggestions-row"></div>
-    <div id="bmc-row" style="display:flex; justify-content:center; margin-top:36px;"></div>`;
+    <div class="bmc-row">
+      <a class="bmc-link" href="https://buymeacoffee.com/OSJoseph" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M17 8h1a4 4 0 0 1 0 8h-1"/>
+          <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/>
+          <line x1="6" y1="2" x2="6" y2="4"/>
+          <line x1="10" y1="2" x2="10" y2="4"/>
+          <line x1="14" y1="2" x2="14" y2="4"/>
+        </svg>
+        Buy me a coffee
+      </a>
+    </div>`;
 
   wireSearchBar();
   renderToDiveRow();
   loadSuggestions();
-  mountBuyMeACoffee();
-}
-
-// The Buy Me a Coffee button ships as a <script> tag. Scripts inserted
-// via innerHTML never execute, so it has to be built as a real element
-// and appended. Guarded so re-rendering the home view doesn't stack up
-// multiple buttons.
-let _bmcMounted = false;
-function mountBuyMeACoffee() {
-  const slot = document.getElementById("bmc-row");
-  if (!slot) return;
-  if (_bmcMounted && slot.childElementCount) return;
-
-  const s = document.createElement("script");
-  s.type = "text/javascript";
-  s.src = "https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js";
-  s.setAttribute("data-name", "bmc-button");
-  s.setAttribute("data-slug", "OSJoseph");
-  s.setAttribute("data-color", "#0265cf");
-  s.setAttribute("data-emoji", "☕");
-  s.setAttribute("data-font", "Bree");
-  s.setAttribute("data-text", "Buy me a coffee");
-  s.setAttribute("data-outline-color", "#ffffff");
-  s.setAttribute("data-font-color", "#ffffff");
-  s.setAttribute("data-coffee-color", "#FFDD00");
-  // If the script is blocked (ad blocker, offline), nothing renders and
-  // the rest of the page is unaffected.
-  s.onerror = () => { slot.innerHTML = ""; };
-  slot.appendChild(s);
-  _bmcMounted = true;
 }
 
 function readOptions() {
