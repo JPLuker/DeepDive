@@ -245,11 +245,42 @@ async function renderHome() {
       </div>
     </div>
     <div id="todive-row"></div>
-    <div id="suggestions-row"></div>`;
+    <div id="suggestions-row"></div>
+    <div id="bmc-row" style="display:flex; justify-content:center; margin-top:36px;"></div>`;
 
   wireSearchBar();
   renderToDiveRow();
   loadSuggestions();
+  mountBuyMeACoffee();
+}
+
+// The Buy Me a Coffee button ships as a <script> tag. Scripts inserted
+// via innerHTML never execute, so it has to be built as a real element
+// and appended. Guarded so re-rendering the home view doesn't stack up
+// multiple buttons.
+let _bmcMounted = false;
+function mountBuyMeACoffee() {
+  const slot = document.getElementById("bmc-row");
+  if (!slot) return;
+  if (_bmcMounted && slot.childElementCount) return;
+
+  const s = document.createElement("script");
+  s.type = "text/javascript";
+  s.src = "https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js";
+  s.setAttribute("data-name", "bmc-button");
+  s.setAttribute("data-slug", "OSJoseph");
+  s.setAttribute("data-color", "#0265cf");
+  s.setAttribute("data-emoji", "☕");
+  s.setAttribute("data-font", "Bree");
+  s.setAttribute("data-text", "Buy me a coffee");
+  s.setAttribute("data-outline-color", "#ffffff");
+  s.setAttribute("data-font-color", "#ffffff");
+  s.setAttribute("data-coffee-color", "#FFDD00");
+  // If the script is blocked (ad blocker, offline), nothing renders and
+  // the rest of the page is unaffected.
+  s.onerror = () => { slot.innerHTML = ""; };
+  slot.appendChild(s);
+  _bmcMounted = true;
 }
 
 function readOptions() {
