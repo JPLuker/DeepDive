@@ -35,6 +35,7 @@
     --teal:#2F7A6F; --teal-soft:#E7F1EF; --gold:#B8842E; --gold-soft:#FBF0DE; --danger:#A5342A;
     --accent-top:#01A8FF; --accent-bottom:#0F07FF; --accent:#0B54FF;
     --accent-gradient:linear-gradient(180deg,var(--accent-top),var(--accent-bottom));
+    --field:#FFF;
     --radius:14px; --radius-lg:22px; --radius-pill:999px;
   }
   /* Dark theme — soft charcoal, not true black (avoids the harsh
@@ -45,6 +46,7 @@
     --ink:#EAEAEA; --paper:#15171B; --surface:#22262D;
     --line:rgba(255,255,255,0.14); --muted:rgba(235,235,235,0.58); --muted-soft:rgba(235,235,235,0.4);
     --teal:#5FB6A8; --teal-soft:#1C2E2B; --gold:#D6A24E; --gold-soft:#2E2718; --danger:#E0776B;
+    --field:#22262D;
     --accent-top:#2FB6FF; --accent-bottom:#3B5BFF; --accent:#3E7BFF;
   }
   html { background:var(--paper); }
@@ -99,7 +101,7 @@
   .btn-small { padding:7px 12px; font-size:12.5px; }
   .btn:disabled { opacity:0.5; cursor:default; }
 
-  input[type=text], input[type=password] { font-family:'Inter',sans-serif; font-size:16px; padding:13px 14px; border-radius:var(--radius); border:1.5px solid var(--line); background:#fff; color:var(--ink); width:100%; }
+  input[type=text], input[type=password] { font-family:'Inter',sans-serif; font-size:16px; padding:13px 14px; border-radius:var(--radius); border:1.5px solid var(--line); background:var(--field); color:var(--ink); width:100%; }
   input:focus, button:focus, a:focus, select:focus { outline:2px solid var(--ink); outline-offset:2px; }
   .search-row { display:flex; gap:10px; margin-top:20px; } .search-row input { flex:1; }
 
@@ -134,7 +136,7 @@
 
   .sort-row { display:flex; align-items:center; gap:10px; margin:4px 0 14px; }
   .sort-row label { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
-  .sort-select { font-family:'Inter',sans-serif; font-size:13px; padding:7px 10px; border-radius:var(--radius); border:1.5px solid var(--line); background:#fff; color:var(--ink); }
+  .sort-select { font-family:'Inter',sans-serif; font-size:13px; padding:7px 10px; border-radius:var(--radius); border:1.5px solid var(--line); background:var(--field); color:var(--ink); }
 
   .watchlist-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
   .watchlist-row.watchlist-done .watchlist-name { color:var(--muted-soft); text-decoration:line-through; }
@@ -187,6 +189,7 @@
     <button class="nav-link" data-nav="scrub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>Full Library Scan</button>
     <button class="nav-link" data-nav="watchlist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>To-Do List</button>
     <button class="nav-link" data-nav="setup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Configuration</button>
+    <button class="nav-link" data-nav="refresh-library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Refresh library</button>
     <div class="nav-divider"></div>
     <div class="nav-sub" style="padding-bottom:6px;">Theme</div>
     <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Theme">

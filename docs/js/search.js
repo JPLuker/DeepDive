@@ -13,6 +13,7 @@
  */
 
 import * as matching from "./matching.js";
+import { filterLikedByArtist } from "./library-cache.js";
 
 // Same weights as app.py's STAGE_WEIGHTS, so the progress bar advances
 // identically. (classify is folded into the tail; it's instant.)
@@ -44,7 +45,17 @@ export async function runSearch(client, artistName, opts = {}) {
     excludeLive = false, excludeCensored = false,
     excludeInstrumental = false, excludeAcappella = false,
     matchRemasters = false, onProgress = () => {},
+    libraryCache = null, scopeToArtist = true,
+    includeAppearsOn = false,
   } = opts;
+
+  // "Appeared on" widens the catalog to compilations and releases the
+  // artist is only featured on. Off by default: it can balloon the
+  // number of releases to read (guest spots, comps, soundtracks), which
+  // makes scans slower and heavier on the API.
+  const includeGroups = includeAppearsOn
+    ? "album,single,compilation,appears_on"
+    : "album,single";
 
   let completed = 0;
   const report = (stage) => onProgress(Math.round(completed), stage);
@@ -69,13 +80,33 @@ export async function runSearch(client, artistName, opts = {}) {
   report(`Finding "${artistName}" on Spotify…`);
 
   report("Reading your Liked Songs…");
-  const likedTracks = await client.getAllLikedTracks(stageCb("liked_songs", "Reading your Liked Songs…"));
+  // With a libraryCache (incremental, browser-persisted), the whole
+  // library is only read in full once; later searches fetch just the
+  // changes. Without one, fall back to the original full read every time.
+  let likedTracks;
+  if (libraryCache) {
+    likedTracks = await libraryCache.getLikedTracks({
+      onProgress: stageCb("liked_songs", "Syncing your Liked Songs…"),
+    });
+  } else {
+    likedTracks = await client.getAllLikedTracks(stageCb("liked_songs", "Reading your Liked Songs…"));
+  }
   completed += STAGE_WEIGHTS.liked_songs;
-  const likedIndex = matching.buildLikedIndexes(likedTracks);
+
+  // Version A scoping: for a single-artist search, compare only against
+  // the liked songs credited to that artist, not the whole library. This
+  // keeps cross-release duplicate detection (within that artist's tracks)
+  // while dropping the full-library fuzzy pass. Falls back to the whole
+  // library if scoping is turned off.
+  const comparisonSet = scopeToArtist
+    ? filterLikedByArtist(likedTracks, artist.id, artist.name)
+    : likedTracks;
+  const likedIndex = matching.buildLikedIndexes(comparisonSet);
 
   report(`Reading ${artist.name}'s releases…`);
   const catalogTracks = await client.getArtistCatalogTracks(artist.id, {
     onProgress: stageCb("catalog", `Reading ${artist.name}'s releases…`),
+    includeGroups,
   });
   completed += STAGE_WEIGHTS.catalog;
 
@@ -129,13 +160,27 @@ export async function runFullScrub(client, opts = {}) {
     excludeInstrumental = false, excludeAcappella = false,
     matchRemasters = false, onProgress = () => {},
     isCancelled = () => false,
+    libraryCache = null, scopeToArtist = true,
+    includeAppearsOn = false,
   } = opts;
 
+  const includeGroups = includeAppearsOn
+    ? "album,single,compilation,appears_on"
+    : "album,single";
+
   onProgress(0, "Reading your Liked Songs…");
-  const likedTracks = await client.getAllLikedTracks((cur, total) => {
-    onProgress(Math.round(clamp01(cur / Math.max(total, 1)) * 5), "Reading your Liked Songs…");
-  });
-  const likedIndex = matching.buildLikedIndexes(likedTracks);
+  let likedTracks;
+  if (libraryCache) {
+    likedTracks = await libraryCache.getLikedTracks({
+      onProgress: (cur, total) => onProgress(Math.round(clamp01(cur / Math.max(total, 1)) * 5), "Syncing your Liked Songs…"),
+    });
+  } else {
+    likedTracks = await client.getAllLikedTracks((cur, total) => {
+      onProgress(Math.round(clamp01(cur / Math.max(total, 1)) * 5), "Reading your Liked Songs…");
+    });
+  }
+  // Whole-library index (used when scoping is off).
+  const wholeLibraryIndex = matching.buildLikedIndexes(likedTracks);
 
   // Distinct primary artists across the library (pure local work).
   const artists = distinctLikedArtists(likedTracks);
@@ -153,7 +198,11 @@ export async function runFullScrub(client, opts = {}) {
     onProgress(base, `Scanning ${artist.name}… (${scanned + 1}/${totalArtists})`);
 
     try {
-      const catalogTracks = await client.getArtistCatalogTracks(artist.id, { isCancelled });
+      const catalogTracks = await client.getArtistCatalogTracks(artist.id, { isCancelled, includeGroups });
+      // Per-artist comparison set (Version A) or the whole library.
+      const likedIndex = scopeToArtist
+        ? matching.buildLikedIndexes(filterLikedByArtist(likedTracks, artist.id, artist.name))
+        : wholeLibraryIndex;
       const phase1 = matching.findCandidates(catalogTracks, likedIndex, {
         excludeLive, excludeCensored, excludeInstrumental, excludeAcappella,
       });

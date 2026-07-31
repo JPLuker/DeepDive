@@ -12,8 +12,14 @@ import * as auth from "./auth.js";
 import { SpotifyClient } from "./spotify.js";
 import * as search from "./search.js";
 import * as watchlist from "./watchlist.js";
+import { LibraryCache } from "./library-cache.js";
+import { bestStore } from "./storage.js";
 
 const client = new SpotifyClient(auth.getToken);
+// Incremental liked-songs cache: read the whole library once, then only
+// fetch changes on later searches. Persisted in IndexedDB. See
+// library-cache.js for the correctness (checksum) design.
+const libraryCache = new LibraryCache(client, bestStore());
 
 const root = document.getElementById("view-root");
 const flashSlot = document.getElementById("flash-slot");
@@ -39,6 +45,45 @@ function flash(msg, isError = false) {
 }
 function setTitle(t) { document.title = t; }
 
+// Sort a list of track objects by the chosen mode. Returns a new array;
+// does not mutate. "album" = discography order: albums chronologically,
+// tracks in disc/track order within each; non-album releases (singles,
+// comps) after, by date. "found" preserves original order.
+function sortTracks(tracks, mode) {
+  const withIdx = tracks.map((t, i) => ({ t, i }));
+  const rd = (t) => (t.album && t.album.release_date) || "";
+  const title = (t) => (t.name || "").toLowerCase();
+  const isAlbum = (t) => t.album && t.album.album_type === "album";
+
+  withIdx.sort((a, b) => {
+    if (mode === "date-desc") return rd(b.t).localeCompare(rd(a.t)) || a.i - b.i;
+    if (mode === "date-asc") return rd(a.t).localeCompare(rd(b.t)) || a.i - b.i;
+    if (mode === "title") return title(a.t).localeCompare(title(b.t)) || a.i - b.i;
+    if (mode === "album") {
+      // Album-first tracks grouped and ordered; everything else after.
+      const aAlb = isAlbum(a.t), bAlb = isAlbum(b.t);
+      if (aAlb !== bAlb) return aAlb ? -1 : 1;           // album tracks first
+      if (aAlb && bAlb) {
+        // chronological by album release, then album name (stable tie),
+        // then disc, then track number.
+        const byDate = rd(a.t).localeCompare(rd(b.t));
+        if (byDate) return byDate;
+        const byName = ((a.t.album.name || "")).localeCompare(b.t.album.name || "");
+        if (byName) return byName;
+        const byDisc = (a.t.disc_number || 1) - (b.t.disc_number || 1);
+        if (byDisc) return byDisc;
+        const byTrack = (a.t.track_number || 0) - (b.t.track_number || 0);
+        if (byTrack) return byTrack;
+        return a.i - b.i;
+      }
+      // both non-album: by date, then original order
+      return rd(a.t).localeCompare(rd(b.t)) || a.i - b.i;
+    }
+    return a.i - b.i; // "found"
+  });
+  return withIdx.map((x) => x.t);
+}
+
 // ---- nav drawer ----
 (function initNav() {
   const drawer = document.getElementById("nav-drawer");
@@ -54,6 +99,7 @@ function setTitle(t) { document.title = t; }
       close();
       const dest = el.getAttribute("data-nav");
       if (dest === "logout") { auth.logout(); render(); }
+      else if (dest === "refresh-library") { refreshLibrary(); }
       else navigate(dest);
     });
   });
@@ -93,6 +139,17 @@ function setTitle(t) { document.title = t; }
   apply(current());
 })();
 
+async function refreshLibrary() {
+  if (!auth.isLoggedIn()) { flash("Connect Spotify first.", true); return; }
+  flash("Refreshing your library from Spotify…");
+  try {
+    const tracks = await libraryCache.getLikedTracks({ forceFull: true });
+    flash(`Library refreshed — ${tracks.length} liked songs synced.`);
+  } catch (e) {
+    flash(`Couldn't refresh library: ${e.message || e}`, true);
+  }
+}
+
 function navigate(view) {
   if (!auth.getClientId()) return renderSetup();
   if (!auth.isLoggedIn()) return renderConnect();
@@ -115,9 +172,9 @@ function renderSetup() {
       <h1>Spotify setup</h1>
       <p class="muted">DeepDive uses your own Spotify app so it stays entirely yours — no shared server, no data leaving your browser. This is a one-time setup.</p>
       <ol class="muted" style="line-height:1.9;">
-        <li>Go to the <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Spotify Developer Dashboard</a> and create an app (any name).</li>
-        <li>In the app's settings, add this exact <strong>Redirect URI</strong>:<br><code class="env">${esc(rUri)}</code></li>
-        <li>Copy your <strong>Client ID</strong> and paste it below. (No client secret needed — this app uses PKCE.)</li>
+        <li>Go to the <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Spotify Developer Dashboard</a> and click <strong>Create app</strong> (any name).</li>
+        <li>In the app's settings, add this exact <strong>Redirect URI</strong>, then click Add <em>and</em> Save at the bottom:<br><code class="env">${esc(rUri)}</code><br><span style="font-size:13px;">Copy it exactly — the trailing slash matters, and Spotify treats <code class="env">http</code> and <code class="env">https</code> as different.</span></li>
+        <li>Copy your <strong>Client ID</strong> and paste it below. No client secret needed — this app uses PKCE, so there isn't one.</li>
       </ol>
       <div style="margin-top:20px;">
         <label class="mono" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Client ID</label>
@@ -183,6 +240,7 @@ async function renderHome() {
           <label class="checkbox-option"><input type="checkbox" id="opt-instrumental"> Exclude instrumentals</label>
           <label class="checkbox-option"><input type="checkbox" id="opt-acappella"> Exclude a cappella versions</label>
           <label class="checkbox-option"><input type="checkbox" id="opt-remaster"> Count remasters as duplicates</label>
+          <label class="checkbox-option"><input type="checkbox" id="opt-appears-on"> Include compilations &amp; "appeared on"</label>
         </div>
       </div>
     </div>
@@ -201,6 +259,7 @@ function readOptions() {
     excludeInstrumental: !!document.getElementById("opt-instrumental")?.checked,
     excludeAcappella: !!document.getElementById("opt-acappella")?.checked,
     matchRemasters: !!document.getElementById("opt-remaster")?.checked,
+    includeAppearsOn: !!document.getElementById("opt-appears-on")?.checked,
   };
 }
 
@@ -321,12 +380,40 @@ async function loadSuggestions() {
 // ============================================================
 // Search run (progress -> results)
 // ============================================================
+// Turns a preflight failure into something actionable. A 403 here almost
+// always means the connected token is missing a scope DeepDive needs
+// (the exact situation the Flask health check was added for) — the fix
+// is reconnecting so Spotify re-grants permissions.
+async function preflight() {
+  try {
+    await client.healthCheck();
+  } catch (e) {
+    const status = e && e.status;
+    if (status === 403 || status === 401) {
+      throw new Error(
+        "Spotify rejected this connection (missing or expired permissions). " +
+        "Open the menu and choose Disconnect Spotify, then connect again to re-grant access."
+      );
+    }
+    throw new Error(`Couldn't reach Spotify: ${e.message || e}`);
+  }
+}
+
 async function startSearch(artistName) {
   renderProgress(`Digging through ${artistName}…`);
   const opts = readOptions();
   try {
+    // Preflight (issue #3): verify this token can actually do what the
+    // scan is about to ask. Ported from the Flask health check, which
+    // was added after a token that looked valid 403'd on /me/playlists
+    // only AFTER a full search had completed. Costs ~3 cheap requests;
+    // saves an entire wasted scan.
+    updateProgress(0, "Checking your Spotify connection…");
+    await preflight();
+
     const result = await search.runSearch(client, artistName, {
       ...opts,
+      libraryCache,
       onProgress: (pct, stage) => updateProgress(pct, stage),
     });
     lastResult = result;
@@ -414,14 +501,13 @@ function renderResults(r) {
         <div class="sort-row">
           <label for="new-sort">Sort by</label>
           <select id="new-sort" class="sort-select">
-            <option value="found">As found</option>
+            <option value="album" selected>Album order (discography)</option>
             <option value="date-desc">Release date (newest)</option>
             <option value="date-asc">Release date (oldest)</option>
             <option value="title">Title (A–Z)</option>
           </select>
         </div>
-        <label class="checkbox-option" style="margin-bottom:8px;"><input type="checkbox" id="build-playlist" checked> Build a playlist from the checked new tracks</label>
-        <div id="new-list">${news.map((t) => trackRow(t, { cls: "newt" })).join("")}</div>
+        <div id="new-list">${sortTracks(news, "album").map((t) => trackRow(t, { cls: "newt" })).join("")}</div>
       ` : `<p class="empty-note">Nothing new — your library already covers this artist.</p>`}
 
       <div class="playlist-name-field" id="playlist-name-wrap">
@@ -430,7 +516,9 @@ function renderResults(r) {
       </div>
 
       <div class="actions">
-        <button class="btn btn-primary" id="confirm-btn">Apply</button>
+        ${dups.length ? `<button class="btn btn-primary" data-action="like">Like Songs</button>` : ""}
+        ${news.length ? `<button class="btn btn-primary" data-action="playlist">Create Playlist Only</button>` : ""}
+        ${dups.length && news.length ? `<button class="btn btn-primary" data-action="both">Like Songs &amp; Create Playlist</button>` : ""}
         <button class="btn btn-ghost" data-home>Back to search</button>
       </div>
       <div class="flash hidden" id="result-msg" style="margin-top:18px;"></div>
@@ -438,57 +526,72 @@ function renderResults(r) {
 
   root.querySelector("[data-home]").addEventListener("click", () => renderHome());
 
-  // sort
+  // sort — re-render the list from sorted data (preserves which rows are
+  // checked by re-reading current checkbox state before re-rendering).
   const sortSel = document.getElementById("new-sort");
   if (sortSel) {
     const listEl = document.getElementById("new-list");
     sortSel.addEventListener("change", () => {
-      const rows = Array.from(listEl.children);
-      const mode = sortSel.value;
-      const orig = rows.map((r, i) => [r, i]);
-      orig.sort((a, b) => {
-        if (mode === "date-desc") return (b[0].dataset.rd || "").localeCompare(a[0].dataset.rd || "");
-        if (mode === "date-asc") return (a[0].dataset.rd || "").localeCompare(b[0].dataset.rd || "");
-        if (mode === "title") return (a[0].dataset.title || "").localeCompare(b[0].dataset.title || "");
-        return a[1] - b[1];
+      // Capture current checkbox state so re-render doesn't reset it.
+      const allBoxes = Array.from(listEl.querySelectorAll("[data-tid]"));
+      const uncheckedIds = new Set(allBoxes.filter((c) => !c.checked).map((c) => c.dataset.tid));
+      const sorted = sortTracks(news, sortSel.value);
+      listEl.innerHTML = sorted.map((t) => trackRow(t, { cls: "newt" })).join("");
+      // Rows render checked by default; re-uncheck the ones that were unchecked.
+      listEl.querySelectorAll("[data-tid]").forEach((c) => {
+        if (uncheckedIds.has(c.dataset.tid)) c.checked = false;
       });
-      orig.forEach(([row]) => listEl.appendChild(row));
     });
   }
 
-  document.getElementById("confirm-btn").addEventListener("click", () => applyResults(r));
+  document.querySelectorAll("[data-action]").forEach((b) =>
+    b.addEventListener("click", () => applyResults(r, b.dataset.action)));
 }
 
-async function applyResults(r) {
-  const btn = document.getElementById("confirm-btn");
+async function applyResults(r, action) {
+  const btns = Array.from(document.querySelectorAll("[data-action]"));
   const msg = document.getElementById("result-msg");
-  btn.disabled = true;
+  btns.forEach((b) => (b.disabled = true));
 
-  // Gather checked duplicates (to like) + checked new tracks (playlist, and liked too).
+  // Two distinct groups: checked duplicates ("already yours elsewhere")
+  // get LIKED; checked new tracks go to the PLAYLIST. Which of those two
+  // actions runs is decided by the button pressed:
+  //   like     -> like the checked duplicates only
+  //   playlist -> build a playlist from the checked new tracks only
+  //   both     -> do both
   const dupIds = Array.from(document.querySelectorAll("[data-dup]:checked")).map((c) => c.dataset.dup);
   const newIds = Array.from(document.querySelectorAll("[data-tid]:checked")).map((c) => c.dataset.tid);
-  const buildPlaylist = !!document.getElementById("build-playlist")?.checked;
   const playlistName = (document.getElementById("playlist-name")?.value || "").trim() || `DeepDive · ${r.artist ? r.artist.name : ""}`;
 
-  const toLike = dupIds.slice(); // duplicates get liked
+  const doLike = action === "like" || action === "both";
+  const doPlaylist = action === "playlist" || action === "both";
+
   const parts = [];
   try {
-    if (toLike.length) { await client.likeTracks(toLike); parts.push(`Liked ${toLike.length} track${toLike.length === 1 ? "" : "s"}.`); }
-
-    if (buildPlaylist && newIds.length) {
-      const res = await client.addTracksToPlaylistDeduped(playlistName, `New-to-you tracks by ${r.artist ? r.artist.name : ""}, found by DeepDive.`, newIds);
+    if (doLike && dupIds.length) {
+      await client.likeTracks(dupIds);
+      parts.push(`Liked ${dupIds.length} track${dupIds.length === 1 ? "" : "s"}.`);
+    }
+    if (doPlaylist && newIds.length) {
+      const res = await client.addTracksToPlaylistDeduped(
+        playlistName,
+        `New-to-you tracks by ${r.artist ? r.artist.name : ""}, found by DeepDive.`,
+        newIds
+      );
       parts.push(`Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}.`);
       msg.innerHTML = `${esc(parts.join(" "))} <a href="${esc(res.url)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
-    } else {
-      msg.textContent = parts.length ? parts.join(" ") : "Nothing selected.";
+      msg.classList.remove("hidden", "error");
+      btns.forEach((b) => (b.disabled = false));
+      return;
     }
+    msg.textContent = parts.length ? parts.join(" ") : "Nothing selected.";
     msg.classList.remove("hidden", "error");
   } catch (e) {
     msg.textContent = `Something went wrong: ${e.message || e}`;
     msg.classList.remove("hidden");
     msg.classList.add("error");
   } finally {
-    btn.disabled = false;
+    btns.forEach((b) => (b.disabled = false));
   }
 }
 
@@ -507,6 +610,7 @@ function renderScrubForm() {
         <label class="checkbox-option"><input type="checkbox" id="s-instrumental"> Exclude instrumentals</label>
         <label class="checkbox-option"><input type="checkbox" id="s-acappella"> Exclude a cappella versions</label>
         <label class="checkbox-option"><input type="checkbox" id="s-remaster"> Count remasters as duplicates</label>
+        <label class="checkbox-option"><input type="checkbox" id="s-appears-on"> Include compilations &amp; "appeared on"</label>
       </div>
       <div class="actions" style="margin-top:0;">
         <button class="btn btn-primary" id="scrub-go">Run full library scrub</button>
@@ -524,6 +628,7 @@ async function startScrub() {
     excludeInstrumental: document.getElementById("s-instrumental").checked,
     excludeAcappella: document.getElementById("s-acappella").checked,
     matchRemasters: document.getElementById("s-remaster").checked,
+    includeAppearsOn: document.getElementById("s-appears-on").checked,
   };
   scrubCancel = { cancelled: false };
   renderProgress("Scanning your whole library…");
@@ -534,8 +639,14 @@ async function startScrub() {
   document.getElementById("scrub-cancel").addEventListener("click", () => { scrubCancel.cancelled = true; });
 
   try {
+    // Preflight before a long scrub (issue #3) — a scope problem found
+    // now costs seconds; found 40 minutes in, it costs the whole scan.
+    updateProgress(0, "Checking your Spotify connection…");
+    await preflight();
+
     const result = await search.runFullScrub(client, {
       ...opts,
+      libraryCache,
       onProgress: (pct, stage) => updateProgress(pct, stage),
       isCancelled: () => scrubCancel.cancelled,
     });
@@ -559,14 +670,14 @@ function renderScrubResults(r) {
         <div class="sort-row">
           <label for="new-sort">Sort by</label>
           <select id="new-sort" class="sort-select">
-            <option value="found">As found</option>
+            <option value="album" selected>Album order (discography)</option>
             <option value="date-desc">Release date (newest)</option>
             <option value="date-asc">Release date (oldest)</option>
             <option value="title">Title (A–Z)</option>
           </select>
         </div>
         <label class="checkbox-option" style="margin-bottom:8px;"><input type="checkbox" id="build-playlist" checked> Build a playlist from these</label>
-        <div id="new-list">${news.map((t) => trackRow(t, { cls: "newt", sub: `${(t.artists && t.artists[0] && t.artists[0].name) || ""} · ${(t.album && t.album.name) || ""}` })).join("")}</div>
+        <div id="new-list">${sortTracks(news, "album").map((t) => trackRow(t, { cls: "newt", sub: `${(t.artists && t.artists[0] && t.artists[0].name) || ""} · ${(t.album && t.album.name) || ""}` })).join("")}</div>
         <div class="playlist-name-field"><label>Playlist name</label><input type="text" id="playlist-name" value="DeepDive · Library scrub"></div>
         <div class="actions"><button class="btn btn-primary" id="scrub-build">Build playlist</button><button class="btn btn-ghost" data-home>Back to search</button></div>
         <div class="flash hidden" id="result-msg" style="margin-top:18px;"></div>
@@ -577,16 +688,13 @@ function renderScrubResults(r) {
   const sortSel = document.getElementById("new-sort");
   if (sortSel) {
     const listEl = document.getElementById("new-list");
+    const subFor = (t) => `${(t.artists && t.artists[0] && t.artists[0].name) || ""} · ${(t.album && t.album.name) || ""}`;
     sortSel.addEventListener("change", () => {
-      const rows = Array.from(listEl.children).map((r, i) => [r, i]);
-      const mode = sortSel.value;
-      rows.sort((a, b) => {
-        if (mode === "date-desc") return (b[0].dataset.rd || "").localeCompare(a[0].dataset.rd || "");
-        if (mode === "date-asc") return (a[0].dataset.rd || "").localeCompare(b[0].dataset.rd || "");
-        if (mode === "title") return (a[0].dataset.title || "").localeCompare(b[0].dataset.title || "");
-        return a[1] - b[1];
-      });
-      rows.forEach(([row]) => listEl.appendChild(row));
+      const allBoxes = Array.from(listEl.querySelectorAll("[data-tid]"));
+      const uncheckedIds = new Set(allBoxes.filter((c) => !c.checked).map((c) => c.dataset.tid));
+      const sorted = sortTracks(news, sortSel.value);
+      listEl.innerHTML = sorted.map((t) => trackRow(t, { cls: "newt", sub: subFor(t) })).join("");
+      listEl.querySelectorAll("[data-tid]").forEach((c) => { if (uncheckedIds.has(c.dataset.tid)) c.checked = false; });
     });
   }
   const buildBtn = document.getElementById("scrub-build");

@@ -1,130 +1,136 @@
-# DeepDive — client-side rewrite (in progress)
+<div align="center">
 
-This is the client-side (no-backend) rewrite of DeepDive, per
-`CLIENT_MIGRATION_PLAN.md` in the main repo. It is **not finished** — it's
-being built in verifiable phases. This directory is the parallel project;
-the Flask app remains the shipping version until this reaches parity.
+# DeepDive
 
-## Status
+### You've liked the album version. You missed the single.
 
-- **Phase 0 — CORS/PKCE reality check: DONE, PASSED.** Confirmed in a real
-  browser against the live DeepDive Spotify app that PKCE token exchange
-  and every endpoint DeepDive uses (reads + playlist writes) work
-  client-side with no backend. The no-backend architecture is viable.
-- **Phase 2 (partial) — `js/matching.js`: DONE, VERIFIED.** Full port of
-  `matching.py`, proven equivalent to the Python:
-  - `sequenceRatio` (a from-scratch port of Python's
-    `difflib.SequenceMatcher.ratio()`) matches CPython across 518 cases
-    including a 503-case fuzz set with autojunk-triggering long strings.
-  - `normalizeTitle` + all five exclusion filters: 95/95 vs Python.
-  - Two-phase `findCandidates`/`confirmCandidates`: 18/18 across all key
-    scenarios, including the three historical bug-regressions (Leisure
-    Hour cross-release, feat.-credit re-release, remaster toggle) and the
-    false-positive guard.
-- **Phase 2 (rest) — `js/spotify.js`: DONE, structurally verified.** Full
-  port of `spotify_client.py` — the Feb 2026 API surface, all reads,
-  playlists, and library writes. Can't be diffed against Python (it hits
-  the network), but verified via a mock-fetch harness (23/23): URL/param
-  construction, `next`-pagination, the 40-uri library-save and 100-uri
-  playlist-add chunking, the retry state machine (429 w/ Retry-After,
-  5xx, and 403-fails-fast), playlist dedup/reuse, and scrub cancellation.
-  Two intentional structural changes from the Python, both forced by the
-  browser:
-    - Everything is `async` (the Python blocked with `time.sleep` in a
-      thread; the browser awaits a promise-based delay instead).
-    - The client is constructed with an async `getToken()` *function*
-      rather than a raw token, so auth.js can refresh transparently
-      mid-run — the client-side equivalent of the Python `get_token()`
-      refreshing when expired.
-  The one thing only a real browser can confirm is that live calls
-  actually succeed end-to-end — but Phase 0 already proved every one of
-  these endpoints works browser-side with clean CORS, so the risk there
-  is low.
+**[Open DeepDive →](https://jpluker.github.io/DeepDive/)**
 
-- **Phase 1 — `js/auth.js`: DONE, logic-verified.** Browser PKCE auth,
-  the client-side replacement for the Python's server-side OAuth. This is
-  the flow the Phase 0 CORS diagnostic already proved works, turned into
-  a reusable module. No client secret; tokens in localStorage; transparent
-  refresh via `getToken()`. Verified (21/21) with stubbed browser globals:
-  valid-token passthrough, expiry-triggered refresh, concurrent-refresh
-  coalescing, logout preserving the Client ID, and the full redirect
-  callback (state-mismatch rejection + code-for-token exchange). The
-  actual redirect navigation + `crypto.subtle` challenge can only run in a
-  browser, but that exact path was already exercised live in Phase 0.
+*Free. No install. Runs entirely in your browser.*
 
-## Not done yet
+</div>
 
-- Phase 3 — the orchestration + UI (all pages, client-rendered): the
-  equivalent of app.py's run_search_job / run_full_scrub_job / confirm
-  flow, plus the home/results/scrub/setup/watchlist views and nav. This
-  is the big remaining piece and the least unit-testable — it's where a
-  real browser becomes necessary.
-- Phase 4 — PWA shell (manifest + service worker) — the "add to home
-  screen" finish
-- Phase 5 — platform testing (esp. iOS backgrounding)
-- Phase 6 — static hosting
+---
 
-## Foundations complete + first runnable build
+## The problem
 
-All logic modules are done and verified (706 assertions passing across
-matching, spotify, auth, watchlist, and the search/scrub orchestration).
-On top of them there's now a **runnable UI**: `index.html` + `js/app.js`
-wire everything into the full flow — setup → connect → home (search,
-autofill, recommendations, To-Dive row, settings panel) → progress →
-results (like + build playlist), plus the full-library scrub and the
-To-Do list page, all in the v1.10 monochrome+blue design.
+You liked a song off an album three years ago. Last month the band put
+the same recording on an EP. Spotify shows it to you as a brand-new
+track you've never heard — because to Spotify, it's a different entry.
+Your library is quietly full of these near-misses, and there's no way to
+see them.
 
-This is the first point where the app actually runs in a browser. The
-logic underneath is verified; the UI layer is structurally checked (all
-imports resolve, boot-critical element IDs present, nav wired) but has
-NOT been run against live Spotify yet — that's the next step, and it
-needs you.
+Multiply that across a favorite artist's whole catalog: album cuts,
+standalone singles, EP versions, reissues, deluxe editions. Songs you
+already love, sitting one release over from where you liked them.
 
-### How to run it (local)
+**DeepDive finds them.**
 
-From this directory, serve it over http (not file://, which breaks ES
-modules and the Spotify redirect):
+## What it does
 
-```
-python3 -m http.server 8888
-```
+Type an artist. DeepDive reads their entire catalog — every album, every
+single, every EP — and holds it up against your Liked Songs.
 
-Then open `http://127.0.0.1:8888/` and:
-1. It'll show the setup page — paste your DeepDive **Client ID**.
-2. Add `http://127.0.0.1:8888/` as a Redirect URI in your Spotify app
-   (note: the app root, not a `/callback` path — the client app uses its
-   own origin as the redirect).
-3. Connect, then try a search.
+**Already yours, elsewhere.** The same recording you've already liked,
+found under a different release. One click adds it where it belongs.
 
-### What to check first (likely rough edges)
+**New to you.** Everything by that artist that genuinely isn't in your
+library — turned into a playlist, in proper album order, ready to play.
 
-- Does login complete and land on the home page?
-- Does a single-artist search run start-to-finish and show results?
-- Do "like" and "build playlist" actually work?
-- Autofill dropdown as you type?
-- The full-library scrub (start one, try cancelling)?
+Nothing is added to your library until you say so. You see every match
+first.
 
-## Not done yet
+## Why you'll like it
 
-- Phase 4 — PWA shell (manifest + service worker) — the "add to home
-  screen" finish
-- Phase 5 — platform testing (esp. iOS backgrounding)
-- Phase 6 — static hosting
-- Polish/parity passes once real-browser testing surfaces issues
+**It plays a discography properly.** New tracks come sorted in album
+order — records in chronological sequence, tracks in their intended
+running order. Press play and hear a catalog the way it was meant to be
+heard, not shuffled alphabetically.
 
-## Running the tests
+**It knows the difference between a re-release and a remix.** A live
+take, an acoustic version, a remaster — those are different recordings,
+and DeepDive treats them that way. The same recording on a different
+sleeve is what gets flagged.
 
-Requires Node (for the test harness only — the app itself has no build
-step and no Node dependency). From this directory:
+**It gets out of your way.** Filter out live cuts, radio edits,
+instrumentals, or a cappella versions. Include compilations and guest
+appearances if you want the deep cuts. Your call, every time.
+
+**Scan one artist or your entire library.** The full library scan crawls
+every artist you've liked. It takes a while and you can stop it whenever
+— it keeps everything it found.
+
+**Keep a list.** Bands you mean to get into, saved for later, one tap
+from a full dive.
+
+**Dark mode.** Obviously.
+
+## Your library stays yours
+
+There's no DeepDive server. No account to make. No data collected,
+because there's nowhere to collect it to — everything happens inside
+your browser, between you and Spotify.
+
+## Put it on your home screen
+
+DeepDive installs like a real app, without an app store:
+
+- **iPhone / iPad** — Share → *Add to Home Screen*
+- **Android** — menu → *Install app*
+- **Desktop** — the install icon in your address bar
+
+Opens fullscreen. Own icon. No one would know it's a website.
+
+---
+
+## Getting started
+
+Spotify requires every app that touches your library to have its own
+credentials — so there's a short one-time step before your first dive.
+Two minutes, and you never do it again.
+
+**1.** Head to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+and click **Create app**. Any name works.
+
+**2.** In the app's settings, add this as a **Redirect URI**, then click
+Add *and* Save:
 
 ```
-node tests/test_ratio.mjs      # SequenceMatcher vs Python, hand cases
-node tests/test_fuzz.mjs       # SequenceMatcher vs Python, 503 fuzz cases
-node tests/test_logic.mjs      # normalizeTitle + filters vs Python
-node tests/test_classify.mjs   # two-phase classification vs Python
-node tests/test_spotify.mjs    # spotify.js request logic (mock fetch)
+https://jpluker.github.io/DeepDive/
 ```
 
-The `*_expected.json` files are ground truth generated from the actual
-`matching.py`; regenerate them from the Python if that logic ever changes,
-then re-run to confirm the port still matches.
+> Copy it exactly — the trailing slash matters, and `https` isn't the
+> same as `http`.
+
+**3.** Copy the **Client ID** from your app's page, [open DeepDive](https://jpluker.github.io/DeepDive/),
+and paste it in. (No client secret — DeepDive doesn't use one.)
+
+**4.** Connect Spotify, approve access, and start digging.
+
+> **Note:** Spotify requires the account to have Premium for this to work.
+
+---
+
+## If something goes wrong
+
+**"Invalid redirect URI"** — the address in your Spotify app settings
+doesn't match exactly. Check the trailing slash and `https`, and make
+sure you hit Save at the bottom.
+
+**"Missing or expired permissions"** — open the menu, Disconnect Spotify,
+then connect again.
+
+**"Too many requests"** — Spotify throttled you for scanning a lot at
+once. Wait a couple of minutes.
+
+**A scan is taking forever** — big catalogs genuinely take time, since
+every release gets read track by track. Including compilations and guest
+appearances makes it slower still.
+
+---
+
+<div align="center">
+
+**[Start digging →](https://jpluker.github.io/DeepDive/)**
+
+</div>

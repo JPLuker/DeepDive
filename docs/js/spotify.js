@@ -218,10 +218,10 @@ export class SpotifyClient {
     });
   }
 
-  async getArtistAlbumIds(artistId, onProgress = null) {
+  async getArtistAlbumIds(artistId, onProgress = null, includeGroups = "album,single") {
     const albumIds = [];
     let results = await this.get(`artists/${artistId}/albums`, {
-      include_groups: "album,single",
+      include_groups: includeGroups,
       limit: ARTIST_ALBUMS_LIMIT_MAX,
     });
     const total = (results && results.total) || 1;
@@ -236,8 +236,8 @@ export class SpotifyClient {
   // Simplified tracks (NO ISRC), one request per album. Mirrors
   // get_artist_catalog_tracks. Supports a cancel check + checkpoint hook
   // for the scrub-resume design (both optional).
-  async getArtistCatalogTracks(artistId, { onProgress = null, isCancelled = null } = {}) {
-    const albumIds = await this.getArtistAlbumIds(artistId);
+  async getArtistCatalogTracks(artistId, { onProgress = null, isCancelled = null, includeGroups = "album,single" } = {}) {
+    const albumIds = await this.getArtistAlbumIds(artistId, null, includeGroups);
     const total = albumIds.length || 1;
     const tracks = [];
     const seen = new Set();
@@ -245,13 +245,19 @@ export class SpotifyClient {
     for (let i = 0; i < albumIds.length; i++) {
       if (isCancelled && isCancelled()) break;
       const album = await this.get(`albums/${albumIds[i]}`);
-      const albumRef = { id: album.id, name: album.name, release_date: album.release_date };
+      const albumRef = {
+        id: album.id, name: album.name, release_date: album.release_date,
+        album_type: album.album_type, // "album" | "single" | "compilation"
+      };
       let page = album.tracks || null;
       while (page) {
         for (const t of page.items || []) {
           if (t.id && !seen.has(t.id)) {
             seen.add(t.id);
             t.album = albumRef;
+            // Preserve position within the release for track-order sorting.
+            t.track_number = t.track_number || null;
+            t.disc_number = t.disc_number || null;
             tracks.push(t);
           }
         }

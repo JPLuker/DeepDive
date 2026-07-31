@@ -1,226 +1,136 @@
+<div align="center">
+
 # DeepDive
 
-A self-hosted tool that reconciles your Spotify Liked Songs against a full
-artist catalog. Type an artist, and DeepDive:
+### You've liked the album version. You missed the single.
 
-1. Pulls your Liked Songs and everything the artist has released (albums, singles, EPs).
-2. Finds recordings you've already liked under a *different* release — e.g.
-   you liked the album cut of a song, but not the standalone single or EP
-   version — using ISRC codes (with a fuzzy title/duration fallback for
-   the rare track missing one).
-3. Lets you review and confirm which of those to add to your Liked Songs.
-4. Builds a playlist of everything by that artist you haven't liked at all.
+**[Open DeepDive →](https://jpluker.github.io/DeepDive/)**
 
-Nothing is liked or added automatically without you checking a box and
-clicking confirm.
+*Free. No install. Runs entirely in your browser.*
 
-Tested on Linux (Python 3.10+). Should also run on macOS/Windows unchanged,
-but Linux is the supported target.
+</div>
 
-## Important: February 2026 Spotify API changes
+---
 
-Spotify restricted Development Mode apps in February/March 2026 — and
-since DeepDive's whole model is "each user creates their own Spotify
-app," that's the mode DeepDive runs in. Two consequences worth knowing:
+## The problem
 
-- **Spotify Premium is required.** Development Mode apps require the app
-  owner to have an active Premium subscription. If it lapses, the app
-  stops working until it resumes.
-- **Bulk fetching is gone.** Batch endpoints were removed, so reading an
-  artist's catalog now costs roughly one request per release. Single-
-  artist search is fine. **Full library scrub is much slower than it
-  used to be** and may not be practical for very large libraries.
+You liked a song off an album three years ago. Last month the band put
+the same recording on an EP. Spotify shows it to you as a brand-new
+track you've never heard — because to Spotify, it's a different entry.
+Your library is quietly full of these near-misses, and there's no way to
+see them.
 
-DeepDive still matches on ISRC — that field was removed in the February
-changes and then reverted, so it survives. See `CHANGELOG.md` (v1.7.0)
-for how matching was restructured to keep ISRC precision affordable.
+Multiply that across a favorite artist's whole catalog: album cuts,
+standalone singles, EP versions, reissues, deluxe editions. Songs you
+already love, sitting one release over from where you liked them.
 
-## Setup
+**DeepDive finds them.**
 
-**1. Create a Spotify app** (free, ~2 minutes)
+## What it does
 
-Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard),
-log in, and click **Create app**. Fill in any name/description. For
-**Redirect URI**, add exactly:
+Type an artist. DeepDive reads their entire catalog — every album, every
+single, every EP — and holds it up against your Liked Songs.
+
+**Already yours, elsewhere.** The same recording you've already liked,
+found under a different release. One click adds it where it belongs.
+
+**New to you.** Everything by that artist that genuinely isn't in your
+library — turned into a playlist, in proper album order, ready to play.
+
+Nothing is added to your library until you say so. You see every match
+first.
+
+## Why you'll like it
+
+**It plays a discography properly.** New tracks come sorted in album
+order — records in chronological sequence, tracks in their intended
+running order. Press play and hear a catalog the way it was meant to be
+heard, not shuffled alphabetically.
+
+**It knows the difference between a re-release and a remix.** A live
+take, an acoustic version, a remaster — those are different recordings,
+and DeepDive treats them that way. The same recording on a different
+sleeve is what gets flagged.
+
+**It gets out of your way.** Filter out live cuts, radio edits,
+instrumentals, or a cappella versions. Include compilations and guest
+appearances if you want the deep cuts. Your call, every time.
+
+**Scan one artist or your entire library.** The full library scan crawls
+every artist you've liked. It takes a while and you can stop it whenever
+— it keeps everything it found.
+
+**Keep a list.** Bands you mean to get into, saved for later, one tap
+from a full dive.
+
+**Dark mode.** Obviously.
+
+## Your library stays yours
+
+There's no DeepDive server. No account to make. No data collected,
+because there's nowhere to collect it to — everything happens inside
+your browser, between you and Spotify.
+
+## Put it on your home screen
+
+DeepDive installs like a real app, without an app store:
+
+- **iPhone / iPad** — Share → *Add to Home Screen*
+- **Android** — menu → *Install app*
+- **Desktop** — the install icon in your address bar
+
+Opens fullscreen. Own icon. No one would know it's a website.
+
+---
+
+## Getting started
+
+Spotify requires every app that touches your library to have its own
+credentials — so there's a short one-time step before your first dive.
+Two minutes, and you never do it again.
+
+**1.** Head to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+and click **Create app**. Any name works.
+
+**2.** In the app's settings, add this as a **Redirect URI**, then click
+Add *and* Save:
 
 ```
-http://127.0.0.1:8888/callback
+https://jpluker.github.io/DeepDive/
 ```
 
-Save, then open the app's settings and copy the **Client ID** and **Client Secret**.
+> Copy it exactly — the trailing slash matters, and `https` isn't the
+> same as `http`.
 
-## Running it
+**3.** Copy the **Client ID** from your app's page, [open DeepDive](https://jpluker.github.io/DeepDive/),
+and paste it in. (No client secret — DeepDive doesn't use one.)
 
-**Easiest — the launcher script:**
+**4.** Connect Spotify, approve access, and start digging.
 
-```bash
-cd deepdive
-./run.sh
-```
+> **Note:** Spotify requires the account to have Premium for this to work.
 
-First time you run it, this sets up a virtual environment and installs
-dependencies automatically (only happens once). Every time after that, it
-just starts the app immediately. It also opens your browser to
-`http://127.0.0.1:8888` for you a couple seconds after the server comes up.
-Press `Ctrl+C` in that terminal to stop it.
+---
 
-If double-clicking `run.sh` from your file manager does nothing (some file
-managers open scripts as text instead of running them by default), either
-run it from a terminal as above, or right-click it → Properties →
-Permissions → enable "Allow executing file as program", then double-click.
+## If something goes wrong
 
-**Manual, if you'd rather not use the script:**
+**"Invalid redirect URI"** — the address in your Spotify app settings
+doesn't match exactly. Check the trailing slash and `https`, and make
+sure you hit Save at the bottom.
 
-```bash
-cd deepdive
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python3 app.py
-```
+**"Missing or expired permissions"** — open the menu, Disconnect Spotify,
+then connect again.
 
-Either way, since no Spotify credentials are configured yet on first run,
-you'll land on an in-app setup page: it shows you the exact Redirect URI to
-paste into your Spotify app's settings, and has fields to paste in your
-Client ID and Client Secret directly — no config files to open or edit.
-Save, and you're taken straight to the search page.
+**"Too many requests"** — Spotify throttled you for scanning a lot at
+once. Wait a couple of minutes.
 
-(A `.env` file is still used under the hood to persist these between runs,
-but you never need to open it by hand.)
+**A scan is taking forever** — big catalogs genuinely take time, since
+every release gets read track by track. Including compilations and guest
+appearances makes it slower still.
 
-## Notes on the matching
+---
 
-- The primary signal is **ISRC** (a per-recording code Spotify exposes on
-  full track objects). If the album cut and the single share an ISRC,
-  they're the same recording and get flagged as a match.
-- If a track has no ISRC (uncommon but happens), DeepDive falls back to
-  fuzzy title matching + duration tolerance (±3s) restricted to tracks by
-  the same artist.
-- Genuinely different recordings — remixes, live versions, alternate
-  masters with a new ISRC — are correctly treated as *new*, not duplicates.
-- Nothing is perfect here; that's why the app shows you every match before
-  touching your library rather than auto-liking anything.
+<div align="center">
 
-## Notes on artist matching
+**[Start digging →](https://jpluker.github.io/DeepDive/)**
 
-DeepDive only pulls the artist's own **albums and singles**, not tracks
-where they merely "appear on" someone else's release (guest features,
-compilations), to keep results focused on their own catalog.
-
-## Getting around
-
-As of v1.9.0, DeepDive's home page is just a search bar and
-recommendations — everything else lives behind the gear icon in the
-top-left corner, which opens a slide-out menu:
-
-- **Search** — back to the home page.
-- **Full Library Scan** — the full-library scrub (see below).
-- **To-Do List** — your full To-Dive-Into List (see below).
-- **Configuration** — revisit your Spotify Client ID/Secret any time,
-  not just on first run.
-- **Disconnect Spotify** — same as before.
-
-Per-search options (exclude live/censored/instrumental/a cappella,
-count remasters as duplicates) live in a small panel next to the search
-bar now — click the sliders icon beside the search button to open it.
-
-The search bar also has autofill: type a couple of characters and a
-dropdown of matching Spotify artists appears (arrow keys + Enter work,
-or just click one). This queries Spotify directly and isn't filtered by
-your To-Do list status, so it can still find an artist you've marked as
-dove into — it's a search tool, not a recommendation feed.
-
-## Scanning your whole library, not just one artist
-
-**Full library scan** (gear menu) runs the same crawl the single-artist
-search does, once per distinct artist in your Liked Songs. This is
-thorough but genuinely slow for a large, varied library — budget for it
-to possibly take 30-60+ minutes. You can cancel at any point and still
-see whatever was found up to that point.
-
-On the home page you'll also see artist suggestions pulled from your
-recent listening activity and top artists, each one click away from a
-search.
-
-Before either kind of scan starts, DeepDive runs a quick connection
-check (a handful of cheap API calls covering the permissions it needs)
-so a token or scope problem shows up in a few seconds, not 30 minutes
-into a scrub or at the very end when you go to confirm results.
-
-**Note:** these features need two additional Spotify permissions beyond
-what earlier versions requested. If you're upgrading from an older
-version, DeepDive will notice your existing connection is missing them
-and prompt you to reconnect — just click Connect Spotify again and
-approve the updated permissions.
-
-## To-Dive-Into List
-
-A watchlist for artists you want to come back to later, reachable from
-the gear menu ("To-Do List") and previewed right on the home page above
-your regular suggestions. Add a name and it sticks around across
-restarts (stored locally in `watchlist.json`, never sent anywhere).
-
-- On the home page, a pill's small **+** badge (hover to reveal) adds
-  that suggested artist straight to the list.
-- Each entry has a one-click **Search now**.
-- **Mark as dove into** removes the artist from every recommendation
-  source on the home page — the To-Dive row and the regular
-  listening-based suggestions both stop showing it, even if Spotify
-  keeps returning it as a top artist. It's not gone for good: the
-  To-Do List page has a collapsible **Completed** section with
-  **Undo** and **Remove permanently** for anything marked dove into.
-
-## Sorting the "New to you" list
-
-On both single-artist search and full library scrub results, the "New
-to you" section has a sort control — release date (newest or oldest
-first) or title, in addition to the default "as found" order. This
-reorders what's shown; it doesn't change which tracks get liked or
-added to the playlist, only the order you review them in.
-
-## Re-running for the same artist
-
-If you run DeepDive again for an artist you've already built a playlist
-for, it reuses the existing playlist (matched by exact name) instead of
-creating a duplicate one, and skips any track that's already in it — so
-re-running never adds the same song twice. The results page after
-confirming will tell you how many tracks were skipped as already present.
-
-## Connecting your account
-
-Clicking **Connect Spotify** opens Spotify's login/consent screen in a
-popup window rather than navigating away from DeepDive — approve access
-there and the popup closes itself automatically, dropping you back into
-the search page. If your browser blocks the popup, a fallback link appears
-to do it as a normal page redirect instead.
-
-## Progress while searching
-
-Large catalogs (an artist with hundreds of releases) can take a while to
-fully read, since DeepDive checks every album's tracklist and pulls full
-track details for ISRC matching. The search page shows a live progress bar
-with the current stage while this runs in the background.
-
-## Data & privacy
-
-Everything runs locally on your machine. Your Spotify tokens are stored in
-your Flask session cookie and a local `.cache-deepdive` file (created on
-first login) — nothing is sent anywhere except directly to Spotify's API.
-Delete `.cache-deepdive` to fully log out and clear cached tokens.
-Your To-Dive-Into List is stored locally in `watchlist.json`, same idea
-— delete it to clear the list.
-
-## Troubleshooting
-
-- **`python3 -m venv venv` fails with something about `ensurepip`** — some
-  Linux distros split the venv module into a separate package. On
-  Debian/Ubuntu: `sudo apt install python3-venv`, then re-run `./run.sh`.
-- **"INVALID_CLIENT: Invalid redirect URI"** — the Redirect URI in your
-  Spotify app settings must match `SPOTIPY_REDIRECT_URI` in `.env` exactly,
-  including the trailing path and using `127.0.0.1` (not `localhost` —
-  Spotify treats these as different values).
-- **Port 8888 already in use** — change `DEEPDIVE_PORT` in `.env` and
-  update the Redirect URI in both `.env` and the Spotify dashboard to match.
-- **Search finds the wrong artist** — DeepDive matches on exact name first,
-  falling back to Spotify's most popular result for that query. For very
-  common names, try adding a distinguishing word Spotify recognizes.
+</div>
