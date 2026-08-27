@@ -173,6 +173,12 @@ const NOISE_PATTERNS = [
   /\s*\(with [^)]*\)/i,
   /\s*-\s*feat\.?.*$/i,
   /\s*-\s*ft\.?.*$/i,
+  // A bare trailing "version" after some descriptor is noise: an
+  // "Audiotree Live version" and an "Audiotree Live" are the same
+  // recording. Specific named versions (album/single/mono/stereo/radio)
+  // are already handled above; this catches the rest. Anchored to the
+  // end so it only strips a trailing word, never mid-title.
+  /\s+version\s*$/i,
 ];
 
 export function normalizeTitle(title) {
@@ -461,6 +467,18 @@ export function confirmCandidates(fullTracks, candidates, likedIndex, opts = {})
 // releases carry the SAME recording, not whether two songs are similar.
 export const DUPLICATE_DURATION_TOLERANCE_MS = 2000;
 
+// Titles for the same recording often differ by a trailing word or two
+// ("- Audiotree Live" vs "- Audiotree Live version"), which an exact
+// normalized-string key can't group. A second fuzzy pass catches those.
+//
+// The threshold is set from real measurements rather than guessed:
+//   "…Audiotree Live" vs "…Audiotree Live version"  -> 0.897  (SAME)
+//   "Who's Laughing Now" vs "…- Audiotree Live"     -> 0.679  (DIFFERENT)
+// A wide gap, so 0.85 clears the duplicate comfortably while leaving
+// studio-vs-live well outside. Note the general fuzzy threshold (0.90)
+// would have missed the real case by 0.003 — hence a separate constant.
+export const DUPLICATE_TITLE_THRESHOLD = 0.85;
+
 function releaseRank(t) {
   // Lower is more canonical. Prefer an album-type release over a single
   // or compilation, then prefer the earliest release date.
@@ -530,11 +548,68 @@ export function collapseDuplicateRecordings(tracks) {
     collapsedCount += group.length - 1;
   }
 
+  // ---- Pass 2: fuzzy title merge --------------------------------
+  // Pass 1 requires an exact normalized-title match, which misses pairs
+  // that differ by a trailing word ("Audiotree Live" vs "Audiotree Live
+  // version"). Compare the survivors directly: same artist, duration
+  // within tolerance, and a high title similarity.
+  //
+  // Two hard guards, so this can't over-collapse:
+  //   - Tracks with DIFFERENT ISRCs are never merged. A differing ISRC
+  //     is authoritative evidence of a different recording (this is what
+  //     keeps remasters separate from originals).
+  //   - Duration is compared directly, not bucketed, so a pair can't
+  //     merge just by landing in the same bucket.
+  const merged = [];
+  const absorbed = new Set();
+
+  for (let i = 0; i < kept.length; i++) {
+    const a = kept[i];
+    if (absorbed.has(a.id)) continue;
+    const cluster = [a];
+
+    for (let j = i + 1; j < kept.length; j++) {
+      const b = kept[j];
+      if (absorbed.has(b.id)) continue;
+
+      const isrcA = (a.external_ids || {}).isrc;
+      const isrcB = (b.external_ids || {}).isrc;
+      if (isrcA && isrcB && isrcA !== isrcB) continue; // definitively different
+
+      if (!setsIntersect(artistNameSet(a), artistNameSet(b))) continue;
+      const durDiff = Math.abs((a.duration_ms || 0) - (b.duration_ms || 0));
+      if (durDiff > DUPLICATE_DURATION_TOLERANCE_MS) continue;
+
+      const sim = sequenceRatio(normalizeTitle(a.name || ""), normalizeTitle(b.name || ""));
+      if (sim < DUPLICATE_TITLE_THRESHOLD) continue;
+
+      cluster.push(b);
+      absorbed.add(b.id);
+    }
+
+    if (cluster.length === 1) {
+      merged.push(a);
+      continue;
+    }
+    const canonical = pickCanonical(cluster);
+    merged.push(canonical);
+    const others = cluster.filter((t) => t.id !== canonical.id);
+    groups[canonical.id] = (groups[canonical.id] || []).concat(others);
+    // Carry over any alternatives already recorded for absorbed tracks.
+    for (const o of others) {
+      if (groups[o.id]) {
+        groups[canonical.id] = groups[canonical.id].concat(groups[o.id]);
+        delete groups[o.id];
+      }
+    }
+    collapsedCount += cluster.length - 1;
+  }
+
   // Preserve the original ordering of whichever track was kept.
   const order = new Map(tracks.map((t, i) => [t.id, i]));
-  kept.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+  merged.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
 
-  return { tracks: kept, collapsedCount, groups };
+  return { tracks: merged, collapsedCount, groups };
 }
 
 /**
