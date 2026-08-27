@@ -92,7 +92,14 @@ export class SpotifyClient {
     this._getToken = getToken;
     // Adaptive pacing state. Starts at zero so ordinary searches are
     // unaffected; only a real 429 slows things down.
+    // Restore any pacing learned earlier. Without this, a page reload
+    // resets to full speed and immediately earns another 429 — the
+    // penalty outlives the tab, so the caution should too.
     this._throttleMs = 0;
+    try {
+      const saved = parseInt(localStorage.getItem("deepdive_throttle_ms") || "0", 10);
+      if (saved > 0) this._throttleMs = Math.min(saved, THROTTLE_MAX_MS);
+    } catch (e) {}
     this._lastRequestAt = 0;
     // Optional hook so the UI can say "waiting on Spotify" instead of
     // appearing frozen during a long backoff.
@@ -109,6 +116,27 @@ export class SpotifyClient {
   /** Called on every 429: slow down for the rest of this run. */
   _backOff() {
     this._throttleMs = Math.min(this._throttleMs + THROTTLE_STEP_MS, THROTTLE_MAX_MS);
+    try { localStorage.setItem("deepdive_throttle_ms", String(this._throttleMs)); } catch (e) {}
+  }
+
+  /**
+   * Pace deliberately before a run we already know is request-heavy,
+   * rather than sprinting until Spotify objects. Backing off only after
+   * a 429 means arriving in the penalty box first and then being slow —
+   * worst of both. Never lowers an existing (learned) throttle.
+   */
+  setMinimumPacing(ms) {
+    this._throttleMs = Math.max(this._throttleMs, Math.min(ms, THROTTLE_MAX_MS));
+  }
+
+  /**
+   * Forget learned pacing. Because the throttle now survives reloads, a
+   * single bad afternoon would otherwise slow every future search
+   * forever with no way back.
+   */
+  resetPacing() {
+    this._throttleMs = 0;
+    try { localStorage.removeItem("deepdive_throttle_ms"); } catch (e) {}
   }
 
   // One HTTP request. Throws SpotifyApiError on >=400 so the retry
@@ -189,7 +217,9 @@ export class SpotifyClient {
           // point is to stop hitting the limit again three calls later.
           this._backOff();
           if (rateLimitAttempts > MAX_RATE_LIMIT_ATTEMPTS) throw e;
-          let wait = 15000;
+          // No Retry-After usually means a sustained limit rather than a
+          // brief one, so escalate rather than retrying every 15s.
+          let wait = Math.min(15000 * rateLimitAttempts, MAX_RATE_LIMIT_WAIT_MS);
           const ra = parseFloat(e.retryAfter);
           if (!Number.isNaN(ra)) wait = Math.min(ra * 1000, MAX_RATE_LIMIT_WAIT_MS);
           if (typeof this.onRateLimit === "function") {

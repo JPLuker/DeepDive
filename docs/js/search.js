@@ -57,6 +57,15 @@ export async function runSearch(client, artistName, opts = {}) {
     ? "album,single,compilation,appears_on"
     : "album,single";
 
+  // Pace up front for the wide catalog read. A prolific artist's
+  // appears_on can be 300-500 releases, and since Spotify's Feb 2026
+  // changes that is one request each with no batching. Sprinting into
+  // that earns a rate limit within seconds and then everything is slow
+  // anyway, so start deliberate instead.
+  if (includeAppearsOn && typeof client.setMinimumPacing === "function") {
+    client.setMinimumPacing(350);
+  }
+
   let completed = 0;
   const report = (stage) => onProgress(Math.round(completed), stage);
 
@@ -176,6 +185,15 @@ export async function runFullScrub(client, opts = {}) {
   const includeGroups = includeAppearsOn
     ? "album,single,compilation,appears_on"
     : "album,single";
+
+  // Pace up front for the wide catalog read. A prolific artist's
+  // appears_on can be 300-500 releases, and since Spotify's Feb 2026
+  // changes that is one request each with no batching. Sprinting into
+  // that earns a rate limit within seconds and then everything is slow
+  // anyway, so start deliberate instead.
+  if (includeAppearsOn && typeof client.setMinimumPacing === "function") {
+    client.setMinimumPacing(350);
+  }
 
   onProgress(0, "Reading your Liked Songs…");
   let likedTracks;

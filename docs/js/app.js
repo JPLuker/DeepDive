@@ -150,6 +150,10 @@ function sortTracks(tracks, mode) {
 
 async function refreshLibrary() {
   if (!auth.isLoggedIn()) { flash("Connect Spotify first.", true); return; }
+  // Also clear any learned rate-limit pacing. This is the natural place
+  // for it: the throttle persists across reloads, so without a way to
+  // clear it one bad session would slow every later search permanently.
+  if (typeof client.resetPacing === "function") client.resetPacing();
   flash("Refreshing your library from Spotify…");
   try {
     const tracks = await libraryCache.getLikedTracks({ forceFull: true });
