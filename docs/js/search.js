@@ -127,7 +127,14 @@ export async function runSearch(client, artistName, opts = {}) {
 
   const phase2 = matching.confirmCandidates(fullTracks, phase1.candidates, likedIndex, { matchRemasters });
 
-  const newTracks = phase1.new_tracks.concat(phase2.new_tracks);
+  const rawNewTracks = phase1.new_tracks.concat(phase2.new_tracks);
+  // The catalog can carry the same recording on several releases (e.g. a
+  // session track released as both a single and on the session EP).
+  // Those are distinct track IDs, so nothing upstream catches them and
+  // the playlist ends up with visible duplicates. Collapse to one per
+  // recording, keeping the most canonical release.
+  const collapsed = matching.collapseDuplicateRecordings(rawNewTracks);
+  const newTracks = collapsed.tracks;
   onProgress(100, "Done");
 
   return {
@@ -135,6 +142,8 @@ export async function runSearch(client, artistName, opts = {}) {
     artist,
     duplicate_candidates: phase2.duplicate_candidates,
     new_tracks: newTracks,
+    collapsed_count: collapsed.collapsedCount,
+    collapsed_groups: collapsed.groups,
     already_liked_count: phase1.already_liked.length,
     excluded_count: phase1.excluded_count,
     exclude_live: excludeLive,
@@ -229,10 +238,16 @@ export async function runFullScrub(client, opts = {}) {
   }
 
   onProgress(100, "Done");
+  // Collapse across the whole scrub, not per artist: the same recording
+  // can surface under more than one artist (features, splits), so the
+  // dedupe has to see everything at once.
+  const collapsedScrub = matching.collapseDuplicateRecordings(allNew);
   return {
     mode: "full_scrub",
     duplicate_candidates: allDuplicates,
-    new_tracks: allNew,
+    new_tracks: collapsedScrub.tracks,
+    collapsed_count: collapsedScrub.collapsedCount,
+    collapsed_groups: collapsedScrub.groups,
     per_artist_summary: perArtist,
     artists_scanned: scanned,
     artists_total: artists.length,

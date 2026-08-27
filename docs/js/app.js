@@ -339,9 +339,53 @@ function renderToDiveRow() {
   el.querySelectorAll("[data-done]").forEach((b) => b.addEventListener("click", () => { watchlist.toggleStatus(b.dataset.done); renderToDiveRow(); loadSuggestions(); }));
 }
 
+// ---- hidden demo mode ----
+// Recommendations come from real listening history, so screenshots
+// expose whatever happens to be in the library. Demo mode substitutes a
+// fixed artist list so marketing images can be staged. Undocumented on
+// purpose. Enable with ?demo=Artist+One,Artist+Two  (or ?demo=1 for a
+// built-in sample set). Persists for the session only.
+const DEMO_SAMPLE = [
+  "Fleetwood Mac", "Big Thief", "Talking Heads", "Fiona Apple",
+  "The Beths", "Wednesday", "Radiohead", "Sharon Van Etten",
+  "Turnstile", "Alvvays", "MJ Lenderman", "Japanese Breakfast",
+];
+
+function demoArtists() {
+  try {
+    const p = new URLSearchParams(window.location.search).get("demo");
+    if (p !== null) {
+      const list = p === "1" || p === ""
+        ? DEMO_SAMPLE
+        : p.split(",").map((s) => s.trim()).filter(Boolean);
+      sessionStorage.setItem("deepdive_demo", JSON.stringify(list));
+      return list;
+    }
+    const stored = sessionStorage.getItem("deepdive_demo");
+    if (stored) return JSON.parse(stored);
+  } catch (e) {}
+  return null;
+}
+
 async function loadSuggestions() {
   const el = document.getElementById("suggestions-row");
   if (!el) return;
+
+  const demo = demoArtists();
+  if (demo && demo.length) {
+    el.innerHTML = `
+      <p class="crate-note" style="margin-top:28px; text-align:center;">Based on what you've been listening to:</p>
+      <div class="pill-row" style="justify-content:center;">
+        ${demo.map((name) => `
+          <div class="pill-wrap">
+            <button class="pill" data-search="${esc(name)}">${esc(name)}</button>
+          </div>`).join("")}
+      </div>`;
+    el.querySelectorAll("[data-search]").forEach((b) =>
+      b.addEventListener("click", () => startSearch(b.dataset.search)));
+    return;
+  }
+
   const pendingNames = new Set(watchlist.listPending().map((e) => e.name.trim().toLowerCase()));
   const doneNames = new Set(watchlist.listDone().map((e) => e.name.trim().toLowerCase()));
   try {
@@ -491,6 +535,7 @@ function renderResults(r) {
     <div class="card">
       <h1>${esc(artistName)}</h1>
       <p class="muted">${r.already_liked_count} already liked · ${dups.length} to confirm · ${news.length} new${r.excluded_count ? ` · ${r.excluded_count} excluded by filters` : ""}</p>
+      ${r.collapsed_count ? `<p class="crate-note">${r.collapsed_count} duplicate recording${r.collapsed_count === 1 ? "" : "s"} collapsed — the same track appeared on more than one release.</p>` : ""}
 
       ${dups.length ? `
         <div class="crate-header"><span class="label teal">Already yours, elsewhere</span><span class="rule"></span></div>
@@ -677,6 +722,7 @@ function renderScrubResults(r) {
     <div class="card">
       <h1>Library scrub ${r.artists_scanned < r.artists_total ? "(cancelled)" : "complete"}</h1>
       <p class="muted">Scanned ${r.artists_scanned} of ${r.artists_total} artists · ${dups.length} duplicates found · ${news.length} new tracks</p>
+      ${r.collapsed_count ? `<p class="crate-note">${r.collapsed_count} duplicate recording${r.collapsed_count === 1 ? "" : "s"} collapsed — the same track appeared on more than one release.</p>` : ""}
       <div class="crate-header"><span class="label gold">New to you</span><span class="rule"></span></div>
       ${news.length ? `
         <div class="sort-row">

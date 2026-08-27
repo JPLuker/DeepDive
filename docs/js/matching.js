@@ -424,3 +424,136 @@ export function confirmCandidates(fullTracks, candidates, likedIndex, opts = {})
 
   return { duplicate_candidates: duplicates, new_tracks: newTracks };
 }
+
+// ---------------------------------------------------------------------
+// Duplicate-recording collapse (fixes the playlist duplicates bug)
+// ---------------------------------------------------------------------
+
+/**
+ * The catalog often carries the SAME recording on more than one release
+ * — e.g. an Audiotree session track released both as a standalone
+ * single and on the session EP. Those are different Spotify track IDs,
+ * so deduping by ID (which the playlist builder does) can't catch them,
+ * and both end up in the generated playlist.
+ *
+ * findCandidates() compares each catalog track against the user's
+ * LIBRARY, but never against the other catalog tracks — so two releases
+ * of one recording both fall through to new_tracks. This collapses them.
+ *
+ * Grouping key, in order of confidence:
+ *   1. ISRC when both tracks have one (authoritative — same ISRC is the
+ *      same recording, which is DeepDive's whole premise).
+ *   2. Otherwise normalized title + duration bucket + shared artist.
+ *      Deliberately conservative: the duration must be within
+ *      DUPLICATE_DURATION_TOLERANCE_MS, so two genuinely different
+ *      recordings that merely share a title (a studio cut and a live
+ *      version of very similar length) are only collapsed if they're
+ *      also near-identical in length.
+ *
+ * Note ISRCs are usually ABSENT here: the two-phase design only fetches
+ * real ISRCs for candidates, not for every catalog track. So in practice
+ * this mostly runs on the title/duration path — which is why that path
+ * is written conservatively. Callers that want ISRC precision should
+ * enrich the tracks first (see collapseNeedsIsrc()).
+ */
+
+// Tighter than the general fuzzy tolerance: we're deciding whether two
+// releases carry the SAME recording, not whether two songs are similar.
+export const DUPLICATE_DURATION_TOLERANCE_MS = 2000;
+
+function releaseRank(t) {
+  // Lower is more canonical. Prefer an album-type release over a single
+  // or compilation, then prefer the earliest release date.
+  const type = (t.album && t.album.album_type) || "";
+  const typeRank = type === "album" ? 0 : type === "single" ? 1 : 2;
+  const date = (t.album && t.album.release_date) || "9999";
+  return { typeRank, date };
+}
+
+/**
+ * Picks which of several releases of the same recording to keep.
+ * Prefers the earliest album-type release, falling back to the earliest
+ * release of any type. (Not simply "album beats everything": a
+ * standalone single that later appears on a compilation should keep the
+ * single, which the date tiebreak handles.)
+ */
+function pickCanonical(tracks) {
+  return tracks.slice().sort((a, b) => {
+    const ra = releaseRank(a), rb = releaseRank(b);
+    if (ra.typeRank !== rb.typeRank) return ra.typeRank - rb.typeRank;
+    if (ra.date !== rb.date) return ra.date.localeCompare(rb.date);
+    return 0; // stable: keep original order
+  })[0];
+}
+
+/**
+ * Collapses tracks that are the same recording on different releases.
+ *
+ * @returns { tracks, collapsedCount, groups }
+ *   tracks         — one per recording, canonical release chosen
+ *   collapsedCount — how many were removed (for "6 duplicates excluded")
+ *   groups         — the removed alternatives, keyed by kept track id,
+ *                    so a UI could offer a different release later
+ */
+export function collapseDuplicateRecordings(tracks) {
+  const byKey = new Map();
+
+  for (const t of tracks) {
+    if (!t || !t.id) continue;
+    const isrc = (t.external_ids || {}).isrc;
+    let key;
+    if (isrc) {
+      key = `isrc:${isrc}`;
+    } else {
+      // Bucket the duration so near-identical lengths group together
+      // without a fragile exact-match.
+      const bucket = Math.round((t.duration_ms || 0) / DUPLICATE_DURATION_TOLERANCE_MS);
+      const artist = ((t.artists || [])[0]?.name || "").toLowerCase();
+      key = `t:${normalizeTitle(t.name || "")}|${artist}|${bucket}`;
+    }
+    if (!byKey.has(key)) byKey.set(key, []);
+    byKey.get(key).push(t);
+  }
+
+  const kept = [];
+  const groups = {};
+  let collapsedCount = 0;
+
+  for (const group of byKey.values()) {
+    if (group.length === 1) {
+      kept.push(group[0]);
+      continue;
+    }
+    const canonical = pickCanonical(group);
+    kept.push(canonical);
+    groups[canonical.id] = group.filter((t) => t.id !== canonical.id);
+    collapsedCount += group.length - 1;
+  }
+
+  // Preserve the original ordering of whichever track was kept.
+  const order = new Map(tracks.map((t, i) => [t.id, i]));
+  kept.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+
+  return { tracks: kept, collapsedCount, groups };
+}
+
+/**
+ * Duration-bucketing can miss a pair that straddles a bucket boundary
+ * (e.g. 3:59.9 and 4:00.1). This returns groups of tracks that look like
+ * possible duplicates by title+artist but weren't collapsed, so a caller
+ * can fetch real ISRCs for just those few and re-collapse precisely —
+ * the same two-phase approach used for candidate matching, rather than
+ * fetching ISRCs for the entire catalog.
+ */
+export function collapseNeedsIsrc(tracks) {
+  const byTitle = new Map();
+  for (const t of tracks) {
+    if (!t || !t.id) continue;
+    if ((t.external_ids || {}).isrc) continue; // already precise
+    const artist = ((t.artists || [])[0]?.name || "").toLowerCase();
+    const key = `${normalizeTitle(t.name || "")}|${artist}`;
+    if (!byTitle.has(key)) byTitle.set(key, []);
+    byTitle.get(key).push(t);
+  }
+  return Array.from(byTitle.values()).filter((g) => g.length > 1);
+}
