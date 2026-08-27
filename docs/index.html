@@ -175,6 +175,31 @@
   .settings-panel.open { display:block; }
   .settings-panel-title { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
 
+  /* ---- intent modal ---- */
+  .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.55); display:flex; align-items:center; justify-content:center; z-index:60; padding:20px; }
+  .modal-backdrop.hidden { display:none; }
+  .modal { background:var(--paper); border:1.5px solid var(--line); border-radius:var(--radius-lg); padding:26px; width:min(520px,100%); max-height:88vh; overflow-y:auto; }
+  .modal h2 { margin:0 0 4px; font-size:20px; }
+  .modal .modal-sub { font-size:13.5px; color:var(--muted); margin:0 0 18px; }
+
+  .intent-list { display:flex; flex-direction:column; gap:9px; }
+  .intent-opt { display:flex; gap:12px; align-items:flex-start; padding:13px 15px; border:1.5px solid var(--line); border-radius:var(--radius); cursor:pointer; background:transparent; text-align:left; width:100%; font-family:inherit; color:var(--ink); }
+  .intent-opt:hover { border-color:var(--ink); }
+  .intent-opt.selected { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 8%, transparent); }
+  .intent-radio { width:16px; height:16px; border-radius:50%; border:2px solid var(--line); flex-shrink:0; margin-top:2px; position:relative; }
+  .intent-opt.selected .intent-radio { border-color:var(--accent); }
+  .intent-opt.selected .intent-radio::after { content:""; position:absolute; inset:2px; border-radius:50%; background:var(--accent); }
+  .intent-text { flex:1; min-width:0; }
+  .intent-name { font-weight:600; font-size:14.5px; }
+  .intent-desc { font-size:12.5px; color:var(--muted); margin-top:3px; line-height:1.45; }
+
+  .intent-custom { margin-top:14px; padding-top:16px; border-top:1px solid var(--line); }
+  .intent-custom.hidden { display:none; }
+  .modal-actions { display:flex; gap:10px; align-items:center; margin-top:22px; flex-wrap:wrap; }
+  .modal-actions .spacer { flex:1; }
+  .modal-remember { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--muted); cursor:pointer; user-select:none; }
+  .modal-remember input { width:15px; height:15px; accent-color:var(--accent); }
+
   /* Support link — styled from the site's own tokens rather than a
      third-party widget, so it matches the pills and follows the theme. */
   .bmc-row { display:flex; justify-content:center; margin-top:44px; }
@@ -221,6 +246,31 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
     <span class="wordmark" data-nav="home"><img src="assets/dd-logo.png" alt="" class="wordmark-icon">DeepDive</span>
+  </div>
+
+  <div class="modal-backdrop hidden" id="intent-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="intent-title">
+      <h2 id="intent-title">What are you after?</h2>
+      <p class="modal-sub" id="intent-artist">Choose how deep to go — you can change this any time.</p>
+      <div class="intent-list" id="intent-list"></div>
+      <div class="intent-custom hidden" id="intent-custom">
+        <div class="settings-panel-title">Fine-tune</div>
+        <div class="filter-options">
+          <label class="checkbox-option"><input type="checkbox" id="opt-live"> Exclude live recordings</label>
+          <label class="checkbox-option"><input type="checkbox" id="opt-censored"> Exclude radio edits &amp; censored versions</label>
+          <label class="checkbox-option"><input type="checkbox" id="opt-instrumental"> Exclude instrumentals</label>
+          <label class="checkbox-option"><input type="checkbox" id="opt-acappella"> Exclude a cappella versions</label>
+          <label class="checkbox-option"><input type="checkbox" id="opt-remaster"> Count remasters as duplicates</label>
+          <label class="checkbox-option"><input type="checkbox" id="opt-appears-on"> Include compilations &amp; "appeared on"</label>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <label class="modal-remember"><input type="checkbox" id="intent-remember"> Don't ask again</label>
+        <span class="spacer"></span>
+        <button class="btn btn-ghost" id="intent-cancel">Cancel</button>
+        <button class="btn btn-primary" id="intent-go">Dive</button>
+      </div>
+    </div>
   </div>
 
   <div id="flash-slot"></div>

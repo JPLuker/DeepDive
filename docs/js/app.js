@@ -232,17 +232,6 @@ async function renderHome() {
         </button>
       </div>
       <div class="autofill-list" id="autofill-list"></div>
-      <div class="settings-panel" id="settings-panel">
-        <div class="settings-panel-title">Search options</div>
-        <div class="filter-options">
-          <label class="checkbox-option"><input type="checkbox" id="opt-live"> Exclude live recordings</label>
-          <label class="checkbox-option"><input type="checkbox" id="opt-censored"> Exclude radio edits &amp; censored versions</label>
-          <label class="checkbox-option"><input type="checkbox" id="opt-instrumental"> Exclude instrumentals</label>
-          <label class="checkbox-option"><input type="checkbox" id="opt-acappella"> Exclude a cappella versions</label>
-          <label class="checkbox-option"><input type="checkbox" id="opt-remaster"> Count remasters as duplicates</label>
-          <label class="checkbox-option"><input type="checkbox" id="opt-appears-on"> Include compilations &amp; "appeared on"</label>
-        </div>
-      </div>
     </div>
     <div id="todive-row"></div>
     <div id="suggestions-row"></div>
@@ -264,7 +253,158 @@ async function renderHome() {
   loadSuggestions();
 }
 
-function readOptions() {
+// ============================================================
+// Intent chooser (2.1)
+// ============================================================
+// Replaces the old hidden settings panel. The filters were always there
+// but lived behind an icon almost nobody clicked, so in practice every
+// search ran on defaults. Asking "what are you after?" makes the same
+// options discoverable, and presets mean most people never touch the
+// individual toggles.
+//
+// IMPORTANT: "standard" reproduces the previous default behaviour
+// exactly (albums + singles, no exclusions). Changing what a default
+// search returns would silently alter results for anyone already using
+// DeepDive, so the presets add options rather than moving the baseline.
+
+const INTENTS = [
+  {
+    id: "standard",
+    name: "Standard dive",
+    desc: "Albums and singles, nothing filtered out. The usual.",
+    opts: {},
+  },
+  {
+    id: "studio",
+    name: "Studio recordings only",
+    desc: "Skips live takes, radio edits, instrumentals and a cappellas — just the proper studio versions.",
+    opts: { excludeLive: true, excludeCensored: true, excludeInstrumental: true, excludeAcappella: true },
+  },
+  {
+    id: "everything",
+    name: "Everything they've touched",
+    desc: "Adds compilations and guest appearances. Thorough, and noticeably slower for artists with a lot of features.",
+    opts: { includeAppearsOn: true },
+  },
+  {
+    id: "custom",
+    name: "Custom",
+    desc: "Set the filters yourself.",
+    opts: null, // read from the checkboxes
+  },
+];
+
+const INTENT_KEY = "deepdive_intent";
+const INTENT_SKIP_KEY = "deepdive_intent_skip";
+const INTENT_CUSTOM_KEY = "deepdive_intent_custom";
+
+function savedIntentId() {
+  try { return localStorage.getItem(INTENT_KEY) || "standard"; } catch (e) { return "standard"; }
+}
+function intentSkipped() {
+  try { return localStorage.getItem(INTENT_SKIP_KEY) === "1"; } catch (e) { return false; }
+}
+function savedCustomOpts() {
+  try { return JSON.parse(localStorage.getItem(INTENT_CUSTOM_KEY) || "{}"); } catch (e) { return {}; }
+}
+
+/** Turn an intent id into the option flags runSearch expects. */
+function optionsForIntent(id, customOpts) {
+  const intent = INTENTS.find((i) => i.id === id) || INTENTS[0];
+  const base = {
+    excludeLive: false, excludeCensored: false, excludeInstrumental: false,
+    excludeAcappella: false, matchRemasters: false, includeAppearsOn: false,
+  };
+  if (intent.id === "custom") return { ...base, ...(customOpts || savedCustomOpts()) };
+  return { ...base, ...intent.opts };
+}
+
+let _pendingArtist = null;
+
+function openIntentModal(artistName, { force = false } = {}) {
+  // If they've opted out of being asked, go straight to the search —
+  // unless this was opened deliberately from the options icon.
+  if (!force && intentSkipped() && artistName) {
+    return runSearchWithOptions(artistName, optionsForIntent(savedIntentId()));
+  }
+
+  _pendingArtist = artistName;
+  const modal = document.getElementById("intent-modal");
+  const list = document.getElementById("intent-list");
+  const sub = document.getElementById("intent-artist");
+  const custom = document.getElementById("intent-custom");
+  const goBtn = document.getElementById("intent-go");
+  if (!modal || !list) return;
+
+  sub.textContent = artistName
+    ? `Diving into ${artistName}. You can change this any time.`
+    : "Pick a default. You can change this any time.";
+  goBtn.textContent = artistName ? "Dive" : "Save";
+
+  let selected = savedIntentId();
+
+  const paint = () => {
+    list.innerHTML = INTENTS.map((i) => `
+      <button type="button" class="intent-opt${i.id === selected ? " selected" : ""}" data-intent="${i.id}">
+        <span class="intent-radio"></span>
+        <span class="intent-text">
+          <span class="intent-name">${esc(i.name)}</span>
+          <span class="intent-desc">${esc(i.desc)}</span>
+        </span>
+      </button>`).join("");
+    custom.classList.toggle("hidden", selected !== "custom");
+    list.querySelectorAll("[data-intent]").forEach((b) =>
+      b.addEventListener("click", () => { selected = b.dataset.intent; paint(); }));
+  };
+  paint();
+
+  // Prefill the custom checkboxes from whatever was last used.
+  const c = savedCustomOpts();
+  const setBox = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
+  setBox("opt-live", c.excludeLive);
+  setBox("opt-censored", c.excludeCensored);
+  setBox("opt-instrumental", c.excludeInstrumental);
+  setBox("opt-acappella", c.excludeAcappella);
+  setBox("opt-remaster", c.matchRemasters);
+  setBox("opt-appears-on", c.includeAppearsOn);
+
+  const remember = document.getElementById("intent-remember");
+  if (remember) remember.checked = intentSkipped();
+
+  modal.classList.remove("hidden");
+
+  const close = () => modal.classList.add("hidden");
+  const confirm = () => {
+    const customOpts = readCustomOptions();
+    try {
+      localStorage.setItem(INTENT_KEY, selected);
+      localStorage.setItem(INTENT_CUSTOM_KEY, JSON.stringify(customOpts));
+      localStorage.setItem(INTENT_SKIP_KEY, remember && remember.checked ? "1" : "0");
+    } catch (e) {}
+    close();
+    if (_pendingArtist) {
+      const artist = _pendingArtist;
+      _pendingArtist = null;
+      runSearchWithOptions(artist, optionsForIntent(selected, customOpts));
+    }
+  };
+
+  // Rebind cleanly each time so handlers don't stack across opens.
+  const goEl = document.getElementById("intent-go");
+  const cancelEl = document.getElementById("intent-cancel");
+  const freshGo = goEl.cloneNode(true); goEl.replaceWith(freshGo);
+  const freshCancel = cancelEl.cloneNode(true); cancelEl.replaceWith(freshCancel);
+  freshGo.addEventListener("click", confirm);
+  freshCancel.addEventListener("click", () => { _pendingArtist = null; close(); });
+  modal.addEventListener("click", (e) => { if (e.target === modal) { _pendingArtist = null; close(); } });
+  document.addEventListener("keydown", function onKey(e) {
+    if (modal.classList.contains("hidden")) { document.removeEventListener("keydown", onKey); return; }
+    if (e.key === "Escape") { _pendingArtist = null; close(); document.removeEventListener("keydown", onKey); }
+    if (e.key === "Enter") { confirm(); document.removeEventListener("keydown", onKey); }
+  });
+}
+
+function readCustomOptions() {
   return {
     excludeLive: !!document.getElementById("opt-live")?.checked,
     excludeCensored: !!document.getElementById("opt-censored")?.checked,
@@ -280,11 +420,15 @@ function wireSearchBar() {
   const goBtn = document.getElementById("search-go-btn");
   const list = document.getElementById("autofill-list");
   const settingsBtn = document.getElementById("settings-toggle-btn");
-  const panel = document.getElementById("settings-panel");
 
-  // settings panel toggle
-  settingsBtn.addEventListener("click", (e) => { e.stopPropagation(); panel.classList.toggle("open"); });
-  document.addEventListener("click", (e) => { if (!panel.contains(e.target) && e.target !== settingsBtn) panel.classList.remove("open"); });
+  // The options icon now opens the intent chooser directly. It's the way
+  // back in for anyone who ticked "Don't ask again" — without it, that
+  // choice would be permanent with no visible escape.
+  settingsBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const n = input.value.trim();
+    openIntentModal(n || null, { force: true });
+  });
 
   const go = () => { const n = input.value.trim(); if (n) startSearch(n); };
   goBtn.addEventListener("click", go);
@@ -455,9 +599,14 @@ async function preflight() {
   }
 }
 
-async function startSearch(artistName) {
+// Entry point from the search bar / pills / watchlist. Shows the intent
+// chooser first (unless the user opted out), then runs the search.
+function startSearch(artistName) {
+  openIntentModal(artistName);
+}
+
+async function runSearchWithOptions(artistName, opts) {
   renderProgress(`Digging through ${artistName}…`);
-  const opts = readOptions();
   try {
     // Preflight (issue #3): verify this token can actually do what the
     // scan is about to ask. Ported from the Flask health check, which
