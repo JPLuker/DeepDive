@@ -21,6 +21,15 @@ const client = new SpotifyClient(auth.getToken);
 // library-cache.js for the correctness (checksum) design.
 const libraryCache = new LibraryCache(client, bestStore());
 
+// When Spotify rate-limits us the client waits and retries, which can be
+// tens of seconds. Without this the progress bar just appears to freeze,
+// so say what's happening instead.
+client.onRateLimit = (waitMs) => {
+  const secs = Math.max(1, Math.round(waitMs / 1000));
+  const el = document.getElementById("prog-stage");
+  if (el) el.textContent = `Spotify is rate-limiting us — waiting ${secs}s, then carrying on…`;
+};
+
 const root = document.getElementById("view-root");
 const flashSlot = document.getElementById("flash-slot");
 
@@ -283,7 +292,7 @@ const INTENTS = [
   {
     id: "everything",
     name: "Everything they've touched",
-    desc: "Adds compilations and guest appearances. Thorough, and noticeably slower for artists with a lot of features.",
+    desc: "Adds compilations and guest appearances. Can be many times slower — for prolific artists this means hundreds of extra requests, so DeepDive will pace itself and may pause when Spotify asks it to.",
     opts: { includeAppearsOn: true },
   },
   {

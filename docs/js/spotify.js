@@ -29,8 +29,27 @@ export const PLAYLIST_ITEMS_LIMIT_MAX = 50;
 
 const MAX_ATTEMPTS = 4;
 const RETRY_BASE_DELAY_MS = 1500;
-const MAX_RATE_LIMIT_ATTEMPTS = 6;
+const MAX_RATE_LIMIT_ATTEMPTS = 10;
 const MAX_RATE_LIMIT_WAIT_MS = 90000;
+
+// ---------------------------------------------------------------------
+// Adaptive throttle
+// ---------------------------------------------------------------------
+// A catalog read is one request per release, and Spotify's Feb 2026
+// changes made that worse: the artist-albums page limit dropped 50 -> 10
+// and batch ?ids= endpoints were removed, so nothing can be fetched in
+// bulk. A normal artist is ~60 releases (fine). With "appeared on"
+// widened to compilations and guest spots it can be 300+, fired as fast
+// as the browser manages -- which reliably trips rate limiting no matter
+// how patient the retry logic is.
+//
+// Retrying harder does not fix that; not tripping the limit does. So the
+// client paces itself: it starts at full speed (most artists never need
+// slowing down) and backs off for the rest of the run each time it sees
+// a 429. Self-tuning, so small catalogs stay fast and big ones settle
+// into a sustainable rate on their own.
+const THROTTLE_STEP_MS = 220;
+const THROTTLE_MAX_MS = 1200;
 const HARD_CALL_TIMEOUT_MS = 25000;
 
 const SCOPE = (
@@ -71,6 +90,25 @@ export class SpotifyApiError extends Error {
 export class SpotifyClient {
   constructor(getToken) {
     this._getToken = getToken;
+    // Adaptive pacing state. Starts at zero so ordinary searches are
+    // unaffected; only a real 429 slows things down.
+    this._throttleMs = 0;
+    this._lastRequestAt = 0;
+    // Optional hook so the UI can say "waiting on Spotify" instead of
+    // appearing frozen during a long backoff.
+    this.onRateLimit = null;
+  }
+
+  /** Wait out the current pacing interval before firing a request. */
+  async _pace() {
+    if (!this._throttleMs) return;
+    const since = Date.now() - this._lastRequestAt;
+    if (since < this._throttleMs) await sleep(this._throttleMs - since);
+  }
+
+  /** Called on every 429: slow down for the rest of this run. */
+  _backOff() {
+    this._throttleMs = Math.min(this._throttleMs + THROTTLE_STEP_MS, THROTTLE_MAX_MS);
   }
 
   // One HTTP request. Throws SpotifyApiError on >=400 so the retry
@@ -94,6 +132,8 @@ export class SpotifyClient {
     init.signal = controller.signal;
 
     let resp;
+    await this._pace();
+    this._lastRequestAt = Date.now();
     try {
       resp = await fetch(url, init);
     } catch (e) {
@@ -145,10 +185,16 @@ export class SpotifyClient {
           await sleep(RETRY_BASE_DELAY_MS * attempt);
         } else if (e.status === 429) {
           rateLimitAttempts += 1;
+          // Slow every subsequent request, not just this retry — the
+          // point is to stop hitting the limit again three calls later.
+          this._backOff();
           if (rateLimitAttempts > MAX_RATE_LIMIT_ATTEMPTS) throw e;
           let wait = 15000;
           const ra = parseFloat(e.retryAfter);
           if (!Number.isNaN(ra)) wait = Math.min(ra * 1000, MAX_RATE_LIMIT_WAIT_MS);
+          if (typeof this.onRateLimit === "function") {
+            try { this.onRateLimit(wait, rateLimitAttempts); } catch (cbErr) {}
+          }
           await sleep(wait);
         } else if ([500, 502, 503, 504].includes(e.status)) {
           if (attempt >= MAX_ATTEMPTS) throw e;
