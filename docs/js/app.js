@@ -366,6 +366,14 @@ function openIntentModal(artistName, { force = false } = {}) {
         </span>
       </button>`).join("");
     custom.classList.toggle("hidden", selected !== "custom");
+    // Only warn when the slow option is actually chosen — a warning
+    // that's always on screen stops being read.
+    const warn = document.getElementById("intent-warning");
+    if (warn) {
+      const heavy = selected === "everything" ||
+        (selected === "custom" && !!document.getElementById("opt-appears-on")?.checked);
+      warn.classList.toggle("hidden", !heavy);
+    }
     list.querySelectorAll("[data-intent]").forEach((b) =>
       b.addEventListener("click", () => { selected = b.dataset.intent; paint(); }));
   };
@@ -380,6 +388,13 @@ function openIntentModal(artistName, { force = false } = {}) {
   setBox("opt-acappella", c.excludeAcappella);
   setBox("opt-remaster", c.matchRemasters);
   setBox("opt-appears-on", c.includeAppearsOn);
+
+  // In Custom, ticking the appeared-on box should raise the same warning.
+  const appearsBox = document.getElementById("opt-appears-on");
+  if (appearsBox) appearsBox.addEventListener("change", () => {
+    const warn = document.getElementById("intent-warning");
+    if (warn && selected === "custom") warn.classList.toggle("hidden", !appearsBox.checked);
+  });
 
   const remember = document.getElementById("intent-remember");
   if (remember) remember.checked = intentSkipped();
