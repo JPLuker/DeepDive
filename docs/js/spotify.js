@@ -90,6 +90,10 @@ export class SpotifyApiError extends Error {
 export class SpotifyClient {
   constructor(getToken) {
     this._getToken = getToken;
+    // Lightweight request log so the app can explain itself. Keeps
+    // counts per endpoint plus the last failure, which is precisely what
+    // one would otherwise dig out of the network console.
+    this.log = { counts: {}, total: 0, lastError: null, started: Date.now() };
     // Adaptive pacing state. Starts at zero so ordinary searches are
     // unaffected; only a real 429 slows things down.
     // Restore any pacing learned earlier. Without this, a page reload
@@ -161,6 +165,14 @@ export class SpotifyClient {
     await this._pace();
     this._lastRequestAt = Date.now();
 
+    // Bucket by endpoint shape, not full URL, so ids don't explode it.
+    try {
+      const path = (url.split("?")[0].split("/v1/")[1] || url)
+        .replace(/\/[0-9A-Za-z]{22}(\/|$)/g, "/{id}$1");
+      this.log.counts[path] = (this.log.counts[path] || 0) + 1;
+      this.log.total += 1;
+    } catch (err) {}
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), HARD_CALL_TIMEOUT_MS);
     init.signal = controller.signal;
@@ -185,10 +197,19 @@ export class SpotifyClient {
       } catch (e) {
         try { msg = await resp.text(); } catch (e2) { msg = null; }
       }
-      throw new SpotifyApiError(resp.status, `${url}: ${msg}`, {
+      const apiErr = new SpotifyApiError(resp.status, `${url}: ${msg}`, {
         retryAfter: resp.headers.get("Retry-After"),
         reason,
       });
+      this.log.lastError = {
+        status: resp.status,
+        url,
+        message: msg || null,
+        reason: reason || null,
+        retryAfter: resp.headers.get("Retry-After"),
+        at: Date.now(),
+      };
+      throw apiErr;
     }
 
     if (resp.status === 204) return null;
@@ -220,6 +241,19 @@ export class SpotifyClient {
           // Slow every subsequent request, not just this retry — the
           // point is to stop hitting the limit again three calls later.
           this._backOff();
+
+          // A Retry-After far beyond any sane wait means a sustained
+          // penalty on the app's credentials, not a momentary burst
+          // limit. Retrying ten times over two minutes cannot satisfy a
+          // six-hour ban; it only turns a clear answer into a confusing
+          // loop. Say so immediately instead.
+          const raSecs = parseFloat(e.retryAfter);
+          if (!Number.isNaN(raSecs) && raSecs * 1000 > MAX_RATE_LIMIT_WAIT_MS) {
+            e.sustained = true;
+            e.retryAfterSeconds = raSecs;
+            throw e;
+          }
+
           if (rateLimitAttempts > MAX_RATE_LIMIT_ATTEMPTS) throw e;
           // No Retry-After usually means a sustained limit rather than a
           // brief one, so escalate rather than retrying every 15s.

@@ -652,7 +652,7 @@ async function runSearchWithOptions(artistName, opts) {
     lastResult = result;
     renderResults(result);
   } catch (e) {
-    renderProgressError(e.message || String(e));
+    renderProgressError(e.message || String(e), e);
   }
 }
 
@@ -679,11 +679,100 @@ function updateProgress(pct, stage) {
   if (stageEl && stage) stageEl.textContent = stage;
   setTitle(`(${pct}%) DeepDive · Working`);
 }
-function renderProgressError(msg) {
+// Turn an error into something a person can act on, plus the technical
+// detail underneath. The point is that nobody should ever need to open
+// the network console to find out what happened — a 429 with a six-hour
+// Retry-After should say "wait until 5pm", not "something went wrong".
+function explainError(err) {
+  const status = err && err.status;
+  const ra = err && (err.retryAfterSeconds ?? parseFloat(err.retryAfter));
+
+  if (status === 429 && !Number.isNaN(ra) && ra > 0) {
+    const until = new Date(Date.now() + ra * 1000);
+    const hrs = Math.floor(ra / 3600);
+    const mins = Math.round((ra % 3600) / 60);
+    const dur = hrs ? `${hrs}h ${mins}m` : `${Math.max(1, mins)} minutes`;
+    const clock = until.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    return {
+      headline: "Spotify has paused this app",
+      detail:
+        `Your Spotify app has been rate-limited for about ${dur} — until roughly ${clock}. ` +
+        `This isn't a bug and retrying won't help; the limit is on your Spotify credentials, not DeepDive. ` +
+        `It usually follows a lot of scanning in a short period, especially with compilations and guest appearances turned on.`,
+      canRetry: false,
+    };
+  }
+  if (status === 429) {
+    return {
+      headline: "Spotify is rate-limiting us",
+      detail: "Too many requests in a short period. Waiting a few minutes usually clears it.",
+      canRetry: true,
+    };
+  }
+  if (status === 401 || status === 403) {
+    return {
+      headline: "Spotify rejected the connection",
+      detail: "Your login may have expired or is missing a permission. Open the menu, choose Disconnect Spotify, then connect again.",
+      canRetry: false,
+    };
+  }
+  if (status === 0) {
+    return {
+      headline: "Couldn't reach Spotify",
+      detail: "The request timed out or the network dropped. Check your connection and try again.",
+      canRetry: true,
+    };
+  }
+  return {
+    headline: "Something went wrong",
+    detail: (err && err.message) ? String(err.message) : String(err),
+    canRetry: true,
+  };
+}
+
+/** The technical detail, shown on demand — the network-console view. */
+function diagnosticsHtml() {
+  const log = client.log || { counts: {}, total: 0 };
+  const rows = Object.entries(log.counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([path, n]) => `<tr><td>${esc(path)}</td><td style="text-align:right;">${n}</td></tr>`)
+    .join("");
+  const e = log.lastError;
+  const errBlock = e ? `
+    <div class="diag-block">
+      <div class="diag-label">Last failed request</div>
+      <div><strong>HTTP ${esc(e.status)}</strong>${e.reason ? ` · ${esc(e.reason)}` : ""}</div>
+      ${e.message ? `<div class="diag-mono">${esc(e.message)}</div>` : ""}
+      ${e.retryAfter ? `<div>Retry-After: <strong>${esc(e.retryAfter)}s</strong></div>` : "<div>No Retry-After header</div>"}
+      <div class="diag-mono">${esc(e.url || "")}</div>
+    </div>` : "";
+  return `
+    ${errBlock}
+    <div class="diag-block">
+      <div class="diag-label">Requests this session (${log.total})</div>
+      <table class="diag-table">${rows || "<tr><td>none</td><td></td></tr>"}</table>
+    </div>
+    <div class="diag-block">
+      <div class="diag-label">Pacing</div>
+      <div>${client._throttleMs ? `${client._throttleMs}ms between requests (learned from rate limiting)` : "none — running at full speed"}</div>
+    </div>`;
+}
+
+function renderProgressError(msgOrErr, err) {
   setTitle("DeepDive · Error");
+  const info = explainError(err || msgOrErr);
   const box = document.getElementById("prog-error");
   const back = document.getElementById("prog-back");
-  if (box) { box.classList.remove("hidden"); box.textContent = `Something went wrong: ${msg}`; }
+  if (box) {
+    box.classList.remove("hidden");
+    box.innerHTML = `
+      <div style="font-weight:700; margin-bottom:6px;">${esc(info.headline)}</div>
+      <div style="line-height:1.5;">${esc(info.detail)}</div>
+      <details class="diag">
+        <summary>Technical details</summary>
+        ${diagnosticsHtml()}
+      </details>`;
+  }
   if (back) back.classList.remove("hidden");
 }
 
@@ -887,7 +976,7 @@ async function startScrub() {
     lastResult = result;
     renderScrubResults(result);
   } catch (e) {
-    renderProgressError(e.message || String(e));
+    renderProgressError(e.message || String(e), e);
   }
 }
 

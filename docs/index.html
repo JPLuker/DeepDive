@@ -195,6 +195,16 @@
 
   .intent-custom { margin-top:14px; padding-top:16px; border-top:1px solid var(--line); }
   .intent-custom.hidden { display:none; }
+  /* diagnostics disclosure inside the error box */
+  .diag { margin-top:12px; }
+  .diag summary { cursor:pointer; font-size:12.5px; color:var(--muted); font-family:'IBM Plex Mono',monospace; letter-spacing:0.04em; }
+  .diag summary:hover { color:var(--ink); }
+  .diag-block { margin-top:12px; padding-top:10px; border-top:1px solid var(--line); font-size:12.5px; line-height:1.6; }
+  .diag-label { font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+  .diag-mono { font-family:'IBM Plex Mono',monospace; font-size:11.5px; word-break:break-all; color:var(--muted); margin-top:3px; }
+  .diag-table { width:100%; border-collapse:collapse; font-family:'IBM Plex Mono',monospace; font-size:11.5px; }
+  .diag-table td { padding:2px 0; border-bottom:1px solid var(--line); }
+
   .intent-warning { display:flex; gap:10px; align-items:flex-start; margin-top:16px; padding:13px 15px; border-radius:var(--radius); background:var(--gold-soft); border:1px solid var(--gold); font-size:12.8px; line-height:1.5; color:var(--ink); }
   .intent-warning.hidden { display:none; }
   .intent-warning svg { width:17px; height:17px; flex-shrink:0; margin-top:1px; color:var(--gold); }
@@ -272,7 +282,7 @@
           <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
           <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
-        <span><strong>This one is slow.</strong> Compilations and guest appearances can mean hundreds of extra releases, and Spotify allows only one at a time — so a prolific artist can take several minutes. DeepDive paces itself to avoid being rate-limited, and will pause and resume if Spotify asks it to. Leave the tab open.</span>
+        <span><strong>This one is slow, and it has a real cost.</strong> Compilations and guest appearances can mean hundreds of extra releases, and Spotify allows only one request at a time — so a prolific artist takes several minutes. Worse, doing this repeatedly can get your Spotify app rate-limited for <strong>hours</strong>, which blocks all searches until it lifts. Use it deliberately rather than routinely, and leave the tab open while it runs.</span>
       </div>
       <div class="modal-actions">
         <label class="modal-remember"><input type="checkbox" id="intent-remember"> Don't ask again</label>
