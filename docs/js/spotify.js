@@ -155,13 +155,17 @@ export class SpotifyClient {
       init.body = JSON.stringify(jsonBody);
     }
 
+    // Pace BEFORE arming the timeout. Starting the abort clock first
+    // meant a paced request spent part of its own 25s budget waiting to
+    // be allowed to start.
+    await this._pace();
+    this._lastRequestAt = Date.now();
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), HARD_CALL_TIMEOUT_MS);
     init.signal = controller.signal;
 
     let resp;
-    await this._pace();
-    this._lastRequestAt = Date.now();
     try {
       resp = await fetch(url, init);
     } catch (e) {

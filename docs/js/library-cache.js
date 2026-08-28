@@ -80,16 +80,26 @@ export class LibraryCache {
   /** Fetch ALL liked tracks, preserving added_at. Returns {tracks, total}. */
   async _fetchAll(onProgress = null) {
     const tracks = [];
+    // Spotify's `total` counts saved entries, but some come back with a
+    // null track — usually something pulled from the platform or not
+    // available in this market. Those can never be cached, so the count
+    // of them has to be carried alongside or the checksum below can
+    // never balance. (This was the bug: tracks.length was compared
+    // straight against total, so any unavailable track meant the cache
+    // looked permanently stale and every search re-read the whole
+    // library.)
+    let unavailable = 0;
     let results = await this.client.get("me/tracks", { limit: 50 });
     const total = (results && typeof results.total === "number") ? results.total : 0;
     while (results) {
       for (const item of results.items || []) {
         if (item && item.track) tracks.push(withAddedAt(item));
+        else unavailable += 1;
       }
       if (onProgress) onProgress(tracks.length, total || tracks.length);
       results = results.next ? await this.client.get(results.next) : null;
     }
-    return { tracks, total: total || tracks.length };
+    return { tracks, total: total || tracks.length, unavailable };
   }
 
   /**
@@ -150,13 +160,19 @@ export class LibraryCache {
     for (const t of cached.tracks) if (!mergedById.has(t.id)) mergedById.set(t.id, t);
     const merged = Array.from(mergedById.values());
 
-    // CHECKSUM. If the count matches Spotify's reported total, we're
-    // provably correct and can trust the cheap path.
-    if (total > 0 && merged.length === total) {
+    // CHECKSUM. Compare like with like: the cache holds only playable
+    // tracks, while Spotify's `total` also counts entries it returns as
+    // null. Adding the known-unavailable count back makes the two
+    // comparable. Without this the sum never balanced for any library
+    // containing a single unavailable track, so the cheap path was never
+    // taken and every search re-read everything.
+    const unavailable = cached.unavailable || 0;
+    if (total > 0 && merged.length + unavailable === total) {
       const state = {
         tracks: merged,
         lastFullReconcile: cached.lastFullReconcile || now,
         syncedTotal: total,
+        unavailable,
       };
       await this._save(state);
       return stripAddedAt(merged);
@@ -167,8 +183,11 @@ export class LibraryCache {
   }
 
   async _fullReadAndStore(onProgress, now) {
-    const { tracks, total } = await this._fetchAll(onProgress);
-    const state = { tracks, lastFullReconcile: now, syncedTotal: total };
+    const { tracks, total, unavailable } = await this._fetchAll(onProgress);
+    const state = {
+      tracks, lastFullReconcile: now, syncedTotal: total,
+      unavailable: unavailable || 0,
+    };
     await this._save(state);
     return stripAddedAt(tracks);
   }
