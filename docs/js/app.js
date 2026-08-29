@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.2.7";
+export const BUILD = "2.2.8";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -715,7 +715,14 @@ async function buildSuggestionRow(el) {
  * the generated suggestions, each labelled with why it's being shown.
  * An unexplained recommendation is clutter; a reason makes it a prompt.
  */
+// The last rendered row. Pinning, unpinning and blocking all change only
+// which items belong where — none of them need fresh data — so they
+// adjust this and redraw rather than re-running the whole build, which
+// would fire API calls again and visibly flash the row.
+let _row = null;
+
 function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state = {}) {
+  _row = { el, pins, suggestions, showAllPins, state };
   const PIN_VISIBLE = 8;
   const shownPins = showAllPins ? pins : pins.slice(0, PIN_VISIBLE);
   const extraPins = pins.length - shownPins.length;
@@ -786,11 +793,19 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   el.querySelectorAll("[data-search]").forEach((b) =>
     b.addEventListener("click", () => startSearch(b.dataset.search)));
 
+  const redraw = () => renderSuggestionRow(_row.el, _row.pins, _row.suggestions, _row.showAllPins, _row.state);
+
   el.querySelectorAll("[data-pin]").forEach((b) => b.addEventListener("click", (ev) => {
     ev.stopPropagation();
-    watchlist.pin(b.dataset.pin, { spotifyId: b.dataset.sid || null, imageUrl: b.dataset.img || null });
-    flash(`Pinned ${b.dataset.pin}.`);
-    loadSuggestions();
+    const name = b.dataset.pin;
+    watchlist.pin(name, { spotifyId: b.dataset.sid || null, imageUrl: b.dataset.img || null });
+    flash(`Pinned ${name}.`);
+    // Move it from suggestions to pins locally — the underlying data
+    // hasn't changed, only where this artist belongs.
+    const key = name.trim().toLowerCase();
+    _row.suggestions = _row.suggestions.filter((x) => (x.name || "").trim().toLowerCase() !== key);
+    _row.pins = watchlist.pinned();
+    redraw();
   }));
 
   el.querySelectorAll("[data-unpin]").forEach((b) => b.addEventListener("click", (ev) => {
@@ -799,20 +814,27 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     // to a stray tap would be annoying.
     if (!window.confirm(`Unpin ${b.dataset.name}?`)) return;
     watchlist.unpin(b.dataset.unpin);
-    loadSuggestions();
+    _row.pins = _row.pins.filter((p) => p.id !== b.dataset.unpin);
+    redraw();
   }));
 
   el.querySelectorAll("[data-block]").forEach((b) => b.addEventListener("click", (ev) => {
     ev.stopPropagation();
-    watchlist.block(b.dataset.block, b.dataset.sid || null);
-    flash(`${b.dataset.block} won't be suggested again.`);
-    loadSuggestions();
+    const name = b.dataset.block;
+    watchlist.block(name, b.dataset.sid || null);
+    flash(`${name} won't be suggested again.`);
+    const key = name.trim().toLowerCase();
+    _row.suggestions = _row.suggestions.filter((x) => (x.name || "").trim().toLowerCase() !== key);
+    redraw();
   }));
 
   const moreBtn = document.getElementById("show-more-pins");
   // Pins are unlimited by design, so long lists collapse rather than
   // being capped — the user decides how messy their own list gets.
-  if (moreBtn) moreBtn.addEventListener("click", () => renderSuggestionRow(el, pins, suggestions, true));
+  if (moreBtn) moreBtn.addEventListener("click", () => {
+    _row.showAllPins = true;
+    redraw();
+  });
 }
 
 // ============================================================
