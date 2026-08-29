@@ -314,25 +314,9 @@
     <button class="nav-link" data-nav="scrub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>Full Library Scan</button>
     <button class="nav-link" data-nav="watchlist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Pins &amp; blocked</button>
     <button class="nav-link" data-nav="refresh-library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Refresh library</button>
-    <div class="nav-divider"></div>
-
-    <div class="nav-sub" style="padding-bottom:6px;">Theme</div>
-    <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Theme">
-      <button class="theme-opt" data-theme-choice="light">Light</button>
-      <button class="theme-opt" data-theme-choice="dark">Dark</button>
-      <button class="theme-opt" data-theme-choice="system">System</button>
-    </div>
-
-    <div class="nav-sub" style="padding-top:14px; padding-bottom:6px;">Appearance</div>
-    <label class="nav-switch">
-      <span>Show support link</span>
-      <input type="checkbox" id="opt-show-bmc" checked>
-      <span class="switch-track"><span class="switch-thumb"></span></span>
-    </label>
-
     <button class="nav-link nav-link-more" id="open-spotify-settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Spotify app
+      Settings
       <svg class="nav-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
 
@@ -347,9 +331,25 @@
     <div class="nav-pane nav-pane-sub" id="nav-spotify-pane" aria-hidden="true">
       <button class="nav-link nav-back" id="close-spotify-settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        Spotify app
+        Settings
       </button>
       <div class="nav-divider"></div>
+
+      <div class="nav-sub" style="padding-bottom:6px;">Theme</div>
+      <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Theme">
+        <button class="theme-opt" data-theme-choice="light">Light</button>
+        <button class="theme-opt" data-theme-choice="dark">Dark</button>
+        <button class="theme-opt" data-theme-choice="system">System</button>
+      </div>
+
+      <div class="nav-sub" style="padding-top:14px; padding-bottom:6px;">Appearance</div>
+      <label class="nav-switch">
+        <span>Show support link</span>
+        <input type="checkbox" id="opt-show-bmc" checked>
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+      </label>
+
+      <div class="nav-sub" style="padding-top:14px; padding-bottom:6px;">Spotify app</div>
       <div class="nav-settings">
         <label class="nav-field-label" for="nav-client-id">Client ID</label>
         <input type="text" id="nav-client-id" class="nav-input" placeholder="paste your Client ID" autocomplete="off" spellcheck="false">
