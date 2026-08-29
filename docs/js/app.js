@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.3.0";
+export const BUILD = "2.3.1";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -253,7 +253,7 @@ async function renderHome() {
       <div class="autofill-list" id="autofill-list"></div>
     </div>
     <div id="suggestions-row"></div>
-    <div class="bmc-row">
+    <div class="bmc-row${showBmc() ? "" : " hidden"}">
       <a class="bmc-link" href="https://buymeacoffee.com/OSJoseph" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M17 8h1a4 4 0 0 1 0 8h-1"/>
@@ -1411,6 +1411,66 @@ async function render() {
   if (!auth.isLoggedIn()) return renderConnect();
   return renderHome();
 }
+
+// ---- support link visibility ----
+// Some people would rather not see a donate prompt every time they open
+// the app. It costs nothing to let them turn it off, and a support link
+// that can't be dismissed is worse than one that can.
+const BMC_KEY = "deepdive_show_bmc";
+function showBmc() {
+  try { return localStorage.getItem(BMC_KEY) !== "0"; } catch (e) { return true; }
+}
+function setShowBmc(on) {
+  try { localStorage.setItem(BMC_KEY, on ? "1" : "0"); } catch (e) {}
+  // Apply immediately rather than waiting for a re-render — the toggle
+  // is in the drawer, with the button visible right behind it.
+  document.querySelectorAll(".bmc-row").forEach((r) => r.classList.toggle("hidden", !on));
+}
+
+// ---- inline settings in the nav drawer ----
+// Configuration used to be a separate page, which meant leaving whatever
+// you were doing to change one field. It lives in the drawer now,
+// alongside the theme controls, so settings are all in one place.
+(function initDrawerSettings() {
+  const bmcBox = document.getElementById("opt-show-bmc");
+  if (bmcBox) {
+    bmcBox.checked = showBmc();
+    bmcBox.addEventListener("change", () => setShowBmc(bmcBox.checked));
+  }
+
+  const uriEl = document.getElementById("nav-redirect-uri");
+  if (uriEl) uriEl.textContent = auth.redirectUri();
+
+  const copyBtn = document.getElementById("nav-copy-uri");
+  if (copyBtn) copyBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(auth.redirectUri());
+      copyBtn.textContent = "Copied";
+      setTimeout(() => { copyBtn.textContent = "Copy"; }, 1600);
+    } catch (e) {
+      copyBtn.textContent = "Copy failed";
+      setTimeout(() => { copyBtn.textContent = "Copy"; }, 1600);
+    }
+  });
+
+  const idInput = document.getElementById("nav-client-id");
+  const saveBtn = document.getElementById("nav-save-client-id");
+  if (idInput) idInput.value = auth.getClientId();
+  const save = () => {
+    const v = (idInput.value || "").trim();
+    if (!v) { flash("Enter your Client ID first.", true); return; }
+    const changed = v !== auth.getClientId();
+    auth.setClientId(v);
+    // Changing the Client ID invalidates the current session, since the
+    // token belongs to the old app. Say so rather than letting the next
+    // request fail confusingly.
+    flash(changed
+      ? "Client ID saved. Reconnect Spotify for it to take effect."
+      : "Client ID saved.");
+  };
+  if (saveBtn) saveBtn.addEventListener("click", save);
+  if (idInput) idInput.addEventListener("keydown", (e) => { if (e.key === "Enter") save(); });
+})();
 
 function stampBuild() {
   const el = document.getElementById("build-id");
