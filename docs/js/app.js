@@ -16,6 +16,11 @@ import { LibraryCache } from "./library-cache.js";
 import * as insights from "./insights.js";
 import { bestStore } from "./storage.js";
 
+// Build marker. Twice now, diagnosing a problem has meant reasoning
+// about which version was actually loaded from indirect evidence — slow
+// and easy to get wrong. Showing it removes the guesswork.
+export const BUILD = "2.2.2";
+
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
 // fetch changes on later searches. Persisted in IndexedDB. See
@@ -542,6 +547,18 @@ async function loadSuggestions() {
     return;
   }
 
+  try {
+    await buildSuggestionRow(el);
+  } catch (err) {
+    // Never fail silently. An empty row with no explanation is
+    // indistinguishable from a broken app, which is exactly how the
+    // last one presented.
+    el.innerHTML = `<p class="crate-note row-label">Couldn't build suggestions: ${esc(err && err.message ? err.message : String(err))}</p>`;
+    console.error("[DeepDive] suggestion row failed:", err);
+  }
+}
+
+async function buildSuggestionRow(el) {
   // Two halves. The listening half needs API calls; the library half is
   // computed from the cache and costs nothing — so if Spotify is slow,
   // rate-limited, or the token is stale, the row still populates.
@@ -867,6 +884,10 @@ function diagnosticsHtml() {
     <div class="diag-block">
       <div class="diag-label">Requests this session (${log.total})</div>
       <table class="diag-table">${rows || "<tr><td>none</td><td></td></tr>"}</table>
+    </div>
+    <div class="diag-block">
+      <div class="diag-label">Build</div>
+      <div>${esc(BUILD)}</div>
     </div>
     <div class="diag-block">
       <div class="diag-label">Pacing</div>
@@ -1217,7 +1238,13 @@ async function render() {
   return renderHome();
 }
 
+function stampBuild() {
+  const el = document.getElementById("build-id");
+  if (el) el.textContent = `build ${BUILD}`;
+}
+
 async function boot() {
+  stampBuild();
   // Handle a PKCE redirect coming back from Spotify.
   const cb = await auth.handleRedirectCallback();
   if (cb.ok === false) {
