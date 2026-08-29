@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DeepDive</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <script>
@@ -317,6 +317,80 @@
   }
   .bmc-link svg { width:17px; height:17px; }
   .bmc-link:hover { color:var(--accent); border-color:var(--accent); }
+
+  /* ---- mobile ----------------------------------------------------
+     Nothing above this point adapts to width: the app was built and
+     tested on a desktop, so a phone got a 76px wordmark, a 100px logo
+     and cards with a fixed 190px floor. This is a real breakpoint
+     rather than a scale-down — spacing and type sizes that read well
+     at 1200px are simply wrong at 380px. */
+  @media (max-width: 640px) {
+    .wrap { padding:0 14px 60px; }
+    .topbar { padding:16px 14px; gap:10px; }
+    .wordmark { font-size:19px; }
+
+    /* The hero took most of a phone screen before anything useful. */
+    .wordmark-hero { font-size:44px; }
+    .wordmark-hero-icon { height:58px; }
+
+    h1 { font-size:22px; }
+    .card { padding:20px 16px; border-radius:var(--radius); }
+
+    /* Search stays the priority; tighten it so the input keeps room. */
+    .search-shell { margin-top:18px; }
+    .search-pill-form { padding:5px 6px 5px 16px; gap:6px; }
+    .search-pill-form input[type=text] { font-size:16px; }  /* 16px avoids iOS zoom-on-focus */
+    .search-icon-btn, .settings-icon-btn { width:40px; height:40px; }
+
+    /* Pills: let them fill the width rather than fragmenting into a
+       ragged two-per-row grid. */
+    .pill-row { gap:7px; }
+    .pill { padding:7px 13px 7px 8px; gap:8px; max-width:100%; }
+    .pill-name { font-size:13px; }
+    .pill-avatar { width:26px; height:26px; }
+    .pill-text { min-width:0; }
+    .pill-name, .pill-reason { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+
+    /* Cards were 190px minimum, which forced horizontal overflow on a
+       narrow screen. One per row reads better anyway. */
+    .card-row { gap:8px; }
+    .pcard { min-width:0; width:100%; padding:12px 14px; }
+
+    .row-head { margin:26px auto 12px; }
+
+    /* Modals: full-width sheets rather than centred boxes. */
+    .modal-backdrop { padding:0; align-items:flex-end; }
+    .modal { width:100%; max-height:92vh; border-radius:var(--radius-lg) var(--radius-lg) 0 0; padding:22px 18px calc(22px + env(safe-area-inset-bottom)); }
+    .modal-actions { position:sticky; bottom:0; background:var(--paper); padding-top:14px; margin-top:18px; }
+    .modal-actions .btn { flex:1; justify-content:center; }
+    .modal-actions .spacer { display:none; }
+    .modal-remember { order:-1; width:100%; }
+
+    .intent-opt { padding:12px 13px; }
+    .len-opt { padding:8px 13px; }
+
+    /* Results rows need the space more than the padding. */
+    .track-row { padding:10px 4px 10px 2px; gap:10px; }
+    .track-name { font-size:14px; }
+    .actions .btn { flex:1; justify-content:center; }
+
+    .watchlist-row { align-items:flex-start; }
+    .watchlist-actions { width:100%; }
+    .watchlist-actions .btn { flex:1; justify-content:center; }
+
+    /* The drawer holds a full settings pane now, so 84vw left the
+       Client ID field uncomfortably narrow. */
+    .nav-drawer { width:min(320px,90vw); }
+    .nav-pane { padding:18px 16px calc(18px + env(safe-area-inset-bottom)); }
+  }
+
+  /* Very narrow phones — the wordmark is still the first thing to
+     overflow, so give it one more step down. */
+  @media (max-width: 380px) {
+    .wordmark-hero { font-size:36px; }
+    .wordmark-hero-icon { height:48px; }
+    .pill-name { font-size:12.5px; }
+  }
 </style>
 </head>
 <body>
