@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.3.6";
+export const BUILD = "2.3.7";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -310,7 +310,7 @@ async function loadPlaylistCards() {
  */
 function renderCardRow(el) {
   el.innerHTML = `
-    <div class="row-head"><span class="label pinned">Playlist ideas</span><span class="rule"></span></div>
+    <div class="row-head"><span class="label pinned">Playlists</span><span class="rule"></span></div>
     <div class="card-row">
       ${_cards.map((c) => `
         <button class="pcard" data-card="${esc(c.id)}">
