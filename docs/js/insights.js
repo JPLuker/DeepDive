@@ -151,3 +151,120 @@ export function seededPick(items, count, seed) {
   }
   return arr.slice(0, count);
 }
+
+// ---------------------------------------------------------------------
+// Playlist cards (2.3)
+// ---------------------------------------------------------------------
+// Each card describes a playlist that could be built from the cached
+// library, along with the tracks it would contain. Nothing here touches
+// the network, so the row is instant and works offline.
+//
+// Cards are *offers*, not playlists: a card is only shown if it would
+// actually produce something, and nothing is created until the user
+// confirms. Showing a card that yields an empty playlist would be worse
+// than not showing it at all.
+
+const MIN_CARD_TRACKS = 5;
+
+function sortedByAdded(tracks, dir = "asc") {
+  const withDate = tracks.filter((t) => t && t.added_at);
+  withDate.sort((a, b) => dir === "asc"
+    ? a.added_at.localeCompare(b.added_at)
+    : b.added_at.localeCompare(a.added_at));
+  return withDate;
+}
+
+/** One card per calendar year that has enough tracks to be worth it. */
+function yearCards(tracks) {
+  const byYear = new Map();
+  for (const t of tracks) {
+    const y = (t.added_at || "").slice(0, 4);
+    if (!y) continue;
+    if (!byYear.has(y)) byYear.set(y, []);
+    byYear.get(y).push(t);
+  }
+  const cards = [];
+  for (const [year, list] of byYear) {
+    if (list.length < MIN_CARD_TRACKS) continue;
+    cards.push({
+      id: `year-${year}`,
+      title: `Your ${year}`,
+      subtitle: "what you added that year",
+      count: list.length,
+      // Chronological within the year reads like a diary rather than a
+      // shuffle.
+      tracks: sortedByAdded(list, "asc"),
+    });
+  }
+  // Most recent year first.
+  cards.sort((a, b) => b.id.localeCompare(a.id));
+  return cards;
+}
+
+/** The earliest things in the library — where it all started. */
+function firstFiftyCard(tracks) {
+  const oldest = sortedByAdded(tracks, "asc").slice(0, 50);
+  if (oldest.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "first-50",
+    title: "Your first 50",
+    subtitle: "the earliest things you liked",
+    count: oldest.length,
+    tracks: oldest,
+  };
+}
+
+/** One track from each artist you've only ever liked once. */
+function oneOffsCard(tracks) {
+  const counts = new Map();
+  for (const t of tracks) {
+    const a = (t.artists || [])[0];
+    if (!a || !a.id) continue;
+    if (!counts.has(a.id)) counts.set(a.id, []);
+    counts.get(a.id).push(t);
+  }
+  const picks = [];
+  for (const list of counts.values()) if (list.length === 1) picks.push(list[0]);
+  if (picks.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "one-offs",
+    title: "One-hit wonders",
+    subtitle: "artists you've liked exactly one song by",
+    count: picks.length,
+    tracks: sortedByAdded(picks, "desc"),
+  };
+}
+
+/** Things added long ago and not revisited since. */
+function forgottenCard(tracks) {
+  const oldest = sortedByAdded(tracks, "asc");
+  if (oldest.length < MIN_CARD_TRACKS * 2) return null;
+  // The older half, minus the very first 50 (those have their own card).
+  const half = oldest.slice(50, 50 + Math.max(MIN_CARD_TRACKS, Math.floor(oldest.length / 3)));
+  if (half.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "forgotten",
+    title: "Long forgotten",
+    subtitle: "added years ago and buried since",
+    count: half.length,
+    tracks: half,
+  };
+}
+
+/**
+ * All cards that would actually produce a playlist for this library.
+ * Year cards are capped so a long-standing account doesn't produce a
+ * dozen near-identical tiles.
+ */
+export function playlistCards(tracks, { maxYears = 3 } = {}) {
+  if (!tracks || !tracks.length) return [];
+  const cards = [];
+  const oneOffs = oneOffsCard(tracks);
+  if (oneOffs) cards.push(oneOffs);
+  cards.push(...yearCards(tracks).slice(0, maxYears));
+  const first = firstFiftyCard(tracks);
+  if (first) cards.push(first);
+  const forgotten = forgottenCard(tracks);
+  if (forgotten) cards.push(forgotten);
+  return cards;
+}

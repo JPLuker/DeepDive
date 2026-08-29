@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.3.3";
+export const BUILD = "2.3.4";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -253,6 +253,7 @@ async function renderHome() {
       <div class="autofill-list" id="autofill-list"></div>
     </div>
     <div id="suggestions-row"></div>
+    <div id="playlist-cards"></div>
     <div class="bmc-row${showBmc() ? "" : " hidden"}">
       <a class="bmc-link" href="https://buymeacoffee.com/OSJoseph" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -268,6 +269,128 @@ async function renderHome() {
 
   wireSearchBar();
   loadSuggestions();
+  loadPlaylistCards();
+}
+
+// ---- playlist suggestion cards (2.3) ----
+// Built entirely from the cached library: no API calls, instant, and
+// available offline. A card is an offer rather than a playlist — nothing
+// is created until it's confirmed, because silently adding playlists to
+// someone's Spotify account on a single click would be presumptuous.
+let _cards = [];
+
+async function loadPlaylistCards() {
+  const el = document.getElementById("playlist-cards");
+  if (!el) return;
+  try {
+    const cached = await Promise.race([
+      libraryCache.peek(),
+      new Promise((resolve) => setTimeout(() => resolve([]), 2500)),
+    ]);
+    if (!cached || !cached.length) { el.innerHTML = ""; return; }
+    _cards = insights.playlistCards(cached);
+    if (!_cards.length) { el.innerHTML = ""; return; }
+
+    el.innerHTML = `
+      <div class="row-head"><span class="label pinned">Playlist ideas</span><span class="rule"></span></div>
+      <div class="card-row">
+        ${_cards.map((c, i) => `
+          <button class="pcard" data-card="${i}">
+            <span class="pcard-title">${esc(c.title)}</span>
+            <span class="pcard-sub">${esc(c.subtitle)}</span>
+            <span class="pcard-count">${c.count} track${c.count === 1 ? "" : "s"}</span>
+          </button>`).join("")}
+      </div>`;
+    el.querySelectorAll("[data-card]").forEach((b) =>
+      b.addEventListener("click", () => openCardModal(_cards[+b.dataset.card])));
+  } catch (e) {
+    el.innerHTML = "";
+    console.error("[DeepDive] playlist cards failed:", e);
+  }
+}
+
+const CARD_LENGTHS = [10, 20, 30, 50, 100, "all"];
+
+function openCardModal(card) {
+  if (!card) return;
+  const modal = document.getElementById("card-modal");
+  const title = document.getElementById("card-title");
+  const sub = document.getElementById("card-sub");
+  const nameInput = document.getElementById("card-name");
+  const lenRow = document.getElementById("card-len");
+  const preview = document.getElementById("card-preview");
+  const summary = document.getElementById("card-preview-summary");
+  const msg = document.getElementById("card-msg");
+  if (!modal) return;
+
+  title.textContent = card.title;
+  sub.textContent = card.subtitle;
+  nameInput.value = `DeepDive · ${card.title}`;
+  msg.classList.add("hidden");
+  msg.textContent = "";
+
+  // Default to everything for small sets, otherwise a sensible slice.
+  let length = card.count <= 50 ? "all" : 50;
+
+  const tracksFor = () => length === "all" ? card.tracks : card.tracks.slice(0, length);
+
+  const paint = () => {
+    lenRow.innerHTML = CARD_LENGTHS
+      .filter((n) => n === "all" || n < card.count)   // don't offer 100 for a 40-track card
+      .map((n) => `<button type="button" class="len-opt${n === length ? " active" : ""}" data-len="${n}">${n === "all" ? `All ${card.count}` : n}</button>`)
+      .join("");
+    lenRow.querySelectorAll("[data-len]").forEach((b) => b.addEventListener("click", () => {
+      const v = b.dataset.len;
+      length = v === "all" ? "all" : parseInt(v, 10);
+      paint();
+    }));
+    const list = tracksFor();
+    summary.textContent = `Preview ${list.length} track${list.length === 1 ? "" : "s"}`;
+    preview.innerHTML = list.slice(0, 100).map((t) => `
+      <div class="track-row newt">
+        <div class="track-meta">
+          <div class="track-name">${esc(t.name)}</div>
+          <div class="track-sub">${esc((t.artists && t.artists[0] && t.artists[0].name) || "")}${t.album && t.album.name ? ` · ${esc(t.album.name)}` : ""}</div>
+        </div>
+      </div>`).join("") + (list.length > 100 ? `<p class="crate-note" style="margin-top:10px;">…and ${list.length - 100} more.</p>` : "");
+  };
+  paint();
+
+  modal.classList.remove("hidden");
+  const close = () => modal.classList.add("hidden");
+
+  // Rebind cleanly so handlers don't accumulate across openings.
+  const goEl = document.getElementById("card-go");
+  const cancelEl = document.getElementById("card-cancel");
+  const freshGo = goEl.cloneNode(true); goEl.replaceWith(freshGo);
+  const freshCancel = cancelEl.cloneNode(true); cancelEl.replaceWith(freshCancel);
+
+  freshCancel.addEventListener("click", close);
+  modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+
+  freshGo.addEventListener("click", async () => {
+    const list = tracksFor();
+    if (!list.length) { msg.textContent = "Nothing to add."; msg.classList.remove("hidden"); return; }
+    freshGo.disabled = true;
+    freshGo.textContent = "Creating…";
+    try {
+      const res = await client.addTracksToPlaylistDeduped(
+        (nameInput.value || "").trim() || `DeepDive · ${card.title}`,
+        `${card.subtitle}, built by DeepDive.`,
+        list.map((t) => t.id)
+      );
+      msg.innerHTML = `Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}. <a href="${esc(res.url)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
+      msg.classList.remove("hidden", "error");
+    } catch (e) {
+      const info = explainError(e);
+      msg.textContent = `${info.headline}. ${info.detail}`;
+      msg.classList.remove("hidden");
+      msg.classList.add("error");
+    } finally {
+      freshGo.disabled = false;
+      freshGo.textContent = "Create playlist";
+    }
+  });
 }
 
 // ============================================================
