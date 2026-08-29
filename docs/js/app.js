@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.2.5";
+export const BUILD = "2.2.6";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -706,25 +706,45 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   const shownPins = showAllPins ? pins : pins.slice(0, PIN_VISIBLE);
   const extraPins = pins.length - shownPins.length;
 
-  const pill = (name, imageUrl, reason, extraBtns) => `
-    <div class="pill-wrap">
+  // A small icon per reason type. Four different prompts all rendered as
+  // identical grey text is hard to scan; an icon makes the kind of
+  // suggestion legible before you read the words.
+  const REASON_ICONS = {
+    play: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="4" y1="10" x2="4" y2="14"/><line x1="9" y1="6" x2="9" y2="18"/><line x1="14" y1="9" x2="14" y2="15"/><line x1="19" y1="11" x2="19" y2="13"/></svg>`,
+    one: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/></svg>`,
+    old: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>`,
+  };
+  const iconFor = (reason) => {
+    if (!reason) return "";
+    if (/song liked/i.test(reason)) return REASON_ICONS.one;
+    if (/last added/i.test(reason)) return REASON_ICONS.old;
+    return REASON_ICONS.play;
+  };
+  const PIN_MARK = `<span class="pin-mark"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2l1.5 1.5-1 4L18 11l-1.4 1.4-3.6-2.1-3.5 3.5.2 3.4L8.3 18.6 5.7 14 1 11.4l1.4-1.4 3.4.2 3.5-3.5L7.2 3.1 8.6 1.7 12.5 5l4-1L14 2z"/></svg></span>`;
+
+  const pill = (name, imageUrl, reason, extraBtns, isPin) => `
+    <div class="pill-wrap${isPin ? " is-pin" : ""}">
       <button class="pill" data-search="${esc(name)}">
         ${imageUrl ? `<img src="${esc(imageUrl)}" alt="" class="pill-avatar">` : ""}
-        <span class="pill-text"><span class="pill-name">${esc(name)}</span>${reason ? `<span class="pill-reason">${esc(reason)}</span>` : ""}</span>
+        <span class="pill-text">
+          <span class="pill-name">${esc(name)}</span>
+          ${reason ? `<span class="pill-reason">${iconFor(reason)}${esc(reason)}</span>` : ""}
+        </span>
+        ${isPin ? PIN_MARK : ""}
       </button>
       ${extraBtns || ""}
     </div>`;
 
   const pinsHtml = shownPins.length ? `
-    <p class="crate-note row-label">Pinned</p>
+    <div class="row-head"><span class="label pinned">Pinned</span><span class="rule"></span></div>
     <div class="pill-row">
       ${shownPins.map((p) => pill(p.name, p.image_url, null,
-        `<button class="pill-icon-btn done-btn" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`)).join("")}
+        `<button class="pill-icon-btn done-btn" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`, true)).join("")}
       ${extraPins > 0 ? `<button class="pill pill-more" id="show-more-pins">show ${extraPins} more…</button>` : ""}
     </div>` : "";
 
   const suggHtml = suggestions.length ? `
-    <p class="crate-note row-label">Suggested for you</p>
+    <div class="row-head"><span class="label sugg">Suggested for you</span><span class="rule"></span></div>
     <div class="pill-row">
       ${suggestions.map((sg) => pill(sg.name, sg.image_url, sg.reason,
         `<button class="pill-icon-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" title="Pin for later">+</button>
