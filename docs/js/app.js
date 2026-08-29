@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.2.3";
+export const BUILD = "2.2.4";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -568,6 +568,18 @@ async function buildSuggestionRow(el) {
   const doneNames = new Set(watchlist.listDone().map((e) => (e.name || "").trim().toLowerCase()));
   const exclude = new Set([...blocked, ...pinNames, ...doneNames]);
 
+  // Paint pins IMMEDIATELY, before anything async.
+  //
+  // Pins live in localStorage and are synchronously available. They need
+  // no network and no IndexedDB, so making them wait on either is simply
+  // wrong — and it's why this looked broken for three rounds: the row
+  // awaited both halves before rendering even once, which meant up to
+  // sixteen seconds of blank page whenever Spotify was slow.
+  //
+  // Anything the user explicitly asked for should appear at once, and
+  // generated suggestions should fill in around it.
+  renderSuggestionRow(el, pins, [], false, { pending: true });
+
   // Stable for the session: something that caught your eye should still
   // be there when you come back to the page.
   let seed;
@@ -586,7 +598,7 @@ async function buildSuggestionRow(el) {
   try {
     const cached = await Promise.race([
       libraryCache.peek(),
-      new Promise((resolve) => setTimeout(() => resolve([]), 4000)),
+      new Promise((resolve) => setTimeout(() => resolve([]), 2500)),
     ]);
     if (cached && cached.length) {
       libraryPicks = insights.librarySuggestions(cached, { exclude, limit: 6 });
@@ -604,7 +616,7 @@ async function buildSuggestionRow(el) {
         client.getTopArtists("medium_term", 10),
         client.getRecentlyPlayedArtists(50),
       ]),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("timed out")), 12000)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timed out")), 8000)),
     ]);
     const seen = new Map();
     for (const a of top) if (!seen.has(a.id)) seen.set(a.id, { id: a.id, name: a.name, image_url: smallest(a.images), reason: "you've been playing them" });
@@ -688,11 +700,15 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   // Never leave the row silently blank — an empty area with no
   // explanation reads as broken. Say which half was unavailable.
   let emptyHtml = "";
-  if (!shownPins.length && !suggestions.length) {
-    const why = state.listeningFailed
-      ? "Couldn't reach Spotify for listening-based suggestions right now."
-      : "Run a search first — suggestions are built from your library once it's been read.";
-    emptyHtml = `<p class="crate-note row-label">${esc(why)} Pin an artist from the search box to keep it here.</p>`;
+  if (!suggestions.length) {
+    if (state.pending) {
+      emptyHtml = `<p class="crate-note row-label">Finding suggestions…</p>`;
+    } else if (!shownPins.length) {
+      const why = state.listeningFailed
+        ? "Couldn't reach Spotify for listening-based suggestions right now."
+        : "Run a search first — suggestions are built from your library once it's been read.";
+      emptyHtml = `<p class="crate-note row-label">${esc(why)} Pin an artist from the search box to keep it here.</p>`;
+    }
   }
 
   el.innerHTML = pinsHtml + suggHtml + emptyHtml;
