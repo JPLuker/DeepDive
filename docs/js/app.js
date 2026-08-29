@@ -572,6 +572,7 @@ async function loadSuggestions() {
 
   // --- listening half (API) ---
   let listeningPicks = [];
+  let listeningFailed = false;
   try {
     const [top, recent] = await Promise.all([
       client.getTopArtists("medium_term", 10),
@@ -585,22 +586,40 @@ async function loadSuggestions() {
       return !exclude.has(k) && !libraryPicks.some((l) => l.id === s2.id);
     });
     listeningPicks = insights.seededPick(listeningPicks, 6, seed);
-  } catch (e) { /* API unavailable — library half still works */ }
+  } catch (e) { listeningFailed = true; /* library half still works */ }
 
   const suggestions = [...listeningPicks, ...libraryPicks];
 
-  // Fill in artist images where we don't have one. Optional: a missing
-  // photo shouldn't cost a suggestion.
+  // Render NOW, before fetching any artwork.
+  //
+  // Artwork is one API request per artist. When the app is rate-limited
+  // each of those retries with backoff, so awaiting them before the
+  // first render can block the entire row — pins included — for minutes,
+  // or forever. Pins are the user's own deliberate choices and must
+  // never wait on a decorative lookup.
+  try {
+    renderSuggestionRow(el, pins, suggestions, false, { listeningFailed, hasCache: libraryPicks.length > 0 });
+  } catch (e) {
+    el.innerHTML = `<p class="crate-note row-label">Couldn't build suggestions.</p>`;
+  }
+
+  // Then enrich in the background and re-render if anything arrives.
   const missing = suggestions.filter((x) => !x.image_url).map((x) => x.id).filter(Boolean);
   if (missing.length) {
     try {
       const details = await client.getArtistsByIds(missing.slice(0, 12));
       const byId = new Map(details.map((a) => [a.id, smallest(a.images)]));
-      for (const x of suggestions) if (!x.image_url) x.image_url = byId.get(x.id) || null;
-    } catch (e) { /* photos optional */ }
+      let changed = false;
+      for (const x of suggestions) {
+        if (!x.image_url && byId.get(x.id)) { x.image_url = byId.get(x.id); changed = true; }
+      }
+      // Only redraw if the row is still on screen and something changed;
+      // the user may have navigated away while this was in flight.
+      if (changed && document.getElementById("suggestions-row") === el) {
+        renderSuggestionRow(el, pins, suggestions);
+      }
+    } catch (e) { /* photos are optional; the row is already up */ }
   }
-
-  renderSuggestionRow(el, pins, suggestions);
 }
 
 /**
@@ -608,7 +627,7 @@ async function loadSuggestions() {
  * the generated suggestions, each labelled with why it's being shown.
  * An unexplained recommendation is clutter; a reason makes it a prompt.
  */
-function renderSuggestionRow(el, pins, suggestions, showAllPins = false) {
+function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state = {}) {
   const PIN_VISIBLE = 8;
   const shownPins = showAllPins ? pins : pins.slice(0, PIN_VISIBLE);
   const extraPins = pins.length - shownPins.length;
@@ -638,7 +657,17 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false) {
          <button class="pill-icon-btn block-btn" data-block="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" title="Never suggest this artist">&minus;</button>`)).join("")}
     </div>` : "";
 
-  el.innerHTML = pinsHtml + suggHtml;
+  // Never leave the row silently blank — an empty area with no
+  // explanation reads as broken. Say which half was unavailable.
+  let emptyHtml = "";
+  if (!shownPins.length && !suggestions.length) {
+    const why = state.listeningFailed
+      ? "Couldn't reach Spotify for listening-based suggestions right now."
+      : "Run a search first — suggestions are built from your library once it's been read.";
+    emptyHtml = `<p class="crate-note row-label">${esc(why)} Pin an artist from the search box to keep it here.</p>`;
+  }
+
+  el.innerHTML = pinsHtml + suggHtml + emptyHtml;
 
   el.querySelectorAll("[data-search]").forEach((b) =>
     b.addEventListener("click", () => startSearch(b.dataset.search)));
