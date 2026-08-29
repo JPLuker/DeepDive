@@ -192,6 +192,18 @@ export class LibraryCache {
     return stripAddedAt(tracks);
   }
 
+  /**
+   * Read what's already cached without contacting Spotify. Used by the
+   * library-mined suggestions, which must cost nothing — if they
+   * triggered a sync they'd defeat the point of being free.
+   * Returns [] when there's no cache yet.
+   */
+  async peek() {
+    const cached = await this._load();
+    if (!cached || !Array.isArray(cached.tracks)) return [];
+    return cached.tracks;
+  }
+
   /** For a manual "clear cache" affordance. */
   async clear() {
     try { await this.store.set(CACHE_KEY, null); } catch (e) {}

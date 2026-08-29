@@ -13,6 +13,7 @@ import { SpotifyClient } from "./spotify.js";
 import * as search from "./search.js";
 import * as watchlist from "./watchlist.js";
 import { LibraryCache } from "./library-cache.js";
+import * as insights from "./insights.js";
 import { bestStore } from "./storage.js";
 
 const client = new SpotifyClient(auth.getToken);
@@ -246,7 +247,6 @@ async function renderHome() {
       </div>
       <div class="autofill-list" id="autofill-list"></div>
     </div>
-    <div id="todive-row"></div>
     <div id="suggestions-row"></div>
     <div class="bmc-row">
       <a class="bmc-link" href="https://buymeacoffee.com/OSJoseph" target="_blank" rel="noopener">
@@ -262,7 +262,6 @@ async function renderHome() {
     </div>`;
 
   wireSearchBar();
-  renderToDiveRow();
   loadSuggestions();
 }
 
@@ -474,11 +473,41 @@ function wireSearchBar() {
       try {
         items = await client.searchArtists(q, 6);
         if (!items.length) return close();
-        list.innerHTML = items.map((it, i) => `<div class="autofill-item" data-i="${i}">${it.image_url ? `<img src="${esc(it.image_url)}" alt="">` : ""}<span>${esc(it.name)}</span></div>`).join("");
+        // Each result gets a pin button. Pinning from here is the whole
+        // point: you're already typing the artist's name, so "save for
+        // later" should be one button away rather than a separate page.
+        // It also stores the real Spotify artist and image rather than a
+        // typed string, which the old To-Dive page couldn't do.
+        list.innerHTML = items.map((it, i) => `
+          <div class="autofill-item" data-i="${i}">
+            ${it.image_url ? `<img src="${esc(it.image_url)}" alt="">` : ""}
+            <span class="autofill-name">${esc(it.name)}</span>
+            <button type="button" class="autofill-pin" data-pin-i="${i}" title="Pin for later" aria-label="Pin ${esc(it.name)} for later">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>`).join("");
         list.classList.add("open");
         active = -1;
         list.querySelectorAll(".autofill-item").forEach((el) => {
-          el.addEventListener("mousedown", (ev) => { ev.preventDefault(); choose(items[+el.dataset.i]); });
+          el.addEventListener("mousedown", (ev) => {
+            // Don't fire the search when the pin button was the target.
+            if (ev.target.closest(".autofill-pin")) return;
+            ev.preventDefault();
+            choose(items[+el.dataset.i]);
+          });
+        });
+        list.querySelectorAll("[data-pin-i]").forEach((btn) => {
+          btn.addEventListener("mousedown", (ev) => { ev.preventDefault(); ev.stopPropagation(); });
+          btn.addEventListener("click", (ev) => {
+            ev.preventDefault(); ev.stopPropagation();
+            const it = items[+btn.dataset.pinI];
+            if (!it) return;
+            watchlist.pin(it.name, { spotifyId: it.id, imageUrl: it.image_url || null });
+            flash(`Pinned ${it.name}.`);
+            close();
+            input.value = "";
+            loadSuggestions();
+          });
         });
       } catch (e) { close(); }
     }, 250);
@@ -492,51 +521,6 @@ function wireSearchBar() {
     else if (e.key === "Escape") close();
   });
   document.addEventListener("click", (e) => { if (!list.contains(e.target) && e.target !== input) close(); });
-}
-
-function renderToDiveRow() {
-  const pending = watchlist.listPending();
-  const el = document.getElementById("todive-row");
-  if (!pending.length) { el.innerHTML = ""; return; }
-  el.innerHTML = `
-    <p class="crate-note" style="margin-top:32px; text-align:center;">From your To-Dive list:</p>
-    <div class="pill-row" style="justify-content:center;">
-      ${pending.map((e) => `
-        <div class="pill-wrap">
-          <button class="pill" data-search="${esc(e.name)}">${e.image_url ? `<img src="${esc(e.image_url)}" alt="" class="pill-avatar">` : ""}${esc(e.name)}</button>
-          <button class="pill-icon-btn done-btn" data-done="${esc(e.id)}" title="Mark as dove into">&#10003;</button>
-        </div>`).join("")}
-    </div>`;
-  el.querySelectorAll("[data-search]").forEach((b) => b.addEventListener("click", () => startSearch(b.dataset.search)));
-  el.querySelectorAll("[data-done]").forEach((b) => b.addEventListener("click", () => { watchlist.toggleStatus(b.dataset.done); renderToDiveRow(); loadSuggestions(); }));
-}
-
-// ---- hidden demo mode ----
-// Recommendations come from real listening history, so screenshots
-// expose whatever happens to be in the library. Demo mode substitutes a
-// fixed artist list so marketing images can be staged. Undocumented on
-// purpose. Enable with ?demo=Artist+One,Artist+Two  (or ?demo=1 for a
-// built-in sample set). Persists for the session only.
-const DEMO_SAMPLE = [
-  "Fleetwood Mac", "Big Thief", "Talking Heads", "Fiona Apple",
-  "The Beths", "Wednesday", "Radiohead", "Sharon Van Etten",
-  "Turnstile", "Alvvays", "MJ Lenderman", "Japanese Breakfast",
-];
-
-function demoArtists() {
-  try {
-    const p = new URLSearchParams(window.location.search).get("demo");
-    if (p !== null) {
-      const list = p === "1" || p === ""
-        ? DEMO_SAMPLE
-        : p.split(",").map((s) => s.trim()).filter(Boolean);
-      sessionStorage.setItem("deepdive_demo", JSON.stringify(list));
-      return list;
-    }
-    const stored = sessionStorage.getItem("deepdive_demo");
-    if (stored) return JSON.parse(stored);
-  } catch (e) {}
-  return null;
 }
 
 async function loadSuggestions() {
@@ -558,51 +542,134 @@ async function loadSuggestions() {
     return;
   }
 
-  const pendingNames = new Set(watchlist.listPending().map((e) => e.name.trim().toLowerCase()));
-  const doneNames = new Set(watchlist.listDone().map((e) => e.name.trim().toLowerCase()));
+  // Two halves. The listening half needs API calls; the library half is
+  // computed from the cache and costs nothing — so if Spotify is slow,
+  // rate-limited, or the token is stale, the row still populates.
+  const blocked = watchlist.blockedNameSet();
+  const pins = watchlist.pinned();
+  const pinNames = new Set(pins.map((e) => (e.name || "").trim().toLowerCase()));
+  const doneNames = new Set(watchlist.listDone().map((e) => (e.name || "").trim().toLowerCase()));
+  const exclude = new Set([...blocked, ...pinNames, ...doneNames]);
+
+  // Stable for the session: something that caught your eye should still
+  // be there when you come back to the page.
+  let seed;
+  try {
+    seed = parseInt(sessionStorage.getItem("deepdive_sugg_seed") || "0", 10);
+    if (!seed) { seed = Date.now() >>> 0; sessionStorage.setItem("deepdive_sugg_seed", String(seed)); }
+  } catch (e) { seed = 12345; }
+
+  const smallest = (imgs) => (imgs && imgs.length ? imgs[imgs.length - 1].url : null);
+
+  // --- library half (free) ---
+  let libraryPicks = [];
+  try {
+    const cached = await libraryCache.peek();
+    if (cached.length) {
+      libraryPicks = insights.librarySuggestions(cached, { exclude, limit: 6 });
+    }
+  } catch (e) { /* cache unavailable — listening half still works */ }
+
+  // --- listening half (API) ---
+  let listeningPicks = [];
   try {
     const [top, recent] = await Promise.all([
       client.getTopArtists("medium_term", 10),
       client.getRecentlyPlayedArtists(50),
     ]);
     const seen = new Map();
-    const smallest = (imgs) => (imgs && imgs.length ? imgs[imgs.length - 1].url : null);
-    for (const a of top) if (!seen.has(a.id)) seen.set(a.id, { id: a.id, name: a.name, image_url: smallest(a.images) });
-    for (const a of recent) if (!seen.has(a.id)) seen.set(a.id, { id: a.id, name: a.name, image_url: null });
+    for (const a of top) if (!seen.has(a.id)) seen.set(a.id, { id: a.id, name: a.name, image_url: smallest(a.images), reason: "you've been playing them" });
+    for (const a of recent) if (!seen.has(a.id)) seen.set(a.id, { id: a.id, name: a.name, image_url: null, reason: "played recently" });
+    listeningPicks = Array.from(seen.values()).filter((s2) => {
+      const k = (s2.name || "").trim().toLowerCase();
+      return !exclude.has(k) && !libraryPicks.some((l) => l.id === s2.id);
+    });
+    listeningPicks = insights.seededPick(listeningPicks, 6, seed);
+  } catch (e) { /* API unavailable — library half still works */ }
 
-    let suggestions = Array.from(seen.values()).filter(
-      (s) => !pendingNames.has(s.name.trim().toLowerCase()) && !doneNames.has(s.name.trim().toLowerCase())
-    ).slice(0, 12);
+  const suggestions = [...listeningPicks, ...libraryPicks];
 
-    // fill missing images
-    const missing = suggestions.filter((s) => !s.image_url).map((s) => s.id);
-    if (missing.length) {
-      try {
-        const details = await client.getArtistsByIds(missing);
-        const byId = new Map(details.map((a) => [a.id, smallest(a.images)]));
-        for (const s of suggestions) if (!s.image_url) s.image_url = byId.get(s.id) || null;
-      } catch (e) { /* photos optional */ }
-    }
-
-    if (!suggestions.length) { el.innerHTML = ""; return; }
-    el.innerHTML = `
-      <p class="crate-note" style="margin-top:28px; text-align:center;">Based on what you've been listening to:</p>
-      <div class="pill-row" style="justify-content:center;">
-        ${suggestions.map((s) => `
-          <div class="pill-wrap">
-            <button class="pill" data-search="${esc(s.name)}">${s.image_url ? `<img src="${esc(s.image_url)}" alt="" class="pill-avatar">` : ""}${esc(s.name)}</button>
-            <button class="pill-icon-btn" data-add="${esc(s.name)}" data-sid="${esc(s.id)}" data-img="${esc(s.image_url || "")}" title="Add to To-Dive list">+</button>
-          </div>`).join("")}
-      </div>`;
-    el.querySelectorAll("[data-search]").forEach((b) => b.addEventListener("click", () => startSearch(b.dataset.search)));
-    el.querySelectorAll("[data-add]").forEach((b) => b.addEventListener("click", () => {
-      watchlist.add(b.dataset.add, { spotifyId: b.dataset.sid || null, imageUrl: b.dataset.img || null });
-      flash(`Added ${b.dataset.add} to your To-Dive list.`);
-      renderToDiveRow(); loadSuggestions();
-    }));
-  } catch (e) {
-    el.innerHTML = `<p class="crate-note" style="margin-top:28px; text-align:center;">Couldn't load suggestions right now.</p>`;
+  // Fill in artist images where we don't have one. Optional: a missing
+  // photo shouldn't cost a suggestion.
+  const missing = suggestions.filter((x) => !x.image_url).map((x) => x.id).filter(Boolean);
+  if (missing.length) {
+    try {
+      const details = await client.getArtistsByIds(missing.slice(0, 12));
+      const byId = new Map(details.map((a) => [a.id, smallest(a.images)]));
+      for (const x of suggestions) if (!x.image_url) x.image_url = byId.get(x.id) || null;
+    } catch (e) { /* photos optional */ }
   }
+
+  renderSuggestionRow(el, pins, suggestions);
+}
+
+/**
+ * Renders pins first (higher intent — you asked for these by name), then
+ * the generated suggestions, each labelled with why it's being shown.
+ * An unexplained recommendation is clutter; a reason makes it a prompt.
+ */
+function renderSuggestionRow(el, pins, suggestions, showAllPins = false) {
+  const PIN_VISIBLE = 8;
+  const shownPins = showAllPins ? pins : pins.slice(0, PIN_VISIBLE);
+  const extraPins = pins.length - shownPins.length;
+
+  const pill = (name, imageUrl, reason, extraBtns) => `
+    <div class="pill-wrap">
+      <button class="pill" data-search="${esc(name)}">
+        ${imageUrl ? `<img src="${esc(imageUrl)}" alt="" class="pill-avatar">` : ""}
+        <span class="pill-text"><span class="pill-name">${esc(name)}</span>${reason ? `<span class="pill-reason">${esc(reason)}</span>` : ""}</span>
+      </button>
+      ${extraBtns || ""}
+    </div>`;
+
+  const pinsHtml = shownPins.length ? `
+    <p class="crate-note row-label">Pinned</p>
+    <div class="pill-row">
+      ${shownPins.map((p) => pill(p.name, p.image_url, null,
+        `<button class="pill-icon-btn done-btn" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`)).join("")}
+      ${extraPins > 0 ? `<button class="pill pill-more" id="show-more-pins">show ${extraPins} more…</button>` : ""}
+    </div>` : "";
+
+  const suggHtml = suggestions.length ? `
+    <p class="crate-note row-label">Suggested for you</p>
+    <div class="pill-row">
+      ${suggestions.map((sg) => pill(sg.name, sg.image_url, sg.reason,
+        `<button class="pill-icon-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" title="Pin for later">+</button>
+         <button class="pill-icon-btn block-btn" data-block="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" title="Never suggest this artist">&minus;</button>`)).join("")}
+    </div>` : "";
+
+  el.innerHTML = pinsHtml + suggHtml;
+
+  el.querySelectorAll("[data-search]").forEach((b) =>
+    b.addEventListener("click", () => startSearch(b.dataset.search)));
+
+  el.querySelectorAll("[data-pin]").forEach((b) => b.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    watchlist.pin(b.dataset.pin, { spotifyId: b.dataset.sid || null, imageUrl: b.dataset.img || null });
+    flash(`Pinned ${b.dataset.pin}.`);
+    loadSuggestions();
+  }));
+
+  el.querySelectorAll("[data-unpin]").forEach((b) => b.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    // Confirm before removing — a pin was a deliberate act, so losing one
+    // to a stray tap would be annoying.
+    if (!window.confirm(`Unpin ${b.dataset.name}?`)) return;
+    watchlist.unpin(b.dataset.unpin);
+    loadSuggestions();
+  }));
+
+  el.querySelectorAll("[data-block]").forEach((b) => b.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    watchlist.block(b.dataset.block, b.dataset.sid || null);
+    flash(`${b.dataset.block} won't be suggested again.`);
+    loadSuggestions();
+  }));
+
+  const moreBtn = document.getElementById("show-more-pins");
+  // Pins are unlimited by design, so long lists collapse rather than
+  // being capped — the user decides how messy their own list gets.
+  if (moreBtn) moreBtn.addEventListener("click", () => renderSuggestionRow(el, pins, suggestions, true));
 }
 
 // ============================================================
@@ -651,9 +718,29 @@ async function runSearchWithOptions(artistName, opts) {
     });
     lastResult = result;
     renderResults(result);
+    // If this artist was pinned, the pin has served its purpose. Ask
+    // rather than assume — but ask at the moment it's obvious, which is
+    // the moment the dive finishes, not later on a list page.
+    maybeOfferUnpin(artistName);
   } catch (e) {
     renderProgressError(e.message || String(e), e);
   }
+}
+
+function maybeOfferUnpin(artistName) {
+  const entry = watchlist.findPinByName(artistName);
+  if (!entry) return;  // only ask about artists that were actually pinned
+  const slot = document.getElementById("result-msg");
+  if (!slot) return;
+  slot.classList.remove("hidden", "error");
+  slot.innerHTML = `
+    <span>${esc(artistName)} is on your pinned list. Done with it?</span>
+    <button class="btn btn-ghost btn-small" id="unpin-after-dive" style="margin-left:10px;">Remove pin</button>`;
+  const btn = document.getElementById("unpin-after-dive");
+  if (btn) btn.addEventListener("click", () => {
+    watchlist.unpin(entry.id);
+    slot.textContent = `Removed ${artistName} from your pins.`;
+  });
 }
 
 function renderProgress(title) {
@@ -1042,42 +1129,54 @@ function renderScrubResults(r) {
 // Watchlist page
 // ============================================================
 function renderWatchlist() {
-  setTitle("DeepDive · To-Do List");
-  const pending = watchlist.listPending();
-  const done = watchlist.listDone();
+  setTitle("DeepDive · Pins & blocked");
+  const pins = watchlist.pinned();
+  const blocked = watchlist.listBlocked();
   root.innerHTML = `
     <div class="card">
-      <h1>To-Dive-Into List</h1>
-      <p class="muted">Bands on your radar. Marking one as dove into stops it showing up in home-page recommendations. Stored in this browser only.</p>
-      <div class="search-row" style="margin-top:16px;">
-        <input type="text" id="wl-add-input" placeholder="e.g. Big Thief">
-        <button class="btn btn-primary" id="wl-add-btn">Add</button>
-      </div>
-      ${pending.length ? `<div class="crate-header"><span class="label gold">To dive into</span><span class="rule"></span></div>
-        ${pending.map((e) => watchlistRow(e, false)).join("")}` : `<p class="empty-note" style="margin-top:16px;">Nothing on your list yet.</p>`}
-      ${done.length ? `<details style="margin-top:32px;"><summary class="crate-note mono" style="cursor:pointer;">Completed (${done.length})</summary>
-        ${done.map((e) => watchlistRow(e, true)).join("")}</details>` : ""}
+      <h1>Pins &amp; blocked</h1>
+      <p class="muted">Pins appear at the top of your suggestions on the home page. Blocked artists never appear at all. Both are stored in this browser only.</p>
+
+      <div class="crate-header"><span class="label gold">Pinned</span><span class="rule"></span></div>
+      ${pins.length ? pins.map((e) => `
+        <div class="watchlist-row">
+          <span class="watchlist-name">${e.image_url ? `<img src="${esc(e.image_url)}" alt="" class="pill-avatar">` : ""}${esc(e.name)}</span>
+          <div class="watchlist-actions">
+            <button class="btn btn-ghost btn-small" data-wl-search="${esc(e.name)}">Dive now</button>
+            <button class="btn btn-ghost btn-small" data-wl-remove="${esc(e.id)}" data-name="${esc(e.name)}">Unpin</button>
+          </div>
+        </div>`).join("") : `<p class="empty-note">Nothing pinned. Pin an artist from the search suggestions, or from the dropdown as you type.</p>`}
+      ${pins.length ? `<div class="actions"><button class="btn btn-ghost btn-small" id="wipe-pins">Remove all pins</button></div>` : ""}
+
+      <div class="crate-header"><span class="label teal">Never suggest</span><span class="rule"></span></div>
+      ${blocked.length ? blocked.map((b) => `
+        <div class="watchlist-row">
+          <span class="watchlist-name">${esc(b.name)}</span>
+          <div class="watchlist-actions">
+            <button class="btn btn-ghost btn-small" data-unblock="${esc(b.name)}">Allow again</button>
+          </div>
+        </div>`).join("") : `<p class="empty-note">Nothing blocked. Use the &minus; button on any suggestion to stop it appearing.</p>`}
+
+      <div class="actions"><button class="btn btn-ghost" data-home>Back to search</button></div>
     </div>`;
 
-  const addInput = document.getElementById("wl-add-input");
-  const doAdd = () => { const n = addInput.value.trim(); if (!n) return flash("Type an artist name first.", true); watchlist.add(n); renderWatchlist(); };
-  document.getElementById("wl-add-btn").addEventListener("click", doAdd);
-  addInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doAdd(); });
-
+  root.querySelector("[data-home]")?.addEventListener("click", () => renderHome());
   root.querySelectorAll("[data-wl-search]").forEach((b) => b.addEventListener("click", () => startSearch(b.dataset.wlSearch)));
-  root.querySelectorAll("[data-wl-toggle]").forEach((b) => b.addEventListener("click", () => { watchlist.toggleStatus(b.dataset.wlToggle); renderWatchlist(); }));
-  root.querySelectorAll("[data-wl-remove]").forEach((b) => b.addEventListener("click", () => { watchlist.remove(b.dataset.wlRemove); renderWatchlist(); }));
-}
-function watchlistRow(e, isDone) {
-  return `
-    <div class="watchlist-row ${isDone ? "watchlist-done" : ""}">
-      <span class="watchlist-name">${e.image_url ? `<img src="${esc(e.image_url)}" alt="" class="pill-avatar">` : ""}${esc(e.name)}</span>
-      <div class="watchlist-actions">
-        ${isDone ? "" : `<button class="btn btn-ghost btn-small" data-wl-search="${esc(e.name)}">Search now</button>`}
-        <button class="btn btn-ghost btn-small" data-wl-toggle="${esc(e.id)}">${isDone ? "Undo" : "Mark as dove into"}</button>
-        <button class="btn btn-ghost btn-small" data-wl-remove="${esc(e.id)}">Remove</button>
-      </div>
-    </div>`;
+  root.querySelectorAll("[data-wl-remove]").forEach((b) => b.addEventListener("click", () => {
+    if (!window.confirm(`Unpin ${b.dataset.name}?`)) return;
+    watchlist.unpin(b.dataset.wlRemove);
+    renderWatchlist();
+  }));
+  root.querySelectorAll("[data-unblock]").forEach((b) => b.addEventListener("click", () => {
+    watchlist.unblock(b.dataset.unblock);
+    renderWatchlist();
+  }));
+  const wipe = document.getElementById("wipe-pins");
+  if (wipe) wipe.addEventListener("click", () => {
+    if (!window.confirm(`Remove all ${pins.length} pins? This can't be undone.`)) return;
+    watchlist.clearAllPins();
+    renderWatchlist();
+  });
 }
 
 // ============================================================

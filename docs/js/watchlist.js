@@ -101,3 +101,79 @@ export function toggleStatus(entryId) {
 export function remove(entryId) {
   save(load().filter((e) => e.id !== entryId));
 }
+
+// ---------------------------------------------------------------------
+// Blocklist
+// ---------------------------------------------------------------------
+// "Never suggest this artist again." Not a developer tool — people have
+// artists they'd rather not be shown, for all sorts of reasons, and a
+// recommendation system without a permanent dismiss will keep serving
+// the same unwanted name forever.
+
+const BLOCK_KEY = "deepdive_blocklist";
+
+function loadBlocked() {
+  try {
+    const raw = localStorage.getItem(BLOCK_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+export function listBlocked() {
+  return loadBlocked();
+}
+
+export function block(name, spotifyId = null) {
+  name = (name || "").trim();
+  if (!name) return;
+  const list = loadBlocked();
+  if (list.some((b) => (b.name || "").trim().toLowerCase() === name.toLowerCase())) return;
+  list.push({ name, spotify_id: spotifyId, at: new Date().toISOString() });
+  localStorage.setItem(BLOCK_KEY, JSON.stringify(list));
+}
+
+export function unblock(name) {
+  const target = (name || "").trim().toLowerCase();
+  localStorage.setItem(
+    BLOCK_KEY,
+    JSON.stringify(loadBlocked().filter((b) => (b.name || "").trim().toLowerCase() !== target))
+  );
+}
+
+/** Fast lookup set of blocked names, lowercased. */
+export function blockedNameSet() {
+  return new Set(loadBlocked().map((b) => (b.name || "").trim().toLowerCase()));
+}
+
+// ---------------------------------------------------------------------
+// Pins
+// ---------------------------------------------------------------------
+// Pins are the To-Dive list, surfaced properly. The storage and shape are
+// unchanged, so existing entries carry over untouched — only the
+// presentation moves: from a page buried in the nav drawer to the top of
+// the recommendation row, where they're actually visible.
+
+export const pinned = listPending;
+export const pin = add;
+export const unpin = remove;
+
+/** Is this artist already pinned? Name match, case-insensitive. */
+export function isPinned(name) {
+  const target = (name || "").trim().toLowerCase();
+  return listEntries().some((e) => (e.name || "").trim().toLowerCase() === target);
+}
+
+/** Find a pin entry by artist name, for unpinning after a dive. */
+export function findPinByName(name) {
+  const target = (name || "").trim().toLowerCase();
+  return listEntries().find((e) => (e.name || "").trim().toLowerCase() === target) || null;
+}
+
+/** Clear every pin — the "wipe all" affordance in settings. */
+export function clearAllPins() {
+  save([]);
+}
