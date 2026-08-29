@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.2.8";
+export const BUILD = "2.2.9";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -795,6 +795,24 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
 
   const redraw = () => renderSuggestionRow(_row.el, _row.pins, _row.suggestions, _row.showAllPins, _row.state);
 
+  // Removing a single pill should touch only that pill. Re-rendering the
+  // row replaces innerHTML, which tears down and rebuilds every element
+  // including all the avatars — that repaint is the flash, and stopping
+  // the API calls alone didn't remove it.
+  const dropPill = (btn) => {
+    const wrap = btn.closest(".pill-wrap");
+    if (!wrap) { redraw(); return; }
+    const row = wrap.parentElement;
+    wrap.remove();
+    // If that emptied a section, take its header and row away too,
+    // rather than leaving a stranded label.
+    if (row && !row.querySelector(".pill-wrap")) {
+      const head = row.previousElementSibling;
+      if (head && head.classList.contains("row-head")) head.remove();
+      row.remove();
+    }
+  };
+
   el.querySelectorAll("[data-pin]").forEach((b) => b.addEventListener("click", (ev) => {
     ev.stopPropagation();
     const name = b.dataset.pin;
@@ -815,7 +833,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     if (!window.confirm(`Unpin ${b.dataset.name}?`)) return;
     watchlist.unpin(b.dataset.unpin);
     _row.pins = _row.pins.filter((p) => p.id !== b.dataset.unpin);
-    redraw();
+    dropPill(b);
   }));
 
   el.querySelectorAll("[data-block]").forEach((b) => b.addEventListener("click", (ev) => {
@@ -825,7 +843,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     flash(`${name} won't be suggested again.`);
     const key = name.trim().toLowerCase();
     _row.suggestions = _row.suggestions.filter((x) => (x.name || "").trim().toLowerCase() !== key);
-    redraw();
+    dropPill(b);
   }));
 
   const moreBtn = document.getElementById("show-more-pins");
