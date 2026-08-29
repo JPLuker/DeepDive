@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.2.2";
+export const BUILD = "2.2.3";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -579,10 +579,16 @@ async function buildSuggestionRow(el) {
   const smallest = (imgs) => (imgs && imgs.length ? imgs[imgs.length - 1].url : null);
 
   // --- library half (free) ---
+  // Bounded: storage that hangs rather than fails would otherwise stall
+  // the whole row with nothing to show and nothing to report. A missed
+  // suggestion is a far better outcome than a blank page.
   let libraryPicks = [];
   try {
-    const cached = await libraryCache.peek();
-    if (cached.length) {
+    const cached = await Promise.race([
+      libraryCache.peek(),
+      new Promise((resolve) => setTimeout(() => resolve([]), 4000)),
+    ]);
+    if (cached && cached.length) {
       libraryPicks = insights.librarySuggestions(cached, { exclude, limit: 6 });
     }
   } catch (e) { /* cache unavailable — listening half still works */ }
@@ -591,9 +597,14 @@ async function buildSuggestionRow(el) {
   let listeningPicks = [];
   let listeningFailed = false;
   try {
-    const [top, recent] = await Promise.all([
-      client.getTopArtists("medium_term", 10),
-      client.getRecentlyPlayedArtists(50),
+    // Also bounded. If Spotify is rate-limited these retry with backoff
+    // for minutes; the row should appear regardless.
+    const [top, recent] = await Promise.race([
+      Promise.all([
+        client.getTopArtists("medium_term", 10),
+        client.getRecentlyPlayedArtists(50),
+      ]),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timed out")), 12000)),
     ]);
     const seen = new Map();
     for (const a of top) if (!seen.has(a.id)) seen.set(a.id, { id: a.id, name: a.name, image_url: smallest(a.images), reason: "you've been playing them" });
