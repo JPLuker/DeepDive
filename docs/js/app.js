@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.3.1";
+export const BUILD = "2.3.2";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1452,6 +1452,30 @@ function setShowBmc(on) {
       setTimeout(() => { copyBtn.textContent = "Copy"; }, 1600);
     }
   });
+
+  // Submenu open/close. Settings that are configured once and rarely
+  // revisited shouldn't occupy permanent space in the main menu.
+  const drawer = document.getElementById("nav-drawer");
+  const openBtn = document.getElementById("open-spotify-settings");
+  const backBtn = document.getElementById("close-spotify-settings");
+  const subPane = document.getElementById("nav-spotify-pane");
+  const openSub = () => {
+    drawer.classList.add("sub-open");
+    if (subPane) subPane.setAttribute("aria-hidden", "false");
+  };
+  const closeSub = () => {
+    drawer.classList.remove("sub-open");
+    if (subPane) subPane.setAttribute("aria-hidden", "true");
+  };
+  if (openBtn) openBtn.addEventListener("click", openSub);
+  if (backBtn) backBtn.addEventListener("click", closeSub);
+  // Closing the drawer should reset it, so reopening never lands the
+  // user in a submenu they didn't ask for.
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSub(); });
+  const backdrop = document.getElementById("nav-backdrop");
+  if (backdrop) backdrop.addEventListener("click", closeSub);
+  const closeNavBtn = document.getElementById("nav-close-btn");
+  if (closeNavBtn) closeNavBtn.addEventListener("click", closeSub);
 
   const idInput = document.getElementById("nav-client-id");
   const saveBtn = document.getElementById("nav-save-client-id");
