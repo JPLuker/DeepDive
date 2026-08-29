@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.2.9";
+export const BUILD = "2.3.0";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -511,7 +511,7 @@ function wireSearchBar() {
             flash(`Pinned ${it.name}.`);
             close();
             input.value = "";
-            loadSuggestions();
+            addPinToRow(it.name);
           });
         });
       } catch (e) { close(); }
@@ -715,6 +715,24 @@ async function buildSuggestionRow(el) {
  * the generated suggestions, each labelled with why it's being shown.
  * An unexplained recommendation is clutter; a reason makes it a prompt.
  */
+/**
+ * Add a pin to the already-rendered row without rebuilding it. Used when
+ * pinning from the autofill dropdown: that artist usually isn't in the
+ * suggestions at all, so nothing about the suggestions needs to change.
+ * Falls back to a full load only if the row hasn't been rendered yet.
+ */
+function addPinToRow(name) {
+  if (!_row || !_row.el || !document.getElementById("suggestions-row")) {
+    loadSuggestions();
+    return;
+  }
+  _row.pins = watchlist.pinned();
+  const key = (name || "").trim().toLowerCase();
+  // If they happened to be suggested too, drop the duplicate.
+  _row.suggestions = _row.suggestions.filter((x) => (x.name || "").trim().toLowerCase() !== key);
+  renderSuggestionRow(_row.el, _row.pins, _row.suggestions, _row.showAllPins, _row.state);
+}
+
 // The last rendered row. Pinning, unpinning and blocking all change only
 // which items belong where — none of them need fresh data — so they
 // adjust this and redraw rather than re-running the whole build, which
@@ -788,12 +806,30 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     }
   }
 
-  el.innerHTML = pinsHtml + suggHtml + emptyHtml;
+  // Two independently-painted sections. Keeping them separate means
+  // changing the pins never repaints the suggestions, which is where all
+  // the avatars are — repainting those was the visible flash.
+  if (!el.querySelector("#pins-section") || !el.querySelector("#sugg-section")) {
+    el.innerHTML = `<div id="pins-section"></div><div id="sugg-section"></div>`;
+  }
+  const pinsSection = el.querySelector("#pins-section");
+  const suggSection = el.querySelector("#sugg-section");
+  if (state.pinsOnly) {
+    pinsSection.innerHTML = pinsHtml;
+  } else {
+    pinsSection.innerHTML = pinsHtml;
+    suggSection.innerHTML = suggHtml + emptyHtml;
+  }
 
   el.querySelectorAll("[data-search]").forEach((b) =>
     b.addEventListener("click", () => startSearch(b.dataset.search)));
 
   const redraw = () => renderSuggestionRow(_row.el, _row.pins, _row.suggestions, _row.showAllPins, _row.state);
+  // Repaint pins alone — suggestions and their images stay untouched.
+  const redrawPins = () => renderSuggestionRow(
+    _row.el, _row.pins, _row.suggestions, _row.showAllPins,
+    Object.assign({}, _row.state, { pinsOnly: true })
+  );
 
   // Removing a single pill should touch only that pill. Re-rendering the
   // row replaces innerHTML, which tears down and rebuilds every element
@@ -823,7 +859,8 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     const key = name.trim().toLowerCase();
     _row.suggestions = _row.suggestions.filter((x) => (x.name || "").trim().toLowerCase() !== key);
     _row.pins = watchlist.pinned();
-    redraw();
+    dropPill(b);        // remove it from suggestions in place
+    redrawPins();       // and repaint only the pins section
   }));
 
   el.querySelectorAll("[data-unpin]").forEach((b) => b.addEventListener("click", (ev) => {
