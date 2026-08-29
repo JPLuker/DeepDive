@@ -15,6 +15,12 @@
  */
 
 /** Group cached tracks by primary artist. */
+/** Smallest available image URL from a Spotify images array. */
+function smallestImage(images) {
+  if (!images || !images.length) return null;
+  return images[images.length - 1].url || null;
+}
+
 function byArtist(tracks) {
   const map = new Map();
   for (const t of tracks || []) {
@@ -22,10 +28,18 @@ function byArtist(tracks) {
     if (!a || !a.id) continue;
     let entry = map.get(a.id);
     if (!entry) {
-      entry = { id: a.id, name: a.name, count: 0, oldest: null, newest: null };
+      entry = { id: a.id, name: a.name, count: 0, oldest: null, newest: null, image_url: null };
       map.set(a.id, entry);
     }
     entry.count += 1;
+    // Artist photos need one API request each, which is exactly the sort
+    // of per-item call that gets rate-limited. The cache already holds
+    // each track's album — artwork included — so use that instead. It
+    // isn't the artist's portrait, but it's a record they made, it's
+    // free, and it's instant.
+    if (!entry.image_url && t.album) {
+      entry.image_url = smallestImage(t.album.images);
+    }
     const added = t.added_at || "";
     if (added) {
       if (!entry.oldest || added < entry.oldest) entry.oldest = added;
@@ -33,6 +47,22 @@ function byArtist(tracks) {
     }
   }
   return map;
+}
+
+/**
+ * Artwork for artists already in the cached library, keyed by artist id
+ * AND lowercased name. Lets the listening half borrow artwork it would
+ * otherwise have to fetch.
+ */
+export function artworkFromCache(tracks) {
+  const byId = new Map();
+  const byName = new Map();
+  for (const a of byArtist(tracks).values()) {
+    if (!a.image_url) continue;
+    byId.set(a.id, a.image_url);
+    if (a.name) byName.set(a.name.trim().toLowerCase(), a.image_url);
+  }
+  return { byId, byName };
 }
 
 /**
@@ -45,7 +75,7 @@ export function artistsWithOneTrack(tracks, { limit = 20 } = {}) {
   const out = [];
   for (const a of byArtist(tracks).values()) {
     if (a.count === 1) {
-      out.push({ id: a.id, name: a.name, reason: "1 song liked", _sort: a.newest || "" });
+      out.push({ id: a.id, name: a.name, image_url: a.image_url, reason: "1 song liked", _sort: a.newest || "" });
     }
   }
   // Most recently discovered first — a one-off from last month is a
@@ -66,7 +96,7 @@ export function artistsNotAddedRecently(tracks, { limit = 20, minTracks = 2 } = 
   for (const a of byArtist(tracks).values()) {
     if (a.count < minTracks || !a.newest) continue;
     const year = a.newest.slice(0, 4);
-    out.push({ id: a.id, name: a.name, reason: `last added ${year}`, _sort: a.newest });
+    out.push({ id: a.id, name: a.name, image_url: a.image_url, reason: `last added ${year}`, _sort: a.newest });
   }
   out.sort((x, y) => (x._sort || "").localeCompare(y._sort || ""));
   return out.slice(0, limit).map(({ _sort, ...rest }) => rest);

@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.2.6";
+export const BUILD = "2.2.7";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -629,6 +629,7 @@ async function buildSuggestionRow(el) {
   // the whole row with nothing to show and nothing to report. A missed
   // suggestion is a far better outcome than a blank page.
   let libraryPicks = [];
+  let cachedArt = { byId: new Map(), byName: new Map() };
   try {
     const cached = await Promise.race([
       libraryCache.peek(),
@@ -636,6 +637,8 @@ async function buildSuggestionRow(el) {
     ]);
     if (cached && cached.length) {
       libraryPicks = insights.librarySuggestions(cached, { exclude, limit: 6 });
+      // Artwork for anything already in the library, free of charge.
+      cachedArt = insights.artworkFromCache(cached);
     }
   } catch (e) { /* cache unavailable — listening half still works */ }
 
@@ -663,6 +666,17 @@ async function buildSuggestionRow(el) {
   } catch (e) { listeningFailed = true; /* library half still works */ }
 
   const suggestions = [...listeningPicks, ...libraryPicks];
+
+  // Borrow cached artwork before considering any network request. Most
+  // suggested artists are in the library already, so this covers the
+  // majority for nothing — and per-artist photo requests were exactly
+  // what was silently failing under rate limiting.
+  for (const x of suggestions) {
+    if (x.image_url) continue;
+    x.image_url = cachedArt.byId.get(x.id)
+      || cachedArt.byName.get((x.name || "").trim().toLowerCase())
+      || null;
+  }
 
   // Render NOW, before fetching any artwork.
   //
@@ -725,7 +739,9 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   const pill = (name, imageUrl, reason, extraBtns, isPin) => `
     <div class="pill-wrap${isPin ? " is-pin" : ""}">
       <button class="pill" data-search="${esc(name)}">
-        ${imageUrl ? `<img src="${esc(imageUrl)}" alt="" class="pill-avatar">` : ""}
+        ${imageUrl
+          ? `<img src="${esc(imageUrl)}" alt="" class="pill-avatar" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'pill-avatar pill-initial',textContent:'${esc((name || "?").trim().charAt(0).toUpperCase())}'}))">`
+          : `<span class="pill-avatar pill-initial">${esc((name || "?").trim().charAt(0).toUpperCase())}</span>`}
         <span class="pill-text">
           <span class="pill-name">${esc(name)}</span>
           ${reason ? `<span class="pill-reason">${iconFor(reason)}${esc(reason)}</span>` : ""}
