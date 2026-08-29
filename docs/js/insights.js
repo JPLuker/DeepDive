@@ -256,15 +256,144 @@ function forgottenCard(tracks) {
  * Year cards are capped so a long-standing account doesn't produce a
  * dozen near-identical tiles.
  */
-export function playlistCards(tracks, { maxYears = 3 } = {}) {
+export function playlistCards(tracks, { maxYears = 3, maxDecades = 3 } = {}) {
   if (!tracks || !tracks.length) return [];
   const cards = [];
-  const oneOffs = oneOffsCard(tracks);
-  if (oneOffs) cards.push(oneOffs);
+  const push = (c) => { if (c) cards.push(c); };
+
+  // Ordered by how likely each is to be interesting, since only the
+  // first handful are shown before "more ideas".
+  push(recentlyAddedCard(tracks));
+  push(oneOffsCard(tracks));
+  push(surpriseCard(tracks));
   cards.push(...yearCards(tracks).slice(0, maxYears));
-  const first = firstFiftyCard(tracks);
-  if (first) cards.push(first);
-  const forgotten = forgottenCard(tracks);
-  if (forgotten) cards.push(forgotten);
+  push(topArtistsCard(tracks));
+  cards.push(...decadeCards(tracks).slice(0, maxDecades));
+  push(epicsCard(tracks));
+  push(shortsCard(tracks));
+  push(firstFiftyCard(tracks));
+  push(forgottenCard(tracks));
   return cards;
+}
+
+// ---------------------------------------------------------------------
+// Additional card types
+// ---------------------------------------------------------------------
+
+/** The most recent additions — what you're into right now. */
+function recentlyAddedCard(tracks) {
+  const newest = sortedByAdded(tracks, "desc").slice(0, 50);
+  if (newest.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "recent",
+    title: "Fresh additions",
+    subtitle: "the last 50 things you liked",
+    count: newest.length,
+    tracks: newest,
+  };
+}
+
+/** Long tracks. Useful as a set in a way a shuffle isn't. */
+function epicsCard(tracks) {
+  const long = tracks
+    .filter((t) => (t.duration_ms || 0) >= 6 * 60 * 1000)
+    .sort((a, b) => (b.duration_ms || 0) - (a.duration_ms || 0));
+  if (long.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "epics",
+    title: "The long ones",
+    subtitle: "six minutes and over",
+    count: long.length,
+    tracks: long,
+  };
+}
+
+/** Short tracks — punk, interludes, anything brief. */
+function shortsCard(tracks) {
+  const short = tracks
+    .filter((t) => { const d = t.duration_ms || 0; return d > 0 && d <= 150 * 1000; })
+    .sort((a, b) => (a.duration_ms || 0) - (b.duration_ms || 0));
+  if (short.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "shorts",
+    title: "Under two thirty",
+    subtitle: "short and to the point",
+    count: short.length,
+    tracks: short,
+  };
+}
+
+/**
+ * Cards by decade of release (not of liking). Uses the album release
+ * date, which the cache already stores.
+ */
+function decadeCards(tracks) {
+  const byDecade = new Map();
+  for (const t of tracks) {
+    const y = parseInt(((t.album && t.album.release_date) || "").slice(0, 4), 10);
+    if (!y || y < 1900) continue;
+    const dec = Math.floor(y / 10) * 10;
+    if (!byDecade.has(dec)) byDecade.set(dec, []);
+    byDecade.get(dec).push(t);
+  }
+  const cards = [];
+  for (const [dec, list] of byDecade) {
+    if (list.length < MIN_CARD_TRACKS * 2) continue;   // decades should feel substantial
+    cards.push({
+      id: `decade-${dec}`,
+      title: dec >= 2000 ? `The ${String(dec).slice(2)}s` : `The ${String(dec).slice(2)}s`,
+      subtitle: `music released ${dec}–${dec + 9}`,
+      count: list.length,
+      tracks: list.slice().sort((a, b) =>
+        ((a.album && a.album.release_date) || "").localeCompare((b.album && b.album.release_date) || "")),
+    });
+  }
+  cards.sort((a, b) => b.id.localeCompare(a.id));
+  return cards;
+}
+
+/** A few tracks each from the artists you've liked most. */
+function topArtistsCard(tracks) {
+  const map = byArtist(tracks);
+  const ranked = Array.from(map.values()).filter((a) => a.count >= 3)
+    .sort((a, b) => b.count - a.count).slice(0, 20);
+  if (ranked.length < 3) return null;
+  const byId = new Map();
+  for (const t of tracks) {
+    const a = (t.artists || [])[0];
+    if (!a || !a.id) continue;
+    if (!byId.has(a.id)) byId.set(a.id, []);
+    byId.get(a.id).push(t);
+  }
+  const picks = [];
+  for (const a of ranked) {
+    const list = (byId.get(a.id) || []).slice(0, 3);
+    picks.push(...list);
+  }
+  if (picks.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "top-artists",
+    title: "Your regulars",
+    subtitle: "a few each from the artists you like most",
+    count: picks.length,
+    tracks: picks,
+  };
+}
+
+/**
+ * A deterministic random slice. Deliberately seeded by day so it changes
+ * over time but stays put within a session — a "surprise" that reshuffles
+ * while you're looking at it is just noise.
+ */
+function surpriseCard(tracks) {
+  if (tracks.length < MIN_CARD_TRACKS * 4) return null;
+  const day = Math.floor(Date.now() / 86400000);
+  const picks = seededPick(tracks, Math.min(50, tracks.length), day);
+  return {
+    id: "surprise",
+    title: "Surprise me",
+    subtitle: "50 at random from your library",
+    count: picks.length,
+    tracks: picks,
+  };
 }

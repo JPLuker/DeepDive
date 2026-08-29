@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.3.4";
+export const BUILD = "2.3.5";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -291,22 +291,38 @@ async function loadPlaylistCards() {
     _cards = insights.playlistCards(cached);
     if (!_cards.length) { el.innerHTML = ""; return; }
 
-    el.innerHTML = `
-      <div class="row-head"><span class="label pinned">Playlist ideas</span><span class="rule"></span></div>
-      <div class="card-row">
-        ${_cards.map((c, i) => `
-          <button class="pcard" data-card="${i}">
-            <span class="pcard-title">${esc(c.title)}</span>
-            <span class="pcard-sub">${esc(c.subtitle)}</span>
-            <span class="pcard-count">${c.count} track${c.count === 1 ? "" : "s"}</span>
-          </button>`).join("")}
-      </div>`;
-    el.querySelectorAll("[data-card]").forEach((b) =>
-      b.addEventListener("click", () => openCardModal(_cards[+b.dataset.card])));
+    renderCardRow(el, false);
   } catch (e) {
     el.innerHTML = "";
     console.error("[DeepDive] playlist cards failed:", e);
   }
+}
+
+const CARDS_VISIBLE = 6;
+
+/**
+ * The card face carries the title and what it is — the exact track count
+ * belongs in the dialog, where the length is actually chosen. Repeating
+ * it here implied the card was a fixed playlist rather than a starting
+ * point.
+ */
+function renderCardRow(el, showAll) {
+  const shown = showAll ? _cards : _cards.slice(0, CARDS_VISIBLE);
+  const extra = _cards.length - shown.length;
+  el.innerHTML = `
+    <div class="row-head"><span class="label pinned">Playlist ideas</span><span class="rule"></span></div>
+    <div class="card-row">
+      ${shown.map((c) => `
+        <button class="pcard" data-card="${esc(c.id)}">
+          <span class="pcard-title">${esc(c.title)}</span>
+          <span class="pcard-sub">${esc(c.subtitle)}</span>
+        </button>`).join("")}
+      ${extra > 0 ? `<button class="pcard pcard-more" id="more-cards"><span class="pcard-title">More ideas</span><span class="pcard-sub">${extra} more</span></button>` : ""}
+    </div>`;
+  el.querySelectorAll("[data-card]").forEach((b) =>
+    b.addEventListener("click", () => openCardModal(_cards.find((c) => c.id === b.dataset.card))));
+  const more = document.getElementById("more-cards");
+  if (more) more.addEventListener("click", () => renderCardRow(el, true));
 }
 
 const CARD_LENGTHS = [10, 20, 30, 50, 100, "all"];
