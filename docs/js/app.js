@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.2.4";
+export const BUILD = "2.2.5";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -528,11 +528,45 @@ function wireSearchBar() {
   document.addEventListener("click", (e) => { if (!list.contains(e.target) && e.target !== input) close(); });
 }
 
+// ---- hidden demo mode ----
+// Recommendations come from real listening history, so screenshots
+// expose whatever happens to be in the library. Demo mode substitutes a
+// fixed artist list so marketing images can be staged. Undocumented on
+// purpose. Enable with ?demo=Artist+One,Artist+Two (or ?demo=1 for a
+// built-in sample set). Persists for the session only.
+//
+// (These were accidentally removed alongside the old To-Dive row in 2.2
+// while the call site remained, throwing a ReferenceError before any
+// error guard could catch it — which is why the whole row silently
+// failed to render.)
+const DEMO_SAMPLE = [
+  "Fleetwood Mac", "Big Thief", "Talking Heads", "Fiona Apple",
+  "The Beths", "Wednesday", "Radiohead", "Sharon Van Etten",
+  "Turnstile", "Alvvays", "MJ Lenderman", "Japanese Breakfast",
+];
+
+function demoArtists() {
+  try {
+    const p = new URLSearchParams(window.location.search).get("demo");
+    if (p !== null) {
+      const list = p === "1" || p === ""
+        ? DEMO_SAMPLE
+        : p.split(",").map((x) => x.trim()).filter(Boolean);
+      sessionStorage.setItem("deepdive_demo", JSON.stringify(list));
+      return list;
+    }
+    const stored = sessionStorage.getItem("deepdive_demo");
+    if (stored) return JSON.parse(stored);
+  } catch (e) {}
+  return null;
+}
+
 async function loadSuggestions() {
   const el = document.getElementById("suggestions-row");
   if (!el) return;
 
-  const demo = demoArtists();
+  let demo = null;
+  try { demo = demoArtists(); } catch (e) { demo = null; }
   if (demo && demo.length) {
     el.innerHTML = `
       <p class="crate-note" style="margin-top:28px; text-align:center;">Based on what you've been listening to:</p>
