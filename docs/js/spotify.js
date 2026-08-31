@@ -474,9 +474,17 @@ export class SpotifyClient {
     }
   }
 
-  async addTracksToPlaylistDeduped(name, description, trackIds) {
+  /**
+   * @param opts.forceNew  Always create a new playlist, even if one with
+   *   this name exists. Reusing by name is the sensible default — it
+   *   stops repeat dives spawning duplicates — but it's the wrong
+   *   behaviour when someone deliberately wants a fresh snapshot, so it
+   *   has to be overridable rather than assumed.
+   */
+  async addTracksToPlaylistDeduped(name, description, trackIds, opts = {}) {
+    const { forceNew = false } = opts;
     const me = await this.get("me");
-    const existing = await this.findPlaylistByName(me.id, name);
+    const existing = forceNew ? null : await this.findPlaylistByName(me.id, name);
 
     let playlistId, playlistUrl, existingIds, reused;
     if (existing) {

@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.3.8";
+export const BUILD = "2.4.0";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -309,6 +309,10 @@ async function loadPlaylistCards() {
  * starting point.
  */
 function renderCardRow(el) {
+  // The sampler is offered alongside the cache-derived cards but marked,
+  // because it's the one that costs API calls and takes a moment. Hiding
+  // that distinction would make the row feel inconsistently slow.
+  const sampler = samplerSourceArtists();
   el.innerHTML = `
     <div class="row-head"><span class="label pinned">Playlists</span><span class="rule"></span></div>
     <div class="card-row">
@@ -317,12 +321,237 @@ function renderCardRow(el) {
           <span class="pcard-title">${esc(c.title)}</span>
           <span class="pcard-sub">${esc(c.subtitle)}</span>
         </button>`).join("")}
+      ${sampler.length >= 2 ? `
+        <button class="pcard pcard-live" id="sampler-card">
+          <span class="pcard-title">Sampler</span>
+          <span class="pcard-sub">a few tracks each from ${sampler.length} suggested artists</span>
+        </button>` : ""}
     </div>`;
   el.querySelectorAll("[data-card]").forEach((b) =>
     b.addEventListener("click", () => openCardModal(_cards.find((c) => c.id === b.dataset.card))));
+  const sb = document.getElementById("sampler-card");
+  if (sb) sb.addEventListener("click", () => openSampler(sampler));
 }
 
-const CARD_LENGTHS = [10, 20, 30, 50, 100, "all"];
+/** Artists the sampler draws from: pins first, then current suggestions. */
+function samplerSourceArtists() {
+  const seen = new Set();
+  const out = [];
+  const add = (a) => {
+    if (!a || !a.id || seen.has(a.id)) return;
+    seen.add(a.id);
+    out.push({ id: a.id, name: a.name });
+  };
+  (watchlist.pinned() || []).forEach((p) => add({ id: p.spotify_id, name: p.name }));
+  ((_row && _row.suggestions) || []).forEach(add);
+  return out.slice(0, SAMPLER_MAX_ARTISTS);
+}
+
+async function openSampler(artists) {
+  const modal = document.getElementById("card-modal");
+  const msg = document.getElementById("card-msg");
+  const lenRow = document.getElementById("card-len");
+  const preview = document.getElementById("card-preview");
+  const summary = document.getElementById("card-preview-summary");
+  if (!modal) return;
+
+  document.getElementById("card-title").textContent = "Sampler";
+  document.getElementById("card-sub").textContent = `a few tracks each from ${artists.length} artists`;
+  document.getElementById("card-name").value = "DeepDive · Sampler";
+  msg.classList.remove("hidden", "error");
+  msg.textContent = "Fetching top tracks…";
+  lenRow.innerHTML = "";
+  preview.innerHTML = "";
+  summary.textContent = "Preview";
+  modal.classList.remove("hidden");
+
+  let tracks = [];
+  try {
+    tracks = await buildSampler(artists, 3, (done, total) => {
+      msg.textContent = `Fetching top tracks… (${done}/${total})`;
+    });
+  } catch (e) {
+    const info = explainError(e);
+    msg.textContent = `${info.headline}. ${info.detail}`;
+    msg.classList.add("error");
+    return;
+  }
+  if (!tracks.length) {
+    msg.textContent = "Couldn't fetch any tracks for these artists.";
+    msg.classList.add("error");
+    return;
+  }
+  msg.classList.add("hidden");
+
+  // Alternating artists reads better than three-in-a-row blocks.
+  const card = {
+    id: "sampler",
+    title: "Sampler",
+    subtitle: `a few tracks each from ${artists.length} artists`,
+    count: tracks.length,
+    tracks: interleaveByArtist(tracks),
+  };
+  _cards = _cards.filter((c) => c.id !== "sampler").concat(card);
+  openCardModal(card);
+}
+
+// ---------------------------------------------------------------------
+// Playlist tooling (2.4)
+// ---------------------------------------------------------------------
+// Length, ordering and destination were previously decided in three
+// different places with three different sets of options. These are the
+// shared pieces, so every playlist in the app offers the same controls.
+
+const PLAYLIST_LENGTHS = [10, 20, 30, 40, 50, 100, "all"];
+
+const PLAYLIST_ORDERS = [
+  { id: "found", label: "As found" },
+  { id: "album", label: "Album order" },
+  { id: "date-desc", label: "Newest first" },
+  { id: "date-asc", label: "Oldest first" },
+  { id: "title", label: "Title A–Z" },
+  { id: "shuffle", label: "Shuffle" },
+];
+
+/**
+ * Apply length and ordering to a track list. Ordering runs first so the
+ * length trims from a meaningfully ordered set — cutting first and then
+ * sorting would give you an arbitrary subset in a tidy order, which is
+ * not the same thing.
+ */
+function applyPlaylistOptions(tracks, { order = "found", length = "all" } = {}) {
+  let out = order === "shuffle"
+    // Seeded per call so a shuffle is genuinely different each time,
+    // unlike the daily-stable "Surprise me" card.
+    ? insights.seededPick(tracks, tracks.length, (Date.now() ^ tracks.length) >>> 0)
+    : sortTracks(tracks, order);
+  if (length !== "all") out = out.slice(0, length);
+  return out;
+}
+
+/** Renders the shared length + order controls into a container. */
+function renderPlaylistOptions(el, state, onChange, total) {
+  const lengths = PLAYLIST_LENGTHS.filter((n) => n === "all" || n < total);
+  el.innerHTML = `
+    <div class="settings-panel-title">How many tracks</div>
+    <div class="card-len" data-group="length">
+      ${lengths.map((n) => `<button type="button" class="len-opt${n === state.length ? " active" : ""}" data-len="${n}">${n === "all" ? `All ${total}` : n}</button>`).join("")}
+    </div>
+    <div class="settings-panel-title" style="margin-top:14px;">Order</div>
+    <div class="card-len" data-group="order">
+      ${PLAYLIST_ORDERS.map((o) => `<button type="button" class="len-opt${o.id === state.order ? " active" : ""}" data-order="${o.id}">${esc(o.label)}</button>`).join("")}
+    </div>`;
+  el.querySelectorAll("[data-len]").forEach((b) => b.addEventListener("click", () => {
+    const v = b.dataset.len;
+    state.length = v === "all" ? "all" : parseInt(v, 10);
+    onChange();
+  }));
+  el.querySelectorAll("[data-order]").forEach((b) => b.addEventListener("click", () => {
+    state.order = b.dataset.order;
+    onChange();
+  }));
+}
+
+/** Plain-text export. Kept simple so it pastes anywhere useful. */
+function tracksToText(tracks) {
+  return tracks.map((t, i) => {
+    const artist = (t.artists && t.artists[0] && t.artists[0].name) || "";
+    const album = (t.album && t.album.name) || "";
+    return `${i + 1}. ${t.name}${artist ? ` — ${artist}` : ""}${album ? ` (${album})` : ""}`;
+  }).join("\n");
+}
+
+/** CSV export, quoted properly so commas in titles don't break it. */
+function tracksToCsv(tracks) {
+  const q = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
+  const rows = [["#", "Track", "Artist", "Album", "Spotify URL"].map(q).join(",")];
+  tracks.forEach((t, i) => {
+    rows.push([
+      i + 1,
+      t.name,
+      (t.artists && t.artists[0] && t.artists[0].name) || "",
+      (t.album && t.album.name) || "",
+      t.id ? `https://open.spotify.com/track/${t.id}` : "",
+    ].map(q).join(","));
+  });
+  return rows.join("\n");
+}
+
+/** Trigger a download without a server. */
+function downloadFile(filename, contents, mime) {
+  try {
+    const blob = new Blob([contents], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    // Revoke on the next tick; revoking immediately can cancel the
+    // download in some browsers.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+const CARD_LENGTHS = PLAYLIST_LENGTHS;
+
+/**
+ * Sampler: a few top tracks from each of several artists. The first
+ * generator that needs the network, which is why it isn't one of the
+ * cache-derived cards — those are instant and cannot be rate-limited,
+ * and mixing a network-dependent card in among them would make that
+ * property untrue without it being visible.
+ *
+ * Requests are per artist, so the count is capped and the artists are
+ * fetched sequentially through the client's existing pacing rather than
+ * in parallel.
+ */
+const SAMPLER_MAX_ARTISTS = 12;
+
+async function buildSampler(artists, perArtist, onProgress) {
+  const picked = artists.slice(0, SAMPLER_MAX_ARTISTS);
+  const out = [];
+  for (let i = 0; i < picked.length; i++) {
+    const a = picked[i];
+    if (!a || !a.id) continue;
+    try {
+      const res = await client.get(`artists/${a.id}/top-tracks`, { market: "from_token" });
+      const tracks = (res && res.tracks) || [];
+      out.push(...tracks.slice(0, perArtist));
+    } catch (e) {
+      // One artist failing shouldn't sink the sampler — a missing act is
+      // better than no playlist.
+      console.warn("[DeepDive] sampler: skipped", a.name, e && e.message);
+    }
+    if (onProgress) onProgress(i + 1, picked.length);
+  }
+  return out;
+}
+
+/** Interleave so the playlist alternates artists rather than blocking them. */
+function interleaveByArtist(tracks) {
+  const byArtist = new Map();
+  for (const t of tracks) {
+    const key = (t.artists && t.artists[0] && t.artists[0].id) || "unknown";
+    if (!byArtist.has(key)) byArtist.set(key, []);
+    byArtist.get(key).push(t);
+  }
+  const lists = Array.from(byArtist.values());
+  const out = [];
+  let added = true;
+  while (added) {
+    added = false;
+    for (const list of lists) {
+      const next = list.shift();
+      if (next) { out.push(next); added = true; }
+    }
+  }
+  return out;
+}
 
 function openCardModal(card) {
   if (!card) return;
@@ -343,20 +572,14 @@ function openCardModal(card) {
   msg.textContent = "";
 
   // Default to everything for small sets, otherwise a sensible slice.
-  let length = card.count <= 50 ? "all" : 50;
+  // Cards arrive already ordered meaningfully (chronological years,
+  // longest-first epics), so "as found" is the right default order.
+  const opts = { length: card.count <= 50 ? "all" : 50, order: "found" };
 
-  const tracksFor = () => length === "all" ? card.tracks : card.tracks.slice(0, length);
+  const tracksFor = () => applyPlaylistOptions(card.tracks, opts);
 
   const paint = () => {
-    lenRow.innerHTML = CARD_LENGTHS
-      .filter((n) => n === "all" || n < card.count)   // don't offer 100 for a 40-track card
-      .map((n) => `<button type="button" class="len-opt${n === length ? " active" : ""}" data-len="${n}">${n === "all" ? `All ${card.count}` : n}</button>`)
-      .join("");
-    lenRow.querySelectorAll("[data-len]").forEach((b) => b.addEventListener("click", () => {
-      const v = b.dataset.len;
-      length = v === "all" ? "all" : parseInt(v, 10);
-      paint();
-    }));
+    renderPlaylistOptions(lenRow, opts, paint, card.count);
     const list = tracksFor();
     summary.textContent = `Preview ${list.length} track${list.length === 1 ? "" : "s"}`;
     preview.innerHTML = list.slice(0, 100).map((t) => `
@@ -381,6 +604,24 @@ function openCardModal(card) {
   freshCancel.addEventListener("click", close);
   modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
 
+  // Export needs no Spotify call at all, so it works even when the API
+  // is rate-limited or the account can't write playlists.
+  const bindExport = (id, ext, fn, mime) => {
+    const oldBtn = document.getElementById(id);
+    if (!oldBtn) return;
+    const btn = oldBtn.cloneNode(true); oldBtn.replaceWith(btn);
+    btn.addEventListener("click", () => {
+      const list = tracksFor();
+      if (!list.length) return;
+      const safe = ((nameInput.value || card.title) + "").replace(/[^\w\d\- ]+/g, "").trim() || "deepdive";
+      const done = downloadFile(`${safe}.${ext}`, fn(list), mime);
+      btn.textContent = done ? "Saved" : "Failed";
+      setTimeout(() => { btn.textContent = `Export .${ext}`; }, 1600);
+    });
+  };
+  bindExport("card-export-txt", "txt", tracksToText, "text/plain;charset=utf-8");
+  bindExport("card-export-csv", "csv", tracksToCsv, "text/csv;charset=utf-8");
+
   freshGo.addEventListener("click", async () => {
     const list = tracksFor();
     if (!list.length) { msg.textContent = "Nothing to add."; msg.classList.remove("hidden"); return; }
@@ -390,7 +631,8 @@ function openCardModal(card) {
       const res = await client.addTracksToPlaylistDeduped(
         (nameInput.value || "").trim() || `DeepDive · ${card.title}`,
         `${card.subtitle}, built by DeepDive.`,
-        list.map((t) => t.id)
+        list.map((t) => t.id),
+        { forceNew: !!document.getElementById("card-force-new")?.checked }
       );
       msg.innerHTML = `Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}. <a href="${esc(res.url)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
       msg.classList.remove("hidden", "error");

@@ -212,6 +212,8 @@
     transition:border-color .15s ease, transform .12s ease;
   }
   .pcard:hover { border-color:var(--accent); transform:translateY(-1px); }
+  /* The sampler needs network calls, unlike every other card. */
+  .pcard-live { border-style:dashed; }
   .pcard-title { font-size:14px; font-weight:600; }
   .pcard-sub { font-size:11.5px; color:var(--muted); }
 
@@ -513,7 +515,15 @@
         <div id="card-preview" class="card-preview"></div>
       </details>
 
+      <label class="modal-remember" style="margin-top:14px;">
+        <input type="checkbox" id="card-force-new">
+        Always create a new playlist
+      </label>
+      <p class="nav-hint" style="margin-top:4px;">Off, an existing playlist with the same name is updated instead of duplicated.</p>
+
       <div class="modal-actions">
+        <button class="btn btn-ghost btn-small" id="card-export-txt">Export .txt</button>
+        <button class="btn btn-ghost btn-small" id="card-export-csv">Export .csv</button>
         <span class="spacer"></span>
         <button class="btn btn-ghost" id="card-cancel">Cancel</button>
         <button class="btn btn-primary" id="card-go">Create playlist</button>
