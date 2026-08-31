@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.4.0";
+export const BUILD = "2.4.1";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -360,7 +360,11 @@ async function openSampler(artists) {
   document.getElementById("card-name").value = "DeepDive · Sampler";
   msg.classList.remove("hidden", "error");
   msg.textContent = "Fetching top tracks…";
+  // Clear the options entirely while loading — leaving the "How many
+  // tracks" heading above an empty space looks broken, which is how the
+  // failure case presented.
   lenRow.innerHTML = "";
+  lenRow.classList.add("hidden");
   preview.innerHTML = "";
   summary.textContent = "Preview";
   modal.classList.remove("hidden");
@@ -377,11 +381,20 @@ async function openSampler(artists) {
     return;
   }
   if (!tracks.length) {
-    msg.textContent = "Couldn't fetch any tracks for these artists.";
+    // Say why. "Couldn't fetch any tracks" leaves the only diagnosis in
+    // the console, which is exactly the problem 2.1.5 set out to fix.
+    const first = (tracks.failures || [])[0];
+    if (first) {
+      const info = explainError(first.error);
+      msg.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">${esc(info.headline)}</div><div>${esc(info.detail)}</div>`;
+    } else {
+      msg.textContent = "None of these artists returned any tracks.";
+    }
     msg.classList.add("error");
     return;
   }
   msg.classList.add("hidden");
+  lenRow.classList.remove("hidden");
 
   // Alternating artists reads better than three-in-a-row blocks.
   const card = {
@@ -515,20 +528,29 @@ const SAMPLER_MAX_ARTISTS = 12;
 async function buildSampler(artists, perArtist, onProgress) {
   const picked = artists.slice(0, SAMPLER_MAX_ARTISTS);
   const out = [];
+  const failures = [];
   for (let i = 0; i < picked.length; i++) {
     const a = picked[i];
     if (!a || !a.id) continue;
     try {
-      const res = await client.get(`artists/${a.id}/top-tracks`, { market: "from_token" });
+      // No market parameter. "from_token" is deprecated, and passing it
+      // fails the request outright; omitting it lets Spotify use the
+      // token's own market, which is what was wanted anyway.
+      const res = await client.get(`artists/${a.id}/top-tracks`);
       const tracks = (res && res.tracks) || [];
       out.push(...tracks.slice(0, perArtist));
     } catch (e) {
       // One artist failing shouldn't sink the sampler — a missing act is
-      // better than no playlist.
+      // better than no playlist. But the reason has to be recoverable,
+      // or a total failure reports nothing useful.
+      failures.push({ name: a.name, error: e });
       console.warn("[DeepDive] sampler: skipped", a.name, e && e.message);
     }
     if (onProgress) onProgress(i + 1, picked.length);
   }
+  // Surface the first failure so the caller can explain a total wipeout
+  // rather than shrugging.
+  out.failures = failures;
   return out;
 }
 
