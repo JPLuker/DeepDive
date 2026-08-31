@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.4.4";
+export const BUILD = "2.4.5";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -357,6 +357,11 @@ async function openSampler(artists) {
   // failure case presented.
   lenRow.innerHTML = "";
   lenRow.classList.add("hidden");
+  // Hide these now rather than when the fetch completes. Otherwise the
+  // dialog spends the whole loading period showing controls that then
+  // disappear, which reads as a glitch.
+  document.getElementById("card-reuse-block")?.classList.add("hidden");
+  document.getElementById("card-export")?.classList.add("hidden");
   preview.innerHTML = "";
   summary.textContent = "Preview";
   modal.classList.remove("hidden");
@@ -1253,9 +1258,9 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     <div class="sampler-row">
       <button class="btn btn-ghost btn-sampler" id="sampler-btn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        Sample ${samplerArtists.length} artists you've barely heard
+        Sampler
       </button>
-      <p class="crate-note sampler-note">A few tracks each from artists with three or fewer liked songs.</p>
+      <p class="crate-note sampler-note">A few tracks each from ${samplerArtists.length} artists you've barely heard.</p>
     </div>` : "";
 
   if (state.pinsOnly) {
