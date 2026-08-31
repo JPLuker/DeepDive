@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.4.5";
+export const BUILD = "2.4.6";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1260,7 +1260,6 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Sampler
       </button>
-      <p class="crate-note sampler-note">A few tracks each from ${samplerArtists.length} artists you've barely heard.</p>
     </div>` : "";
 
   if (state.pinsOnly) {
