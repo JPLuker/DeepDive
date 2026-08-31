@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.4.6";
+export const BUILD = "2.5.1";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -278,6 +278,11 @@ async function renderHome() {
 // is created until it's confirmed, because silently adding playlists to
 // someone's Spotify account on a single click would be presumptuous.
 let _cards = [];
+let _allCards = [];
+
+// Shown per load. Small enough to scan, with a much larger pool behind
+// it so refreshing is worth doing.
+const CARDS_PER_LOAD = 6;
 
 async function loadPlaylistCards() {
   const el = document.getElementById("playlist-cards");
@@ -288,8 +293,14 @@ async function loadPlaylistCards() {
       new Promise((resolve) => setTimeout(() => resolve([]), 2500)),
     ]);
     if (!cached || !cached.length) { el.innerHTML = ""; return; }
-    _cards = insights.playlistCards(cached);
-    if (!_cards.length) { el.innerHTML = ""; return; }
+    // A fresh seed each load, so a refresh brings different ideas. The
+    // artist suggestions above are deliberately session-stable — you
+    // should be able to come back to one you spotted — but playlists are
+    // a browsing surface where repetition is the bigger risk.
+    const seed = (Date.now() >>> 0) ^ Math.floor(Math.random() * 0xffffffff);
+    _allCards = insights.playlistCards(cached, { seed });
+    if (!_allCards.length) { el.innerHTML = ""; return; }
+    _cards = insights.seededPick(_allCards, CARDS_PER_LOAD, seed);
 
     renderCardRow(el);
   } catch (e) {
@@ -314,12 +325,15 @@ function renderCardRow(el) {
     <div class="card-row">
       ${_cards.map((c) => `
         <button class="pcard" data-card="${esc(c.id)}">
-          <span class="pcard-title">${esc(c.title)}</span>
-          <span class="pcard-sub">${esc(c.subtitle)}</span>
+          <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
+          <span class="pcard-text">
+            <span class="pcard-title">${esc(c.title)}</span>
+            <span class="pcard-sub">${esc(c.subtitle)}</span>
+          </span>
         </button>`).join("")}
     </div>`;
   el.querySelectorAll("[data-card]").forEach((b) =>
-    b.addEventListener("click", () => openCardModal(_cards.find((c) => c.id === b.dataset.card))));
+    b.addEventListener("click", () => openCardModal((_allCards.length ? _allCards : _cards).find((c) => c.id === b.dataset.card))));
 }
 
 /**
@@ -339,7 +353,44 @@ function samplerSourceArtists() {
   return _samplerArtists.slice(0, SAMPLER_MAX_ARTISTS);
 }
 
-async function openSampler(artists) {
+/**
+ * Two steps, because tapping the button used to begin twelve requests
+ * immediately with no way back — a look became a commitment. This asks
+ * first, and the fetch can be abandoned while it runs.
+ */
+function openSampler(artists) {
+  const modal = document.getElementById("card-modal");
+  if (!modal) return;
+  document.getElementById("card-title").textContent = "Sampler";
+  document.getElementById("card-sub").textContent =
+    `A few tracks each from ${artists.length} artists you've barely heard. This takes a moment — one request per artist.`;
+  document.getElementById("card-name").value = "";
+  document.getElementById("card-len").innerHTML = "";
+  document.getElementById("card-preview").innerHTML = "";
+  document.getElementById("card-preview-summary").textContent = "Preview";
+  document.getElementById("card-reuse-block")?.classList.add("hidden");
+  document.getElementById("card-export")?.classList.add("hidden");
+  document.querySelector(".playlist-name-field")?.classList.add("hidden");
+  document.querySelector("#card-modal details")?.classList.add("hidden");
+  const msg = document.getElementById("card-msg");
+  msg.classList.add("hidden");
+
+  const goEl = document.getElementById("card-go");
+  const cancelEl = document.getElementById("card-cancel");
+  const freshGo = goEl.cloneNode(true); goEl.replaceWith(freshGo);
+  const freshCancel = cancelEl.cloneNode(true); cancelEl.replaceWith(freshCancel);
+  freshGo.textContent = "Build sampler";
+  freshGo.disabled = false;
+
+  const close = () => modal.classList.add("hidden");
+  freshCancel.addEventListener("click", close);
+  modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
+  freshGo.addEventListener("click", () => runSampler(artists));
+
+  modal.classList.remove("hidden");
+}
+
+async function runSampler(artists) {
   const modal = document.getElementById("card-modal");
   const msg = document.getElementById("card-msg");
   const lenRow = document.getElementById("card-len");
@@ -347,6 +398,8 @@ async function openSampler(artists) {
   const summary = document.getElementById("card-preview-summary");
   if (!modal) return;
 
+  document.querySelector(".playlist-name-field")?.classList.remove("hidden");
+  document.querySelector("#card-modal details")?.classList.remove("hidden");
   document.getElementById("card-title").textContent = "Sampler";
   document.getElementById("card-sub").textContent = `a few tracks each from ${artists.length} artists you've barely heard`;
   document.getElementById("card-name").value = `DeepDive · Sampler ${new Date().toISOString().slice(0,10)}`;
@@ -366,11 +419,26 @@ async function openSampler(artists) {
   summary.textContent = "Preview";
   modal.classList.remove("hidden");
 
+  _samplerCancelled = false;
+  // Cancel stays live during the fetch — the whole problem was that
+  // starting it left no way out.
+  const cancelDuring = document.getElementById("card-cancel");
+  if (cancelDuring) {
+    const fresh = cancelDuring.cloneNode(true); cancelDuring.replaceWith(fresh);
+    fresh.addEventListener("click", () => {
+      _samplerCancelled = true;
+      document.getElementById("card-modal").classList.add("hidden");
+    });
+  }
+  const goDuring = document.getElementById("card-go");
+  if (goDuring) { goDuring.disabled = true; goDuring.textContent = "Building…"; }
+
   let tracks = [];
   try {
     tracks = await buildSampler(artists, 3, (done, total) => {
-      msg.textContent = `Fetching top tracks… (${done}/${total})`;
+      msg.textContent = `Fetching tracks… (${done}/${total})`;
     });
+    if (_samplerCancelled) return;
   } catch (e) {
     const info = explainError(e);
     msg.textContent = `${info.headline}. ${info.detail}`;
@@ -528,11 +596,17 @@ const CARD_LENGTHS = PLAYLIST_LENGTHS;
  */
 const SAMPLER_MAX_ARTISTS = 12;
 
+let _samplerCancelled = false;
+
 async function buildSampler(artists, perArtist, onProgress) {
   const picked = artists.slice(0, SAMPLER_MAX_ARTISTS);
   const out = [];
   const failures = [];
   for (let i = 0; i < picked.length; i++) {
+    // Checked between artists rather than mid-request: a run is a dozen
+    // separate calls, so stopping at the next boundary is quick enough
+    // and avoids aborting a request that's already in flight.
+    if (_samplerCancelled) break;
     const a = picked[i];
     if (!a || !a.id) continue;
     try {

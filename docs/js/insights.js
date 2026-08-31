@@ -256,23 +256,33 @@ function forgottenCard(tracks) {
  * Year cards are capped so a long-standing account doesn't produce a
  * dozen near-identical tiles.
  */
-export function playlistCards(tracks, { maxYears = 3, maxDecades = 3 } = {}) {
+/**
+ * Everything this library can support. Callers pick a rotating subset —
+ * the pool is deliberately larger than what's shown so refreshing
+ * surfaces something different rather than the same handful forever.
+ */
+export function playlistCards(tracks, { maxYears = 6, maxDecades = 5, seed = 0 } = {}) {
   if (!tracks || !tracks.length) return [];
   const cards = [];
   const push = (c) => { if (c) cards.push(c); };
 
-  // Ordered by how likely each is to be interesting, since only the
-  // first handful are shown before "more ideas".
   push(recentlyAddedCard(tracks));
   push(oneOffsCard(tracks));
   push(surpriseCard(tracks));
-  cards.push(...yearCards(tracks).slice(0, maxYears));
   push(topArtistsCard(tracks));
-  cards.push(...decadeCards(tracks).slice(0, maxDecades));
+  push(albumFavouritesCard(tracks));
+  push(artistSpotlightCard(tracks, seed));
+  push(thisMonthCard(tracks));
+  push(anniversaryCard(tracks));
+  push(oldSoulsCard(tracks));
+  push(freshPressCard(tracks));
+  push(oneEachYearCard(tracks));
   push(epicsCard(tracks));
   push(shortsCard(tracks));
   push(firstFiftyCard(tracks));
   push(forgottenCard(tracks));
+  cards.push(...yearCards(tracks).slice(0, maxYears));
+  cards.push(...decadeCards(tracks).slice(0, maxDecades));
   return cards;
 }
 
@@ -421,4 +431,134 @@ export function artistsBarelyExplored(tracks, { maxTracks = 3, limit = 12 } = {}
   }
   out.sort((x, y) => (y._sort || "").localeCompare(x._sort || ""));
   return out.slice(0, limit).map(({ _sort, ...rest }) => rest);
+}
+
+// ---------------------------------------------------------------------
+// A wider pool of cards
+// ---------------------------------------------------------------------
+// Enough variety that a rotating handful stays interesting across
+// refreshes rather than showing the same four ideas forever.
+
+/** Albums you liked several tracks from — the ones that actually landed. */
+function albumFavouritesCard(tracks) {
+  const byAlbum = new Map();
+  for (const t of tracks) {
+    const name = t.album && t.album.name;
+    if (!name) continue;
+    if (!byAlbum.has(name)) byAlbum.set(name, []);
+    byAlbum.get(name).push(t);
+  }
+  const picks = [];
+  for (const list of byAlbum.values()) if (list.length >= 3) picks.push(...list);
+  if (picks.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "album-faves",
+    title: "Albums that landed",
+    subtitle: "records you liked three or more from",
+    count: picks.length,
+    tracks: picks,
+  };
+}
+
+/** Everything by one heavily-liked artist. Rotates by seed. */
+function artistSpotlightCard(tracks, seed) {
+  const map = byArtist(tracks);
+  const heavy = Array.from(map.values()).filter((a) => a.count >= 8);
+  if (!heavy.length) return null;
+  const pick = heavy[Math.abs(seed) % heavy.length];
+  const list = tracks.filter((t) => ((t.artists || [])[0] || {}).id === pick.id);
+  if (list.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: `spotlight-${pick.id}`,
+    title: `All your ${pick.name}`,
+    subtitle: `every ${pick.name} track you've liked`,
+    count: list.length,
+    tracks: sortedByAdded(list, "asc"),
+  };
+}
+
+/** Added during this calendar month, any year. */
+function thisMonthCard(tracks) {
+  const mm = String(new Date().getMonth() + 1).padStart(2, "0");
+  const list = tracks.filter((t) => (t.added_at || "").slice(5, 7) === mm);
+  if (list.length < MIN_CARD_TRACKS) return null;
+  const monthName = new Date().toLocaleString(undefined, { month: "long" });
+  return {
+    id: "this-month",
+    title: `Every ${monthName}`,
+    subtitle: "what you've added this month, across the years",
+    count: list.length,
+    tracks: sortedByAdded(list, "desc"),
+  };
+}
+
+/** Old music you discovered recently. */
+function oldSoulsCard(tracks) {
+  const list = tracks.filter((t) => {
+    const rel = parseInt(((t.album && t.album.release_date) || "").slice(0, 4), 10);
+    const add = parseInt((t.added_at || "").slice(0, 4), 10);
+    return rel && add && add - rel >= 20;
+  });
+  if (list.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "old-souls",
+    title: "Late to the party",
+    subtitle: "music you found twenty years after it came out",
+    count: list.length,
+    tracks: list,
+  };
+}
+
+/** Liked in the same year it was released. */
+function freshPressCard(tracks) {
+  const list = tracks.filter((t) => {
+    const rel = ((t.album && t.album.release_date) || "").slice(0, 4);
+    const add = (t.added_at || "").slice(0, 4);
+    return rel && add && rel === add;
+  });
+  if (list.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "fresh-press",
+    title: "Caught it early",
+    subtitle: "liked the same year it was released",
+    count: list.length,
+    tracks: sortedByAdded(list, "desc"),
+  };
+}
+
+/** One track from each year you've been collecting — a tour of the library. */
+function oneEachYearCard(tracks) {
+  const byYear = new Map();
+  for (const t of sortedByAdded(tracks, "asc")) {
+    const y = (t.added_at || "").slice(0, 4);
+    if (y && !byYear.has(y)) byYear.set(y, t);
+  }
+  const list = Array.from(byYear.values());
+  if (list.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "one-each-year",
+    title: "One from every year",
+    subtitle: "a single track from each year you've collected",
+    count: list.length,
+    tracks: list,
+  };
+}
+
+/** Liked around this date in previous years. */
+function anniversaryCard(tracks) {
+  const now = new Date();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const thisYear = String(now.getFullYear());
+  const list = tracks.filter((t) => {
+    const a = t.added_at || "";
+    return a.slice(5, 7) === mm && a.slice(0, 4) !== thisYear;
+  });
+  if (list.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "anniversary",
+    title: "This time last year",
+    subtitle: "and the years before that",
+    count: list.length,
+    tracks: sortedByAdded(list, "desc"),
+  };
 }
