@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.4.3";
+export const BUILD = "2.4.4";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -349,7 +349,7 @@ async function openSampler(artists) {
 
   document.getElementById("card-title").textContent = "Sampler";
   document.getElementById("card-sub").textContent = `a few tracks each from ${artists.length} artists you've barely heard`;
-  document.getElementById("card-name").value = "DeepDive · Sampler";
+  document.getElementById("card-name").value = `DeepDive · Sampler ${new Date().toISOString().slice(0,10)}`;
   msg.classList.remove("hidden", "error");
   msg.textContent = "Fetching top tracks…";
   // Clear the options entirely while loading — leaving the "How many
@@ -389,12 +389,18 @@ async function openSampler(artists) {
   lenRow.classList.remove("hidden");
 
   // Alternating artists reads better than three-in-a-row blocks.
+  // Date the name rather than asking whether to reuse: each sampler is a
+  // snapshot of a moment, so overwriting the last one would be wrong and
+  // asking about it is a question with an obvious answer.
+  const stamp = new Date().toISOString().slice(0, 10);
   const card = {
     id: "sampler",
     title: "Sampler",
     subtitle: `a few tracks each from ${artists.length} artists you've barely heard`,
     count: tracks.length,
     tracks: interleaveByArtist(tracks),
+    simple: true,
+    name: `DeepDive · Sampler ${stamp}`,
   };
   _cards = _cards.filter((c) => c.id !== "sampler").concat(card);
   openCardModal(card);
@@ -597,19 +603,27 @@ function openCardModal(card) {
 
   title.textContent = card.title;
   sub.textContent = card.subtitle;
-  nameInput.value = `DeepDive · ${card.title}`;
+  nameInput.value = card.name || `DeepDive · ${card.title}`;
   msg.classList.add("hidden");
   msg.textContent = "";
 
   // Default to everything for small sets, otherwise a sensible slice.
   // Cards arrive already ordered meaningfully (chronological years,
   // longest-first epics), so "as found" is the right default order.
-  const opts = { length: card.count <= 50 ? "all" : 50, order: "found" };
+  // The sampler is a "just give me something" action, so it takes no
+  // options: twenty tracks, shuffled, in a dated playlist. Offering
+  // length, order and a reuse toggle for a throwaway mix was friction
+  // for no gain.
+  const simple = !!card.simple;
+  const opts = simple
+    ? { length: 20, order: "shuffle" }
+    : { length: card.count <= 50 ? "all" : 50, order: "found" };
 
   const tracksFor = () => applyPlaylistOptions(card.tracks, opts);
 
   const paint = () => {
-    renderPlaylistOptions(lenRow, opts, paint, card.count);
+    if (simple) lenRow.innerHTML = "";
+    else renderPlaylistOptions(lenRow, opts, paint, card.count);
     const list = tracksFor();
     summary.textContent = `Preview ${list.length} track${list.length === 1 ? "" : "s"}`;
     preview.innerHTML = list.slice(0, 100).map((t) => `
@@ -621,6 +635,11 @@ function openCardModal(card) {
       </div>`).join("") + (list.length > 100 ? `<p class="crate-note" style="margin-top:10px;">…and ${list.length - 100} more.</p>` : "");
   };
   paint();
+
+  const reuseBlock = document.getElementById("card-reuse-block");
+  const exportBtnEl = document.getElementById("card-export");
+  if (reuseBlock) reuseBlock.classList.toggle("hidden", simple);
+  if (exportBtnEl) exportBtnEl.classList.toggle("hidden", simple);
 
   modal.classList.remove("hidden");
   const close = () => modal.classList.add("hidden");
@@ -662,7 +681,7 @@ function openCardModal(card) {
         (nameInput.value || "").trim() || `DeepDive · ${card.title}`,
         `${card.subtitle}, built by DeepDive.`,
         list.map((t) => t.id),
-        { forceNew: !!document.getElementById("card-force-new")?.checked }
+        { forceNew: simple || !!document.getElementById("card-force-new")?.checked }
       );
       msg.innerHTML = `Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}. <a href="${esc(res.url)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
       msg.classList.remove("hidden", "error");

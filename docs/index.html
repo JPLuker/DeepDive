@@ -516,19 +516,20 @@
         <input type="text" id="card-name">
       </div>
 
-      <div class="settings-panel-title">How many tracks</div>
-      <div class="card-len" id="card-len" role="group" aria-label="Length"></div>
+      <div class="card-len" id="card-len" role="group" aria-label="Playlist options"></div>
 
       <details class="diag" style="margin-top:16px;">
         <summary id="card-preview-summary">Preview tracks</summary>
         <div id="card-preview" class="card-preview"></div>
       </details>
 
-      <label class="modal-remember" style="margin-top:14px;">
-        <input type="checkbox" id="card-force-new">
-        Always create a new playlist
-      </label>
-      <p class="nav-hint" style="margin-top:4px;">Off, an existing playlist with the same name is updated instead of duplicated.</p>
+      <div id="card-reuse-block">
+        <label class="modal-remember" style="margin-top:14px;">
+          <input type="checkbox" id="card-force-new">
+          Always create a new playlist
+        </label>
+        <p class="nav-hint" style="margin-top:4px;">Off, an existing playlist with the same name is updated instead of duplicated.</p>
+      </div>
 
       <!-- Two export buttons crowded the row to the point of truncating
            every label on a phone. One is enough: CSV opens in a
