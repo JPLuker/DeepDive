@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.4.1";
+export const BUILD = "2.4.2";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -309,10 +309,6 @@ async function loadPlaylistCards() {
  * starting point.
  */
 function renderCardRow(el) {
-  // The sampler is offered alongside the cache-derived cards but marked,
-  // because it's the one that costs API calls and takes a moment. Hiding
-  // that distinction would make the row feel inconsistently slow.
-  const sampler = samplerSourceArtists();
   el.innerHTML = `
     <div class="row-head"><span class="label pinned">Playlists</span><span class="rule"></span></div>
     <div class="card-row">
@@ -321,30 +317,26 @@ function renderCardRow(el) {
           <span class="pcard-title">${esc(c.title)}</span>
           <span class="pcard-sub">${esc(c.subtitle)}</span>
         </button>`).join("")}
-      ${sampler.length >= 2 ? `
-        <button class="pcard pcard-live" id="sampler-card">
-          <span class="pcard-title">Sampler</span>
-          <span class="pcard-sub">a few tracks each from ${sampler.length} suggested artists</span>
-        </button>` : ""}
     </div>`;
   el.querySelectorAll("[data-card]").forEach((b) =>
     b.addEventListener("click", () => openCardModal(_cards.find((c) => c.id === b.dataset.card))));
-  const sb = document.getElementById("sampler-card");
-  if (sb) sb.addEventListener("click", () => openSampler(sampler));
 }
 
-/** Artists the sampler draws from: pins first, then current suggestions. */
+/**
+ * Artists the sampler draws from: ones you've barely explored.
+ *
+ * Sampling artists you already play constantly is pointless — you know
+ * what they sound like. The useful case is an artist you liked once or
+ * twice and never followed up on, which is also exactly the group the
+ * home page's "1 song liked" prompt surfaces.
+ *
+ * Populated from the cache when suggestions load, so building the row
+ * costs nothing extra.
+ */
+let _samplerArtists = [];
+
 function samplerSourceArtists() {
-  const seen = new Set();
-  const out = [];
-  const add = (a) => {
-    if (!a || !a.id || seen.has(a.id)) return;
-    seen.add(a.id);
-    out.push({ id: a.id, name: a.name });
-  };
-  (watchlist.pinned() || []).forEach((p) => add({ id: p.spotify_id, name: p.name }));
-  ((_row && _row.suggestions) || []).forEach(add);
-  return out.slice(0, SAMPLER_MAX_ARTISTS);
+  return _samplerArtists.slice(0, SAMPLER_MAX_ARTISTS);
 }
 
 async function openSampler(artists) {
@@ -356,7 +348,7 @@ async function openSampler(artists) {
   if (!modal) return;
 
   document.getElementById("card-title").textContent = "Sampler";
-  document.getElementById("card-sub").textContent = `a few tracks each from ${artists.length} artists`;
+  document.getElementById("card-sub").textContent = `a few tracks each from ${artists.length} artists you've barely heard`;
   document.getElementById("card-name").value = "DeepDive · Sampler";
   msg.classList.remove("hidden", "error");
   msg.textContent = "Fetching top tracks…";
@@ -400,7 +392,7 @@ async function openSampler(artists) {
   const card = {
     id: "sampler",
     title: "Sampler",
-    subtitle: `a few tracks each from ${artists.length} artists`,
+    subtitle: `a few tracks each from ${artists.length} artists you've barely heard`,
     count: tracks.length,
     tracks: interleaveByArtist(tracks),
   };
@@ -1039,6 +1031,10 @@ async function buildSuggestionRow(el) {
       libraryPicks = insights.librarySuggestions(cached, { exclude, limit: 6 });
       // Artwork for anything already in the library, free of charge.
       cachedArt = insights.artworkFromCache(cached);
+      // Sampler candidates come from the same read — no extra cost.
+      _samplerArtists = insights.artistsBarelyExplored(cached, {
+        maxTracks: 3, limit: SAMPLER_MAX_ARTISTS,
+      }).filter((a) => !blocked.has((a.name || "").trim().toLowerCase()));
     }
   } catch (e) { /* cache unavailable — listening half still works */ }
 
@@ -1214,12 +1210,28 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   }
   const pinsSection = el.querySelector("#pins-section");
   const suggSection = el.querySelector("#sugg-section");
+  // The sampler belongs at the end of the suggestions, not among the
+  // playlist cards: it's about artists you've barely explored, which is
+  // the same subject as the row above it.
+  const samplerArtists = samplerSourceArtists();
+  const samplerHtml = samplerArtists.length >= 2 ? `
+    <div class="sampler-row">
+      <button class="btn btn-ghost btn-sampler" id="sampler-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Sample ${samplerArtists.length} artists you've barely heard
+      </button>
+      <p class="crate-note sampler-note">A few tracks each from artists with three or fewer liked songs.</p>
+    </div>` : "";
+
   if (state.pinsOnly) {
     pinsSection.innerHTML = pinsHtml;
   } else {
     pinsSection.innerHTML = pinsHtml;
-    suggSection.innerHTML = suggHtml + emptyHtml;
+    suggSection.innerHTML = suggHtml + emptyHtml + samplerHtml;
   }
+
+  const sampBtn = document.getElementById("sampler-btn");
+  if (sampBtn) sampBtn.addEventListener("click", () => openSampler(samplerArtists));
 
   el.querySelectorAll("[data-search]").forEach((b) =>
     b.addEventListener("click", () => startSearch(b.dataset.search)));

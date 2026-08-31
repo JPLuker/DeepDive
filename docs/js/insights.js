@@ -397,3 +397,28 @@ function surpriseCard(tracks) {
     tracks: picks,
   };
 }
+
+/**
+ * Artists you've barely explored — a few liked songs and no more. These
+ * are the ones worth sampling: an artist you play constantly needs no
+ * introduction, whereas one you've liked twice and never followed up on
+ * is exactly the case where hearing a few more tracks might land.
+ *
+ * Ordered by most recently added, since a recent discovery is a livelier
+ * prompt than one from years ago.
+ */
+export function artistsBarelyExplored(tracks, { maxTracks = 3, limit = 12 } = {}) {
+  const out = [];
+  for (const a of byArtist(tracks).values()) {
+    if (a.count > maxTracks) continue;
+    out.push({
+      id: a.id,
+      name: a.name,
+      image_url: a.image_url,
+      count: a.count,
+      _sort: a.newest || "",
+    });
+  }
+  out.sort((x, y) => (y._sort || "").localeCompare(x._sort || ""));
+  return out.slice(0, limit).map(({ _sort, ...rest }) => rest);
+}
