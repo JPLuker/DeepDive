@@ -368,7 +368,12 @@
     .modal-backdrop { padding:0; align-items:flex-end; }
     .modal { width:100%; max-height:92vh; border-radius:var(--radius-lg) var(--radius-lg) 0 0; padding:22px 18px calc(22px + env(safe-area-inset-bottom)); }
     .modal-actions { position:sticky; bottom:0; background:var(--paper); padding-top:14px; margin-top:18px; }
-    .modal-actions .btn { flex:1; justify-content:center; }
+    /* Don't stretch every action to equal width: with three buttons
+       that squeezed each label until it truncated. The primary action
+       takes the room it needs, the rest size to their text. */
+    .modal-actions { flex-wrap:wrap; gap:8px; }
+    .modal-actions .btn { flex:0 0 auto; }
+    .modal-actions #card-go, .modal-actions [data-action] { flex:1 1 auto; justify-content:center; }
     .modal-actions .spacer { display:none; }
     .modal-remember { order:-1; width:100%; }
 
@@ -525,9 +530,11 @@
       </label>
       <p class="nav-hint" style="margin-top:4px;">Off, an existing playlist with the same name is updated instead of duplicated.</p>
 
+      <!-- Two export buttons crowded the row to the point of truncating
+           every label on a phone. One is enough: CSV opens in a
+           spreadsheet and still reads fine as plain text. -->
       <div class="modal-actions">
-        <button class="btn btn-ghost btn-small" id="card-export-txt">Export .txt</button>
-        <button class="btn btn-ghost btn-small" id="card-export-csv">Export .csv</button>
+        <button class="btn btn-ghost btn-small" id="card-export">Export</button>
         <span class="spacer"></span>
         <button class="btn btn-ghost" id="card-cancel">Cancel</button>
         <button class="btn btn-primary" id="card-go">Create playlist</button>

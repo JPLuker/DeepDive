@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.4.2";
+export const BUILD = "2.4.3";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -525,11 +525,27 @@ async function buildSampler(artists, perArtist, onProgress) {
     const a = picked[i];
     if (!a || !a.id) continue;
     try {
-      // No market parameter. "from_token" is deprecated, and passing it
-      // fails the request outright; omitting it lets Spotify use the
-      // token's own market, which is what was wanted anyway.
-      const res = await client.get(`artists/${a.id}/top-tracks`);
-      const tracks = (res && res.tracks) || [];
+      // Two routes, because /artists/{id}/top-tracks is refused for this
+      // app — consistent with the other endpoints Spotify restricted for
+      // Dev Mode in Feb 2026. Search returns tracks for an artist in
+      // roughly popularity order and costs the same single request, so
+      // it serves the same purpose.
+      //
+      // No market parameter anywhere: "from_token" is deprecated and
+      // fails outright, while omitting it uses the token's own market.
+      let tracks = [];
+      try {
+        const res = await client.get(`artists/${a.id}/top-tracks`);
+        tracks = (res && res.tracks) || [];
+      } catch (topErr) {
+        const res = await client.get("search", {
+          q: `artist:"${a.name}"`, type: "track", limit: 10,
+        });
+        tracks = ((res && res.tracks && res.tracks.items) || [])
+          // Search matches loosely, so keep only tracks actually by this
+          // artist rather than ones merely mentioning the name.
+          .filter((t) => (t.artists || []).some((ar) => ar.id === a.id));
+      }
       out.push(...tracks.slice(0, perArtist));
     } catch (e) {
       // One artist failing shouldn't sink the sampler — a missing act is
@@ -620,21 +636,21 @@ function openCardModal(card) {
 
   // Export needs no Spotify call at all, so it works even when the API
   // is rate-limited or the account can't write playlists.
-  const bindExport = (id, ext, fn, mime) => {
-    const oldBtn = document.getElementById(id);
-    if (!oldBtn) return;
-    const btn = oldBtn.cloneNode(true); oldBtn.replaceWith(btn);
+  // One export. CSV opens in a spreadsheet and still reads acceptably as
+  // plain text, so offering both formats bought little and cost a
+  // cluttered row.
+  const oldExport = document.getElementById("card-export");
+  if (oldExport) {
+    const btn = oldExport.cloneNode(true); oldExport.replaceWith(btn);
     btn.addEventListener("click", () => {
       const list = tracksFor();
       if (!list.length) return;
       const safe = ((nameInput.value || card.title) + "").replace(/[^\w\d\- ]+/g, "").trim() || "deepdive";
-      const done = downloadFile(`${safe}.${ext}`, fn(list), mime);
+      const done = downloadFile(`${safe}.csv`, tracksToCsv(list), "text/csv;charset=utf-8");
       btn.textContent = done ? "Saved" : "Failed";
-      setTimeout(() => { btn.textContent = `Export .${ext}`; }, 1600);
+      setTimeout(() => { btn.textContent = "Export"; }, 1600);
     });
-  };
-  bindExport("card-export-txt", "txt", tracksToText, "text/plain;charset=utf-8");
-  bindExport("card-export-csv", "csv", tracksToCsv, "text/csv;charset=utf-8");
+  }
 
   freshGo.addEventListener("click", async () => {
     const list = tracksFor();
