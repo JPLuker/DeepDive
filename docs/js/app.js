@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.5.2";
+export const BUILD = "2.5.3";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -69,11 +69,27 @@ function sortTracks(tracks, mode) {
   const rd = (t) => (t.album && t.album.release_date) || "";
   const title = (t) => (t.name || "").toLowerCase();
   const isAlbum = (t) => t.album && t.album.album_type === "album";
+  const artist = (t) => (((t.artists || [])[0] || {}).name || "").toLowerCase();
 
   withIdx.sort((a, b) => {
     if (mode === "date-desc") return rd(b.t).localeCompare(rd(a.t)) || a.i - b.i;
     if (mode === "date-asc") return rd(a.t).localeCompare(rd(b.t)) || a.i - b.i;
     if (mode === "title") return title(a.t).localeCompare(title(b.t)) || a.i - b.i;
+    if (mode === "artist") {
+      // Group an artist's tracks together, then order sensibly within
+      // each: by album release, then album, then track number. Sorting
+      // by artist alone would leave their tracks in arbitrary order,
+      // which defeats the point of grouping them.
+      const byArtist = artist(a.t).localeCompare(artist(b.t));
+      if (byArtist) return byArtist;
+      const byDate = rd(a.t).localeCompare(rd(b.t));
+      if (byDate) return byDate;
+      const byAlbum = ((a.t.album && a.t.album.name) || "").localeCompare((b.t.album && b.t.album.name) || "");
+      if (byAlbum) return byAlbum;
+      const byTrack = (a.t.track_number || 0) - (b.t.track_number || 0);
+      if (byTrack) return byTrack;
+      return a.i - b.i;
+    }
     if (mode === "album") {
       // Album-first tracks grouped and ordered; everything else after.
       const aAlb = isAlbum(a.t), bAlb = isAlbum(b.t);
@@ -493,6 +509,7 @@ const PLAYLIST_ORDERS = [
   { id: "album", label: "Album order" },
   { id: "date-desc", label: "Newest first" },
   { id: "date-asc", label: "Oldest first" },
+  { id: "artist", label: "By artist" },
   { id: "title", label: "Title A–Z" },
   { id: "shuffle", label: "Shuffle" },
 ];
