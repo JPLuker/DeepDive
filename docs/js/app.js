@@ -19,7 +19,7 @@ import { bestStore } from "./storage.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.5.1";
+export const BUILD = "2.5.2";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -728,6 +728,13 @@ function openCardModal(card) {
   const cancelEl = document.getElementById("card-cancel");
   const freshGo = goEl.cloneNode(true); goEl.replaceWith(freshGo);
   const freshCancel = cancelEl.cloneNode(true); cancelEl.replaceWith(freshCancel);
+  // cloneNode copies the live state, so a button left reading "Building…"
+  // and disabled by an earlier step arrives here still stuck. Reset it
+  // explicitly rather than inheriting whatever the previous phase left.
+  freshGo.textContent = "Create playlist";
+  freshGo.disabled = false;
+  freshCancel.textContent = "Cancel";
+  freshCancel.disabled = false;
 
   freshCancel.addEventListener("click", close);
   modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
