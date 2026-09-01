@@ -529,6 +529,17 @@ export class SpotifyClient {
       await this._call("PUT", "me/library", { params: { uris } });
     }
   }
+
+  /**
+   * The inverse of likeTracks, for undo. Same endpoint and the same
+   * 40-uri batching; only the method differs.
+   */
+  async unlikeTracks(trackIds) {
+    for (const batch of chunk(trackIds, LIBRARY_SAVE_URIS_MAX)) {
+      const uris = batch.map((tid) => `spotify:track:${tid}`).join(",");
+      await this._call("DELETE", "me/library", { params: { uris } });
+    }
+  }
 }
 
 // Pure local helper — no API calls (mirrors get_distinct_liked_artists).

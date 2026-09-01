@@ -15,11 +15,12 @@ import * as watchlist from "./watchlist.js";
 import { LibraryCache } from "./library-cache.js";
 import * as insights from "./insights.js";
 import { bestStore } from "./storage.js";
+import * as history from "./history.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.5.3";
+export const BUILD = "2.6.0";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -191,6 +192,7 @@ function navigate(view) {
   if (view === "home") return renderHome();
   if (view === "scrub") return renderScrubForm();
   if (view === "watchlist") return renderWatchlist();
+  if (view === "history") return renderHistory();
   if (view === "setup") return renderSetup();
   return renderHome();
 }
@@ -1486,6 +1488,15 @@ async function runSearchWithOptions(artistName, opts) {
       onProgress: (pct, stage) => updateProgress(pct, stage),
     });
     lastResult = result;
+    history.recordDive({
+      artistId: result.artist && result.artist.id,
+      artistName: result.artist && result.artist.name,
+      imageUrl: result.artist && result.artist.images && result.artist.images.length
+        ? result.artist.images[result.artist.images.length - 1].url : null,
+      duplicates: (result.duplicate_candidates || []).length,
+      newTracks: (result.new_tracks || []).length,
+      alreadyLiked: result.already_liked_count || 0,
+    });
     renderResults(result);
     // If this artist was pinned, the pin has served its purpose. Ask
     // rather than assume — but ask at the moment it's obvious, which is
@@ -1754,6 +1765,14 @@ async function applyResults(r, action) {
     if (doLike && dupIds.length) {
       await client.likeTracks(dupIds);
       parts.push(`Liked ${dupIds.length} track${dupIds.length === 1 ? "" : "s"}.`);
+      // Recorded so it can be reversed. Spotify offers no bulk unlike,
+      // and DeepDive is the only thing that knows exactly which tracks
+      // these were.
+      history.recordAction({
+        type: "like",
+        label: `Liked ${dupIds.length} track${dupIds.length === 1 ? "" : "s"} by ${(r.artist && r.artist.name) || "an artist"}`,
+        trackIds: dupIds,
+      });
     }
     if (doPlaylist && newIds.length) {
       const res = await client.addTracksToPlaylistDeduped(
@@ -1901,6 +1920,124 @@ function renderScrubResults(r) {
 // ============================================================
 // Watchlist page
 // ============================================================
+// ---------------------------------------------------------------------
+// History, undo, and export/import (2.6)
+// ---------------------------------------------------------------------
+
+function renderHistory() {
+  setTitle("DeepDive · History");
+  const dives = history.listDives();
+  const undoable = history.lastUndoable();
+  const actions = history.listActions();
+
+  root.innerHTML = `
+    <div class="card">
+      <h1>History</h1>
+      <p class="muted">What DeepDive has done, and how to take it back. Stored in this browser only.</p>
+
+      ${undoable ? `
+        <div class="crate-header"><span class="label gold">Undo</span><span class="rule"></span></div>
+        <div class="watchlist-row">
+          <span class="watchlist-name">${esc(undoable.label)}</span>
+          <div class="watchlist-actions">
+            <button class="btn btn-ghost btn-small" id="undo-last">Undo</button>
+          </div>
+        </div>
+        <p class="nav-hint">Removes those tracks from your Liked Songs. Playlists aren't undone — deleting one you may have edited or shared would be worse than leaving it.</p>
+      ` : `<p class="empty-note">Nothing to undo.</p>`}
+
+      <div class="crate-header"><span class="label teal">Dives</span><span class="rule"></span></div>
+      ${dives.length ? dives.map((d) => `
+        <div class="watchlist-row">
+          <span class="watchlist-name">
+            ${d.imageUrl ? `<img src="${esc(d.imageUrl)}" alt="" class="pill-avatar">` : ""}
+            <span>
+              <span style="display:block;">${esc(d.artistName)}</span>
+              <span class="pill-reason">${esc(new Date(d.at).toLocaleDateString())} · ${d.duplicates} dup · ${d.newTracks} new</span>
+            </span>
+          </span>
+          <div class="watchlist-actions">
+            <button class="btn btn-ghost btn-small" data-redive="${esc(d.artistName)}">Dive again</button>
+          </div>
+        </div>`).join("") : `<p class="empty-note">No dives yet.</p>`}
+      ${dives.length ? `<div class="actions"><button class="btn btn-ghost btn-small" id="clear-dives">Clear dive history</button></div>` : ""}
+
+      <div class="crate-header"><span class="label gold">Your data</span><span class="rule"></span></div>
+      <p class="nav-hint" style="margin-top:0;">Pins, blocked artists, dive history and settings. The library cache isn't included — it rebuilds itself from Spotify in one read, so carrying thousands of tracks around in a file would be a poor trade.</p>
+      <div class="actions">
+        <button class="btn btn-ghost btn-small" id="export-data">Export backup</button>
+        <button class="btn btn-ghost btn-small" id="import-data">Import backup</button>
+        <input type="file" id="import-file" accept="application/json,.json" style="display:none;">
+      </div>
+      <div class="flash hidden" id="history-msg" style="margin-top:14px;"></div>
+
+      <div class="actions"><button class="btn btn-ghost" data-home>Back to search</button></div>
+    </div>`;
+
+  root.querySelector("[data-home]")?.addEventListener("click", () => renderHome());
+  root.querySelectorAll("[data-redive]").forEach((b) =>
+    b.addEventListener("click", () => startSearch(b.dataset.redive)));
+
+  const msg = document.getElementById("history-msg");
+  const say = (text, isError) => {
+    msg.textContent = text;
+    msg.classList.remove("hidden");
+    msg.classList.toggle("error", !!isError);
+  };
+
+  const undoBtn = document.getElementById("undo-last");
+  if (undoBtn) undoBtn.addEventListener("click", async () => {
+    if (!window.confirm(`${undoable.label} — remove those from your Liked Songs?`)) return;
+    undoBtn.disabled = true;
+    undoBtn.textContent = "Undoing…";
+    try {
+      await client.unlikeTracks(undoable.trackIds);
+      history.markUndone(undoable.id);
+      renderHistory();
+      flash("Undone.");
+    } catch (e) {
+      const info = explainError(e);
+      say(`${info.headline}. ${info.detail}`, true);
+      undoBtn.disabled = false;
+      undoBtn.textContent = "Undo";
+    }
+  });
+
+  const clearBtn = document.getElementById("clear-dives");
+  if (clearBtn) clearBtn.addEventListener("click", () => {
+    if (!window.confirm("Clear your dive history? This can't be undone.")) return;
+    history.clearDives();
+    renderHistory();
+  });
+
+  document.getElementById("export-data")?.addEventListener("click", () => {
+    const stamp = new Date().toISOString().slice(0, 10);
+    const ok = downloadFile(`deepdive-backup-${stamp}.json`,
+      JSON.stringify(history.exportData(), null, 2), "application/json");
+    say(ok ? "Backup saved." : "Couldn't save the file.", !ok);
+  });
+
+  const fileInput = document.getElementById("import-file");
+  document.getElementById("import-data")?.addEventListener("click", () => fileInput.click());
+  fileInput?.addEventListener("change", async () => {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const payload = JSON.parse(text);
+      // Merge by default: importing onto a device that already has pins
+      // shouldn't silently discard them.
+      const sum = history.importData(payload, { mode: "merge" });
+      say(`Imported: ${sum.pins} pins, ${sum.blocked} blocked, ${sum.dives} dives added.`);
+      renderHistory();
+    } catch (e) {
+      say(e && e.message ? e.message : "Couldn't read that file.", true);
+    } finally {
+      fileInput.value = "";
+    }
+  });
+}
+
 function renderWatchlist() {
   setTitle("DeepDive · Pins & blocked");
   const pins = watchlist.pinned();
