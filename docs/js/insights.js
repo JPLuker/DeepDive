@@ -28,10 +28,11 @@ function byArtist(tracks) {
     if (!a || !a.id) continue;
     let entry = map.get(a.id);
     if (!entry) {
-      entry = { id: a.id, name: a.name, count: 0, oldest: null, newest: null, image_url: null };
+      entry = { id: a.id, name: a.name, count: 0, oldest: null, newest: null, image_url: null, trackIds: [] };
       map.set(a.id, entry);
     }
     entry.count += 1;
+    if (t.id) entry.trackIds.push(t.id);
     // Artist photos need one API request each, which is exactly the sort
     // of per-item call that gets rate-limited. The cache already holds
     // each track's album — artwork included — so use that instead. It
@@ -426,6 +427,10 @@ export function artistsBarelyExplored(tracks, { maxTracks = 3, limit = 12, seed 
       name: a.name,
       image_url: a.image_url,
       count: a.count,
+      // The tracks already liked by this artist. One of them anchors the
+      // sampler: hearing the song you know before two you don't is what
+      // makes it an introduction rather than a pile of strangers.
+      likedTrackIds: a.trackIds || [],
       _sort: a.newest || "",
     });
   }

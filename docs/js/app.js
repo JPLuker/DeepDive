@@ -20,7 +20,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.6.1";
+export const BUILD = "2.6.2";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -486,7 +486,9 @@ async function runSampler(artists) {
   msg.classList.add("hidden");
   lenRow.classList.remove("hidden");
 
-  // Alternating artists reads better than three-in-a-row blocks.
+  // Kept in build order: grouped by artist, each led by a track you
+  // already liked. Interleaving or shuffling would undo that.
+  //
   // Date the name rather than asking whether to reuse: each sampler is a
   // snapshot of a moment, so overwriting the last one would be wrong and
   // asking about it is a question with an obvious answer.
@@ -496,7 +498,7 @@ async function runSampler(artists) {
     title: "Sampler",
     subtitle: `a few tracks each from ${artists.length} artists you've barely heard`,
     count: tracks.length,
-    tracks: interleaveByArtist(tracks),
+    tracks,
     simple: true,
     name: `DeepDive · Sampler ${stamp}`,
   };
@@ -624,6 +626,14 @@ const SAMPLER_MAX_ARTISTS = 12;
 
 let _samplerCancelled = false;
 
+/**
+ * Three tracks per artist: the one you already liked, then two you
+ * haven't. The familiar one leads so each artist opens with a reason to
+ * keep listening — a sampler of nothing but strangers is easy to skip.
+ *
+ * Tracks stay grouped by artist for the same reason. Interleaving or
+ * shuffling would scatter the anchors and the structure would be lost.
+ */
 async function buildSampler(artists, perArtist, onProgress) {
   const picked = artists.slice(0, SAMPLER_MAX_ARTISTS);
   const out = [];
@@ -657,7 +667,22 @@ async function buildSampler(artists, perArtist, onProgress) {
           // artist rather than ones merely mentioning the name.
           .filter((t) => (t.artists || []).some((ar) => ar.id === a.id));
       }
-      out.push(...tracks.slice(0, perArtist));
+      // Split what came back into the already-liked and the rest.
+      const liked = new Set(a.likedTrackIds || []);
+      const known = tracks.filter((t) => liked.has(t.id));
+      const unknown = tracks.filter((t) => !liked.has(t.id));
+
+      // One familiar track, then fill with unfamiliar ones. If nothing
+      // familiar comes back — the liked track may not be in the top
+      // results — just use unfamiliar ones rather than dropping the
+      // artist entirely.
+      const forArtist = [];
+      if (known.length) forArtist.push(known[0]);
+      for (const t of unknown) {
+        if (forArtist.length >= perArtist) break;
+        forArtist.push(t);
+      }
+      out.push(...forArtist);
     } catch (e) {
       // One artist failing shouldn't sink the sampler — a missing act is
       // better than no playlist. But the reason has to be recoverable,
@@ -673,26 +698,6 @@ async function buildSampler(artists, perArtist, onProgress) {
   return out;
 }
 
-/** Interleave so the playlist alternates artists rather than blocking them. */
-function interleaveByArtist(tracks) {
-  const byArtist = new Map();
-  for (const t of tracks) {
-    const key = (t.artists && t.artists[0] && t.artists[0].id) || "unknown";
-    if (!byArtist.has(key)) byArtist.set(key, []);
-    byArtist.get(key).push(t);
-  }
-  const lists = Array.from(byArtist.values());
-  const out = [];
-  let added = true;
-  while (added) {
-    added = false;
-    for (const list of lists) {
-      const next = list.shift();
-      if (next) { out.push(next); added = true; }
-    }
-  }
-  return out;
-}
 
 function openCardModal(card) {
   if (!card) return;
@@ -721,7 +726,10 @@ function openCardModal(card) {
   // for no gain.
   const simple = !!card.simple;
   const opts = simple
-    ? { length: 20, order: "shuffle" }
+    // "found" preserves the order the sampler built: grouped by artist,
+    // each led by a track already liked. Shuffling would scatter the
+    // anchors, which is the whole structure.
+    ? { length: 20, order: "found" }
     : { length: card.count <= 50 ? "all" : 50, order: "found" };
 
   const tracksFor = () => applyPlaylistOptions(card.tracks, opts);
