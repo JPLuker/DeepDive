@@ -20,7 +20,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.6.0";
+export const BUILD = "2.6.1";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -365,10 +365,17 @@ function renderCardRow(el) {
  * Populated from the cache when suggestions load, so building the row
  * costs nothing extra.
  */
-let _samplerArtists = [];
+let _samplerPool = [];
 
+/**
+ * A fresh handful each time. Drawing the top twelve by recency meant the
+ * same artists appeared in every sampler — one of them turned up in
+ * every playlist in a row — which defeats the purpose of sampling.
+ */
 function samplerSourceArtists() {
-  return _samplerArtists.slice(0, SAMPLER_MAX_ARTISTS);
+  if (_samplerPool.length <= SAMPLER_MAX_ARTISTS) return _samplerPool.slice();
+  const seed = (Date.now() >>> 0) ^ Math.floor(Math.random() * 0xffffffff);
+  return insights.seededPick(_samplerPool, SAMPLER_MAX_ARTISTS, seed);
 }
 
 /**
@@ -790,6 +797,19 @@ function openCardModal(card) {
       );
       msg.innerHTML = `Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}. <a href="${esc(res.url)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
       msg.classList.remove("hidden", "error");
+      // Recorded so it can be removed from History. Only newly created
+      // playlists are offered for removal — taking away one that already
+      // existed and was merely updated would delete something the user
+      // built themselves.
+      if (!res.reused && res.id) {
+        history.recordAction({
+          type: "playlist",
+          label: `Created "${(nameInput.value || card.title).trim()}"`,
+          playlistId: res.id,
+          playlistUrl: res.url,
+          undoable: false,
+        });
+      }
     } catch (e) {
       const info = explainError(e);
       msg.textContent = `${info.headline}. ${info.detail}`;
@@ -1172,8 +1192,10 @@ async function buildSuggestionRow(el) {
       // Artwork for anything already in the library, free of charge.
       cachedArt = insights.artworkFromCache(cached);
       // Sampler candidates come from the same read — no extra cost.
-      _samplerArtists = insights.artistsBarelyExplored(cached, {
-        maxTracks: 3, limit: SAMPLER_MAX_ARTISTS,
+      // Keep the full pool rather than a trimmed twelve, so each run can
+      // draw a different handful from it.
+      _samplerPool = insights.artistsBarelyExplored(cached, {
+        maxTracks: 3, limit: 500,
       }).filter((a) => !blocked.has((a.name || "").trim().toLowerCase()));
     }
   } catch (e) { /* cache unavailable — listening half still works */ }
@@ -1927,6 +1949,7 @@ function renderScrubResults(r) {
 function renderHistory() {
   setTitle("DeepDive · History");
   const dives = history.listDives();
+  const created = history.listCreatedPlaylists();
   const undoable = history.lastUndoable();
   const actions = history.listActions();
 
@@ -1945,6 +1968,24 @@ function renderHistory() {
         </div>
         <p class="nav-hint">Removes those tracks from your Liked Songs. Playlists aren't undone — deleting one you may have edited or shared would be worse than leaving it.</p>
       ` : `<p class="empty-note">Nothing to undo.</p>`}
+
+      ${created.length ? `
+        <div class="crate-header"><span class="label teal">Playlists created</span><span class="rule"></span></div>
+        ${created.map((p) => `
+          <div class="watchlist-row">
+            <span class="watchlist-name">
+              <span>
+                <span style="display:block;">${esc(p.label.replace(/^Created "?|"$/g, ""))}</span>
+                <span class="pill-reason">${esc(new Date(p.at).toLocaleDateString())}</span>
+              </span>
+            </span>
+            <div class="watchlist-actions">
+              ${p.playlistUrl ? `<a class="btn btn-ghost btn-small" href="${esc(p.playlistUrl)}" target="_blank" rel="noopener">Open</a>` : ""}
+              <button class="btn btn-ghost btn-small" data-delete-playlist="${esc(p.id)}" data-pid="${esc(p.playlistId)}" data-label="${esc(p.label)}">Remove</button>
+            </div>
+          </div>`).join("")}
+        <p class="nav-hint">Removing takes the playlist out of your Spotify library. Only playlists DeepDive created are listed — one it merely added to is yours, not ours to remove.</p>
+      ` : ""}
 
       <div class="crate-header"><span class="label teal">Dives</span><span class="rule"></span></div>
       ${dives.length ? dives.map((d) => `
@@ -2002,6 +2043,23 @@ function renderHistory() {
       undoBtn.textContent = "Undo";
     }
   });
+
+  root.querySelectorAll("[data-delete-playlist]").forEach((b) => b.addEventListener("click", async () => {
+    if (!window.confirm(`Remove "${b.dataset.label.replace(/^Created "?|"$/g, "")}" from your Spotify library?`)) return;
+    b.disabled = true;
+    b.textContent = "Removing…";
+    try {
+      await client.deletePlaylist(b.dataset.pid);
+      history.markUndone(b.dataset.deletePlaylist);
+      renderHistory();
+      flash("Playlist removed.");
+    } catch (e) {
+      const info = explainError(e);
+      say(`${info.headline}. ${info.detail}`, true);
+      b.disabled = false;
+      b.textContent = "Remove";
+    }
+  }));
 
   const clearBtn = document.getElementById("clear-dives");
   if (clearBtn) clearBtn.addEventListener("click", () => {

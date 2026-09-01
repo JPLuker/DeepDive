@@ -417,7 +417,7 @@ function surpriseCard(tracks) {
  * Ordered by most recently added, since a recent discovery is a livelier
  * prompt than one from years ago.
  */
-export function artistsBarelyExplored(tracks, { maxTracks = 3, limit = 12 } = {}) {
+export function artistsBarelyExplored(tracks, { maxTracks = 3, limit = 12, seed = null } = {}) {
   const out = [];
   for (const a of byArtist(tracks).values()) {
     if (a.count > maxTracks) continue;
@@ -428,6 +428,15 @@ export function artistsBarelyExplored(tracks, { maxTracks = 3, limit = 12 } = {}
       count: a.count,
       _sort: a.newest || "",
     });
+  }
+
+  // Without a seed this returns the most recent, which is the right
+  // answer for a fixed list. With one it draws at random from the whole
+  // pool — otherwise every sampler picks the same twelve artists and the
+  // same names turn up in playlist after playlist, which is the opposite
+  // of the point.
+  if (seed !== null) {
+    return seededPick(out, limit, seed).map(({ _sort, ...rest }) => rest);
   }
   out.sort((x, y) => (y._sort || "").localeCompare(x._sort || ""));
   return out.slice(0, limit).map(({ _sort, ...rest }) => rest);

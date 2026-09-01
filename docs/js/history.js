@@ -91,13 +91,15 @@ export function clearDives() {
  * shared, or added to is destructive in a way that removing a like
  * isn't, and "undo" should never be the riskier option.
  */
-export function recordAction({ type, label, trackIds, undoable = true }) {
+export function recordAction({ type, label, trackIds, playlistId, playlistUrl, undoable = true }) {
   const list = load(ACTIONS_KEY);
   list.unshift({
     id: uid(),
     type,
     label,
     trackIds: trackIds || [],
+    playlistId: playlistId || null,
+    playlistUrl: playlistUrl || null,
     at: new Date().toISOString(),
     undoable: !!undoable,
     undone: false,
@@ -122,6 +124,11 @@ export function markUndone(id) {
 
 export function clearActions() {
   save(ACTIONS_KEY, []);
+}
+
+/** Playlists DeepDive created that haven't been removed. */
+export function listCreatedPlaylists() {
+  return load(ACTIONS_KEY).filter((a) => a.type === "playlist" && a.playlistId && !a.undone);
 }
 
 // ---------------------------------------------------------------------

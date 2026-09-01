@@ -513,6 +513,7 @@ export class SpotifyClient {
     await this.addTracksToPlaylist(playlistId, toAdd);
 
     return {
+      id: playlistId,
       url: playlistUrl,
       reused,
       added_count: toAdd.length,
@@ -528,6 +529,18 @@ export class SpotifyClient {
       const uris = batch.map((tid) => `spotify:track:${tid}`).join(",");
       await this._call("PUT", "me/library", { params: { uris } });
     }
+  }
+
+  /**
+   * Remove a playlist from the user's library.
+   *
+   * Spotify has no true delete — you unfollow your own playlist, which
+   * takes it out of your library and is what "delete" means in their own
+   * apps. The playlist object survives server-side, so this is less
+   * destructive than the name suggests.
+   */
+  async deletePlaylist(playlistId) {
+    await this._call("DELETE", `playlists/${playlistId}/followers`);
   }
 
   /**
