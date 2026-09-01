@@ -20,7 +20,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.6.2";
+export const BUILD = "2.7.0";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -193,6 +193,7 @@ function navigate(view) {
   if (view === "scrub") return renderScrubForm();
   if (view === "watchlist") return renderWatchlist();
   if (view === "history") return renderHistory();
+  if (view === "about") return renderLanding();
   if (view === "setup") return renderSetup();
   return renderHome();
 }
@@ -2158,7 +2159,94 @@ function renderWatchlist() {
 // ============================================================
 // Boot
 // ============================================================
+// ---------------------------------------------------------------------
+// Landing page
+// ---------------------------------------------------------------------
+// Arriving cold, the first thing DeepDive used to ask for was a Spotify
+// Client ID — a credential, with numbered instructions, before saying
+// what any of it was for. This explains the thing first and asks second.
+
+const LANDING_SEEN_KEY = "deepdive_seen_landing";
+
+function landingSeen() {
+  try { return localStorage.getItem(LANDING_SEEN_KEY) === "1"; } catch (e) { return false; }
+}
+function markLandingSeen() {
+  try { localStorage.setItem(LANDING_SEEN_KEY, "1"); } catch (e) {}
+}
+
+const FEATURES = [
+  {
+    icon: `<path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/>`,
+    title: "Find what you missed",
+    body: "You liked a song off an album years ago. The same recording turned up later on an EP, and Spotify showed it to you like it was new. DeepDive reads an artist's whole catalogue against your Liked Songs and finds those near-misses.",
+  },
+  {
+    icon: `<path d="M21 15V6M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM12 12H3M16 6H3M12 18H3"/>`,
+    title: "Build the playlist",
+    body: "Everything by that artist you genuinely haven't heard, in album order or however you like it — length, ordering and naming all yours. Nothing touches your library until you press the button.",
+  },
+  {
+    icon: `<polygon points="5 3 19 12 5 21 5 3"/>`,
+    title: "Sample what you barely know",
+    body: "Artists you've liked once or twice and never followed up on. Each one leads with the song you already know, then two you don't.",
+  },
+  {
+    icon: `<path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21 8 14 2 9.4h7.6z"/>`,
+    title: "Playlists from your own history",
+    body: "Your 2019. Albums that landed. Music you found twenty years late. One from every year you've been collecting. All built from what's already in your library.",
+  },
+  {
+    icon: `<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/>`,
+    title: "Pins and suggestions",
+    body: "Pin an artist to come back to. Suggestions come half from what you've been playing and half from your own library, and each one tells you why it's there.",
+  },
+  {
+    icon: `<path d="M12 22s8-4.5 8-11a8 8 0 1 0-16 0c0 6.5 8 11 8 11z"/><circle cx="12" cy="11" r="3"/>`,
+    title: "Yours alone",
+    body: "No server, no account, no data collected — there's nowhere to collect it to. Everything happens in your browser, between you and Spotify.",
+  },
+];
+
+function renderLanding() {
+  setTitle("DeepDive");
+  root.innerHTML = `
+    <div class="landing">
+      <div style="text-align:center;">
+        <span class="wordmark-hero"><img src="assets/dd-logo.png" alt="" class="wordmark-hero-icon">DeepDive</span>
+        <p class="landing-lede">You've liked the album version. You missed the single.</p>
+        <p class="landing-sub">DeepDive reconciles an artist's catalogue against your Spotify library — finding the recordings you already love hiding under a different release, and everything by them you've never heard at all.</p>
+        <div class="landing-cta">
+          <button class="btn btn-primary" id="landing-start">Get started</button>
+        </div>
+        <p class="landing-note">Free. Runs entirely in your browser. Takes about two minutes to set up.</p>
+      </div>
+
+      <div class="landing-grid">
+        ${FEATURES.map((f) => `
+          <div class="landing-card">
+            <span class="landing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${f.icon}</svg></span>
+            <h3>${esc(f.title)}</h3>
+            <p>${esc(f.body)}</p>
+          </div>`).join("")}
+      </div>
+
+      <div class="landing-foot">
+        <p class="landing-note">Spotify requires every app to have its own credentials, so you'll create a free one on their developer dashboard. It's a form, and you only do it once.</p>
+        <button class="btn btn-primary" id="landing-start-2">Set up Spotify</button>
+      </div>
+    </div>`;
+
+  const go = () => { markLandingSeen(); renderSetup(); };
+  document.getElementById("landing-start")?.addEventListener("click", go);
+  document.getElementById("landing-start-2")?.addEventListener("click", go);
+}
+
 async function render() {
+  // Explain before asking. Only on a genuinely first visit — once the
+  // landing page has been seen, going straight to setup is the faster
+  // path for someone returning to finish the job.
+  if (!auth.getClientId() && !landingSeen()) return renderLanding();
   if (!auth.getClientId()) return renderSetup();
   if (!auth.isLoggedIn()) return renderConnect();
   return renderHome();

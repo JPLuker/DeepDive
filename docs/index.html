@@ -328,6 +328,22 @@
   .bmc-link svg { width:17px; height:17px; }
   .bmc-link:hover { color:var(--accent); border-color:var(--accent); }
 
+  /* ---- landing page ---- */
+  .landing { padding-top:24px; }
+  .landing-lede { font-size:20px; font-weight:600; margin:22px auto 10px; max-width:520px; line-height:1.35; }
+  .landing-sub { font-size:15px; color:var(--muted); max-width:560px; margin:0 auto; line-height:1.6; }
+  .landing-cta { margin:26px 0 10px; }
+  .landing-note { font-size:12.5px; color:var(--muted-soft); margin:0; }
+
+  .landing-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:44px 0 34px; }
+  .landing-card { border:1.5px solid var(--line); border-radius:var(--radius-lg); padding:20px; background:var(--paper); }
+  .landing-icon { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:var(--radius); background:var(--surface); color:var(--accent); margin-bottom:12px; }
+  .landing-icon svg { width:18px; height:18px; }
+  .landing-card h3 { font-size:15px; margin:0 0 6px; }
+  .landing-card p { font-size:13.5px; color:var(--muted); line-height:1.55; margin:0; }
+
+  .landing-foot { text-align:center; border-top:1px solid var(--line); padding-top:28px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+
   /* ---- mobile ----------------------------------------------------
      Nothing above this point adapts to width: the app was built and
      tested on a desktop, so a phone got a 76px wordmark, a 100px logo
@@ -368,6 +384,12 @@
     .pcard-title { font-size:13px; }
 
     .row-head { margin:26px auto 12px; }
+
+    /* Two columns of feature cards is unreadable at phone width. */
+    .landing-grid { grid-template-columns:1fr; gap:10px; margin:30px 0 26px; }
+    .landing-card { padding:16px; }
+    .landing-lede { font-size:17px; }
+    .landing-sub { font-size:14px; }
 
     /* Modals: full-width sheets rather than centred boxes. */
     .modal-backdrop { padding:0; align-items:flex-end; }
@@ -422,6 +444,7 @@
     <button class="nav-link" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search</button>
     <button class="nav-link" data-nav="scrub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>Full Library Scan</button>
     <button class="nav-link" data-nav="watchlist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Pins &amp; blocked</button>
+    <button class="nav-link" data-nav="about"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>About DeepDive</button>
     <button class="nav-link" data-nav="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15 14"/></svg>History</button>
     <button class="nav-link" data-nav="refresh-library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Refresh library</button>
     <button class="nav-link nav-link-more" id="open-spotify-settings">
