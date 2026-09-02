@@ -14,13 +14,14 @@ import * as search from "./search.js";
 import * as watchlist from "./watchlist.js";
 import { LibraryCache } from "./library-cache.js";
 import * as insights from "./insights.js";
+import * as matching from "./matching.js";
 import { bestStore } from "./storage.js";
 import * as history from "./history.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.7.1";
+export const BUILD = "2.7.2";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -647,6 +648,7 @@ async function buildSampler(artists, perArtist, onProgress) {
   const picked = artists.slice(0, SAMPLER_MAX_ARTISTS);
   const out = [];
   const failures = [];
+  const seenTrackIds = new Set();
   for (let i = 0; i < picked.length; i++) {
     // Checked between artists rather than mid-request: a run is a dozen
     // separate calls, so stopping at the next boundary is quick enough
@@ -676,6 +678,13 @@ async function buildSampler(artists, perArtist, onProgress) {
           // artist rather than ones merely mentioning the name.
           .filter((t) => (t.artists || []).some((ar) => ar.id === a.id));
       }
+      // Collapse cross-release duplicates first. Search happily returns
+      // the same recording several times — album, single, compilation —
+      // each with its own track id, which is how the sampler ended up
+      // with three copies of one song. The searches already do this;
+      // the sampler didn't.
+      tracks = matching.collapseDuplicateRecordings(tracks).tracks;
+
       // Split what came back into the already-liked and the rest.
       const liked = new Set(a.likedTrackIds || []);
       const known = tracks.filter((t) => liked.has(t.id));
@@ -691,7 +700,12 @@ async function buildSampler(artists, perArtist, onProgress) {
         if (forArtist.length >= perArtist) break;
         forArtist.push(t);
       }
-      out.push(...forArtist);
+      // Also guard across artists — a collaboration can legitimately be
+      // returned for both parties, and the same track twice in one
+      // playlist is a bug either way.
+      for (const t of forArtist) {
+        if (!seenTrackIds.has(t.id)) { seenTrackIds.add(t.id); out.push(t); }
+      }
     } catch (e) {
       // One artist failing shouldn't sink the sampler — a missing act is
       // better than no playlist. But the reason has to be recoverable,
