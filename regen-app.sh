@@ -18,6 +18,9 @@ head = (head
     .replace('href="assets/', 'href="../assets/')
     .replace('src="assets/', 'src="../assets/')
     .replace("url('assets/", "url('../assets/"))
+# The manifest sits inside app/, unlike everything else in assets/, so
+# it must stay relative rather than climbing a level.
+head = head.replace('href="../assets/dd-logo.png">', 'href="../assets/dd-logo.png">')
 body = open('app/index.html').read()
 body = body[body.index('</head>') + len('</head>'):]
 open('app/index.html','w').write(head + body)

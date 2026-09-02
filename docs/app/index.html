@@ -3,6 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0B0C0F">
+<!-- iOS ignores the manifest's display mode, so it needs its own tags to
+     launch without Safari's chrome. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DeepDive">
+<link rel="apple-touch-icon" href="../assets/dd-logo.png">
 <title>DeepDive</title>
 <link rel="icon" type="image/png" href="../assets/favicon.png">
 <script>
@@ -48,12 +57,16 @@
     /* Deeper base, lighter cards. The old --paper sat close enough to
        the page that cards never read as raised; separating them is most
        of what makes a dark interface look composed rather than flat. */
-    --bg:#000000; --ink:#F2F2F2; --paper:#121316; --surface:#1C1E23;
+    /* Not pure black. #000 reads as an OLED test card rather than a
+       designed surface, and gives nothing for cards to sit above.
+       Spotify and stats.fm both use a near-black with a slight cast;
+       this one leans very faintly blue to agree with the accent. */
+    --bg:#0B0C0F; --ink:#F2F2F2; --paper:#15171C; --surface:#1E2128;
     --line:rgba(255,255,255,0.10); --muted:rgba(242,242,242,0.62); --muted-soft:rgba(242,242,242,0.42);
     --teal:#5FB6A8; --teal-soft:#1C2E2B; --gold:#D6A24E; --gold-soft:#2E2718; --danger:#E0776B;
     --field:#1C1E23;
     --accent-top:#2FB6FF; --accent-bottom:#3B5BFF; --accent:#3E7BFF;
-    --tile:#17191E; --tile-hover:#20232A;
+    --tile:#16181D; --tile-hover:#1F222A;
   }
   html { background:var(--bg); }
   body, .card, .nav-drawer, input, .sort-select, .pill, .autofill-list, .settings-panel {
@@ -119,7 +132,7 @@
   .flash { max-width:760px; margin:0 auto 20px; padding:12px 16px; background:var(--gold-soft); border:1px solid var(--gold); color:var(--ink); border-radius:var(--radius); font-size:14px; }
   .flash.error { background:#fbe9e7; border-color:var(--danger); }
 
-  .card { background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-lg); padding:32px; margin-top:24px; }
+  .card { background:var(--paper); border:none; border-radius:var(--radius-lg); padding:28px; margin-top:20px; }
   h1,h2,h3 { font-family:'Inter',sans-serif; font-weight:700; margin:0 0 12px; line-height:1.15; letter-spacing:-0.01em; }
   h1 { font-size:26px; } h2 { font-size:18px; }
   p { line-height:1.55; }
@@ -290,7 +303,11 @@
   code.env { background:var(--surface); padding:2px 6px; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:13px; }
 
   .search-shell { position:relative; max-width:620px; margin:0 auto; }
-  .search-pill-form { display:flex; align-items:center; gap:8px; border:2.5px solid var(--ink); border-radius:32px; padding:6px 8px 6px 22px; background:var(--paper); }
+  /* A filled field rather than a 2.5px outline. Heavy borders are the
+     single most dated thing in an interface like this; modern apps use
+     a raised surface and let focus do the signalling. */
+  .search-pill-form { display:flex; align-items:center; gap:8px; border:1px solid transparent; border-radius:var(--radius); padding:7px 8px 7px 18px; background:var(--surface); transition:border-color .15s ease, background .15s ease; }
+  .search-pill-form:focus-within { border-color:var(--accent); background:var(--paper); }
   .search-pill-form input[type=text] { border:none; padding:10px 0; font-size:16px; }
   .search-pill-form input[type=text]:focus { outline:none; }
   .search-icon-btn, .settings-icon-btn { display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:50%; border:none; background:var(--accent-gradient); color:var(--paper); cursor:pointer; flex-shrink:0; }
@@ -376,6 +393,32 @@
   .landing-card p { font-size:13.5px; color:var(--muted); line-height:1.55; margin:0; }
 
   .landing-foot { text-align:center; border-top:1px solid var(--line); padding-top:28px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+
+  /* ---- bottom tab bar (mobile) ---- */
+  /* A slide-out drawer is a web idiom; every phone music app puts its
+     primary destinations in a fixed bar at the bottom, within thumb
+     reach. Hidden on desktop, where the drawer is fine. */
+  .tabbar { display:none; }
+  @media (max-width: 640px) {
+    .tabbar {
+      display:grid; grid-template-columns:repeat(4,1fr);
+      position:fixed; left:0; right:0; bottom:0; z-index:40;
+      background:color-mix(in srgb, var(--bg) 92%, transparent);
+      backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+      border-top:1px solid var(--line);
+      padding-bottom:env(safe-area-inset-bottom);
+    }
+    .tab {
+      display:flex; flex-direction:column; align-items:center; gap:3px;
+      padding:9px 0 7px; background:none; border:none; cursor:pointer;
+      color:var(--muted-soft); font-family:inherit; font-size:10px; font-weight:500;
+    }
+    .tab svg { width:21px; height:21px; }
+    .tab.active { color:var(--ink); }
+    .tab.active svg { color:var(--accent); }
+    /* Clear the bar so the last row isn't trapped underneath it. */
+    .wrap { padding-bottom:calc(78px + env(safe-area-inset-bottom)); }
+  }
 
   /* ---- mobile ----------------------------------------------------
      Nothing above this point adapts to width: the app was built and
@@ -617,6 +660,13 @@
       <div class="flash hidden" id="card-msg" style="margin-top:16px;"></div>
     </div>
   </div>
+
+  <nav class="tabbar" id="tabbar" aria-label="Sections">
+    <button class="tab" data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
+    <button class="tab" data-tab="scrub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Scan</button>
+    <button class="tab" data-tab="watchlist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21 8 14 2 9.4h7.6z"/></svg>Pins</button>
+    <button class="tab" data-tab="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15 14"/></svg>History</button>
+  </nav>
 
   <div id="flash-slot"></div>
   <div class="wrap" id="view-root"><!-- views render here --></div>

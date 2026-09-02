@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.3";
+export const BUILD = "2.9.0";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -264,6 +264,7 @@ function renderConnect() {
 // ============================================================
 async function renderHome() {
   setTitle("DeepDive");
+  setActiveTab("home");
   root.innerHTML = `
     <div class="search-shell">
       <div class="search-pill-form">
@@ -1839,6 +1840,7 @@ async function applyResults(r, action) {
 // ============================================================
 function renderScrubForm() {
   setTitle("DeepDive · Full library scan");
+  setActiveTab("scrub");
   root.innerHTML = `
     <div class="card">
       <h1>Scan your whole library</h1>
@@ -1963,6 +1965,7 @@ function renderScrubResults(r) {
 
 function renderHistory() {
   setTitle("DeepDive · History");
+  setActiveTab("history");
   const dives = history.listDives();
   const created = history.listCreatedPlaylists();
   const undoable = history.lastUndoable();
@@ -2113,6 +2116,7 @@ function renderHistory() {
 
 function renderWatchlist() {
   setTitle("DeepDive · Pins & blocked");
+  setActiveTab("watchlist");
   const pins = watchlist.pinned();
   const blocked = watchlist.listBlocked();
   root.innerHTML = `
@@ -2340,6 +2344,31 @@ function setShowBmc(on) {
   };
   if (saveBtn) saveBtn.addEventListener("click", save);
   if (idInput) idInput.addEventListener("keydown", (e) => { if (e.key === "Enter") save(); });
+})();
+
+// ---- bottom tab bar ----
+// Mirrors the drawer's destinations for phones, where reaching a
+// hamburger at the top of the screen is the worst place to put
+// navigation. Marks the current section so the app says where you are.
+let _currentTab = "home";
+
+function setActiveTab(name) {
+  _currentTab = name;
+  document.querySelectorAll(".tab").forEach((t) =>
+    t.classList.toggle("active", t.dataset.tab === name));
+}
+
+(function initTabs() {
+  document.addEventListener("click", (e) => {
+    const tab = e.target.closest("[data-tab]");
+    if (!tab) return;
+    const name = tab.dataset.tab;
+    setActiveTab(name);
+    if (name === "home") return renderHome();
+    if (name === "scrub") return renderScrubForm();
+    if (name === "watchlist") return renderWatchlist();
+    if (name === "history") return renderHistory();
+  });
 })();
 
 function stampBuild() {
