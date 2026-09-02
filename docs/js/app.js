@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.5.9";
+export const BUILD = "2.6.0";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1280,15 +1280,16 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     ? `<img src="${esc(imageUrl)}" alt="" class="tile-art" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'tile-art-fallback',textContent:'${initial(name)}'}))">`
     : `<span class="tile-art-fallback">${initial(name)}</span>`;
 
-  // The tile shows a 56px thumbnail but the dive screen shows the art
-  // large, so hand over the biggest variant we have rather than the one
-  // sized for the tile.
+  // The tile's own image is usually the artist's photo — that's what the
+  // listening endpoints return. Cached album art is only a stand-in for
+  // artists we have no photo for, so it must not take precedence, which
+  // is what was putting album covers on the dive screen.
   const bigArt = (name, fallback) => {
+    if (fallback) return fallback;
     if (_cachedArt && name) {
-      const big = _cachedArt.largeByName.get(name.trim().toLowerCase());
-      if (big) return big;
+      return _cachedArt.largeByName.get(name.trim().toLowerCase()) || "";
     }
-    return fallback || "";
+    return "";
   };
 
   const tile = (name, imageUrl, sub, actions, isPin) => `
@@ -1608,8 +1609,8 @@ function showProgressArt(images, artistName, artistId) {
       const imgs = (a && a.images) || [];
       log("artist photo:", imgs.length ? "found" : "none");
       if (imgs.length) _haveArtistPhoto = true;
-      // Only replace if there's genuinely a portrait; otherwise the
-      // album art already showing is better than nothing.
+      // The artist's own photo always wins over a stand-in, whatever is
+      // already on screen.
       if (imgs.length) paintProgressArt(slot, imgs[0].url);
     })
     .catch((e) => log("artist photo failed:", e && (e.status || e.message)));

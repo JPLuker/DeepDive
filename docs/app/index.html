@@ -434,15 +434,15 @@
     background-size:cover; background-position:center;
     opacity:0; transition:opacity .5s ease;
   }
-  .dive-bg.visible { opacity:0.5; }
+  .dive-bg.visible { opacity:0.28; }
   /* Fade it into the page at the edges so it reads as a backdrop rather
      than a photo with the UI dumped on it, and keep enough darkness
      behind the card for the text to stay legible. */
   .dive-bg::after {
     content:""; position:absolute; inset:0;
     background:
-      linear-gradient(to bottom, color-mix(in srgb, var(--bg) 55%, transparent) 0%,
-                                  color-mix(in srgb, var(--bg) 82%, transparent) 55%,
+      linear-gradient(to bottom, color-mix(in srgb, var(--bg) 70%, transparent) 0%,
+                                  color-mix(in srgb, var(--bg) 88%, transparent) 60%,
                                   var(--bg) 100%);
   }
 
