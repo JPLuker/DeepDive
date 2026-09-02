@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.5.4";
+export const BUILD = "2.5.5";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -348,6 +348,8 @@ let _samplerPool = [];
 // Album artwork keyed by artist, built when suggestions load. Kept at
 // module scope so the dive screen can borrow it without another read.
 let _cachedArt = null;
+// Artwork handed over by whatever started the dive.
+let _pendingArtwork = null;
 
 /**
  * A fresh handful each time. Drawing the top twelve by recency meant the
@@ -1094,7 +1096,7 @@ async function loadSuggestions() {
           </div>`).join("")}
       </div>`;
     el.querySelectorAll("[data-search]").forEach((b) =>
-      b.addEventListener("click", () => startSearch(b.dataset.search)));
+      b.addEventListener("click", () => startSearch(b.dataset.search, b.dataset.art || null)));
     return;
   }
 
@@ -1279,7 +1281,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
 
   const tile = (name, imageUrl, sub, actions, isPin) => `
     <div class="tile-wrap${isPin ? " is-pin" : ""}">
-      <button class="tile" data-search="${esc(name)}">
+      <button class="tile" data-search="${esc(name)}" data-art="${esc(imageUrl || "")}">
         ${art(name, imageUrl)}
         <span class="tile-text">
           <span class="tile-title">${esc(name)}</span>
@@ -1350,7 +1352,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   if (sampBtn) sampBtn.addEventListener("click", () => openSampler(samplerArtists));
 
   el.querySelectorAll("[data-search]").forEach((b) =>
-    b.addEventListener("click", () => startSearch(b.dataset.search)));
+    b.addEventListener("click", () => startSearch(b.dataset.search, b.dataset.art || null)));
 
   const redraw = () => renderSuggestionRow(_row.el, _row.pins, _row.suggestions, _row.showAllPins, _row.state);
   // Repaint pins alone — suggestions and their images stay untouched.
@@ -1443,12 +1445,25 @@ async function preflight() {
 
 // Entry point from the search bar / pills / watchlist. Shows the intent
 // chooser first (unless the user opted out), then runs the search.
-function startSearch(artistName) {
+/**
+ * @param artworkUrl  The image the caller is already showing for this
+ *   artist. Tiles have a working URL in hand — the same one rendering on
+ *   the home screen — so handing it over is more reliable than the dive
+ *   screen deriving its own, and needs no request at all.
+ */
+function startSearch(artistName, artworkUrl = null) {
+  _pendingArtwork = artworkUrl;
   openIntentModal(artistName);
 }
 
 async function runSearchWithOptions(artistName, opts) {
   renderProgress(`Digging through ${artistName}…`);
+  // If the caller handed us artwork, show it immediately — no waiting on
+  // the artist to resolve, and no request.
+  if (_pendingArtwork) {
+    const slot = document.getElementById("prog-art");
+    if (slot) paintProgressArt(slot, _pendingArtwork);
+  }
   try {
     // Preflight (issue #3): verify this token can actually do what the
     // scan is about to ask. Ported from the Flask health check, which
@@ -2243,7 +2258,7 @@ function renderHistory() {
             </span>
           </span>
           <div class="watchlist-actions">
-            <button class="btn btn-ghost btn-small" data-redive="${esc(d.artistName)}">Dive again</button>
+            <button class="btn btn-ghost btn-small" data-redive="${esc(d.artistName)}" data-art="${esc(d.imageUrl || "")}">Dive again</button>
           </div>
         </div>`).join("") : `<p class="empty-note">No dives yet.</p>`}
       ${dives.length ? `<div class="actions"><button class="btn btn-ghost btn-small" id="clear-dives">Clear dive history</button></div>` : ""}
@@ -2262,7 +2277,7 @@ function renderHistory() {
 
   root.querySelector("[data-home]")?.addEventListener("click", () => renderHome());
   root.querySelectorAll("[data-redive]").forEach((b) =>
-    b.addEventListener("click", () => startSearch(b.dataset.redive)));
+    b.addEventListener("click", () => startSearch(b.dataset.redive, b.dataset.art || null)));
 
   const msg = document.getElementById("history-msg");
   const say = (text, isError) => {
@@ -2354,7 +2369,7 @@ function renderWatchlist() {
         <div class="watchlist-row">
           <span class="watchlist-name">${e.image_url ? `<img src="${esc(e.image_url)}" alt="" class="pill-avatar">` : ""}${esc(e.name)}</span>
           <div class="watchlist-actions">
-            <button class="btn btn-ghost btn-small" data-wl-search="${esc(e.name)}">Dive now</button>
+            <button class="btn btn-ghost btn-small" data-wl-search="${esc(e.name)}" data-art="${esc(e.image_url || "")}">Dive now</button>
             <button class="btn btn-ghost btn-small" data-wl-remove="${esc(e.id)}" data-name="${esc(e.name)}">Unpin</button>
           </div>
         </div>`).join("") : `<p class="empty-note">Nothing pinned. Pin an artist from the search suggestions, or from the dropdown as you type.</p>`}
@@ -2373,7 +2388,7 @@ function renderWatchlist() {
     </div>`;
 
   root.querySelector("[data-home]")?.addEventListener("click", () => renderHome());
-  root.querySelectorAll("[data-wl-search]").forEach((b) => b.addEventListener("click", () => startSearch(b.dataset.wlSearch)));
+  root.querySelectorAll("[data-wl-search]").forEach((b) => b.addEventListener("click", () => startSearch(b.dataset.wlSearch, b.dataset.art || null)));
   root.querySelectorAll("[data-wl-remove]").forEach((b) => b.addEventListener("click", () => {
         watchlist.unpin(b.dataset.wlRemove);
     renderWatchlist();
