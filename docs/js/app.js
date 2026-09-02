@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.5.6";
+export const BUILD = "2.5.8";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -762,7 +762,7 @@ function openCardModal(card) {
         list.map((t) => t.id),
         { forceNew: simple || !!document.getElementById("card-force-new")?.checked }
       );
-      msg.innerHTML = `Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}. <a href="${esc(res.url)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
+      msg.innerHTML = `Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}. <a href="${esc(res.url)}" data-spotify style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
       msg.classList.remove("hidden", "error");
       // Recorded so it can be removed from History. Only newly created
       // playlists are offered for removal — taking away one that already
@@ -1323,7 +1323,17 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   let emptyHtml = "";
   if (!suggestions.length) {
     if (state.pending) {
-      emptyHtml = `<p class="crate-note row-label">Finding suggestions…</p>`;
+      // Placeholders in the shape of the answer, rather than a line of
+      // text where the results will be.
+      emptyHtml = `
+        <div class="row-head"><h2>Suggested</h2><span class="qual">for you</span></div>
+        <div class="tile-grid">
+          ${Array.from({ length: 6 }, () => `
+            <div class="tile-skeleton">
+              <span class="sk-art"></span>
+              <span class="sk-lines"><span class="sk-line"></span><span class="sk-line short"></span></span>
+            </div>`).join("")}
+        </div>`;
     } else if (!shownPins.length) {
       const why = state.listeningFailed
         ? "Couldn't reach Spotify for listening-based suggestions right now."
@@ -1464,6 +1474,7 @@ async function preflight() {
  */
 function startSearch(artistName, artworkUrl = null) {
   _pendingArtwork = artworkUrl;
+  _haveArtistPhoto = false;
   openIntentModal(artistName);
 }
 
@@ -1489,6 +1500,9 @@ async function runSearchWithOptions(artistName, opts) {
       libraryCache,
       onProgress: (pct, stage) => updateProgress(pct, stage),
       onArtist: (a) => showProgressArt(a && a.images, a && a.name, a && a.id),
+      // Only used if the artist has no photo of their own — plenty of
+      // smaller acts don't.
+      onArtwork: (url) => { if (!_haveArtistPhoto) setDiveBackdrop(url); },
     });
     lastResult = result;
     history.recordDive({
@@ -1529,7 +1543,8 @@ function maybeOfferUnpin(artistName) {
 function renderProgress(title) {
   setTitle("(0%) DeepDive · Working");
   root.innerHTML = `
-    <div class="card card-hero">
+    <div class="dive-bg" id="dive-bg"></div>
+    <div class="card card-dive">
       <!-- Full-bleed artwork with the title over it, rather than a
            square floating above a heading. Matches the artwork-led
            treatment used everywhere else, and gives a screen you'll be
@@ -1548,6 +1563,12 @@ function renderProgress(title) {
 /**
  * Show the artist once known. Separate function so multi-artist dives
  * and the sampler can reuse it as a slideshow later.
+ */
+/**
+ * The artist's own photo is what's wanted here — album art is only a
+ * stand-in. So anything local paints immediately (instant, no request),
+ * and the artist record is fetched regardless to replace it with the
+ * real portrait when it lands.
  */
 function showProgressArt(images, artistName, artistId) {
   const slot = document.getElementById("prog-art");
@@ -1575,24 +1596,65 @@ function showProgressArt(images, artistName, artistId) {
     }
   }
 
-  if (url) {
-    paintProgressArt(slot, url);
-    return;
-  }
+  // Paint whatever we have straight away so the screen isn't empty…
+  if (url) paintProgressArt(slot, url);
 
-  if (!artistId) { log("no artist id — giving up"); return; }
+  // …then get the real artist photo, which is the one that belongs here.
+  if (!artistId) { log("no artist id — keeping local art"); return; }
 
-  log("fetching artist", artistId);
+  log("fetching artist photo", artistId);
   client.get(`artists/${artistId}`)
     .then((a) => {
       const imgs = (a && a.images) || [];
-      log("artist fetch ok, images:", imgs.length);
+      log("artist photo:", imgs.length ? "found" : "none");
+      if (imgs.length) _haveArtistPhoto = true;
+      // Only replace if there's genuinely a portrait; otherwise the
+      // album art already showing is better than nothing.
       if (imgs.length) paintProgressArt(slot, imgs[0].url);
     })
-    .catch((e) => log("artist fetch failed:", e && (e.status || e.message)));
+    .catch((e) => log("artist photo failed:", e && (e.status || e.message)));
+}
+
+// Tracks whether a genuine artist photo has been shown, so a later
+// album-art fallback can't replace it.
+let _haveArtistPhoto = false;
+
+function setDiveBackdrop(url) {
+  const bg = document.getElementById("dive-bg");
+  if (!bg || !url) return;
+  const probe = new Image();
+  probe.onload = () => {
+    bg.style.backgroundImage = `url("${url.replace(/"/g, "%22")}")`;
+    bg.classList.add("visible");
+  };
+  probe.onerror = () => console.warn("[DeepDive art] backdrop failed:", url);
+  probe.src = url;
+}
+
+/**
+ * Open a Spotify link in the desktop or mobile client where it exists,
+ * falling back to the web player.
+ *
+ * The spotify: URI opens the installed app. If nothing handles it the
+ * browser does nothing at all, so a timer opens the web link instead —
+ * a handled URI backgrounds the page, which cancels the fallback.
+ */
+function openInSpotify(webUrl) {
+  const m = /open\.spotify\.com\/(playlist|album|artist|track)\/([A-Za-z0-9]+)/.exec(webUrl || "");
+  if (!m) { window.open(webUrl, "_blank", "noopener"); return; }
+  const uri = `spotify:${m[1]}:${m[2]}`;
+  let handled = false;
+  const onHide = () => { handled = true; };
+  document.addEventListener("visibilitychange", onHide, { once: true });
+  window.location.href = uri;
+  setTimeout(() => {
+    document.removeEventListener("visibilitychange", onHide);
+    if (!handled && !document.hidden) window.open(webUrl, "_blank", "noopener");
+  }, 900);
 }
 
 function paintProgressArt(slot, url) {
+  setDiveBackdrop(url);
   console.log("[DeepDive art] painting", url);
   const img = new Image();
   img.className = "prog-art";
@@ -1855,7 +1917,7 @@ async function applyResults(r, action) {
         newIds
       );
       parts.push(`Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}.`);
-      msg.innerHTML = `${esc(parts.join(" "))} <a href="${esc(res.url)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
+      msg.innerHTML = `${esc(parts.join(" "))} <a href="${esc(res.url)}" data-spotify style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
       msg.classList.remove("hidden", "error");
       btns.forEach((b) => (b.disabled = false));
       return;
@@ -1983,7 +2045,7 @@ function renderScrubResults(r) {
     const name = (document.getElementById("playlist-name").value || "DeepDive · Library scrub").trim();
     try {
       const res = await client.addTracksToPlaylistDeduped(name, "New-to-you tracks found by DeepDive's full library scrub.", ids);
-      msg.innerHTML = `Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}. <a href="${esc(res.url)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
+      msg.innerHTML = `Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}. <a href="${esc(res.url)}" data-spotify style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
       msg.classList.remove("hidden", "error");
     } catch (e) {
       msg.textContent = `Something went wrong: ${e.message || e}`;
@@ -2069,10 +2131,15 @@ function renderSettings() {
         <button class="theme-opt" data-theme-choice="system">System</button>
       </div>
 
-      <div class="crate-header"><span class="label teal">Pins &amp; blocked</span><span class="rule"></span></div>
+      <div class="crate-header"><span class="label teal">Manage</span><span class="rule"></span></div>
       <div class="actions">
-        <button class="btn btn-ghost btn-small" id="go-pins">Manage pins</button>
-        <button class="btn btn-ghost btn-small" id="go-history">History</button>
+        <button class="btn btn-ghost btn-small" id="go-pins">Pins &amp; blocked</button>
+      </div>
+
+      <div class="crate-header"><span class="label gold">History</span><span class="rule"></span></div>
+      <p class="nav-hint" style="margin-top:0;">What you've dived, what DeepDive created, and how to undo it.</p>
+      <div class="actions">
+        <button class="btn btn-ghost btn-small" id="go-history">Dive history</button>
       </div>
 
       <div class="crate-header"><span class="label teal">Your data</span><span class="rule"></span></div>
@@ -2165,7 +2232,7 @@ function renderSettings() {
             <span class="pill-reason">${p.tracks} track${p.tracks === 1 ? "" : "s"}</span>
           </span></span>
           <div class="watchlist-actions">
-            ${p.url ? `<a class="btn btn-ghost btn-small" href="${esc(p.url)}" target="_blank" rel="noopener">Open</a>` : ""}
+            ${p.url ? `<a class="btn btn-ghost btn-small" href="${esc(p.url)}" data-spotify>Open</a>` : ""}
             <button class="btn btn-ghost btn-small" data-rm-pl="${esc(p.id)}" data-nm="${esc(p.name)}">Remove</button>
           </div>
         </div>`).join("");
@@ -2251,7 +2318,7 @@ function renderHistory() {
               </span>
             </span>
             <div class="watchlist-actions">
-              ${p.playlistUrl ? `<a class="btn btn-ghost btn-small" href="${esc(p.playlistUrl)}" target="_blank" rel="noopener">Open</a>` : ""}
+              ${p.playlistUrl ? `<a class="btn btn-ghost btn-small" href="${esc(p.playlistUrl)}" data-spotify>Open</a>` : ""}
               <button class="btn btn-ghost btn-small" data-delete-playlist="${esc(p.id)}" data-pid="${esc(p.playlistId)}" data-label="${esc(p.label)}">Remove</button>
             </div>
           </div>`).join("")}
@@ -2559,6 +2626,15 @@ function setActiveTab(name) {
 function applyBmcVisibility() {
   document.getElementById("coffee-link")?.classList.toggle("hidden", !showBmc());
 }
+
+(function initSpotifyLinks() {
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("a[data-spotify]");
+    if (!a) return;
+    e.preventDefault();
+    openInSpotify(a.getAttribute("href"));
+  });
+})();
 
 function stampBuild() {
   const el = document.getElementById("build-id");

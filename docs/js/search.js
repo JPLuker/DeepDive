@@ -44,7 +44,7 @@ export async function runSearch(client, artistName, opts = {}) {
   const {
     excludeLive = false, excludeCensored = false,
     excludeInstrumental = false, excludeAcappella = false,
-    matchRemasters = false, onProgress = () => {}, onArtist = () => {},
+    matchRemasters = false, onProgress = () => {}, onArtist = () => {}, onArtwork = () => {},
     libraryCache = null, scopeToArtist = true,
     includeAppearsOn = false,
   } = opts;
@@ -121,6 +121,14 @@ export async function runSearch(client, artistName, opts = {}) {
     onProgress: stageCb("catalog", `Reading ${artist.name}'s releases…`),
     includeGroups,
   });
+
+  // Smaller acts often have no artist photo on Spotify at all. Their own
+  // album art is the obvious stand-in and has just been fetched, so it
+  // costs nothing extra.
+  try {
+    const withArt = catalogTracks.find((t) => t.album && t.album.images && t.album.images.length);
+    if (withArt) onArtwork(withArt.album.images[0].url);
+  } catch (e) {}
   completed += STAGE_WEIGHTS.catalog;
 
   report("Comparing with your library…");

@@ -73,6 +73,16 @@
     transition: background-color .2s ease, color .2s ease, border-color .2s ease;
   }
   * { box-sizing:border-box; }
+  /* The white flash on tap is Chrome's default highlight, not the app.
+     Suppressed here and replaced with our own pressed state, so touch
+     feedback matches the interface rather than the browser. */
+  * { -webkit-tap-highlight-color:transparent; }
+  button, a, .tab, .tile, .pcard { -webkit-tap-highlight-color:transparent; }
+  .tab:active, .tile:active, .pcard:active, .btn:active { filter:brightness(1.25); }
+  /* Keep a visible focus ring for keyboard users — removing the tap
+     highlight shouldn't cost accessibility. */
+  :focus:not(:focus-visible) { outline:none; }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
   body { margin:0; background:var(--bg); color:var(--ink); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
   a { color:inherit; }
   .wrap { max-width:760px; margin:0 auto; padding:0 24px 80px; }
@@ -185,6 +195,16 @@
   .row-head h2 { font-family:'Inter',system-ui,sans-serif; font-size:21px; font-weight:700; letter-spacing:-0.02em; margin:0; }
   .row-head .qual { font-size:21px; font-weight:700; letter-spacing:-0.02em; color:var(--muted-soft); }
   .row-head .rule { display:none; }
+
+  /* Skeletons while suggestions load. An empty area reads as broken;
+     a placeholder in the shape of the answer reads as working. */
+  .tile-skeleton { display:flex; align-items:center; gap:12px; background:var(--tile); border-radius:var(--radius-tile); min-height:56px; overflow:hidden; }
+  .sk-art { width:56px; height:56px; flex-shrink:0; background:var(--surface); }
+  .sk-lines { flex:1; display:flex; flex-direction:column; gap:6px; padding-right:14px; }
+  .sk-line { height:9px; border-radius:4px; background:var(--surface); }
+  .sk-line.short { width:45%; height:7px; }
+  .tile-skeleton, .sk-art, .sk-line { animation:sk-pulse 1.4s ease-in-out infinite; }
+  @keyframes sk-pulse { 0%,100% { opacity:1; } 50% { opacity:0.55; } }
 
   /* ---- artwork tiles ---- */
   /* Two columns, artwork flush to the edge and doing the work. A 26px
@@ -404,28 +424,35 @@
   .btn-danger { background:var(--danger); color:#fff; }
 
   /* ---- dive screen ---- */
-  /* Artwork runs full-bleed behind the title, letting imagery do the
-     work as the tiles do, rather than a square centred above a heading. */
-  .card-hero { padding:0; overflow:hidden; position:relative; }
-  .card-hero > *:not(.prog-art-slot):not(.prog-title) { padding-left:28px; padding-right:28px; }
-  .card-hero > *:last-child { padding-bottom:24px; }
-
-  .prog-art-slot { display:none; }
-  .prog-art-slot.visible { display:block; position:relative; line-height:0; }
-  /* Fade the image into the card so the title sits on it cleanly rather
-     than against a hard edge. */
-  .prog-art-slot.visible::after {
+  /* The artist fills the screen behind everything, with the progress
+     card floating on top. A dive is minutes of waiting, so the artist
+     you're waiting on may as well be the thing you're looking at. */
+  .dive-bg {
+    position:fixed; inset:0; z-index:-1;
+    background-size:cover; background-position:center;
+    opacity:0; transition:opacity .5s ease;
+  }
+  .dive-bg.visible { opacity:0.5; }
+  /* Fade it into the page at the edges so it reads as a backdrop rather
+     than a photo with the UI dumped on it, and keep enough darkness
+     behind the card for the text to stay legible. */
+  .dive-bg::after {
     content:""; position:absolute; inset:0;
-    background:linear-gradient(to bottom, transparent 40%, var(--paper) 100%);
+    background:
+      linear-gradient(to bottom, color-mix(in srgb, var(--bg) 55%, transparent) 0%,
+                                  color-mix(in srgb, var(--bg) 82%, transparent) 55%,
+                                  var(--bg) 100%);
   }
-  .prog-art { width:100%; aspect-ratio:16/10; object-fit:cover; display:block; animation:art-in .4s ease; }
-  .prog-title {
-    position:relative; margin:-52px 28px 14px; z-index:1;
-    font-size:26px; letter-spacing:-0.02em; text-shadow:0 2px 18px rgba(0,0,0,0.6);
+
+  /* Translucent so the artist shows through, rather than sitting on an
+     opaque slab that hides the thing we just went and fetched. */
+  .card-dive {
+    background:color-mix(in srgb, var(--paper) 82%, transparent);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--line);
   }
-  /* Without artwork the title needs its normal spacing back. */
-  .prog-art-slot:not(.visible) + .prog-title { margin:28px 28px 14px; }
-  @keyframes art-in { from { opacity:0; transform:scale(1.03); } to { opacity:1; transform:none; } }
+  .prog-art-slot { display:none; }   /* the artwork lives in the backdrop now */
+  .prog-title { font-size:24px; letter-spacing:-0.02em; }
 
   /* Support link lives in the topbar: always findable, never in the way.
      Muted until hovered so it doesn't compete with the wordmark. */
