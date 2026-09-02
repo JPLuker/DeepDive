@@ -20,7 +20,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.7.0";
+export const BUILD = "2.7.1";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -205,13 +205,21 @@ function renderSetup() {
   setTitle("DeepDive · Configuration");
   const rUri = auth.redirectUri();
   const currentId = auth.getClientId();
+  // The app moved to /app/ in 2.7.1, which changes the redirect URI.
+  // Anyone set up before that has the old one registered and will hit
+  // INVALID_CLIENT until they add this one — worth saying plainly rather
+  // than leaving them to decode Spotify's error message.
+  const moved = /\/app\/?$/.test(rUri)
+    ? `<p class="crate-note" style="margin-bottom:14px;">Used DeepDive before the address changed? Add the URI below <em>alongside</em> your existing one — Spotify allows several — or logging in will fail.</p>`
+    : "";
   root.innerHTML = `
     <div class="card">
       <h1>Spotify setup</h1>
       <p class="muted">DeepDive uses your own Spotify app so it stays entirely yours — no shared server, no data leaving your browser. This is a one-time setup.</p>
+      ${moved}
       <ol class="muted" style="line-height:1.9;">
         <li>Go to the <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Spotify Developer Dashboard</a> and click <strong>Create app</strong> (any name).</li>
-        <li>In the app's settings, add this exact <strong>Redirect URI</strong>, then click Add <em>and</em> Save at the bottom:<br><code class="env">${esc(rUri)}</code><br><span style="font-size:13px;">Copy it exactly — the trailing slash matters, and Spotify treats <code class="env">http</code> and <code class="env">https</code> as different.</span></li>
+        <li>In the app's settings, add this exact <strong>Redirect URI</strong>, then click Add <em>and</em> Save at the bottom:<br><code class="env">${esc(rUri)}</code><br><span style="font-size:13px;">Copy it exactly — the <code class="env">/app/</code> and the trailing slash both matter, and Spotify treats <code class="env">http</code> and <code class="env">https</code> as different.</span></li>
         <li>Copy your <strong>Client ID</strong> and paste it below. No client secret needed — this app uses PKCE, so there isn't one.</li>
       </ol>
       <div style="margin-top:20px;">
@@ -238,7 +246,7 @@ function renderConnect() {
   setTitle("DeepDive");
   root.innerHTML = `
     <div style="margin-top:60px; text-align:center;">
-      <span class="wordmark-hero"><img src="assets/dd-logo.png" alt="" class="wordmark-hero-icon">DeepDive</span>
+      <span class="wordmark-hero"><img src="../assets/dd-logo.png" alt="" class="wordmark-hero-icon">DeepDive</span>
       <p class="muted" style="max-width:460px; margin:20px auto 0;">
         DeepDive checks an artist's discography against your Liked Songs, finds recordings you've already liked under a different release, and helps you fold in the ones you're missing — then builds a playlist of everything you still haven't liked.
       </p>
@@ -257,7 +265,7 @@ async function renderHome() {
   setTitle("DeepDive");
   root.innerHTML = `
     <div style="margin-top:40px; text-align:center;">
-      <span class="wordmark-hero"><img src="assets/dd-logo.png" alt="" class="wordmark-hero-icon">DeepDive</span>
+      <span class="wordmark-hero"><img src="../assets/dd-logo.png" alt="" class="wordmark-hero-icon">DeepDive</span>
     </div>
     <div class="search-shell">
       <div class="search-pill-form">
@@ -2213,7 +2221,7 @@ function renderLanding() {
   root.innerHTML = `
     <div class="landing">
       <div style="text-align:center;">
-        <span class="wordmark-hero"><img src="assets/dd-logo.png" alt="" class="wordmark-hero-icon">DeepDive</span>
+        <span class="wordmark-hero"><img src="../assets/dd-logo.png" alt="" class="wordmark-hero-icon">DeepDive</span>
         <p class="landing-lede">You've liked the album version. You missed the single.</p>
         <p class="landing-sub">DeepDive reconciles an artist's catalogue against your Spotify library — finding the recordings you already love hiding under a different release, and everything by them you've never heard at all.</p>
         <div class="landing-cta">
