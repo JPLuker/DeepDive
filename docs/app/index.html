@@ -394,6 +394,13 @@
 
   .landing-foot { text-align:center; border-top:1px solid var(--line); padding-top:28px; display:flex; flex-direction:column; align-items:center; gap:14px; }
 
+  /* Sampler intro: the artists it's about to fetch, so the page shows
+     what it's going to do rather than describing it. */
+  .sampler-faces { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0; }
+  .sampler-face { width:48px; height:48px; border-radius:var(--radius-tile); object-fit:cover; display:block; }
+  .sampler-face-blank { display:flex; align-items:center; justify-content:center; background:var(--surface); color:var(--muted); font-weight:600; }
+  .btn-danger { background:var(--danger); color:#fff; }
+
   /* Artist artwork on the dive screen. Hidden until an artist resolves,
      so there's no empty frame while the search runs. */
   .prog-art-slot { display:none; }
@@ -434,7 +441,9 @@
   .tabbar { display:none; }
   @media (max-width: 640px) {
     .tabbar {
-      display:grid; grid-template-columns:repeat(4,1fr);
+      /* Auto-fit so the bar always divides evenly however many tabs
+         there are, rather than leaving empty columns on the right. */
+      display:grid; grid-auto-flow:column; grid-auto-columns:1fr;
       position:fixed; left:0; right:0; bottom:0; z-index:40;
       background:color-mix(in srgb, var(--bg) 92%, transparent);
       backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
@@ -551,75 +560,10 @@
 </style>
 </head>
 <body>
-  <div class="nav-backdrop" id="nav-backdrop"></div>
-  <nav class="nav-drawer" id="nav-drawer" aria-label="Main menu">
-    <div class="nav-pane" id="nav-main-pane">
-    <div class="nav-drawer-header">
-      <span class="wordmark" data-nav="home"><img src="../assets/dd-logo.png" alt="" class="wordmark-icon">DeepDive</span>
-      <button type="button" class="menu-btn" id="nav-close-btn" aria-label="Close menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>
-      </button>
-    </div>
-    <button class="nav-link" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search</button>
-    <button class="nav-link" data-nav="scrub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>Full Library Scan</button>
-    <button class="nav-link" data-nav="watchlist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Pins &amp; blocked</button>
-    <button class="nav-link" data-nav="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15 14"/></svg>History</button>
-    <button class="nav-link" data-nav="refresh-library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Refresh library</button>
-    <button class="nav-link nav-link-more" id="open-spotify-settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Settings
-      <svg class="nav-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-
-    <div class="nav-divider"></div>
-    <button class="nav-link" data-nav="logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Disconnect Spotify</button>
-    <div class="nav-sub">DeepDive · catalog reconciliation<br><span id="build-id">build —</span></div>
-    </div>
-
-    <!-- Spotify settings live behind a submenu: they're set once and
-         rarely revisited, so having them permanently expanded pushed
-         everything else down the drawer. -->
-    <div class="nav-pane nav-pane-sub" id="nav-spotify-pane" aria-hidden="true">
-      <button class="nav-link nav-back" id="close-spotify-settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        Settings
-      </button>
-      <div class="nav-divider"></div>
-
-      <div class="nav-sub" style="padding-bottom:6px;">Theme</div>
-      <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Theme">
-        <button class="theme-opt" data-theme-choice="light">Light</button>
-        <button class="theme-opt" data-theme-choice="dark">Dark</button>
-        <button class="theme-opt" data-theme-choice="system">System</button>
-      </div>
-
-      <div class="nav-sub" style="padding-top:14px; padding-bottom:6px;">Appearance</div>
-      <label class="nav-switch">
-        <span>Show support link</span>
-        <input type="checkbox" id="opt-show-bmc" checked>
-        <span class="switch-track"><span class="switch-thumb"></span></span>
-      </label>
-
-      <div class="nav-sub" style="padding-top:14px; padding-bottom:6px;">Spotify app</div>
-      <div class="nav-settings">
-        <label class="nav-field-label" for="nav-client-id">Client ID</label>
-        <input type="text" id="nav-client-id" class="nav-input" placeholder="paste your Client ID" autocomplete="off" spellcheck="false">
-        <button class="btn btn-ghost btn-small" id="nav-save-client-id" style="margin-top:8px;">Save Client ID</button>
-
-        <div class="nav-field-label" style="margin-top:18px;">Redirect URI</div>
-        <div class="nav-uri" id="nav-redirect-uri" title="Add this exact value to your Spotify app"></div>
-        <button class="btn btn-ghost btn-small" id="nav-copy-uri" style="margin-top:8px;">Copy</button>
-        <p class="nav-hint">Must match your Spotify app exactly — trailing slash included.</p>
-      </div>
-    </div>
-  </nav>
+  
 
   <div class="topbar">
-    <span class="topbar-left">
-    <button type="button" class="menu-btn" id="nav-open-btn" aria-label="Open menu">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    </button>
-    </span>
+    <span class="topbar-left"></span>
     <span class="wordmark" data-nav="home"><img src="../assets/dd-logo.png" alt="" class="wordmark-icon">DeepDive</span>
     <span class="topbar-right">
       <a class="coffee-btn" id="coffee-link" href="https://buymeacoffee.com/OSJoseph" target="_blank" rel="noopener" title="Buy me a coffee" aria-label="Buy me a coffee">

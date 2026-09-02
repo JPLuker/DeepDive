@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.5.0";
+export const BUILD = "2.5.1";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -121,25 +121,6 @@ function sortTracks(tracks, mode) {
 }
 
 // ---- nav drawer ----
-(function initNav() {
-  const drawer = document.getElementById("nav-drawer");
-  const backdrop = document.getElementById("nav-backdrop");
-  const open = () => { drawer.classList.add("open"); backdrop.classList.add("open"); };
-  const close = () => { drawer.classList.remove("open"); backdrop.classList.remove("open"); };
-  document.getElementById("nav-open-btn").addEventListener("click", open);
-  document.getElementById("nav-close-btn").addEventListener("click", close);
-  backdrop.addEventListener("click", close);
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
-  document.querySelectorAll("[data-nav]").forEach((el) => {
-    el.addEventListener("click", () => {
-      close();
-      const dest = el.getAttribute("data-nav");
-      if (dest === "logout") { auth.logout(); render(); }
-      else if (dest === "refresh-library") { refreshLibrary(); }
-      else navigate(dest);
-    });
-  });
-})();
 
 // ---- theme toggle (light / dark / system) ----
 (function initTheme() {
@@ -382,116 +363,69 @@ function samplerSourceArtists() {
  * first, and the fetch can be abandoned while it runs.
  */
 function openSampler(artists) {
-  const modal = document.getElementById("card-modal");
-  if (!modal) return;
-  document.getElementById("card-title").textContent = "Sampler";
-  document.getElementById("card-sub").textContent =
-    `A few tracks each from ${artists.length} artists you've barely heard. This takes a moment — one request per artist.`;
-  document.getElementById("card-name").value = "";
-  document.getElementById("card-len").innerHTML = "";
-  document.getElementById("card-preview").innerHTML = "";
-  document.getElementById("card-preview-summary").textContent = "Preview";
-  // Nothing is fetched yet, so a Preview control here opens an empty box.
-  document.querySelector("#card-modal details")?.classList.add("hidden");
-  document.getElementById("card-reuse-block")?.classList.add("hidden");
-  document.getElementById("card-export")?.classList.add("hidden");
-  document.querySelector(".playlist-name-field")?.classList.add("hidden");
-  document.querySelector("#card-modal details")?.classList.add("hidden");
-  const msg = document.getElementById("card-msg");
-  msg.classList.add("hidden");
+  // A page, not a modal. Watching progress inside a dialog reads as an
+  // error state; a dive gets a full screen and so should this.
+  renderSamplerIntro(artists);
+}
 
-  const goEl = document.getElementById("card-go");
-  const cancelEl = document.getElementById("card-cancel");
-  const freshGo = goEl.cloneNode(true); goEl.replaceWith(freshGo);
-  const freshCancel = cancelEl.cloneNode(true); cancelEl.replaceWith(freshCancel);
-  freshGo.textContent = "Build sampler";
-  freshGo.disabled = false;
-
-  const close = () => modal.classList.add("hidden");
-  freshCancel.addEventListener("click", close);
-  modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
-  freshGo.addEventListener("click", () => runSampler(artists));
-
-  modal.classList.remove("hidden");
+function renderSamplerIntro(artists) {
+  setTitle("DeepDive · Sampler");
+  root.innerHTML = `
+    <div class="card">
+      <h1>Sampler</h1>
+      <p class="muted">A few tracks each from ${artists.length} artists you've barely heard — one song you already liked, then two you haven't.</p>
+      <div class="sampler-faces" id="sampler-faces">
+        ${artists.slice(0, 8).map((a) => a.image_url
+          ? `<img src="${esc(a.image_url)}" alt="" class="sampler-face">`
+          : `<span class="sampler-face sampler-face-blank">${esc((a.name || "?").charAt(0).toUpperCase())}</span>`).join("")}
+      </div>
+      <p class="nav-hint">This takes a moment — one request per artist.</p>
+      <div class="actions">
+        <button class="btn btn-primary" id="sampler-start">Build sampler</button>
+        <button class="btn btn-ghost" id="sampler-cancel">Back</button>
+      </div>
+    </div>`;
+  document.getElementById("sampler-cancel")?.addEventListener("click", () => renderHome());
+  document.getElementById("sampler-start")?.addEventListener("click", () => runSampler(artists));
 }
 
 async function runSampler(artists) {
-  const modal = document.getElementById("card-modal");
-  const msg = document.getElementById("card-msg");
-  const lenRow = document.getElementById("card-len");
-  const preview = document.getElementById("card-preview");
-  const summary = document.getElementById("card-preview-summary");
-  if (!modal) return;
-
-  document.querySelector(".playlist-name-field")?.classList.remove("hidden");
-  document.querySelector("#card-modal details")?.classList.remove("hidden");
-  document.getElementById("card-title").textContent = "Sampler";
-  document.getElementById("card-sub").textContent = `a few tracks each from ${artists.length} artists you've barely heard`;
-  document.getElementById("card-name").value = `DeepDive · Sampler ${new Date().toISOString().slice(0,10)}`;
-  msg.classList.remove("hidden", "error");
-  msg.textContent = "Fetching top tracks…";
-  // Clear the options entirely while loading — leaving the "How many
-  // tracks" heading above an empty space looks broken, which is how the
-  // failure case presented.
-  lenRow.innerHTML = "";
-  lenRow.classList.add("hidden");
-  // Hide these now rather than when the fetch completes. Otherwise the
-  // dialog spends the whole loading period showing controls that then
-  // disappear, which reads as a glitch.
-  document.getElementById("card-reuse-block")?.classList.add("hidden");
-  document.getElementById("card-export")?.classList.add("hidden");
-  preview.innerHTML = "";
-  summary.textContent = "Preview";
-  modal.classList.remove("hidden");
-
+  // Reuses the dive progress screen, so building a sampler looks like
+  // any other search rather than a dialog reporting at you.
+  renderProgress("Building your sampler…");
   _samplerCancelled = false;
-  // Cancel stays live during the fetch — the whole problem was that
-  // starting it left no way out.
-  const cancelDuring = document.getElementById("card-cancel");
-  if (cancelDuring) {
-    const fresh = cancelDuring.cloneNode(true); cancelDuring.replaceWith(fresh);
-    fresh.addEventListener("click", () => {
-      _samplerCancelled = true;
-      document.getElementById("card-modal").classList.add("hidden");
-    });
+
+  const back = document.getElementById("prog-back");
+  if (back) {
+    back.classList.remove("hidden");
+    const btn = back.querySelector("button");
+    if (btn) {
+      btn.textContent = "Cancel";
+      btn.addEventListener("click", () => { _samplerCancelled = true; renderHome(); });
+    }
   }
-  const goDuring = document.getElementById("card-go");
-  if (goDuring) { goDuring.disabled = true; goDuring.textContent = "Building…"; }
 
   let tracks = [];
   try {
     tracks = await buildSampler(artists, 3, (done, total) => {
-      msg.textContent = `Fetching tracks… (${done}/${total})`;
+      // Show whose tracks are being fetched, using the same artwork
+      // component the dive screen uses.
+      const a = artists[Math.min(done, artists.length - 1)];
+      if (a && a.image_url) showProgressArt([{ url: a.image_url }]);
+      updateProgress(Math.round((done / total) * 100), `${a ? a.name : "Fetching"}… (${done}/${total})`);
     });
     if (_samplerCancelled) return;
   } catch (e) {
-    const info = explainError(e);
-    msg.textContent = `${info.headline}. ${info.detail}`;
-    msg.classList.add("error");
+    renderProgressError(e.message || String(e), e);
     return;
   }
-  if (!tracks.length) {
-    // Say why. "Couldn't fetch any tracks" leaves the only diagnosis in
-    // the console, which is exactly the problem 2.1.5 set out to fix.
-    const first = (tracks.failures || [])[0];
-    if (first) {
-      const info = explainError(first.error);
-      msg.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">${esc(info.headline)}</div><div>${esc(info.detail)}</div>`;
-    } else {
-      msg.textContent = "None of these artists returned any tracks.";
-    }
-    msg.classList.add("error");
-    return;
-  }
-  msg.classList.add("hidden");
-  lenRow.classList.remove("hidden");
 
-  // Kept in build order: grouped by artist, each led by a track you
-  // already liked. Interleaving or shuffling would undo that.
-  //
-  // Date the name rather than asking whether to reuse: each sampler is a
-  // snapshot of a moment, so overwriting the last one would be wrong and
-  // asking about it is a question with an obvious answer.
+  if (!tracks.length) {
+    const first = (tracks.failures || [])[0];
+    renderProgressError(first ? (first.error && first.error.message) : "No tracks came back for these artists.", first && first.error);
+    return;
+  }
+
   const stamp = new Date().toISOString().slice(0, 10);
   const card = {
     id: "sampler",
@@ -503,8 +437,15 @@ async function runSampler(artists) {
     name: `DeepDive · Sampler ${stamp}`,
   };
   _cards = _cards.filter((c) => c.id !== "sampler").concat(card);
+  // Results in the dialog, where the preview and the name field belong —
+  // by this point there is something real to show.
+  document.querySelector(".playlist-name-field")?.classList.remove("hidden");
+  document.querySelector("#card-modal details")?.classList.remove("hidden");
   openCardModal(card);
 }
+
+
+
 
 // ---------------------------------------------------------------------
 // Playlist tooling (2.4)
@@ -1450,8 +1391,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     ev.stopPropagation();
     // Confirm before removing — a pin was a deliberate act, so losing one
     // to a stray tap would be annoying.
-    if (!window.confirm(`Unpin ${b.dataset.name}?`)) return;
-    watchlist.unpin(b.dataset.unpin);
+        watchlist.unpin(b.dataset.unpin);
     _row.pins = _row.pins.filter((p) => p.id !== b.dataset.unpin);
     dropPill(b);
   }));
@@ -1976,6 +1916,44 @@ function renderScrubResults(r) {
 // History, undo, and export/import (2.6)
 // ---------------------------------------------------------------------
 
+/**
+ * Our own confirm dialog.
+ *
+ * window.confirm renders the browser's own chrome — a different font,
+ * the site's URL, and a jarring break from the app, which is especially
+ * obvious once installed as a standalone app. This looks like the rest
+ * of DeepDive.
+ *
+ * Returns a promise so callers read the same as before.
+ */
+function confirmDialog({ title, body, confirmLabel = "Confirm", danger = false }) {
+  return new Promise((resolve) => {
+    const wrap = document.createElement("div");
+    wrap.className = "modal-backdrop";
+    wrap.innerHTML = `
+      <div class="modal" role="dialog" aria-modal="true">
+        <h2>${esc(title)}</h2>
+        ${body ? `<p class="modal-sub">${esc(body)}</p>` : ""}
+        <div class="modal-actions">
+          <span class="spacer"></span>
+          <button class="btn btn-ghost" data-c="no">Cancel</button>
+          <button class="btn ${danger ? "btn-danger" : "btn-primary"}" data-c="yes">${esc(confirmLabel)}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(wrap);
+    const done = (v) => { wrap.remove(); document.removeEventListener("keydown", onKey); resolve(v); };
+    function onKey(e) {
+      if (e.key === "Escape") done(false);
+      if (e.key === "Enter") done(true);
+    }
+    wrap.querySelector('[data-c="yes"]').addEventListener("click", () => done(true));
+    wrap.querySelector('[data-c="no"]').addEventListener("click", () => done(false));
+    wrap.addEventListener("click", (e) => { if (e.target === wrap) done(false); });
+    document.addEventListener("keydown", onKey);
+    wrap.querySelector('[data-c="yes"]').focus();
+  });
+}
+
 function renderSettings() {
   setTitle("DeepDive · Settings");
   setActiveTab("settings");
@@ -1999,7 +1977,16 @@ function renderSettings() {
       <div class="actions"><button class="btn btn-ghost btn-small" id="find-playlists">Find DeepDive playlists</button></div>
       <div id="playlist-cleanup"></div>
 
-      <div class="crate-header"><span class="label gold">Pins &amp; blocked</span><span class="rule"></span></div>
+      <div id="playlist-cleanup-all"></div>
+
+      <div class="crate-header"><span class="label gold">Theme</span><span class="rule"></span></div>
+      <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Theme">
+        <button class="theme-opt" data-theme-choice="light">Light</button>
+        <button class="theme-opt" data-theme-choice="dark">Dark</button>
+        <button class="theme-opt" data-theme-choice="system">System</button>
+      </div>
+
+      <div class="crate-header"><span class="label teal">Pins &amp; blocked</span><span class="rule"></span></div>
       <div class="actions">
         <button class="btn btn-ghost btn-small" id="go-pins">Manage pins</button>
         <button class="btn btn-ghost btn-small" id="go-history">History</button>
@@ -2017,6 +2004,14 @@ function renderSettings() {
         <button class="btn btn-ghost btn-small" id="set-refresh">Refresh library</button>
         <button class="btn btn-ghost btn-small" id="set-disconnect">Disconnect</button>
       </div>
+      <div class="nav-settings" style="padding:14px 0 0;">
+        <label class="nav-field-label" for="set-client-id">Client ID</label>
+        <input type="text" id="set-client-id" class="nav-input" placeholder="paste your Client ID" autocomplete="off" spellcheck="false">
+        <button class="btn btn-ghost btn-small" id="set-save-id" style="margin-top:8px;">Save Client ID</button>
+        <div class="nav-field-label" style="margin-top:16px;">Redirect URI</div>
+        <div class="nav-uri" id="set-redirect-uri"></div>
+        <p class="nav-hint">Must match your Spotify app exactly.</p>
+      </div>
       <div class="flash hidden" id="settings-msg" style="margin-top:14px;"></div>
     </div>`;
 
@@ -2024,6 +2019,18 @@ function renderSettings() {
   const say = (t, err) => { msg.textContent = t; msg.classList.remove("hidden"); msg.classList.toggle("error", !!err); };
 
   document.getElementById("go-scrub")?.addEventListener("click", () => renderScrubForm());
+
+  const uriEl = document.getElementById("set-redirect-uri");
+  if (uriEl) uriEl.textContent = auth.redirectUri();
+  const idInput = document.getElementById("set-client-id");
+  if (idInput) idInput.value = auth.getClientId();
+  document.getElementById("set-save-id")?.addEventListener("click", () => {
+    const v = (idInput.value || "").trim();
+    if (!v) { say("Enter your Client ID first.", true); return; }
+    const changed = v !== auth.getClientId();
+    auth.setClientId(v);
+    say(changed ? "Saved. Reconnect Spotify for it to take effect." : "Saved.");
+  });
   document.getElementById("go-pins")?.addEventListener("click", () => renderWatchlist());
   document.getElementById("go-history")?.addEventListener("click", () => renderHistory());
   document.getElementById("set-refresh")?.addEventListener("click", () => refreshLibrary());
@@ -2074,9 +2081,34 @@ function renderSettings() {
             <button class="btn btn-ghost btn-small" data-rm-pl="${esc(p.id)}" data-nm="${esc(p.name)}">Remove</button>
           </div>
         </div>`).join("");
+      // A bulk action is where a confirmation genuinely earns its place —
+      // removing thirty playlists by accident is a bad afternoon,
+      // whereas removing one is a click to rebuild.
+      const allSlot = document.getElementById("playlist-cleanup-all");
+      if (allSlot) {
+        allSlot.innerHTML = `<div class="actions"><button class="btn btn-ghost btn-small" id="rm-all-pl">Remove all ${found.length}</button></div>`;
+        document.getElementById("rm-all-pl")?.addEventListener("click", async () => {
+          const ok = await confirmDialog({
+            title: `Remove all ${found.length} playlists?`,
+            body: "They'll be removed from your Spotify library. This can't be undone from here.",
+            confirmLabel: "Remove all", danger: true,
+          });
+          if (!ok) return;
+          const btn = document.getElementById("rm-all-pl");
+          btn.disabled = true;
+          let done = 0;
+          for (const p of found) {
+            btn.textContent = `Removing ${++done}/${found.length}…`;
+            try { await client.deletePlaylist(p.id); } catch (e) { /* keep going */ }
+          }
+          slot.innerHTML = "";
+          allSlot.innerHTML = "";
+          flash(`Removed ${done} playlist${done === 1 ? "" : "s"}.`);
+        });
+      }
+
       slot.querySelectorAll("[data-rm-pl]").forEach((b) => b.addEventListener("click", async () => {
-        if (!window.confirm(`Remove "${b.dataset.nm}" from your Spotify library?`)) return;
-        b.disabled = true; b.textContent = "Removing…";
+                b.disabled = true; b.textContent = "Removing…";
         try {
           await client.deletePlaylist(b.dataset.rmPl);
           b.closest(".watchlist-row")?.remove();
@@ -2179,7 +2211,7 @@ function renderHistory() {
 
   const undoBtn = document.getElementById("undo-last");
   if (undoBtn) undoBtn.addEventListener("click", async () => {
-    if (!window.confirm(`${undoable.label} — remove those from your Liked Songs?`)) return;
+    if (!await confirmDialog({ title: "Undo this?", body: `${undoable.label}. Those tracks will be removed from your Liked Songs.`, confirmLabel: "Undo", danger: true })) return;
     undoBtn.disabled = true;
     undoBtn.textContent = "Undoing…";
     try {
@@ -2196,8 +2228,7 @@ function renderHistory() {
   });
 
   root.querySelectorAll("[data-delete-playlist]").forEach((b) => b.addEventListener("click", async () => {
-    if (!window.confirm(`Remove "${b.dataset.label.replace(/^Created "?|"$/g, "")}" from your Spotify library?`)) return;
-    b.disabled = true;
+        b.disabled = true;
     b.textContent = "Removing…";
     try {
       await client.deletePlaylist(b.dataset.pid);
@@ -2213,8 +2244,8 @@ function renderHistory() {
   }));
 
   const clearBtn = document.getElementById("clear-dives");
-  if (clearBtn) clearBtn.addEventListener("click", () => {
-    if (!window.confirm("Clear your dive history? This can't be undone.")) return;
+  if (clearBtn) clearBtn.addEventListener("click", async () => {
+    if (!await confirmDialog({ title: "Clear dive history?", body: "This cannot be undone.", confirmLabel: "Clear", danger: true })) return;
     history.clearDives();
     renderHistory();
   });
@@ -2282,8 +2313,7 @@ function renderWatchlist() {
   root.querySelector("[data-home]")?.addEventListener("click", () => renderHome());
   root.querySelectorAll("[data-wl-search]").forEach((b) => b.addEventListener("click", () => startSearch(b.dataset.wlSearch)));
   root.querySelectorAll("[data-wl-remove]").forEach((b) => b.addEventListener("click", () => {
-    if (!window.confirm(`Unpin ${b.dataset.name}?`)) return;
-    watchlist.unpin(b.dataset.wlRemove);
+        watchlist.unpin(b.dataset.wlRemove);
     renderWatchlist();
   }));
   root.querySelectorAll("[data-unblock]").forEach((b) => b.addEventListener("click", () => {
@@ -2291,8 +2321,8 @@ function renderWatchlist() {
     renderWatchlist();
   }));
   const wipe = document.getElementById("wipe-pins");
-  if (wipe) wipe.addEventListener("click", () => {
-    if (!window.confirm(`Remove all ${pins.length} pins? This can't be undone.`)) return;
+  if (wipe) wipe.addEventListener("click", async () => {
+    if (!await confirmDialog({ title: "Remove all pins?", body: `All ${pins.length} pins will be cleared. This cannot be undone.`, confirmLabel: "Remove all", danger: true })) return;
     watchlist.clearAllPins();
     renderWatchlist();
   });
@@ -2414,70 +2444,6 @@ function setShowBmc(on) {
 // Configuration used to be a separate page, which meant leaving whatever
 // you were doing to change one field. It lives in the drawer now,
 // alongside the theme controls, so settings are all in one place.
-(function initDrawerSettings() {
-  const bmcBox = document.getElementById("opt-show-bmc");
-  if (bmcBox) {
-    bmcBox.checked = showBmc();
-    bmcBox.addEventListener("change", () => setShowBmc(bmcBox.checked));
-  }
-
-  const uriEl = document.getElementById("nav-redirect-uri");
-  if (uriEl) uriEl.textContent = auth.redirectUri();
-
-  const copyBtn = document.getElementById("nav-copy-uri");
-  if (copyBtn) copyBtn.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(auth.redirectUri());
-      copyBtn.textContent = "Copied";
-      setTimeout(() => { copyBtn.textContent = "Copy"; }, 1600);
-    } catch (e) {
-      copyBtn.textContent = "Copy failed";
-      setTimeout(() => { copyBtn.textContent = "Copy"; }, 1600);
-    }
-  });
-
-  // Submenu open/close. Settings that are configured once and rarely
-  // revisited shouldn't occupy permanent space in the main menu.
-  const drawer = document.getElementById("nav-drawer");
-  const openBtn = document.getElementById("open-spotify-settings");
-  const backBtn = document.getElementById("close-spotify-settings");
-  const subPane = document.getElementById("nav-spotify-pane");
-  const openSub = () => {
-    drawer.classList.add("sub-open");
-    if (subPane) subPane.setAttribute("aria-hidden", "false");
-  };
-  const closeSub = () => {
-    drawer.classList.remove("sub-open");
-    if (subPane) subPane.setAttribute("aria-hidden", "true");
-  };
-  if (openBtn) openBtn.addEventListener("click", openSub);
-  if (backBtn) backBtn.addEventListener("click", closeSub);
-  // Closing the drawer should reset it, so reopening never lands the
-  // user in a submenu they didn't ask for.
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSub(); });
-  const backdrop = document.getElementById("nav-backdrop");
-  if (backdrop) backdrop.addEventListener("click", closeSub);
-  const closeNavBtn = document.getElementById("nav-close-btn");
-  if (closeNavBtn) closeNavBtn.addEventListener("click", closeSub);
-
-  const idInput = document.getElementById("nav-client-id");
-  const saveBtn = document.getElementById("nav-save-client-id");
-  if (idInput) idInput.value = auth.getClientId();
-  const save = () => {
-    const v = (idInput.value || "").trim();
-    if (!v) { flash("Enter your Client ID first.", true); return; }
-    const changed = v !== auth.getClientId();
-    auth.setClientId(v);
-    // Changing the Client ID invalidates the current session, since the
-    // token belongs to the old app. Say so rather than letting the next
-    // request fail confusingly.
-    flash(changed
-      ? "Client ID saved. Reconnect Spotify for it to take effect."
-      : "Client ID saved.");
-  };
-  if (saveBtn) saveBtn.addEventListener("click", save);
-  if (idInput) idInput.addEventListener("keydown", (e) => { if (e.key === "Enter") save(); });
-})();
 
 // ---- bottom tab bar ----
 // Mirrors the drawer's destinations for phones, where reaching a
@@ -2498,23 +2464,7 @@ function setActiveTab(name) {
     const name = tab.dataset.tab;
     setActiveTab(name);
     if (name === "home") return renderHome();
-    if (name === "scrub") return renderScrubForm();
-    if (name === "history") return renderHistory();
-    if (name === "settings") {
-      // Settings live in the drawer's sub-pane rather than as a page, so
-      // the tab opens the drawer straight into it instead of duplicating
-      // the whole thing as a fifth view.
-      const drawer = document.getElementById("nav-drawer");
-      const backdrop = document.getElementById("nav-backdrop");
-      if (drawer) {
-        drawer.classList.add("open", "sub-open");
-        if (backdrop) backdrop.classList.add("open");
-      }
-      // Pins moved off the bar — it's reachable from the drawer and its
-      // contents are already on the home screen.
-      setActiveTab(_currentTab);
-      return;
-    }
+    if (name === "settings") return renderSettings();
   });
 })();
 
