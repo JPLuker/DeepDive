@@ -85,12 +85,12 @@
   :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
   body { margin:0; background:var(--bg); color:var(--ink); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
   a { color:inherit; }
-  .wrap { max-width:760px; margin:0 auto; padding:0 24px 80px; }
+  .wrap { max-width:760px; margin:0 auto; padding:0 24px 80px; position:relative; z-index:1; }
   .hidden { display:none !important; }
 
   /* Settings left, wordmark centred, an equal-width spacer right so the
      centre is actually centred rather than shoved by the button. */
-  .topbar { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:14px 24px 10px; max-width:760px; margin:0 auto; }
+  .topbar { position:relative; z-index:1; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:14px 24px 10px; max-width:760px; margin:0 auto; }
   .topbar .topbar-left { display:flex; justify-content:flex-start; }
   .topbar .topbar-right { display:flex; justify-content:flex-end; }
   .menu-btn { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; border:none; background:transparent; cursor:pointer; color:var(--ink); flex-shrink:0; }
@@ -428,7 +428,9 @@
      card floating on top. A dive is minutes of waiting, so the artist
      you're waiting on may as well be the thing you're looking at. */
   .dive-bg {
-    position:fixed; inset:0; z-index:-1;
+    /* z-index 0, not -1. A negative index paints behind the body's own
+       background, which made this invisible however correctly it loaded. */
+    position:fixed; inset:0; z-index:0; pointer-events:none;
     background-size:cover; background-position:center;
     opacity:0; transition:opacity .5s ease;
   }

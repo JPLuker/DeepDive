@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.5.8";
+export const BUILD = "2.5.9";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -249,6 +249,7 @@ function renderConnect() {
 // ============================================================
 async function renderHome() {
   setTitle("DeepDive");
+  clearDiveBackdrop();
   setActiveTab("home");
   root.innerHTML = `
     <div class="search-shell">
@@ -1543,7 +1544,6 @@ function maybeOfferUnpin(artistName) {
 function renderProgress(title) {
   setTitle("(0%) DeepDive · Working");
   root.innerHTML = `
-    <div class="dive-bg" id="dive-bg"></div>
     <div class="card card-dive">
       <!-- Full-bleed artwork with the title over it, rather than a
            square floating above a heading. Matches the artwork-led
@@ -1618,6 +1618,11 @@ function showProgressArt(images, artistName, artistId) {
 // Tracks whether a genuine artist photo has been shown, so a later
 // album-art fallback can't replace it.
 let _haveArtistPhoto = false;
+
+function clearDiveBackdrop() {
+  const bg = document.getElementById("dive-bg");
+  if (bg) { bg.classList.remove("visible"); bg.style.backgroundImage = ""; }
+}
 
 function setDiveBackdrop(url) {
   const bg = document.getElementById("dive-bg");
@@ -1800,6 +1805,7 @@ function trackRow(t, { checkbox = true, cls = "newt", sub = "" } = {}) {
 
 function renderResults(r) {
   setTitle("DeepDive · Results");
+  clearDiveBackdrop();
   const dups = r.duplicate_candidates || [];
   const news = r.new_tracks || [];
   const artistName = r.artist ? r.artist.name : "";
@@ -1938,6 +1944,7 @@ async function applyResults(r, action) {
 // ============================================================
 function renderScrubForm() {
   setTitle("DeepDive · Full library scan");
+  clearDiveBackdrop();
   setActiveTab("scrub");
   root.innerHTML = `
     <div class="card">
@@ -2101,6 +2108,7 @@ function confirmDialog({ title, body, confirmLabel = "Confirm", danger = false }
 
 function renderSettings() {
   setTitle("DeepDive · Settings");
+  clearDiveBackdrop();
   setActiveTab("settings");
   root.innerHTML = `
     <div class="card">
@@ -2285,6 +2293,7 @@ function renderSettings() {
 
 function renderHistory() {
   setTitle("DeepDive · History");
+  clearDiveBackdrop();
   setActiveTab("history");
   const dives = history.listDives();
   const created = history.listCreatedPlaylists();
@@ -2435,6 +2444,7 @@ function renderHistory() {
 
 function renderWatchlist() {
   setTitle("DeepDive · Pins & blocked");
+  clearDiveBackdrop();
   const pins = watchlist.pinned();
   const blocked = watchlist.listBlocked();
   root.innerHTML = `
