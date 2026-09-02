@@ -403,16 +403,29 @@
   .sampler-face-blank { display:flex; align-items:center; justify-content:center; background:var(--surface); color:var(--muted); font-weight:600; }
   .btn-danger { background:var(--danger); color:#fff; }
 
-  /* Artist artwork on the dive screen. Hidden until an artist resolves,
-     so there's no empty frame while the search runs. */
+  /* ---- dive screen ---- */
+  /* Artwork runs full-bleed behind the title, letting imagery do the
+     work as the tiles do, rather than a square centred above a heading. */
+  .card-hero { padding:0; overflow:hidden; position:relative; }
+  .card-hero > *:not(.prog-art-slot):not(.prog-title) { padding-left:28px; padding-right:28px; }
+  .card-hero > *:last-child { padding-bottom:24px; }
+
   .prog-art-slot { display:none; }
-  .prog-art-slot.visible { display:block; margin:-6px 0 20px; }
-  .prog-art {
-    width:100%; max-width:260px; aspect-ratio:1; object-fit:cover;
-    border-radius:var(--radius-lg); display:block; margin:0 auto;
-    animation:art-in .35s ease;
+  .prog-art-slot.visible { display:block; position:relative; line-height:0; }
+  /* Fade the image into the card so the title sits on it cleanly rather
+     than against a hard edge. */
+  .prog-art-slot.visible::after {
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(to bottom, transparent 40%, var(--paper) 100%);
   }
-  @keyframes art-in { from { opacity:0; transform:scale(.97); } to { opacity:1; transform:none; } }
+  .prog-art { width:100%; aspect-ratio:16/10; object-fit:cover; display:block; animation:art-in .4s ease; }
+  .prog-title {
+    position:relative; margin:-52px 28px 14px; z-index:1;
+    font-size:26px; letter-spacing:-0.02em; text-shadow:0 2px 18px rgba(0,0,0,0.6);
+  }
+  /* Without artwork the title needs its normal spacing back. */
+  .prog-art-slot:not(.visible) + .prog-title { margin:28px 28px 14px; }
+  @keyframes art-in { from { opacity:0; transform:scale(1.03); } to { opacity:1; transform:none; } }
 
   /* Support link lives in the topbar: always findable, never in the way.
      Muted until hovered so it doesn't compete with the wordmark. */

@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.5.5";
+export const BUILD = "2.5.6";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1279,9 +1279,20 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     ? `<img src="${esc(imageUrl)}" alt="" class="tile-art" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'tile-art-fallback',textContent:'${initial(name)}'}))">`
     : `<span class="tile-art-fallback">${initial(name)}</span>`;
 
+  // The tile shows a 56px thumbnail but the dive screen shows the art
+  // large, so hand over the biggest variant we have rather than the one
+  // sized for the tile.
+  const bigArt = (name, fallback) => {
+    if (_cachedArt && name) {
+      const big = _cachedArt.largeByName.get(name.trim().toLowerCase());
+      if (big) return big;
+    }
+    return fallback || "";
+  };
+
   const tile = (name, imageUrl, sub, actions, isPin) => `
     <div class="tile-wrap${isPin ? " is-pin" : ""}">
-      <button class="tile" data-search="${esc(name)}" data-art="${esc(imageUrl || "")}">
+      <button class="tile" data-search="${esc(name)}" data-art="${esc(bigArt(name, imageUrl))}">
         ${art(name, imageUrl)}
         <span class="tile-text">
           <span class="tile-title">${esc(name)}</span>
@@ -1518,13 +1529,13 @@ function maybeOfferUnpin(artistName) {
 function renderProgress(title) {
   setTitle("(0%) DeepDive · Working");
   root.innerHTML = `
-    <div class="card">
-      <!-- The artist's photo appears here once the search resolves them.
-           A dive takes minutes; a bar moving on an empty page is a poor
-           use of that, and the image costs nothing — the artist object
-           already carries it. -->
+    <div class="card card-hero">
+      <!-- Full-bleed artwork with the title over it, rather than a
+           square floating above a heading. Matches the artwork-led
+           treatment used everywhere else, and gives a screen you'll be
+           looking at for minutes something worth looking at. -->
       <div class="prog-art-slot" id="prog-art"></div>
-      <h1 id="prog-title">${esc(title)}</h1>
+      <h1 id="prog-title" class="prog-title">${esc(title)}</h1>
       <p class="muted">This can take a while for artists with large catalogs — DeepDive reads every release track by track.</p>
       <div class="progress-stage" id="prog-stage">Starting…</div>
       <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>

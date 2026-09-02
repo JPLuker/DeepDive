@@ -21,6 +21,13 @@ function smallestImage(images) {
   return images[images.length - 1].url || null;
 }
 
+/** Spotify orders images largest first. Used where the art is displayed
+ *  big — a 64px thumbnail stretched to 260px looks like a mistake. */
+function largestImage(images) {
+  if (!images || !images.length) return null;
+  return images[0].url || null;
+}
+
 function byArtist(tracks) {
   const map = new Map();
   for (const t of tracks || []) {
@@ -40,6 +47,7 @@ function byArtist(tracks) {
     // free, and it's instant.
     if (!entry.image_url && t.album) {
       entry.image_url = smallestImage(t.album.images);
+      entry.image_url_large = largestImage(t.album.images);
     }
     const added = t.added_at || "";
     if (added) {
@@ -58,12 +66,20 @@ function byArtist(tracks) {
 export function artworkFromCache(tracks) {
   const byId = new Map();
   const byName = new Map();
+  // Large variants kept separately for screens that display art big.
+  const largeById = new Map();
+  const largeByName = new Map();
   for (const a of byArtist(tracks).values()) {
     if (!a.image_url) continue;
     byId.set(a.id, a.image_url);
-    if (a.name) byName.set(a.name.trim().toLowerCase(), a.image_url);
+    if (a.image_url_large) largeById.set(a.id, a.image_url_large);
+    if (a.name) {
+      const k = a.name.trim().toLowerCase();
+      byName.set(k, a.image_url);
+      if (a.image_url_large) largeByName.set(k, a.image_url_large);
+    }
   }
-  return { byId, byName };
+  return { byId, byName, largeById, largeByName };
 }
 
 /**
