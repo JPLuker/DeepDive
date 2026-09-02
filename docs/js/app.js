@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.5.1";
+export const BUILD = "2.5.2";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -2013,6 +2013,11 @@ function renderSettings() {
         <p class="nav-hint">Must match your Spotify app exactly.</p>
       </div>
       <div class="flash hidden" id="settings-msg" style="margin-top:14px;"></div>
+
+      <!-- The build number moved here when the drawer was removed. It
+           earns its place: knowing which version is actually loaded has
+           settled several "is this deployed yet?" questions. -->
+      <p class="settings-build">DeepDive · build ${esc(BUILD)}</p>
     </div>`;
 
   const msg = document.getElementById("settings-msg");
