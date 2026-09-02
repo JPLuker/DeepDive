@@ -55,7 +55,7 @@
     --accent-top:#2FB6FF; --accent-bottom:#3B5BFF; --accent:#3E7BFF;
     --tile:#17191E; --tile-hover:#20232A;
   }
-  html { background:var(--paper); }
+  html { background:var(--bg); }
   body, .card, .nav-drawer, input, .sort-select, .pill, .autofill-list, .settings-panel {
     transition: background-color .2s ease, color .2s ease, border-color .2s ease;
   }
@@ -158,6 +158,13 @@
   .pill-icon-btn { position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:var(--accent); color:var(--paper); border:1.5px solid var(--paper); display:none; align-items:center; justify-content:center; font-size:13px; line-height:1; cursor:pointer; padding:0; }
   .pill-wrap:hover .pill-icon-btn, .pill-icon-btn:focus { display:inline-flex; }
   .pill-icon-btn.done-btn { background:var(--teal); }
+
+  /* ---- app header ---- */
+  /* Small and out of the way. A full-height wordmark every time you open
+     the app is a landing-page gesture, and there's a landing page now. */
+  .app-head { display:flex; align-items:center; gap:10px; padding:6px 0 18px; }
+  .app-head .mark { display:flex; align-items:center; gap:8px; font-family:'Martius','Inter',sans-serif; text-transform:uppercase; font-size:16px; letter-spacing:0.02em; color:var(--muted); }
+  .app-head .mark img { height:20px; width:auto; opacity:0.9; }
 
   /* ---- section headers ---- */
   /* Big bold sans with a muted qualifier, the way modern music apps do
@@ -284,7 +291,7 @@
 
   code.env { background:var(--surface); padding:2px 6px; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:13px; }
 
-  .search-shell { position:relative; max-width:620px; margin:28px auto 0; }
+  .search-shell { position:relative; max-width:620px; margin:0 auto; }
   .search-pill-form { display:flex; align-items:center; gap:8px; border:2.5px solid var(--ink); border-radius:32px; padding:6px 8px 6px 22px; background:var(--paper); }
   .search-pill-form input[type=text] { border:none; padding:10px 0; font-size:16px; }
   .search-pill-form input[type=text]:focus { outline:none; }

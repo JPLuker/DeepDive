@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.0";
+export const BUILD = "2.8.1";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -265,8 +265,8 @@ function renderConnect() {
 async function renderHome() {
   setTitle("DeepDive");
   root.innerHTML = `
-    <div style="margin-top:40px; text-align:center;">
-      <span class="wordmark-hero"><img src="../assets/dd-logo.png" alt="" class="wordmark-hero-icon">DeepDive</span>
+    <div class="app-head">
+      <span class="mark"><img src="../assets/dd-logo.png" alt="">DeepDive</span>
     </div>
     <div class="search-shell">
       <div class="search-pill-form">
