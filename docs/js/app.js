@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.5.2";
+export const BUILD = "2.5.3";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -345,6 +345,9 @@ function renderCardRow(el) {
  * costs nothing extra.
  */
 let _samplerPool = [];
+// Album artwork keyed by artist, built when suggestions load. Kept at
+// module scope so the dive screen can borrow it without another read.
+let _cachedArt = null;
 
 /**
  * A fresh handful each time. Drawing the top twelve by recency meant the
@@ -411,7 +414,7 @@ async function runSampler(artists) {
       // Show whose tracks are being fetched, using the same artwork
       // component the dive screen uses.
       const a = artists[Math.min(done, artists.length - 1)];
-      if (a && a.image_url) showProgressArt([{ url: a.image_url }]);
+      showProgressArt(a && a.image_url ? [{ url: a.image_url }] : null, a && a.name, a && a.id);
       updateProgress(Math.round((done / total) * 100), `${a ? a.name : "Fetching"}… (${done}/${total})`);
     });
     if (_samplerCancelled) return;
@@ -1153,6 +1156,7 @@ async function buildSuggestionRow(el) {
       libraryPicks = insights.librarySuggestions(cached, { exclude, limit: 6 });
       // Artwork for anything already in the library, free of charge.
       cachedArt = insights.artworkFromCache(cached);
+      _cachedArt = cachedArt;
       // Sampler candidates come from the same read — no extra cost.
       // Keep the full pool rather than a trimmed twelve, so each run can
       // draw a different handful from it.
@@ -1458,7 +1462,7 @@ async function runSearchWithOptions(artistName, opts) {
       ...opts,
       libraryCache,
       onProgress: (pct, stage) => updateProgress(pct, stage),
-      onArtist: (a) => showProgressArt(a && a.images),
+      onArtist: (a) => showProgressArt(a && a.images, a && a.name, a && a.id),
     });
     lastResult = result;
     history.recordDive({
@@ -1519,12 +1523,39 @@ function renderProgress(title) {
  * Show the artist once known. Separate function so multi-artist dives
  * and the sampler can reuse it as a slideshow later.
  */
-function showProgressArt(images) {
+function showProgressArt(images, artistName, artistId) {
   const slot = document.getElementById("prog-art");
   if (!slot) return;
-  const url = images && images.length ? images[0].url : null;   // largest
-  if (!url) return;
-  slot.innerHTML = `<img src="${esc(url)}" alt="" class="prog-art" onerror="this.remove()">`;
+
+  // Prefer the artist photo, but don't depend on it. Spotify's search
+  // results don't reliably carry images for this app — the same Feb 2026
+  // narrowing that removed `popularity` — so fall back to album art for
+  // that artist from the cached library, which is already local and
+  // costs nothing. An album cover is a fair stand-in for a portrait.
+  let url = images && images.length ? images[0].url : null;
+  if (!url && artistName && _cachedArt) {
+    url = _cachedArt.byName.get(artistName.trim().toLowerCase()) || null;
+  }
+  if (url) {
+    paintProgressArt(slot, url);
+    return;
+  }
+
+  // Nothing local. One request for the artist record gets the real
+  // photo — negligible against the hundreds a dive already makes, and
+  // it's fire-and-forget so a failure just leaves the screen as it was.
+  if (artistId) {
+    client.get(`artists/${artistId}`)
+      .then((a) => {
+        const imgs = (a && a.images) || [];
+        if (imgs.length) paintProgressArt(slot, imgs[0].url);
+      })
+      .catch(() => {});
+  }
+}
+
+function paintProgressArt(slot, url) {
+  slot.innerHTML = `<img src="${esc(url)}" alt="" class="prog-art" onerror="this.closest('.prog-art-slot')?.classList.remove('visible'); this.remove();">`;
   slot.classList.add("visible");
 }
 
