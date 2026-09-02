@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.6.0";
+export const BUILD = "2.6.1";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1481,13 +1481,10 @@ function startSearch(artistName, artworkUrl = null) {
 }
 
 async function runSearchWithOptions(artistName, opts) {
-  renderProgress(`Digging through ${artistName}…`);
-  // If the caller handed us artwork, show it immediately — no waiting on
-  // the artist to resolve, and no request.
-  if (_pendingArtwork) {
-    const slot = document.getElementById("prog-art");
-    if (slot) paintProgressArt(slot, _pendingArtwork);
-  }
+  // Report from the bar rather than taking the screen. The current view
+  // stays put, so you can keep browsing while the dive runs.
+  showDiveBar(artistName, _pendingArtwork);
+  if (_pendingArtwork) setDiveBackdrop(_pendingArtwork);
   try {
     // Preflight (issue #3): verify this token can actually do what the
     // scan is about to ask. Ported from the Flask health check, which
@@ -1500,12 +1497,20 @@ async function runSearchWithOptions(artistName, opts) {
     const result = await search.runSearch(client, artistName, {
       ...opts,
       libraryCache,
-      onProgress: (pct, stage) => updateProgress(pct, stage),
-      onArtist: (a) => showProgressArt(a && a.images, a && a.name, a && a.id),
+      onProgress: (pct, stage) => updateDiveBar(pct, stage),
+      // The bar carries a thumbnail; the backdrop still gets the photo,
+      // so the results screen opens on the artist.
+      onArtist: (a) => {
+        const url = (a && a.images && a.images.length) ? a.images[0].url : null;
+        if (url) { setDiveBarArt(url); setDiveBackdrop(url); }
+        else showProgressArt(a && a.images, a && a.name, a && a.id);
+      },
       // Only used if the artist has no photo of their own — plenty of
       // smaller acts don't.
-      onArtwork: (url) => { if (!_haveArtistPhoto) setDiveBackdrop(url); },
+      onArtwork: (url) => { if (!_haveArtistPhoto) { setDiveBarArt(url); setDiveBackdrop(url); } },
     });
+    if (_diveCancelled) return;   // abandoned while it ran
+    hideDiveBar();
     lastResult = result;
     history.recordDive({
       artistId: result.artist && result.artist.id,
@@ -1522,7 +1527,8 @@ async function runSearchWithOptions(artistName, opts) {
     // the moment the dive finishes, not later on a list page.
     maybeOfferUnpin(artistName);
   } catch (e) {
-    renderProgressError(e.message || String(e), e);
+    hideDiveBar();
+    if (!_diveCancelled) renderProgressError(e.message || String(e), e);
   }
 }
 
@@ -1540,6 +1546,62 @@ function maybeOfferUnpin(artistName) {
     watchlist.unpin(entry.id);
     slot.textContent = `Removed ${artistName} from your pins.`;
   });
+}
+
+// ---------------------------------------------------------------------
+// Dive status bar
+// ---------------------------------------------------------------------
+// A dive takes minutes. Occupying the whole screen to show a progress
+// bar means the app is unusable for the duration and there's nothing to
+// look at; reporting from a bar at the bottom leaves you free to browse,
+// pin, or start reading something else.
+
+let _diveCancelled = false;
+
+function showDiveBar(artistName, artUrl) {
+  const bar = document.getElementById("dive-bar");
+  if (!bar) return;
+  _diveCancelled = false;
+  document.body.classList.add("diving");
+  document.getElementById("dive-bar-title").textContent = `Diving into ${artistName}…`;
+  document.getElementById("dive-bar-stage").textContent = "Starting…";
+  document.getElementById("dive-bar-fill").style.width = "0%";
+  setDiveBarArt(artUrl);
+  bar.hidden = false;
+
+  const cancel = document.getElementById("dive-bar-cancel");
+  if (cancel) {
+    const fresh = cancel.cloneNode(true);
+    cancel.replaceWith(fresh);
+    fresh.addEventListener("click", () => {
+      _diveCancelled = true;
+      hideDiveBar();
+      flash("Dive cancelled.");
+    });
+  }
+}
+
+function setDiveBarArt(url) {
+  const el = document.getElementById("dive-bar-art");
+  if (!el || !url) return;
+  const probe = new Image();
+  probe.onload = () => { el.style.backgroundImage = `url("${url.replace(/"/g, "%22")}")`; };
+  probe.src = url;
+}
+
+function updateDiveBar(pct, stage) {
+  const fill = document.getElementById("dive-bar-fill");
+  const st = document.getElementById("dive-bar-stage");
+  if (fill) fill.style.width = `${pct}%`;
+  if (st && stage) st.textContent = stage;
+  setTitle(`(${pct}%) DeepDive · Working`);
+}
+
+function hideDiveBar() {
+  const bar = document.getElementById("dive-bar");
+  if (bar) bar.hidden = true;
+  document.body.classList.remove("diving");
+  setTitle("DeepDive");
 }
 
 function renderProgress(title) {
