@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.1";
+export const BUILD = "2.5.0";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -57,8 +57,11 @@ function fmtDur(ms) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 function flash(msg, isError = false) {
-  flashSlot.innerHTML = `<div class="wrap" style="padding-bottom:0;"><div class="flash${isError ? " error" : ""}">${esc(msg)}</div></div>`;
-  setTimeout(() => { flashSlot.innerHTML = ""; }, 6000);
+  flashSlot.innerHTML = `<div class="flash${isError ? " error" : ""}">${esc(msg)}</div>`;
+  // Restart the timer each time so a second toast isn't cut short by the
+  // first one's expiry.
+  clearTimeout(flash._t);
+  flash._t = setTimeout(() => { flashSlot.innerHTML = ""; }, 4500);
 }
 function setTitle(t) { document.title = t; }
 
@@ -194,6 +197,7 @@ function navigate(view) {
   if (view === "scrub") return renderScrubForm();
   if (view === "watchlist") return renderWatchlist();
   if (view === "history") return renderHistory();
+  if (view === "settings") return renderSettings();
   if (view === "about") return renderLanding();
   if (view === "setup") return renderSetup();
   return renderHome();
@@ -279,19 +283,7 @@ async function renderHome() {
       <div class="autofill-list" id="autofill-list"></div>
     </div>
     <div id="suggestions-row"></div>
-    <div id="playlist-cards"></div>
-    <div class="bmc-row${showBmc() ? "" : " hidden"}">
-      <a class="bmc-link" href="https://buymeacoffee.com/OSJoseph" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M17 8h1a4 4 0 0 1 0 8h-1"/>
-          <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/>
-          <line x1="6" y1="2" x2="6" y2="4"/>
-          <line x1="10" y1="2" x2="10" y2="4"/>
-          <line x1="14" y1="2" x2="14" y2="4"/>
-        </svg>
-        Buy me a coffee
-      </a>
-    </div>`;
+    <div id="playlist-cards"></div>`;
 
   wireSearchBar();
   loadSuggestions();
@@ -399,6 +391,8 @@ function openSampler(artists) {
   document.getElementById("card-len").innerHTML = "";
   document.getElementById("card-preview").innerHTML = "";
   document.getElementById("card-preview-summary").textContent = "Preview";
+  // Nothing is fetched yet, so a Preview control here opens an empty box.
+  document.querySelector("#card-modal details")?.classList.add("hidden");
   document.getElementById("card-reuse-block")?.classList.add("hidden");
   document.getElementById("card-export")?.classList.add("hidden");
   document.querySelector(".playlist-name-field")?.classList.add("hidden");
@@ -1524,6 +1518,7 @@ async function runSearchWithOptions(artistName, opts) {
       ...opts,
       libraryCache,
       onProgress: (pct, stage) => updateProgress(pct, stage),
+      onArtist: (a) => showProgressArt(a && a.images),
     });
     lastResult = result;
     history.recordDive({
@@ -1565,6 +1560,11 @@ function renderProgress(title) {
   setTitle("(0%) DeepDive · Working");
   root.innerHTML = `
     <div class="card">
+      <!-- The artist's photo appears here once the search resolves them.
+           A dive takes minutes; a bar moving on an empty page is a poor
+           use of that, and the image costs nothing — the artist object
+           already carries it. -->
+      <div class="prog-art-slot" id="prog-art"></div>
       <h1 id="prog-title">${esc(title)}</h1>
       <p class="muted">This can take a while for artists with large catalogs — DeepDive reads every release track by track.</p>
       <div class="progress-stage" id="prog-stage">Starting…</div>
@@ -1575,6 +1575,19 @@ function renderProgress(title) {
     </div>`;
   root.querySelector("[data-nav-home]")?.addEventListener("click", () => renderHome());
 }
+/**
+ * Show the artist once known. Separate function so multi-artist dives
+ * and the sampler can reuse it as a slideshow later.
+ */
+function showProgressArt(images) {
+  const slot = document.getElementById("prog-art");
+  if (!slot) return;
+  const url = images && images.length ? images[0].url : null;   // largest
+  if (!url) return;
+  slot.innerHTML = `<img src="${esc(url)}" alt="" class="prog-art" onerror="this.remove()">`;
+  slot.classList.add("visible");
+}
+
 function updateProgress(pct, stage) {
   const fill = document.getElementById("prog-fill");
   const pctEl = document.getElementById("prog-pct");
@@ -1963,6 +1976,126 @@ function renderScrubResults(r) {
 // History, undo, and export/import (2.6)
 // ---------------------------------------------------------------------
 
+function renderSettings() {
+  setTitle("DeepDive · Settings");
+  setActiveTab("settings");
+  root.innerHTML = `
+    <div class="card">
+      <h1>Settings</h1>
+
+      <div class="crate-header"><span class="label teal">Scan</span><span class="rule"></span></div>
+      <p class="nav-hint" style="margin-top:0;">Crawl every artist in your library at once. Thorough, and slow — one request per release.</p>
+      <div class="actions"><button class="btn btn-ghost btn-small" id="go-scrub">Full library scan</button></div>
+
+      <div class="crate-header"><span class="label gold">Appearance</span><span class="rule"></span></div>
+      <label class="nav-switch" style="padding-left:0;">
+        <span>Show support link</span>
+        <input type="checkbox" id="set-show-bmc">
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+      </label>
+
+      <div class="crate-header"><span class="label teal">Playlists</span><span class="rule"></span></div>
+      <p class="nav-hint" style="margin-top:0;">Find playlists DeepDive created — including ones made before it kept a record of them.</p>
+      <div class="actions"><button class="btn btn-ghost btn-small" id="find-playlists">Find DeepDive playlists</button></div>
+      <div id="playlist-cleanup"></div>
+
+      <div class="crate-header"><span class="label gold">Pins &amp; blocked</span><span class="rule"></span></div>
+      <div class="actions">
+        <button class="btn btn-ghost btn-small" id="go-pins">Manage pins</button>
+        <button class="btn btn-ghost btn-small" id="go-history">History</button>
+      </div>
+
+      <div class="crate-header"><span class="label teal">Your data</span><span class="rule"></span></div>
+      <div class="actions">
+        <button class="btn btn-ghost btn-small" id="set-export">Export backup</button>
+        <button class="btn btn-ghost btn-small" id="set-import">Import backup</button>
+        <input type="file" id="set-import-file" accept="application/json,.json" style="display:none;">
+      </div>
+
+      <div class="crate-header"><span class="label gold">Spotify</span><span class="rule"></span></div>
+      <div class="actions">
+        <button class="btn btn-ghost btn-small" id="set-refresh">Refresh library</button>
+        <button class="btn btn-ghost btn-small" id="set-disconnect">Disconnect</button>
+      </div>
+      <div class="flash hidden" id="settings-msg" style="margin-top:14px;"></div>
+    </div>`;
+
+  const msg = document.getElementById("settings-msg");
+  const say = (t, err) => { msg.textContent = t; msg.classList.remove("hidden"); msg.classList.toggle("error", !!err); };
+
+  document.getElementById("go-scrub")?.addEventListener("click", () => renderScrubForm());
+  document.getElementById("go-pins")?.addEventListener("click", () => renderWatchlist());
+  document.getElementById("go-history")?.addEventListener("click", () => renderHistory());
+  document.getElementById("set-refresh")?.addEventListener("click", () => refreshLibrary());
+  document.getElementById("set-disconnect")?.addEventListener("click", () => { auth.logout(); render(); });
+
+  const bmc = document.getElementById("set-show-bmc");
+  if (bmc) {
+    bmc.checked = showBmc();
+    bmc.addEventListener("change", () => setShowBmc(bmc.checked));
+  }
+
+  document.getElementById("set-export")?.addEventListener("click", () => {
+    const stamp = new Date().toISOString().slice(0, 10);
+    const ok = downloadFile(`deepdive-backup-${stamp}.json`,
+      JSON.stringify(history.exportData(), null, 2), "application/json");
+    say(ok ? "Backup saved." : "Couldn't save the file.", !ok);
+  });
+  const fileInput = document.getElementById("set-import-file");
+  document.getElementById("set-import")?.addEventListener("click", () => fileInput.click());
+  fileInput?.addEventListener("change", async () => {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    try {
+      const sum = history.importData(JSON.parse(await file.text()), { mode: "merge" });
+      say(`Imported: ${sum.pins} pins, ${sum.blocked} blocked, ${sum.dives} dives added.`);
+    } catch (e) {
+      say(e && e.message ? e.message : "Couldn't read that file.", true);
+    } finally { fileInput.value = ""; }
+  });
+
+  // Cleanup searches by name, because playlists created before DeepDive
+  // recorded them have no stored id to look up.
+  const findBtn = document.getElementById("find-playlists");
+  findBtn?.addEventListener("click", async () => {
+    const slot = document.getElementById("playlist-cleanup");
+    findBtn.disabled = true; findBtn.textContent = "Searching…";
+    try {
+      const found = await client.findOwnPlaylistsByPrefix("DeepDive");
+      if (!found.length) { slot.innerHTML = `<p class="empty-note">No DeepDive playlists found.</p>`; return; }
+      slot.innerHTML = found.map((p) => `
+        <div class="watchlist-row">
+          <span class="watchlist-name"><span>
+            <span style="display:block;">${esc(p.name)}</span>
+            <span class="pill-reason">${p.tracks} track${p.tracks === 1 ? "" : "s"}</span>
+          </span></span>
+          <div class="watchlist-actions">
+            ${p.url ? `<a class="btn btn-ghost btn-small" href="${esc(p.url)}" target="_blank" rel="noopener">Open</a>` : ""}
+            <button class="btn btn-ghost btn-small" data-rm-pl="${esc(p.id)}" data-nm="${esc(p.name)}">Remove</button>
+          </div>
+        </div>`).join("");
+      slot.querySelectorAll("[data-rm-pl]").forEach((b) => b.addEventListener("click", async () => {
+        if (!window.confirm(`Remove "${b.dataset.nm}" from your Spotify library?`)) return;
+        b.disabled = true; b.textContent = "Removing…";
+        try {
+          await client.deletePlaylist(b.dataset.rmPl);
+          b.closest(".watchlist-row")?.remove();
+          flash("Playlist removed.");
+        } catch (e) {
+          const info = explainError(e);
+          say(`${info.headline}. ${info.detail}`, true);
+          b.disabled = false; b.textContent = "Remove";
+        }
+      }));
+    } catch (e) {
+      const info = explainError(e);
+      say(`${info.headline}. ${info.detail}`, true);
+    } finally {
+      findBtn.disabled = false; findBtn.textContent = "Find DeepDive playlists";
+    }
+  });
+}
+
 function renderHistory() {
   setTitle("DeepDive · History");
   setActiveTab("history");
@@ -2274,6 +2407,7 @@ function setShowBmc(on) {
   // Apply immediately rather than waiting for a re-render — the toggle
   // is in the drawer, with the button visible right behind it.
   document.querySelectorAll(".bmc-row").forEach((r) => r.classList.toggle("hidden", !on));
+  document.getElementById("coffee-link")?.classList.toggle("hidden", !on);
 }
 
 // ---- inline settings in the nav drawer ----
@@ -2384,12 +2518,34 @@ function setActiveTab(name) {
   });
 })();
 
+function applyBmcVisibility() {
+  document.getElementById("coffee-link")?.classList.toggle("hidden", !showBmc());
+}
+
 function stampBuild() {
   const el = document.getElementById("build-id");
   if (el) el.textContent = `build ${BUILD}`;
 }
 
+// Register the service worker. Android needs one registered before it
+// will create a real installed app rather than a bookmark shortcut;
+// offline resilience is the secondary benefit.
+//
+// Non-blocking and failure-tolerant: the app must behave identically if
+// registration is unavailable, which it is on unsupported browsers and
+// in some privacy configurations.
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch((e) => {
+      console.warn("[DeepDive] service worker registration failed:", e && e.message);
+    });
+  });
+}
+
 async function boot() {
+  registerServiceWorker();
+  applyBmcVisibility();
   stampBuild();
   // Handle a PKCE redirect coming back from Spotify.
   const cb = await auth.handleRedirectCallback();

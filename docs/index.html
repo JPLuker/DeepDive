@@ -394,6 +394,39 @@
 
   .landing-foot { text-align:center; border-top:1px solid var(--line); padding-top:28px; display:flex; flex-direction:column; align-items:center; gap:14px; }
 
+  /* Artist artwork on the dive screen. Hidden until an artist resolves,
+     so there's no empty frame while the search runs. */
+  .prog-art-slot { display:none; }
+  .prog-art-slot.visible { display:block; margin:-6px 0 20px; }
+  .prog-art {
+    width:100%; max-width:260px; aspect-ratio:1; object-fit:cover;
+    border-radius:var(--radius-lg); display:block; margin:0 auto;
+    animation:art-in .35s ease;
+  }
+  @keyframes art-in { from { opacity:0; transform:scale(.97); } to { opacity:1; transform:none; } }
+
+  /* Support link lives in the topbar: always findable, never in the way.
+     Muted until hovered so it doesn't compete with the wordmark. */
+  .coffee-btn { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; color:var(--muted-soft); transition:color .15s ease, background .15s ease; }
+  .coffee-btn:hover { color:var(--gold); background:var(--surface); }
+  .coffee-btn svg { width:19px; height:19px; }
+  .coffee-btn.hidden { display:none; }
+
+  /* ---- toast ---- */
+  /* The flash slot used to sit at the end of the document, so on a long
+     page the message rendered below everything and was never seen — it
+     only looked like it worked on short pages. Floating fixes that. */
+  #flash-slot { position:fixed; left:0; right:0; bottom:0; z-index:60; pointer-events:none; display:flex; justify-content:center; }
+  #flash-slot .flash {
+    pointer-events:auto; margin:0 16px calc(18px + env(safe-area-inset-bottom));
+    background:var(--surface); color:var(--ink); border:1px solid var(--line);
+    border-radius:var(--radius); padding:12px 18px; font-size:13.5px;
+    box-shadow:0 8px 28px rgba(0,0,0,0.45); max-width:min(460px,calc(100vw - 32px));
+    animation:toast-in .18s ease;
+  }
+  #flash-slot .flash.error { border-color:var(--danger); color:var(--danger); }
+  @keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
   /* ---- bottom tab bar (mobile) ---- */
   /* A slide-out drawer is a web idiom; every phone music app puts its
      primary destinations in a fixed bar at the bottom, within thumb
@@ -418,6 +451,7 @@
     .tab.active svg { color:var(--accent); }
     /* Clear the bar so the last row isn't trapped underneath it. */
     .wrap { padding-bottom:calc(78px + env(safe-area-inset-bottom)); }
+    #flash-slot .flash { margin-bottom:calc(84px + env(safe-area-inset-bottom)); }
   }
 
   /* ---- mobile ----------------------------------------------------

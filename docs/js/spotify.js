@@ -432,6 +432,36 @@ export class SpotifyClient {
   // -----------------------------------------------------------------
   // Playlists
   // -----------------------------------------------------------------
+  /**
+   * Every playlist of the user's own that looks like DeepDive made it.
+   *
+   * Needed because playlists created before DeepDive recorded them have
+   * no stored id — matching on the name prefix is the only way to find
+   * them. Owner-filtered, so a playlist someone else made that happens
+   * to be called "DeepDive · …" is never offered for deletion.
+   */
+  async findOwnPlaylistsByPrefix(prefix) {
+    const me = await this.get("me");
+    const out = [];
+    const wanted = prefix.trim().toLowerCase();
+    let results = await this.get("me/playlists", { limit: 50 });
+    while (results) {
+      for (const p of results.items || []) {
+        if (!p || !p.name) continue;
+        if ((p.owner || {}).id !== me.id) continue;
+        if (!p.name.trim().toLowerCase().startsWith(wanted)) continue;
+        out.push({
+          id: p.id,
+          name: p.name,
+          url: (p.external_urls || {}).spotify || null,
+          tracks: (p.tracks || {}).total || 0,
+        });
+      }
+      results = results.next ? await this.get(results.next) : null;
+    }
+    return out;
+  }
+
   async findPlaylistByName(userId, name) {
     const target = name.trim().toLowerCase();
     let results = await this.get("me/playlists", { limit: 50 });

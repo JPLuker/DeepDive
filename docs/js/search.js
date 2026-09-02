@@ -44,7 +44,7 @@ export async function runSearch(client, artistName, opts = {}) {
   const {
     excludeLive = false, excludeCensored = false,
     excludeInstrumental = false, excludeAcappella = false,
-    matchRemasters = false, onProgress = () => {},
+    matchRemasters = false, onProgress = () => {}, onArtist = () => {},
     libraryCache = null, scopeToArtist = true,
     includeAppearsOn = false,
   } = opts;
@@ -81,6 +81,10 @@ export async function runSearch(client, artistName, opts = {}) {
   };
 
   report(`Finding "${artistName}" on Spotify…`);
+  // Hand the artist back as soon as they're known so the caller can show
+  // who's being dived rather than a bare progress bar. Guarded: a
+  // display callback must never be able to fail the search.
+  try { onArtist(artist); } catch (e) {}
   const artist = await client.findArtist(artistName);
   completed += STAGE_WEIGHTS.find_artist;
   if (!artist) {
