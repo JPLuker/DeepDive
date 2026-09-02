@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.5.3";
+export const BUILD = "2.5.4";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1532,31 +1532,57 @@ function showProgressArt(images, artistName, artistId) {
   // narrowing that removed `popularity` — so fall back to album art for
   // that artist from the cached library, which is already local and
   // costs nothing. An album cover is a fair stand-in for a portrait.
+  // Every branch reports what it found. Three silent fallbacks meant a
+  // blank screen with nothing to diagnose from, which is the same
+  // mistake the error handling in 2.1.5 was written to prevent.
+  const log = (...a) => console.log("[DeepDive art]", ...a);
+
   let url = images && images.length ? images[0].url : null;
-  if (!url && artistName && _cachedArt) {
-    url = _cachedArt.byName.get(artistName.trim().toLowerCase()) || null;
+  log("search images:", images ? images.length : "none", url ? "→ using" : "");
+
+  if (!url && artistName) {
+    if (!_cachedArt) {
+      log("cache: not loaded");
+    } else {
+      url = _cachedArt.byName.get(artistName.trim().toLowerCase()) || null;
+      log("cache lookup:", artistName, url ? "→ hit" : `→ miss (${_cachedArt.byName.size} artists cached)`);
+    }
   }
+
   if (url) {
     paintProgressArt(slot, url);
     return;
   }
 
-  // Nothing local. One request for the artist record gets the real
-  // photo — negligible against the hundreds a dive already makes, and
-  // it's fire-and-forget so a failure just leaves the screen as it was.
-  if (artistId) {
-    client.get(`artists/${artistId}`)
-      .then((a) => {
-        const imgs = (a && a.images) || [];
-        if (imgs.length) paintProgressArt(slot, imgs[0].url);
-      })
-      .catch(() => {});
-  }
+  if (!artistId) { log("no artist id — giving up"); return; }
+
+  log("fetching artist", artistId);
+  client.get(`artists/${artistId}`)
+    .then((a) => {
+      const imgs = (a && a.images) || [];
+      log("artist fetch ok, images:", imgs.length);
+      if (imgs.length) paintProgressArt(slot, imgs[0].url);
+    })
+    .catch((e) => log("artist fetch failed:", e && (e.status || e.message)));
 }
 
 function paintProgressArt(slot, url) {
-  slot.innerHTML = `<img src="${esc(url)}" alt="" class="prog-art" onerror="this.closest('.prog-art-slot')?.classList.remove('visible'); this.remove();">`;
+  console.log("[DeepDive art] painting", url);
+  const img = new Image();
+  img.className = "prog-art";
+  img.alt = "";
+  // Report a load failure rather than vanishing silently — a URL that
+  // 404s or is blocked looked identical to having no artwork at all.
+  img.onerror = () => {
+    console.warn("[DeepDive art] image failed to load:", url);
+    slot.classList.remove("visible");
+    slot.innerHTML = "";
+  };
+  img.onload = () => console.log("[DeepDive art] loaded");
+  slot.innerHTML = "";
+  slot.appendChild(img);
   slot.classList.add("visible");
+  img.src = url;
 }
 
 function updateProgress(pct, stage) {
