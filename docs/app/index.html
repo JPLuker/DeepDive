@@ -36,25 +36,31 @@
     --accent-top:#01A8FF; --accent-bottom:#0F07FF; --accent:#0B54FF;
     --accent-gradient:linear-gradient(180deg,var(--accent-top),var(--accent-bottom));
     --field:#FFF;
+    --bg:#FAFAFA; --tile:#F2F2F3; --tile-hover:#EAEAEC;
     --radius:14px; --radius-lg:22px; --radius-pill:999px;
+    --radius-tile:10px;
   }
   /* Dark theme — soft charcoal, not true black (avoids the harsh
      halation of light text on pure black). Only colour tokens change;
      every component reads these variables, so nothing else needs edits.
      The blue accent is nudged brighter so it still pops on charcoal. */
   :root[data-theme="dark"] {
-    --ink:#EAEAEA; --paper:#15171B; --surface:#22262D;
-    --line:rgba(255,255,255,0.14); --muted:rgba(235,235,235,0.58); --muted-soft:rgba(235,235,235,0.4);
+    /* Deeper base, lighter cards. The old --paper sat close enough to
+       the page that cards never read as raised; separating them is most
+       of what makes a dark interface look composed rather than flat. */
+    --bg:#000000; --ink:#F2F2F2; --paper:#121316; --surface:#1C1E23;
+    --line:rgba(255,255,255,0.10); --muted:rgba(242,242,242,0.62); --muted-soft:rgba(242,242,242,0.42);
     --teal:#5FB6A8; --teal-soft:#1C2E2B; --gold:#D6A24E; --gold-soft:#2E2718; --danger:#E0776B;
-    --field:#22262D;
+    --field:#1C1E23;
     --accent-top:#2FB6FF; --accent-bottom:#3B5BFF; --accent:#3E7BFF;
+    --tile:#17191E; --tile-hover:#20232A;
   }
   html { background:var(--paper); }
   body, .card, .nav-drawer, input, .sort-select, .pill, .autofill-list, .settings-panel {
     transition: background-color .2s ease, color .2s ease, border-color .2s ease;
   }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
   a { color:inherit; }
   .wrap { max-width:760px; margin:0 auto; padding:0 24px 80px; }
   .hidden { display:none !important; }
@@ -153,46 +159,51 @@
   .pill-wrap:hover .pill-icon-btn, .pill-icon-btn:focus { display:inline-flex; }
   .pill-icon-btn.done-btn { background:var(--teal); }
 
-  /* ---- suggestion + pin rows ---- */
-  /* Section headers reuse the crate-header idiom from the results page
-     so the home screen reads as part of the same app. */
-  .row-head { display:flex; align-items:center; gap:12px; margin:34px auto 14px; max-width:760px; }
-  .row-head .label { font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; padding:4px 9px; border-radius:4px; border:1px solid currentColor; white-space:nowrap; }
-  .row-head .label.pinned { background:var(--gold-soft); color:var(--gold); }
-  .row-head .label.sugg { background:var(--teal-soft); color:var(--teal); }
-  .row-head .rule { flex:1; height:1px; background:var(--line); }
+  /* ---- section headers ---- */
+  /* Big bold sans with a muted qualifier, the way modern music apps do
+     it. The old mono-uppercase-plus-rule was a record-shop idiom and sat
+     oddly next to artwork. */
+  .row-head { display:flex; align-items:baseline; gap:8px; margin:38px auto 14px; max-width:760px; }
+  .row-head h2 { font-family:'Inter',system-ui,sans-serif; font-size:21px; font-weight:700; letter-spacing:-0.02em; margin:0; }
+  .row-head .qual { font-size:21px; font-weight:700; letter-spacing:-0.02em; color:var(--muted-soft); }
+  .row-head .rule { display:none; }
 
-  .pill-row { justify-content:center; }
-  .pill {
-    align-items:center; gap:10px; padding:8px 15px 8px 9px;
-    background:var(--paper); border:1.5px solid var(--line);
-    transition:border-color .15s ease, transform .12s ease, background .15s ease;
+  /* ---- artwork tiles ---- */
+  /* Two columns, artwork flush to the edge and doing the work. A 26px
+     circle beside a label wastes the one genuinely visual asset here. */
+  .tile-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+  .tile {
+    display:flex; align-items:center; gap:12px;
+    background:var(--tile); border:none; border-radius:var(--radius-tile);
+    overflow:hidden; cursor:pointer; text-align:left; font-family:inherit;
+    color:var(--ink); padding:0; min-height:56px;
+    transition:background .15s ease;
   }
-  .pill:hover { border-color:var(--ink); transform:translateY(-1px); }
-  .pill-avatar { width:30px; height:30px; margin-right:0; }
-  /* Fallback when there's no artwork, or the image fails to load. A
-     lettered disc keeps the row's rhythm — a missing image otherwise
-     leaves pills at inconsistent widths and looks broken. */
-  .pill-initial {
-    display:inline-flex; align-items:center; justify-content:center;
-    border-radius:50%; background:var(--surface); color:var(--muted);
-    font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:500;
-    flex-shrink:0;
+  .tile:hover { background:var(--tile-hover); }
+  .tile-art { width:56px; height:56px; flex-shrink:0; object-fit:cover; display:block; background:var(--surface); }
+  .tile-art-fallback {
+    width:56px; height:56px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,var(--accent-top),var(--accent-bottom));
+    color:#fff; font-weight:700; font-size:20px;
   }
-  .pill-text { display:inline-flex; flex-direction:column; align-items:flex-start; line-height:1.25; }
-  .pill-name { font-size:13.5px; font-weight:600; letter-spacing:-0.005em; }
-  .pill-reason { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--muted-soft); font-family:'IBM Plex Mono',monospace; letter-spacing:0.04em; text-transform:uppercase; margin-top:3px; }
-  .pill-reason svg { width:10px; height:10px; flex-shrink:0; }
-
-  /* Pins are the user's own choices, so they read as chosen rather than
-     generated: accent border, no reason line, a pin mark. */
-  .pill-wrap.is-pin .pill { border-color:color-mix(in srgb, var(--accent) 55%, var(--line)); padding-right:13px; }
-  .pill-wrap.is-pin .pill:hover { border-color:var(--accent); }
-  .pill-wrap.is-pin .pill-name { font-size:13.5px; }
-  .pin-mark { color:var(--accent); display:inline-flex; }
-  .pin-mark svg { width:12px; height:12px; }
-
-  .pill-more { color:var(--muted); font-style:italic; border-style:dashed; }
+  .tile-text { flex:1; min-width:0; padding-right:12px; display:flex; flex-direction:column; gap:2px; }
+  .tile-title { font-size:14px; font-weight:600; letter-spacing:-0.01em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tile-sub { font-size:11.5px; color:var(--muted-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tile-actions { display:flex; gap:4px; padding-right:8px; opacity:0; transition:opacity .15s ease; }
+  .tile:hover .tile-actions, .tile-wrap:focus-within .tile-actions { opacity:1; }
+  .tile-wrap { position:relative; display:flex; }
+  .tile-wrap .tile { flex:1; }
+  .tile-btn {
+    width:26px; height:26px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(255,255,255,0.10); color:var(--ink);
+    display:inline-flex; align-items:center; justify-content:center; font-size:15px; line-height:1;
+    align-self:center;
+  }
+  .tile-btn:hover { background:var(--accent); color:#fff; }
+  .tile-btn.danger:hover { background:var(--danger); color:#fff; }
+  /* Pins get a left edge rather than a full outline — enough to mark
+     them as chosen without boxing them in. */
+  .tile-wrap.is-pin .tile { box-shadow:inset 3px 0 0 var(--accent); }
   .pill-icon-btn.block-btn { background:var(--danger); }
 
   /* pin button inside the autofill dropdown */
@@ -202,28 +213,45 @@
   .autofill-pin:hover { border-color:var(--accent); color:var(--accent); }
   .autofill-pin svg { width:14px; height:14px; }
 
-  /* ---- playlist cards ---- */
-  .card-row { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
-  .pcard {
-    display:inline-flex; align-items:center; gap:10px;
-    padding:9px 17px; border-radius:var(--radius-pill);
-    border:1.5px solid var(--line); background:var(--paper);
-    color:var(--ink); cursor:pointer; text-align:left; font-family:inherit;
-    max-width:100%;
-    transition:border-color .15s ease, transform .12s ease;
+  /* Sampler: a full-width accent row rather than a dashed pill. It's an
+     action, not another tag in the list above it. */
+  .sampler-row { margin-top:12px; }
+  .btn-sampler {
+    display:flex; align-items:center; justify-content:center; gap:9px;
+    width:100%; padding:14px; border:none; border-radius:var(--radius);
+    background:var(--tile); color:var(--ink); font-size:14px; font-weight:600;
+    cursor:pointer; font-family:inherit; transition:background .15s ease;
   }
-  .pcard:hover { border-color:var(--accent); transform:translateY(-1px); }
-  /* Sampler sits at the end of the suggestions. Dashed because, unlike
-     everything else in that area, it makes network calls. */
-  .sampler-row { display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:22px; }
-  .btn-sampler { border-style:dashed; font-size:13px; padding:10px 18px; }
-  .btn-sampler svg { width:14px; height:14px; }
-  .pcard-text { display:inline-flex; flex-direction:column; align-items:flex-start; line-height:1.25; min-width:0; }
-  .pcard-title { font-size:13.5px; font-weight:600; letter-spacing:-0.005em; }
-  .pcard-sub { font-size:10px; color:var(--muted-soft); font-family:'IBM Plex Mono',monospace; letter-spacing:0.04em; text-transform:uppercase; margin-top:3px; }
-  .pcard-title, .pcard-sub { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
-  .pcard-icon { color:var(--muted); display:inline-flex; flex-shrink:0; }
-  .pcard-icon svg { width:16px; height:16px; }
+  .btn-sampler:hover { background:var(--tile-hover); }
+  .btn-sampler svg { width:15px; height:15px; color:var(--accent); }
+
+  /* ---- playlist cards ---- */
+  /* Gradient fills rather than outlines. Six identical bordered boxes
+     read as a form; tinted cards read as things to pick between. The
+     hue rotates per card so the row has some variety without needing
+     artwork it doesn't have. */
+  .card-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .pcard {
+    position:relative; overflow:hidden;
+    display:flex; flex-direction:column; justify-content:flex-end; gap:3px;
+    min-height:104px; padding:14px;
+    border:none; border-radius:var(--radius); cursor:pointer;
+    text-align:left; font-family:inherit; color:#fff;
+    background:var(--tile);
+    transition:transform .14s ease, filter .14s ease;
+  }
+  .pcard::before {
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 32%), hsl(calc(var(--h) + 28) 58% 16%));
+    z-index:0;
+  }
+  .pcard > * { position:relative; z-index:1; }
+  .pcard:hover { transform:translateY(-2px); filter:brightness(1.12); }
+  .pcard-icon { opacity:0.85; margin-bottom:auto; }
+  .pcard-icon svg { width:18px; height:18px; }
+  .pcard-title { font-size:14.5px; font-weight:700; letter-spacing:-0.01em; line-height:1.2; }
+  .pcard-sub { font-size:11.5px; color:rgba(255,255,255,0.72); line-height:1.35; }
+  .pcard-text { display:contents; }
 
   .card-len { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:4px; }
   .len-opt { font-family:'IBM Plex Mono',monospace; font-size:12px; padding:7px 12px; border-radius:var(--radius-pill); border:1.5px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }
@@ -384,6 +412,15 @@
     .pcard-title { font-size:13px; }
 
     .row-head { margin:26px auto 12px; }
+
+    /* Artwork tiles go single-column; two 56px thumbnails plus text
+       don't fit side by side at phone width. */
+    .tile-grid { grid-template-columns:1fr; }
+    .tile-actions { opacity:1; }   /* no hover on touch */
+    .card-row { grid-template-columns:repeat(2,1fr); gap:8px; }
+    .pcard { min-height:92px; padding:12px; }
+    .row-head { margin:28px auto 12px; }
+    .row-head h2, .row-head .qual { font-size:18px; }
 
     /* Two columns of feature cards is unreadable at phone width. */
     .landing-grid { grid-template-columns:1fr; gap:10px; margin:30px 0 26px; }

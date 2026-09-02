@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.7.2";
+export const BUILD = "2.8.0";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -349,15 +349,13 @@ async function loadPlaylistCards() {
  */
 function renderCardRow(el) {
   el.innerHTML = `
-    <div class="row-head"><span class="label pinned">Playlists</span><span class="rule"></span></div>
+    <div class="row-head"><h2>Playlists</h2><span class="qual">from your library</span></div>
     <div class="card-row">
-      ${_cards.map((c) => `
-        <button class="pcard" data-card="${esc(c.id)}">
+      ${_cards.map((c, i) => `
+        <button class="pcard" data-card="${esc(c.id)}" style="--h:${(200 + i * 47) % 360};">
           <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
-          <span class="pcard-text">
-            <span class="pcard-title">${esc(c.title)}</span>
-            <span class="pcard-sub">${esc(c.subtitle)}</span>
-          </span>
+          <span class="pcard-title">${esc(c.title)}</span>
+          <span class="pcard-sub">${esc(c.subtitle)}</span>
         </button>`).join("")}
     </div>`;
   el.querySelectorAll("[data-card]").forEach((b) =>
@@ -1334,51 +1332,40 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   const shownPins = showAllPins ? pins : pins.slice(0, PIN_VISIBLE);
   const extraPins = pins.length - shownPins.length;
 
-  // A small icon per reason type. Four different prompts all rendered as
-  // identical grey text is hard to scan; an icon makes the kind of
-  // suggestion legible before you read the words.
-  const REASON_ICONS = {
-    play: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="4" y1="10" x2="4" y2="14"/><line x1="9" y1="6" x2="9" y2="18"/><line x1="14" y1="9" x2="14" y2="15"/><line x1="19" y1="11" x2="19" y2="13"/></svg>`,
-    one: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/></svg>`,
-    old: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>`,
-  };
-  const iconFor = (reason) => {
-    if (!reason) return "";
-    if (/song liked/i.test(reason)) return REASON_ICONS.one;
-    if (/last added/i.test(reason)) return REASON_ICONS.old;
-    return REASON_ICONS.play;
-  };
-  const PIN_MARK = `<span class="pin-mark"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2l1.5 1.5-1 4L18 11l-1.4 1.4-3.6-2.1-3.5 3.5.2 3.4L8.3 18.6 5.7 14 1 11.4l1.4-1.4 3.4.2 3.5-3.5L7.2 3.1 8.6 1.7 12.5 5l4-1L14 2z"/></svg></span>`;
+  // Tiles lead with artwork. The reason line stays — an unexplained
+  // suggestion is clutter — but it's secondary text now rather than a
+  // mono badge competing with the name.
+  const initial = (n) => esc((n || "?").trim().charAt(0).toUpperCase());
+  const art = (name, imageUrl) => imageUrl
+    ? `<img src="${esc(imageUrl)}" alt="" class="tile-art" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'tile-art-fallback',textContent:'${initial(name)}'}))">`
+    : `<span class="tile-art-fallback">${initial(name)}</span>`;
 
-  const pill = (name, imageUrl, reason, extraBtns, isPin) => `
-    <div class="pill-wrap${isPin ? " is-pin" : ""}">
-      <button class="pill" data-search="${esc(name)}">
-        ${imageUrl
-          ? `<img src="${esc(imageUrl)}" alt="" class="pill-avatar" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'pill-avatar pill-initial',textContent:'${esc((name || "?").trim().charAt(0).toUpperCase())}'}))">`
-          : `<span class="pill-avatar pill-initial">${esc((name || "?").trim().charAt(0).toUpperCase())}</span>`}
-        <span class="pill-text">
-          <span class="pill-name">${esc(name)}</span>
-          ${reason ? `<span class="pill-reason">${iconFor(reason)}${esc(reason)}</span>` : ""}
+  const tile = (name, imageUrl, sub, actions, isPin) => `
+    <div class="tile-wrap${isPin ? " is-pin" : ""}">
+      <button class="tile" data-search="${esc(name)}">
+        ${art(name, imageUrl)}
+        <span class="tile-text">
+          <span class="tile-title">${esc(name)}</span>
+          ${sub ? `<span class="tile-sub">${esc(sub)}</span>` : ""}
         </span>
-        ${isPin ? PIN_MARK : ""}
       </button>
-      ${extraBtns || ""}
+      ${actions ? `<span class="tile-actions">${actions}</span>` : ""}
     </div>`;
 
   const pinsHtml = shownPins.length ? `
-    <div class="row-head"><span class="label pinned">Pinned</span><span class="rule"></span></div>
-    <div class="pill-row">
-      ${shownPins.map((p) => pill(p.name, p.image_url, null,
-        `<button class="pill-icon-btn done-btn" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`, true)).join("")}
-      ${extraPins > 0 ? `<button class="pill pill-more" id="show-more-pins">show ${extraPins} more…</button>` : ""}
-    </div>` : "";
+    <div class="row-head"><h2>Pinned</h2></div>
+    <div class="tile-grid">
+      ${shownPins.map((p) => tile(p.name, p.image_url, null,
+        `<button class="tile-btn danger" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`, true)).join("")}
+    </div>
+    ${extraPins > 0 ? `<div style="text-align:center;margin-top:10px;"><button class="btn btn-ghost btn-small" id="show-more-pins">Show ${extraPins} more</button></div>` : ""}` : "";
 
   const suggHtml = suggestions.length ? `
-    <div class="row-head"><span class="label sugg">Suggested for you</span><span class="rule"></span></div>
-    <div class="pill-row">
-      ${suggestions.map((sg) => pill(sg.name, sg.image_url, sg.reason,
-        `<button class="pill-icon-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" title="Pin for later">+</button>
-         <button class="pill-icon-btn block-btn" data-block="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" title="Never suggest this artist">&minus;</button>`)).join("")}
+    <div class="row-head"><h2>Suggested</h2><span class="qual">for you</span></div>
+    <div class="tile-grid">
+      ${suggestions.map((sg) => tile(sg.name, sg.image_url, sg.reason,
+        `<button class="tile-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" title="Pin for later">+</button>
+         <button class="tile-btn danger" data-block="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" title="Never suggest this artist">&minus;</button>`)).join("")}
     </div>` : "";
 
   // Never leave the row silently blank — an empty area with no
@@ -1440,13 +1427,13 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   // including all the avatars — that repaint is the flash, and stopping
   // the API calls alone didn't remove it.
   const dropPill = (btn) => {
-    const wrap = btn.closest(".pill-wrap");
+    const wrap = btn.closest(".tile-wrap");
     if (!wrap) { redraw(); return; }
     const row = wrap.parentElement;
     wrap.remove();
     // If that emptied a section, take its header and row away too,
     // rather than leaving a stranded label.
-    if (row && !row.querySelector(".pill-wrap")) {
+    if (row && !row.querySelector(".tile-wrap")) {
       const head = row.previousElementSibling;
       if (head && head.classList.contains("row-head")) head.remove();
       row.remove();
