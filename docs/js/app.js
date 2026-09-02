@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.0";
+export const BUILD = "2.9.1";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -2116,7 +2116,6 @@ function renderHistory() {
 
 function renderWatchlist() {
   setTitle("DeepDive · Pins & blocked");
-  setActiveTab("watchlist");
   const pins = watchlist.pinned();
   const blocked = watchlist.listBlocked();
   root.innerHTML = `
@@ -2366,8 +2365,22 @@ function setActiveTab(name) {
     setActiveTab(name);
     if (name === "home") return renderHome();
     if (name === "scrub") return renderScrubForm();
-    if (name === "watchlist") return renderWatchlist();
     if (name === "history") return renderHistory();
+    if (name === "settings") {
+      // Settings live in the drawer's sub-pane rather than as a page, so
+      // the tab opens the drawer straight into it instead of duplicating
+      // the whole thing as a fifth view.
+      const drawer = document.getElementById("nav-drawer");
+      const backdrop = document.getElementById("nav-backdrop");
+      if (drawer) {
+        drawer.classList.add("open", "sub-open");
+        if (backdrop) backdrop.classList.add("open");
+      }
+      // Pins moved off the bar — it's reachable from the drawer and its
+      // contents are already on the home screen.
+      setActiveTab(_currentTab);
+      return;
+    }
   });
 })();
 
