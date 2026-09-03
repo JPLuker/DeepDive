@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.6.1";
+export const BUILD = "2.6.2";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -398,7 +398,10 @@ function renderSamplerIntro(artists) {
 async function runSampler(artists) {
   // Reuses the dive progress screen, so building a sampler looks like
   // any other search rather than a dialog reporting at you.
-  renderProgress("Building your sampler…");
+  showDiveScreen("Building your sampler…", () => renderHome());
+  // Multi-artist run, so seed the slideshow with everyone up front —
+  // this is the case the rotation was built for.
+  artists.forEach((a) => { if (a.image_url) addDiveImage(a.image_url); });
   _samplerCancelled = false;
 
   const back = document.getElementById("prog-back");
@@ -418,7 +421,8 @@ async function runSampler(artists) {
       // component the dive screen uses.
       const a = artists[Math.min(done, artists.length - 1)];
       showProgressArt(a && a.image_url ? [{ url: a.image_url }] : null, a && a.name, a && a.id);
-      updateProgress(Math.round((done / total) * 100), `${a ? a.name : "Fetching"}… (${done}/${total})`);
+      updateDiveScreen(Math.round((done / total) * 100), `${a ? a.name : "Fetching"}… (${done}/${total})`);
+      if (a && a.image_url) addDiveImage(a.image_url);
     });
     if (_samplerCancelled) return;
   } catch (e) {
@@ -1481,36 +1485,35 @@ function startSearch(artistName, artworkUrl = null) {
 }
 
 async function runSearchWithOptions(artistName, opts) {
-  // Report from the bar rather than taking the screen. The current view
-  // stays put, so you can keep browsing while the dive runs.
-  showDiveBar(artistName, _pendingArtwork);
-  if (_pendingArtwork) setDiveBackdrop(_pendingArtwork);
+  // The dive gets the whole screen: the artist fills it and the status
+  // sits along the bottom.
+  showDiveScreen(`Diving into ${artistName}…`, () => renderHome());
+  if (_pendingArtwork) addDiveImage(_pendingArtwork);
   try {
     // Preflight (issue #3): verify this token can actually do what the
     // scan is about to ask. Ported from the Flask health check, which
     // was added after a token that looked valid 403'd on /me/playlists
     // only AFTER a full search had completed. Costs ~3 cheap requests;
     // saves an entire wasted scan.
-    updateProgress(0, "Checking your Spotify connection…");
+    updateDiveScreen(0, "Checking your Spotify connection…");
     await preflight();
 
     const result = await search.runSearch(client, artistName, {
       ...opts,
       libraryCache,
-      onProgress: (pct, stage) => updateDiveBar(pct, stage),
-      // The bar carries a thumbnail; the backdrop still gets the photo,
-      // so the results screen opens on the artist.
+      onProgress: (pct, stage) => updateDiveScreen(pct, stage),
       onArtist: (a) => {
-        const url = (a && a.images && a.images.length) ? a.images[0].url : null;
-        if (url) { setDiveBarArt(url); setDiveBackdrop(url); }
-        else showProgressArt(a && a.images, a && a.name, a && a.id);
+        // Every photo the artist has, not just the first — that alone
+        // gives most dives a slideshow.
+        ((a && a.images) || []).forEach((im) => addDiveImage(im.url));
+        if (!(a && a.images && a.images.length) && a && a.id) fetchArtistImages(a.id);
       },
-      // Only used if the artist has no photo of their own — plenty of
-      // smaller acts don't.
-      onArtwork: (url) => { if (!_haveArtistPhoto) { setDiveBarArt(url); setDiveBackdrop(url); } },
+      // Album covers as the catalogue is read, which keeps the rotation
+      // going through a long dive.
+      onArtwork: (url) => addDiveImage(url),
     });
     if (_diveCancelled) return;   // abandoned while it ran
-    hideDiveBar();
+    hideDiveScreen();
     lastResult = result;
     history.recordDive({
       artistId: result.artist && result.artist.id,
@@ -1527,7 +1530,7 @@ async function runSearchWithOptions(artistName, opts) {
     // the moment the dive finishes, not later on a list page.
     maybeOfferUnpin(artistName);
   } catch (e) {
-    hideDiveBar();
+    hideDiveScreen();
     if (!_diveCancelled) renderProgressError(e.message || String(e), e);
   }
 }
@@ -1549,80 +1552,111 @@ function maybeOfferUnpin(artistName) {
 }
 
 // ---------------------------------------------------------------------
-// Dive status bar
+// Full-screen dive
 // ---------------------------------------------------------------------
-// A dive takes minutes. Occupying the whole screen to show a progress
-// bar means the app is unusable for the duration and there's nothing to
-// look at; reporting from a bar at the bottom leaves you free to browse,
-// pin, or start reading something else.
+// A dive runs for minutes. It gets the whole screen, filled with the
+// artist, and reports along the bottom — rather than a progress bar in a
+// box in the middle of an empty page.
+//
+// Photos arrive over time: the artist's own first, then album covers as
+// the catalogue is read, and for a multi-artist scan every artist in
+// turn. So the slideshow accepts images as they're discovered rather
+// than needing the full set up front.
 
 let _diveCancelled = false;
+let _diveImages = [];
+let _diveSlideTimer = null;
+let _diveSlideIndex = 0;
 
-function showDiveBar(artistName, artUrl) {
-  const bar = document.getElementById("dive-bar");
-  if (!bar) return;
+/**
+ * Fetch an artist's photos when the search result didn't carry any.
+ * Fire-and-forget: the slideshow works without it.
+ */
+function fetchArtistImages(artistId) {
+  client.get(`artists/${artistId}`)
+    .then((a) => ((a && a.images) || []).forEach((im) => addDiveImage(im.url)))
+    .catch(() => {});
+}
+
+function showDiveScreen(heading, onCancel) {
+  const el = document.getElementById("dive-screen");
+  if (!el) return;
   _diveCancelled = false;
-  document.body.classList.add("diving");
-  document.getElementById("dive-bar-title").textContent = `Diving into ${artistName}…`;
-  document.getElementById("dive-bar-stage").textContent = "Starting…";
-  document.getElementById("dive-bar-fill").style.width = "0%";
-  setDiveBarArt(artUrl);
-  bar.hidden = false;
+  _diveImages = [];
+  _diveSlideIndex = 0;
+  document.getElementById("dive-slides").innerHTML = "";
+  document.getElementById("dive-heading").textContent = heading;
+  document.getElementById("dive-stage").textContent = "Starting…";
+  document.getElementById("dive-fill").style.width = "0%";
+  el.hidden = false;
 
-  const cancel = document.getElementById("dive-bar-cancel");
+  const cancel = document.getElementById("dive-cancel");
   if (cancel) {
     const fresh = cancel.cloneNode(true);
     cancel.replaceWith(fresh);
     fresh.addEventListener("click", () => {
       _diveCancelled = true;
-      hideDiveBar();
-      flash("Dive cancelled.");
+      hideDiveScreen();
+      if (typeof onCancel === "function") onCancel();
     });
   }
+  startSlideshow();
 }
 
-function setDiveBarArt(url) {
-  const el = document.getElementById("dive-bar-art");
-  if (!el || !url) return;
+/**
+ * Add a photo to the rotation. Loads it first, so a broken URL never
+ * becomes a blank slide in the cycle.
+ */
+function addDiveImage(url) {
+  if (!url || _diveImages.includes(url)) return;
   const probe = new Image();
-  probe.onload = () => { el.style.backgroundImage = `url("${url.replace(/"/g, "%22")}")`; };
+  probe.onload = () => {
+    if (_diveImages.includes(url)) return;
+    _diveImages.push(url);
+    const slides = document.getElementById("dive-slides");
+    if (!slides) return;
+    const slide = document.createElement("div");
+    slide.className = "dive-slide";
+    slide.style.backgroundImage = `url("${url.replace(/"/g, "%22")}")`;
+    slides.appendChild(slide);
+    // First one in shows immediately; the rest wait their turn.
+    if (_diveImages.length === 1) slide.classList.add("on");
+  };
   probe.src = url;
 }
 
-function updateDiveBar(pct, stage) {
-  const fill = document.getElementById("dive-bar-fill");
-  const st = document.getElementById("dive-bar-stage");
+function startSlideshow() {
+  clearInterval(_diveSlideTimer);
+  _diveSlideTimer = setInterval(() => {
+    const slides = document.querySelectorAll("#dive-slides .dive-slide");
+    if (slides.length < 2) return;
+    slides[_diveSlideIndex % slides.length].classList.remove("on");
+    _diveSlideIndex = (_diveSlideIndex + 1) % slides.length;
+    slides[_diveSlideIndex].classList.add("on");
+  }, 4500);
+}
+
+function updateDiveScreen(pct, stage) {
+  const fill = document.getElementById("dive-fill");
+  const st = document.getElementById("dive-stage");
   if (fill) fill.style.width = `${pct}%`;
   if (st && stage) st.textContent = stage;
   setTitle(`(${pct}%) DeepDive · Working`);
 }
 
-function hideDiveBar() {
-  const bar = document.getElementById("dive-bar");
-  if (bar) bar.hidden = true;
-  document.body.classList.remove("diving");
+function setDiveHeading(text) {
+  const h = document.getElementById("dive-heading");
+  if (h) h.textContent = text;
+}
+
+function hideDiveScreen() {
+  const el = document.getElementById("dive-screen");
+  if (el) el.hidden = true;
+  clearInterval(_diveSlideTimer);
+  _diveSlideTimer = null;
   setTitle("DeepDive");
 }
 
-function renderProgress(title) {
-  setTitle("(0%) DeepDive · Working");
-  root.innerHTML = `
-    <div class="card card-dive">
-      <!-- Full-bleed artwork with the title over it, rather than a
-           square floating above a heading. Matches the artwork-led
-           treatment used everywhere else, and gives a screen you'll be
-           looking at for minutes something worth looking at. -->
-      <div class="prog-art-slot" id="prog-art"></div>
-      <h1 id="prog-title" class="prog-title">${esc(title)}</h1>
-      <p class="muted">This can take a while for artists with large catalogs — DeepDive reads every release track by track.</p>
-      <div class="progress-stage" id="prog-stage">Starting…</div>
-      <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
-      <div class="progress-meta"><span id="prog-pct">0%</span></div>
-      <div class="flash error hidden" id="prog-error" style="margin-top:20px;"></div>
-      <div class="actions hidden" id="prog-back"><button class="btn btn-ghost" data-nav-home>Back</button></div>
-    </div>`;
-  root.querySelector("[data-nav-home]")?.addEventListener("click", () => renderHome());
-}
 /**
  * Show the artist once known. Separate function so multi-artist dives
  * and the sampler can reuse it as a slideshow later.
@@ -1741,15 +1775,6 @@ function paintProgressArt(slot, url) {
   img.src = url;
 }
 
-function updateProgress(pct, stage) {
-  const fill = document.getElementById("prog-fill");
-  const pctEl = document.getElementById("prog-pct");
-  const stageEl = document.getElementById("prog-stage");
-  if (fill) fill.style.width = pct + "%";
-  if (pctEl) pctEl.textContent = pct + "%";
-  if (stageEl && stage) stageEl.textContent = stage;
-  setTitle(`(${pct}%) DeepDive · Working`);
-}
 // Turn an error into something a person can act on, plus the technical
 // detail underneath. The point is that nobody should ever need to open
 // the network console to find out what happened — a 429 with a six-hour
@@ -2040,7 +2065,7 @@ async function startScrub() {
     includeAppearsOn: document.getElementById("s-appears-on").checked,
   };
   scrubCancel = { cancelled: false };
-  renderProgress("Scanning your whole library…");
+  showDiveScreen("Scanning your whole library…", () => renderHome());
   // add a cancel button to the progress card
   const backSlot = document.getElementById("prog-back");
   backSlot.classList.remove("hidden");
@@ -2050,19 +2075,25 @@ async function startScrub() {
   try {
     // Preflight before a long scrub (issue #3) — a scope problem found
     // now costs seconds; found 40 minutes in, it costs the whole scan.
-    updateProgress(0, "Checking your Spotify connection…");
+    updateDiveScreen(0, "Checking your Spotify connection…");
     await preflight();
 
     const result = await search.runFullScrub(client, {
       ...opts,
       libraryCache,
-      onProgress: (pct, stage) => updateProgress(pct, stage),
+      onProgress: (pct, stage) => updateDiveScreen(pct, stage),
       isCancelled: () => scrubCancel.cancelled,
+      // A scan touches every artist in the library, so its slideshow is
+      // the richest of the lot.
+      onArtwork: (url) => addDiveImage(url),
     });
+    hideDiveScreen();
+    if (_diveCancelled) return;
     lastResult = result;
     renderScrubResults(result);
   } catch (e) {
-    renderProgressError(e.message || String(e), e);
+    hideDiveScreen();
+    if (!_diveCancelled) renderProgressError(e.message || String(e), e);
   }
 }
 
