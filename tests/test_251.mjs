@@ -9,7 +9,9 @@ let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL
 check('sampler asks before fetching', /id="sampler-start"/.test(src) && /renderSamplerIntro/.test(src));
 check('fetching is a separate step', /async function runSampler\(artists\)/.test(src));
 check('cancellable mid-run', /_samplerCancelled/.test(src) && /if \(_samplerCancelled\) break;/.test(src));
-check('cancel rebound during the fetch', /_samplerCancelled = true;/.test(src));
+// The dive screen owns the cancel button now; its handler sets the flag
+// the fetch loop checks between artists.
+check('cancel sets the flag the loop checks', /showDiveScreen\("Building your sampler…", \(\) => \{[\s\S]{0,80}_samplerCancelled = true;/.test(src));
 
 // --- bigger pool, rotating ---
 const t=(id,aid,an,added,dur,rel)=>({id,name:id,artists:[{id:aid,name:an}],added_at:added,duration_ms:dur,album:{name:'Al'+aid,release_date:rel,images:[{url:'i.jpg'}]}});

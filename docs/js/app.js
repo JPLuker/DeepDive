@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.6.2";
+export const BUILD = "2.6.3";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -30,12 +30,21 @@ const client = new SpotifyClient(auth.getToken);
 const libraryCache = new LibraryCache(client, bestStore());
 
 // When Spotify rate-limits us the client waits and retries, which can be
-// tens of seconds. Without this the progress bar just appears to freeze,
-// so say what's happening instead.
-client.onRateLimit = (waitMs) => {
+// anywhere from fifteen to ninety seconds. Without saying so the dive
+// simply appears to freeze.
+//
+// Note this writes to the dive screen's stage line. It previously
+// targeted the old card-based progress element, which the full-screen
+// rewrite removed — so the warnings were going nowhere at all.
+client.onRateLimit = (waitMs, attempt) => {
   const secs = Math.max(1, Math.round(waitMs / 1000));
-  const el = document.getElementById("prog-stage");
-  if (el) el.textContent = `Spotify is rate-limiting us — waiting ${secs}s, then carrying on…`;
+  const el = document.getElementById("dive-stage");
+  const msg = `Spotify is rate-limiting us — waiting ${secs}s, then carrying on…`
+    + (attempt > 1 ? ` (attempt ${attempt})` : "");
+  if (el) el.textContent = msg;
+  // Also surface it outside a dive, where there's no stage line to write
+  // to — a stalled search from the home screen otherwise says nothing.
+  else flash(msg);
 };
 
 const root = document.getElementById("view-root");
@@ -397,21 +406,20 @@ function renderSamplerIntro(artists) {
 async function runSampler(artists) {
   // Reuses the dive progress screen, so building a sampler looks like
   // any other search rather than a dialog reporting at you.
-  showDiveScreen("Building your sampler…", () => renderHome());
+  // Cancelling has to set the flag the fetch loop checks between
+  // artists, or the run continues invisibly after the screen closes.
+  showDiveScreen("Building your sampler…", () => {
+    _samplerCancelled = true;
+    renderHome();
+  });
   // Multi-artist run, so seed the slideshow with everyone up front —
   // this is the case the rotation was built for.
   artists.forEach((a) => { if (a.image_url) addDiveImage(a.image_url); });
   _samplerCancelled = false;
 
-  const back = document.getElementById("prog-back");
-  if (back) {
-    back.classList.remove("hidden");
-    const btn = back.querySelector("button");
-    if (btn) {
-      btn.textContent = "Cancel";
-      btn.addEventListener("click", () => { _samplerCancelled = true; renderHome(); });
-    }
-  }
+  // Cancelling is handled by the dive screen's own button, wired in
+  // showDiveScreen.
+
 
   let tracks = [];
   try {
@@ -1772,22 +1780,28 @@ function diagnosticsHtml() {
     </div>`;
 }
 
+/**
+ * Renders its own view. It used to unhide elements inside the old
+ * progress card, which the full-screen rewrite removed — so a failed
+ * dive was showing nothing at all.
+ */
 function renderProgressError(msgOrErr, err) {
   setTitle("DeepDive · Error");
+  hideDiveScreen();
   const info = explainError(err || msgOrErr);
-  const box = document.getElementById("prog-error");
-  const back = document.getElementById("prog-back");
-  if (box) {
-    box.classList.remove("hidden");
-    box.innerHTML = `
-      <div style="font-weight:700; margin-bottom:6px;">${esc(info.headline)}</div>
-      <div style="line-height:1.5;">${esc(info.detail)}</div>
+  root.innerHTML = `
+    <div class="card">
+      <h1>${esc(info.headline)}</h1>
+      <p class="muted" style="line-height:1.55;">${esc(info.detail)}</p>
       <details class="diag">
         <summary>Technical details</summary>
         ${diagnosticsHtml()}
-      </details>`;
-  }
-  if (back) back.classList.remove("hidden");
+      </details>
+      <div class="actions">
+        <button class="btn btn-primary" id="err-home">Back to search</button>
+      </div>
+    </div>`;
+  document.getElementById("err-home")?.addEventListener("click", () => renderHome());
 }
 
 // ============================================================
@@ -1977,12 +1991,15 @@ async function startScrub() {
     includeAppearsOn: document.getElementById("s-appears-on").checked,
   };
   scrubCancel = { cancelled: false };
-  showDiveScreen("Scanning your whole library…", () => renderHome());
-  // add a cancel button to the progress card
-  const backSlot = document.getElementById("prog-back");
-  backSlot.classList.remove("hidden");
-  backSlot.innerHTML = `<button class="btn btn-ghost" id="scrub-cancel">Cancel &amp; show what's found</button>`;
-  document.getElementById("scrub-cancel").addEventListener("click", () => { scrubCancel.cancelled = true; });
+  // Cancelling a scrub keeps what it found, unlike a dive, so it sets the
+  // flag the scan checks rather than abandoning outright.
+  //
+  // This previously wrote a button into the old progress card, which no
+  // longer exists — the null reference would have thrown and killed the
+  // scan at the first line.
+  showDiveScreen("Scanning your whole library…", () => { scrubCancel.cancelled = true; });
+  const cancelBtn = document.getElementById("dive-cancel");
+  if (cancelBtn) cancelBtn.textContent = "Cancel & show what's found";
 
   try {
     // Preflight before a long scrub (issue #3) — a scope problem found
@@ -2649,10 +2666,6 @@ function applyBmcVisibility() {
   });
 })();
 
-function stampBuild() {
-  const el = document.getElementById("build-id");
-  if (el) el.textContent = `build ${BUILD}`;
-}
 
 // Register the service worker. Android needs one registered before it
 // will create a real installed app rather than a bookmark shortcut;
@@ -2673,7 +2686,6 @@ function registerServiceWorker() {
 async function boot() {
   registerServiceWorker();
   applyBmcVisibility();
-  stampBuild();
   // Handle a PKCE redirect coming back from Spotify.
   const cb = await auth.handleRedirectCallback();
   if (cb.ok === false) {

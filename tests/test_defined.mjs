@@ -17,7 +17,7 @@ const mustExist = [
   'startSearch','runSearchWithOptions','startScrub','applyResults','preflight',
   'explainError','diagnosticsHtml','maybeOfferUnpin','openIntentModal',
   'optionsForIntent','readCustomOptions','sortTracks','trackRow','esc','fmtDur',
-  'flash','setTitle','navigate','refreshLibrary','stampBuild','boot','render',
+  'flash','setTitle','navigate','refreshLibrary','boot','render',
   'loadPlaylistCards','openCardModal','renderCardRow','openSampler','runSampler','buildSampler','samplerSourceArtists','applyPlaylistOptions','renderPlaylistOptions','tracksToText','tracksToCsv','downloadFile','addPinToRow','showBmc','setShowBmc',
 ];
 const missing = mustExist.filter(n =>
@@ -33,6 +33,21 @@ for (const c of ['DEMO_SAMPLE','INTENTS','INTENT_KEY','BUILD','CARD_LENGTHS','BM
 // The specific regression: demoArtists was deleted while still being
 // called, and the call sat outside the try block so nothing caught it.
 check('the demo call is inside a guard', /try \{ demo = demoArtists\(\); \}/.test(src));
+
+// Every getElementById target must exist in the shell or be rendered by
+// app.js. Elements removed in a redesign leave callers behind that
+// either do nothing silently or throw — both have happened here.
+{
+  const app = readFileSync('/home/claude/dd/app/index.html','utf8');
+  const ids = new Set([
+    ...app.matchAll(/id="([A-Za-z0-9_-]+)"/g),
+    ...src.matchAll(/id="([A-Za-z0-9_-]+)"/g),
+  ].map(m => m[1]));
+  const refs = new Set([...src.matchAll(/getElementById\("([A-Za-z0-9_-]+)"\)/g)].map(m => m[1]));
+  const orphans = [...refs].filter(r => !ids.has(r));
+  if (orphans.length) console.log('  orphaned element references:', orphans.join(', '));
+  check('no references to elements that do not exist', orphans.length === 0);
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

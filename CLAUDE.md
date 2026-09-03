@@ -110,6 +110,17 @@ leave partial state. Duplicate `openSampler`, `renderSamplerIntro` and
 `runSampler` declarations once stopped the module loading entirely. If an
 edit script errors, re-read the file rather than re-running it.
 
+**Code left pointing at removed elements.** When the dive became
+full-screen, four functions kept operating on the old progress card's
+elements. `renderProgressError` rendered nothing, so a failed dive showed
+a blank screen; the library scan threw on a null reference at its first
+line; rate-limit warnings went nowhere, so a dive appeared to freeze for
+up to ninety seconds in silence; and the sampler's cancel stopped setting
+the flag its loop checks, so cancelling left it running invisibly.
+
+*`tests/test_defined.mjs` now audits every `getElementById` target
+against the markup.* Run it after any redesign.
+
 **Guessing instead of instrumenting.** I spent five releases on a missing
 artist photo, offering four wrong explanations — Spotify dropped the
 field, the cache missed, the artist had no photo, Brave blocked it. The
