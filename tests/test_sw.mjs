@@ -1,9 +1,9 @@
 import { readFileSync, existsSync } from 'fs';
-const sw = readFileSync('/home/claude/dd/app/sw.js','utf8');
-const src = readFileSync('/home/claude/dd/js/app.js','utf8');
+const sw = readFileSync(new URL('../docs/app/sw.js', import.meta.url),'utf8');
+const src = readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
-check('service worker exists beside the app', existsSync('/home/claude/dd/app/sw.js'));
+check('service worker exists beside the app', existsSync(new URL('../docs/app/sw.js', import.meta.url)));
 check('registered from the app', /navigator\.serviceWorker\.register\("sw\.js"\)/.test(src));
 check('registration cannot break boot', /\.catch\(\(e\) => \{[\s\S]{0,120}registration failed/.test(src));
 check('registration is feature-detected', /if \(!\("serviceWorker" in navigator\)\) return;/.test(src));

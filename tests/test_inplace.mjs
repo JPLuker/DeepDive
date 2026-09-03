@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-const src = readFileSync('/home/claude/dd/js/app.js','utf8');
+const src = readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 // Extract just the handler region to assert no rebuild is triggered.

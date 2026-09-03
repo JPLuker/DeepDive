@@ -1,6 +1,6 @@
 const store=new Map();
 globalThis.localStorage={getItem:(k)=>store.has(k)?store.get(k):null,setItem:(k,v)=>store.set(k,String(v)),removeItem:(k)=>store.delete(k)};
-const h = await import('/home/claude/dd/js/history.js');
+const h = await import('../docs/js/history.js');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 // dives

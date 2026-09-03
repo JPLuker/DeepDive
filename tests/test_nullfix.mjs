@@ -1,4 +1,4 @@
-import { LibraryCache } from '/home/claude/dd/js/library-cache.js';
+import { LibraryCache } from '../docs/js/library-cache.js';
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 function memStore(){const m=new Map();return{async get(k){return m.has(k)?m.get(k):null;},async set(k,v){m.set(k,v);}};}
 

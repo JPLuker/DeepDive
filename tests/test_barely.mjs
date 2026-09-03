@@ -1,4 +1,4 @@
-import { artistsBarelyExplored } from '/home/claude/dd/js/insights.js';
+import { artistsBarelyExplored } from '../docs/js/insights.js';
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 const t=(id,aid,an,added)=>({id,artists:[{id:aid,name:an}],added_at:added,album:{images:[{url:'i.jpg'}]}});
 const lib=[];

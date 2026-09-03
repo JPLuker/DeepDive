@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.6.5";
+export const BUILD = "2.6.6";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -416,7 +416,8 @@ async function runSampler(artists) {
   });
   // Multi-artist run, so seed the slideshow with everyone up front —
   // this is the case the rotation was built for.
-  artists.forEach((a) => { if (a.image_url) addDiveImage(a.image_url); });
+  // Full screen wants the 640px original, not the tile-sized copy.
+  artists.forEach((a) => addDiveImage(a.image_url_large || a.image_url));
   _samplerCancelled = false;
 
   // Cancelling is handled by the dive screen's own button, wired in
@@ -430,7 +431,7 @@ async function runSampler(artists) {
       // component the dive screen uses.
       const a = artists[Math.min(done, artists.length - 1)];
       updateDiveScreen(Math.round((done / total) * 100), `${a ? a.name : "Fetching"}… (${done}/${total})`);
-      if (a && a.image_url) addDiveImage(a.image_url);
+      if (a) addDiveImage(a.image_url_large || a.image_url);
     });
     if (_samplerCancelled) return;
   } catch (e) {
@@ -1039,7 +1040,7 @@ function wireSearchBar() {
             ev.preventDefault(); ev.stopPropagation();
             const it = items[+btn.dataset.pinI];
             if (!it) return;
-            watchlist.pin(it.name, { spotifyId: it.id, imageUrl: it.image_url || null });
+            watchlist.pin(it.name, { spotifyId: it.id, imageUrl: it.image_url || null, imageUrlLarge: it.image_url_large || null });
             flash(`Pinned ${it.name}.`);
             close();
             input.value = "";
@@ -1155,6 +1156,10 @@ async function buildSuggestionRow(el) {
   } catch (e) { seed = 12345; }
 
   const smallest = (imgs) => (imgs && imgs.length ? imgs[imgs.length - 1].url : null);
+  // Spotify returns one photo at three sizes, widest first. Tiles want
+  // the small copy; the full-screen dive wants the 640px original, and
+  // upscaling the small one is what made dive photos look soft.
+  const biggest = (imgs) => (imgs && imgs.length ? imgs[0].url : null);
 
   // --- library half (free) ---
   // Bounded: storage that hangs rather than fails would otherwise stall
@@ -1195,7 +1200,7 @@ async function buildSuggestionRow(el) {
       new Promise((_, reject) => setTimeout(() => reject(new Error("timed out")), 8000)),
     ]);
     const seen = new Map();
-    for (const a of top) if (!seen.has(a.id)) seen.set(a.id, { id: a.id, name: a.name, image_url: smallest(a.images), reason: "you've been playing them" });
+    for (const a of top) if (!seen.has(a.id)) seen.set(a.id, { id: a.id, name: a.name, image_url: smallest(a.images), image_url_large: biggest(a.images), reason: "you've been playing them" });
     for (const a of recent) if (!seen.has(a.id)) seen.set(a.id, { id: a.id, name: a.name, image_url: null, reason: "played recently" });
     listeningPicks = Array.from(seen.values()).filter((s2) => {
       const k = (s2.name || "").trim().toLowerCase();
@@ -1236,9 +1241,14 @@ async function buildSuggestionRow(el) {
     try {
       const details = await client.getArtistsByIds(missing.slice(0, 12));
       const byId = new Map(details.map((a) => [a.id, smallest(a.images)]));
+      const bigById = new Map(details.map((a) => [a.id, biggest(a.images)]));
       let changed = false;
       for (const x of suggestions) {
-        if (!x.image_url && byId.get(x.id)) { x.image_url = byId.get(x.id); changed = true; }
+        if (!x.image_url && byId.get(x.id)) {
+          x.image_url = byId.get(x.id);
+          x.image_url_large = bigById.get(x.id) || null;
+          changed = true;
+        }
       }
       // Only redraw if the row is still on screen and something changed;
       // the user may have navigated away while this was in flight.
@@ -1296,7 +1306,12 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   // listening endpoints return. Cached album art is only a stand-in for
   // artists we have no photo for, so it must not take precedence, which
   // is what was putting album covers on the dive screen.
-  const bigArt = (name, fallback) => {
+  //
+  // `fallback` is the tile-sized copy, fine at 44px and soft across a
+  // whole phone screen, so a full-size photo is preferred when the
+  // suggestion carried one.
+  const bigArt = (name, fallback, large) => {
+    if (large) return large;
     if (fallback) return fallback;
     if (_cachedArt && name) {
       return _cachedArt.largeByName.get(name.trim().toLowerCase()) || "";
@@ -1304,9 +1319,9 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     return "";
   };
 
-  const tile = (name, imageUrl, sub, actions, isPin) => `
+  const tile = (name, imageUrl, sub, actions, isPin, largeUrl) => `
     <div class="tile-wrap${isPin ? " is-pin" : ""}">
-      <button class="tile" data-search="${esc(name)}" data-art="${esc(bigArt(name, imageUrl))}">
+      <button class="tile" data-search="${esc(name)}" data-art="${esc(bigArt(name, imageUrl, largeUrl))}">
         ${art(name, imageUrl)}
         <span class="tile-text">
           <span class="tile-title">${esc(name)}</span>
@@ -1320,7 +1335,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     <div class="row-head"><h2>Pinned</h2></div>
     <div class="tile-grid">
       ${shownPins.map((p) => tile(p.name, p.image_url, null,
-        `<button class="tile-btn danger" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`, true)).join("")}
+        `<button class="tile-btn danger" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`, true, p.image_url_large)).join("")}
     </div>
     ${extraPins > 0 ? `<div style="text-align:center;margin-top:10px;"><button class="btn btn-ghost btn-small" id="show-more-pins">Show ${extraPins} more</button></div>` : ""}` : "";
 
@@ -1328,8 +1343,8 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     <div class="row-head"><h2>Suggested</h2><span class="qual">for you</span></div>
     <div class="tile-grid">
       ${suggestions.map((sg) => tile(sg.name, sg.image_url, sg.reason,
-        `<button class="tile-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" title="Pin for later">+</button>
-         <button class="tile-btn danger" data-block="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" title="Never suggest this artist">&minus;</button>`)).join("")}
+        `<button class="tile-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" data-img-big="${esc(sg.image_url_large || "")}" title="Pin for later">+</button>
+         <button class="tile-btn danger" data-block="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" title="Never suggest this artist">&minus;</button>`, false, sg.image_url_large)).join("")}
     </div>` : "";
 
   // Never leave the row silently blank — an empty area with no
@@ -1417,7 +1432,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   el.querySelectorAll("[data-pin]").forEach((b) => b.addEventListener("click", (ev) => {
     ev.stopPropagation();
     const name = b.dataset.pin;
-    watchlist.pin(name, { spotifyId: b.dataset.sid || null, imageUrl: b.dataset.img || null });
+    watchlist.pin(name, { spotifyId: b.dataset.sid || null, imageUrl: b.dataset.img || null, imageUrlLarge: b.dataset.imgBig || null });
     flash(`Pinned ${name}.`);
     // Move it from suggestions to pins locally — the underlying data
     // hasn't changed, only where this artist belongs.
@@ -1512,14 +1527,18 @@ async function runSearchWithOptions(artistName, opts) {
       libraryCache,
       onProgress: (pct, stage) => updateDiveScreen(pct, stage),
       onArtist: (a) => {
-        // Every photo the artist has, not just the first — that alone
-        // gives most dives a slideshow.
-        ((a && a.images) || []).forEach((im) => addDiveImage(im.url));
-        if (!(a && a.images && a.images.length) && a && a.id) fetchArtistImages(a.id);
+        // `images` is ONE photograph at three sizes (640/320/160, widest
+        // first) — not three photographs. Adding them all queued the same
+        // picture three times, so the slideshow crossfaded between
+        // identical frames while cycling down through the small ones and
+        // stretching them full-screen. Take the largest, once.
+        const photo = largestImage(a && a.images);
+        if (photo) { _haveArtistPhoto = true; addDiveImage(photo); }
+        else if (a && a.id) fetchArtistImages(a.id);
       },
-      // Album covers as the catalogue is read, which keeps the rotation
-      // going through a long dive.
-      onArtwork: (url) => addDiveImage(url),
+      // Album art is a fallback for acts with no photo on Spotify, not
+      // decoration to mix in alongside one.
+      onArtwork: (url) => { if (!_haveArtistPhoto) addDiveImage(url); },
     });
     if (_diveCancelled) return;   // abandoned while it ran
     hideDiveScreen();
@@ -1583,8 +1602,20 @@ let _diveSlideIndex = 0;
  */
 function fetchArtistImages(artistId) {
   client.get(`artists/${artistId}`)
-    .then((a) => ((a && a.images) || []).forEach((im) => addDiveImage(im.url)))
+    .then((a) => {
+      const photo = largestImage(a && a.images);
+      if (photo) { _haveArtistPhoto = true; addDiveImage(photo); }
+    })
     .catch(() => {});
+}
+
+/**
+ * Spotify returns an image set widest-first: the same picture at 640,
+ * 320 and 160. Anything smaller than the largest will be upscaled to
+ * fill the screen and look soft, so only the first is ever wanted.
+ */
+function largestImage(images) {
+  return (images && images.length) ? images[0].url : null;
 }
 
 function showDiveScreen(heading, onCancel) {

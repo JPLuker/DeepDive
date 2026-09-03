@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-const src = readFileSync('/home/claude/dd/js/app.js','utf8');
+const src = readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 check('artist option offered', /\{ id: "artist", label: "By artist" \}/.test(src));
 check('artist mode implemented', /if \(mode === "artist"\)/.test(src));

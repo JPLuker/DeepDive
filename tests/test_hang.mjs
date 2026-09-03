@@ -1,4 +1,4 @@
-import { bestStore, makeMemoryStore } from '/home/claude/dd/js/storage.js';
+import { bestStore, makeMemoryStore } from '../docs/js/storage.js';
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 // THE REPORTED CASE: indexedDB.open() that never settles (Brave-style block)

@@ -1,4 +1,4 @@
-import { SpotifyClient } from '/home/claude/dd/js/spotify.js';
+import { SpotifyClient } from '../docs/js/spotify.js';
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 const ok = (body={}) => ({status:200,headers:{get:()=>null},json:async()=>body,text:async()=>JSON.stringify(body)});
 const rl = (retryAfter='0') => ({status:429,headers:{get:(k)=>k==='Retry-After'?retryAfter:null},json:async()=>({error:{message:'rate'}}),text:async()=>'{}'});

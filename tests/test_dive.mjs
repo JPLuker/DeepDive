@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
-const html=readFileSync('/home/claude/dd/index.html','utf8');
-const app=readFileSync('/home/claude/dd/app/index.html','utf8');
-const src=readFileSync('/home/claude/dd/js/app.js','utf8');
+const html=readFileSync(new URL('../docs/index.html', import.meta.url),'utf8');
+const app=readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
+const src=readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 check('full-screen dive exists', /id="dive-screen"/.test(app));
@@ -19,13 +19,22 @@ check('rotation runs on a timer', /_diveSlideTimer = setInterval/.test(src));
 check('rotation stops when hidden', /clearInterval\(_diveSlideTimer\)/.test(src));
 
 // sources
-check('all artist photos used', /\(\(a && a\.images\) \|\| \[\]\)\.forEach\(\(im\) => addDiveImage\(im\.url\)\)/.test(src));
-check('album covers join as read', /onArtwork: \(url\) => addDiveImage\(url\)/.test(src));
+// Spotify's `images` is one photo at three sizes, so only the largest is
+// ever wanted — taking all three showed the same picture repeatedly and
+// upscaled the 160px copy across the whole screen.
+check('only the largest artist photo used', /function largestImage\(images\)/.test(src));
+check('no longer adds every image size', !/\(\(a && a\.images\) \|\| \[\]\)\.forEach\(\(im\) => addDiveImage\(im\.url\)\)/.test(src));
+check('album art gated behind having no photo', /if \(!_haveArtistPhoto\) addDiveImage\(url\)/.test(src));
+check('photo flag is actually set', /_haveArtistPhoto = true/.test(src));
 check('fetches photos when search has none', /function fetchArtistImages\(artistId\)/.test(src));
 
 // multi-artist
-check('sampler seeds every artist', /artists\.forEach\(\(a\) => \{ if \(a\.image_url\) addDiveImage/.test(src));
-check('sampler adds each as it goes', /if \(a && a\.image_url\) addDiveImage\(a\.image_url\)/.test(src));
+// The sampler slideshow used `image_url`, which searchArtists sets to the
+// SMALLEST of Spotify's three sizes because it also feeds 44px tiles.
+// Full screen needs the 640px original, so both paths now prefer it.
+check('sampler seeds every artist', /artists\.forEach\(\(a\) => addDiveImage\(a\.image_url_large \|\| a\.image_url\)\)/.test(src));
+check('sampler adds each as it goes', /if \(a\) addDiveImage\(a\.image_url_large \|\| a\.image_url\)/.test(src));
+check('sampler no longer uses the tile-sized copy alone', !/addDiveImage\(a\.image_url\);/.test(src));
 check('library scan feeds it too', /onArtwork: \(url\) => addDiveImage\(url\),\s*\}\);/.test(src));
 
 // lifecycle
@@ -38,6 +47,18 @@ check('percentage element exists', /id="dive-pct"/.test(app));
 check('right-aligned under the bar', /\.dive-pct \{ align-self:flex-end/.test(html));
 check('updated with progress', /pc\.textContent = `\$\{pct\}%`/.test(src));
 check('reset when a dive starts', /pc0\.textContent = "0%"/.test(src));
+
+
+// Full-size photo plumbing: every route into the dive screen must carry
+// the 640px original, not the tile thumbnail. Each of these was a
+// separate place the small copy leaked through to full screen.
+import { readFileSync as rf2 } from 'fs';
+const sp = rf2(new URL('../docs/js/spotify.js', import.meta.url), 'utf8');
+const wl = rf2(new URL('../docs/js/watchlist.js', import.meta.url), 'utf8');
+check('searchArtists returns both sizes', /image_url_large: images\.length \? images\[0\]\.url : null/.test(sp));
+check('suggestions carry a large url', /image_url_large: biggest\(a\.images\)/.test(sp + src));
+check('bigArt prefers the large url', /const bigArt = \(name, fallback, large\) => \{\s*if \(large\) return large;/.test(src));
+check('pins store a large url', /image_url_large: imageUrlLarge/.test(wl));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

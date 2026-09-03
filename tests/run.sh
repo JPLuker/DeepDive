@@ -12,7 +12,7 @@ cd "$(dirname "$0")/.."
 fail=0
 
 echo "── syntax ─────────────────────────────────────────"
-for f in js/*.js app/sw.js; do
+for f in docs/js/*.js docs/app/sw.js; do
   if node --check "$f" 2>/dev/null; then
     printf '  ✓ %s\n' "$f"
   else
@@ -34,7 +34,7 @@ globalThis.localStorage={getItem:(k)=>store.get(k)||null,setItem:(k,v)=>store.se
 globalThis.sessionStorage={getItem:(k)=>sess.get(k)||null,setItem:(k,v)=>sess.set(k,v),removeItem:(k)=>sess.delete(k)};
 globalThis.document={documentElement:{setAttribute:()=>{},removeAttribute:()=>{}},getElementById:()=>fakeEl('div'),querySelector:()=>fakeEl('div'),querySelectorAll:()=>[],addEventListener:()=>{},removeEventListener:()=>{},title:'',createElement:(t)=>fakeEl(t),body:fakeEl('body'),hidden:false};
 globalThis.window={location:{origin:'http://x',pathname:'/app/',search:''},history:{replaceState:()=>{}},addEventListener:()=>{},matchMedia:()=>({matches:false,addEventListener:()=>{}}),confirm:()=>true,open:()=>{}};
-import('./js/app.js').then(m=>setTimeout(()=>console.log('  ✓ boots, BUILD='+m.BUILD),80)).catch(e=>{console.log('  ✗ '+e.message);process.exit(1);});
+import('./docs/js/app.js').then(m=>setTimeout(()=>console.log('  ✓ boots, BUILD='+m.BUILD),80)).catch(e=>{console.log('  ✗ '+e.message);process.exit(1);});
 " || fail=1
 
 echo

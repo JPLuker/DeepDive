@@ -1,5 +1,5 @@
-import { runSearch } from '/home/claude/dd/js/search.js';
-import { findCandidates, confirmCandidates, buildLikedIndexes, collapseDuplicateRecordings } from '/home/claude/dd/js/matching.js';
+import { runSearch } from '../docs/js/search.js';
+import { findCandidates, confirmCandidates, buildLikedIndexes, collapseDuplicateRecordings } from '../docs/js/matching.js';
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 function t(id,name,{album='Al',albumType='album',dur=200000,isrc=null,artist='A',artistId='a1',date='2020-01-01'}={}){
   const o={id,name,artists:[{id:artistId,name:artist}],duration_ms:dur,

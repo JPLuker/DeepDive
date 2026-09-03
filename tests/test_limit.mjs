@@ -3,8 +3,8 @@
 // but it can remember one it's been told about instead of starting work
 // that will fail on its first request.
 import { readFileSync } from 'fs';
-const sp = readFileSync('/home/claude/dd/js/spotify.js','utf8');
-const src = readFileSync('/home/claude/dd/js/app.js','utf8');
+const sp = readFileSync(new URL('../docs/js/spotify.js', import.meta.url),'utf8');
+const src = readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 check('expiry stored on a sustained 429', /deepdive_limited_until/.test(sp));

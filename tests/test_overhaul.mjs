@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
-const html = readFileSync('/home/claude/dd/index.html','utf8');
-const app  = readFileSync('/home/claude/dd/app/index.html','utf8');
-const src  = readFileSync('/home/claude/dd/js/app.js','utf8');
+const html = readFileSync(new URL('../docs/index.html', import.meta.url),'utf8');
+const app  = readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
+const src  = readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 // tokens

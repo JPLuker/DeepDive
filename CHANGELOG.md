@@ -1,5 +1,28 @@
 # Changelog
 
+> Entries for the 2.x rewrite were never backfilled — the history below
+> stops at the Flask era. The 2.x record lives in the git log and
+> `ROADMAP.md`'s "Shipped since".
+
+## 2.6.6
+- Fixed: artist photos on the dive screen looked low-resolution partway
+  through. Spotify's `images` array is one photograph at three sizes
+  (640/320/160, widest first), not three photographs — the dive treated
+  it as a gallery and queued all three. Every 4.5 seconds it crossfaded
+  to a smaller copy of the same picture, stretched to fill the screen.
+  Only the largest is used now.
+- Fixed: the same bug was why the slideshow appeared not to run on a
+  single-artist dive — it was crossfading between identical frames, so
+  the only visible change was the resolution dropping.
+- Fixed: album art is now only used for artists Spotify has no photo
+  for, rather than joining the rotation alongside one. The
+  `_haveArtistPhoto` flag written for exactly this was never read or
+  set; it works now.
+- Fixed: 30 of the 34 test suites had been dead since the app moved
+  under `docs/` — they read paths from an older layout, errored on
+  import, printed nothing, and the runner scored them as absent rather
+  than failing. 48 assertions were actually executing; 430 are now.
+
 ## v1.10.1
 - Fixed: every single-artist search and full library scrub was broken
   entirely (`Something went wrong: name 'get_artist_album_ids' is not

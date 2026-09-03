@@ -1,4 +1,4 @@
-import { runSearch } from '/home/claude/dd/js/search.js';
+import { runSearch } from '../docs/js/search.js';
 let pass=0, fail=0; function check(l,c){ if(c)pass++; else{fail++;console.log('FAIL:',l);} }
 
 function t(id,name,album,albumType='album',dur=214000,date='2024-01-01'){

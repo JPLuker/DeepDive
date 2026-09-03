@@ -1,4 +1,4 @@
-import { playlistCards } from '/home/claude/dd/js/insights.js';
+import { playlistCards } from '../docs/js/insights.js';
 import { readFileSync } from 'fs';
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 const t=(id,aid,added,dur,rel)=>({id,name:id,artists:[{id:aid,name:'A'+aid}],added_at:added,duration_ms:dur,album:{name:'Al',release_date:rel,images:[{url:'i.jpg'}]}});
@@ -40,7 +40,7 @@ check('surprise is stable within the day', a===b);
 check('tiny library yields nothing', playlistCards([t('x','a','2020-01-01',200000,'2020-01-01')]).length===0);
 
 // UI: count no longer on the card face
-const app=readFileSync('/home/claude/dd/js/app.js','utf8');
+const app=readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 check('count removed from the card face', !/pcard-count/.test(app));
 // Superseded by 2.3.6: the row sits at the bottom of the page, so all
 // cards are shown rather than hidden behind a 'more' click.

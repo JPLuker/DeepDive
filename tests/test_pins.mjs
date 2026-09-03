@@ -1,6 +1,6 @@
 const store=new Map();
 globalThis.localStorage={getItem:(k)=>store.has(k)?store.get(k):null,setItem:(k,v)=>store.set(k,String(v)),removeItem:(k)=>store.delete(k)};
-const wl = await import('/home/claude/dd/js/watchlist.js');
+const wl = await import('../docs/js/watchlist.js');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 // pins reuse the existing store, so old To-Dive entries survive

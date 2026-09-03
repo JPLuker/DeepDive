@@ -1,4 +1,4 @@
-import { playlistCards } from '/home/claude/dd/js/insights.js';
+import { playlistCards } from '../docs/js/insights.js';
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 const t=(id,aid,date)=>({id,name:id,artists:[{id:aid,name:'A'+aid}],added_at:date,album:{name:'Al',images:[{url:'i.jpg'}]}});
 

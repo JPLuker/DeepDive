@@ -3,9 +3,9 @@
 // the full-screen rewrite removed, so the dive just appeared to freeze
 // for up to ninety seconds with no explanation.
 import { readFileSync } from 'fs';
-const src = readFileSync('/home/claude/dd/js/app.js','utf8');
-const app = readFileSync('/home/claude/dd/app/index.html','utf8');
-const sp  = readFileSync('/home/claude/dd/js/spotify.js','utf8');
+const src = readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
+const app = readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
+const sp  = readFileSync(new URL('../docs/js/spotify.js', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 check('client exposes the hook', /this\.onRateLimit = null;/.test(sp));

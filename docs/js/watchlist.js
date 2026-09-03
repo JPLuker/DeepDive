@@ -57,7 +57,7 @@ export function listDone() {
   return listEntries().filter((e) => e.status === "done");
 }
 
-export function add(name, { spotifyId = null, imageUrl = null } = {}) {
+export function add(name, { spotifyId = null, imageUrl = null, imageUrlLarge = null } = {}) {
   name = (name || "").trim();
   if (!name) return;
   const entries = load();
@@ -71,6 +71,9 @@ export function add(name, { spotifyId = null, imageUrl = null } = {}) {
     added_at: new Date().toISOString(),
     spotify_id: spotifyId,
     image_url: imageUrl,
+    // The tile copy is 160px. Kept separately so a dive launched from a
+    // pin gets the full-size photo instead of upscaling the thumbnail.
+    image_url_large: imageUrlLarge,
   });
   save(entries);
 }

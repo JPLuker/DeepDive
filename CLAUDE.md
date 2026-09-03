@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.6.5.** If the build in `js/app.js` is well
+**Last updated at build 2.6.6.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -111,8 +111,17 @@ half the site.
 ./tests/run.sh
 ```
 
-394 assertions, 32 suites, plus a syntax check and a boot check. It takes
+430 assertions, 34 suites, plus a syntax check and a boot check. It takes
 seconds.
+
+**A suite reporting "(no output)" is not a passing suite.** The runner
+scores those as absent, not failed, so the summary line can read
+reassuringly while most of the suite never executes. This happened for
+real: when the app moved under `docs/`, 30 of 34 suites kept reading the
+old paths, errored on import, and printed nothing — the runner reported
+"48 passed, 0 failed" for months while the safety net was disconnected.
+If the assertion total drops sharply, something has silently stopped
+running. Check the total, not just the failure count.
 
 **Read every failure before pushing, not after.** I pushed past failures
 three times in one session; twice they were stale assertions, and once
@@ -179,6 +188,15 @@ where you'd expect:
   scoped track search
 - `market=from_token` is deprecated and fails the request outright
 - Library writes are `PUT /me/library?uris=`, 40 at a time
+
+**An `images` array is one image at three sizes, not three images.**
+Widest first: 640, 320, 160. This reads like a gallery and isn't one.
+Treating it as one gave the dive a "slideshow" that crossfaded between
+identical frames and upscaled the 160px copy across a whole phone
+screen. Always take `images[0]`. It also means a single artist supplies
+exactly one photo — a solo dive cannot rotate through several without
+spending a request per extra artist, which is the pattern behind every
+rate limit here.
 
 **Spotify publishes no remaining-quota header** — no
 `X-RateLimit-Remaining`, nothing. The only signal is `Retry-After` on a

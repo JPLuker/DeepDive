@@ -1,4 +1,4 @@
-import { collapseDuplicateRecordings } from '/home/claude/dd/js/matching.js';
+import { collapseDuplicateRecordings } from '../docs/js/matching.js';
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 function t(id,name,{album='Al',albumType='album',dur=221000,isrc=null,artist='DURRY',date='2024-01-01'}={}){
   const o={id,name,artists:[{id:'d',name:artist}],duration_ms:dur,

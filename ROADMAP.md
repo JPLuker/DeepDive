@@ -69,7 +69,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.6.5
+## Shipped since — build 2.6.6
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -91,6 +91,14 @@ sessions below:
 - **The dive is full-screen** with a crossfading slideshow: every artist
   photo, then album covers as the catalogue is read, and every artist in
   turn for a sampler or library scan
+
+Fixed in 2.6.6: the dive's artist photo degraded to a 160px upscale
+partway through, and the slideshow appeared not to run — both caused by
+treating Spotify's `images` array as three photographs when it is one
+photograph at three sizes. Album art is now a fallback for artists with
+no photo rather than a co-star. Separately, 30 of 34 test suites had been
+silently dead since the app moved under `docs/`; 430 assertions run now
+against 48 before.
 
 Also fixed after the full-screen dive shipped (2.6.3–2.6.4): rate-limit
 warnings, the error view, the library scan's cancel and the sampler's

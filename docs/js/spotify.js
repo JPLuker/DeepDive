@@ -359,7 +359,12 @@ export class SpotifyClient {
       return {
         id: a.id,
         name: a.name,
+        // Two sizes, deliberately. `image_url` is the smallest, which is
+        // right for a search-result tile and wrong for anything larger.
+        // `image_url_large` is the 640px original, for the full-screen
+        // dive — the small one upscales to a visibly soft mess there.
         image_url: images.length ? images[images.length - 1].url : null,
+        image_url_large: images.length ? images[0].url : null,
       };
     });
   }

@@ -7,7 +7,7 @@
 // specific, high-value list: every top-level helper the app calls at
 // startup must exist.
 import { readFileSync } from 'fs';
-const src = readFileSync('/home/claude/dd/js/app.js','utf8');
+const src = readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 const mustExist = [
@@ -38,7 +38,7 @@ check('the demo call is inside a guard', /try \{ demo = demoArtists\(\); \}/.tes
 // app.js. Elements removed in a redesign leave callers behind that
 // either do nothing silently or throw — both have happened here.
 {
-  const app = readFileSync('/home/claude/dd/app/index.html','utf8');
+  const app = readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
   const ids = new Set([
     ...app.matchAll(/id="([A-Za-z0-9_-]+)"/g),
     ...src.matchAll(/id="([A-Za-z0-9_-]+)"/g),

@@ -125,6 +125,10 @@ export async function runSearch(client, artistName, opts = {}) {
   // Smaller acts often have no artist photo on Spotify at all. Their own
   // album art is the obvious stand-in and has just been fetched, so it
   // costs nothing extra.
+  // Only a fallback: smaller acts often have no artist photo on Spotify
+  // at all, and their own album art is the obvious stand-in since it has
+  // just been fetched. The dive shows artist photos by preference — see
+  // the `_haveArtistPhoto` gate on the receiving end.
   try {
     const withArt = catalogTracks.find((t) => t.album && t.album.images && t.album.images.length);
     if (withArt) onArtwork(withArt.album.images[0].url);
