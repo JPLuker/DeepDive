@@ -92,15 +92,18 @@ check('searchArtists tiles use the middle variant', /images\.length >= 2 \? imag
 check('full-size still reserved for the dive', /image_url_large: images\.length \? images\[0\]\.url : null/.test(sp));
 
 
-// Spotify's largest artist image is 640x640; covering a 1080x2400 phone
-// is a 3.75x upscale that no URL choice fixes. One image, two layers:
-// blurred fill behind, near-native copy in front.
-check('slides build a blurred backdrop', /bg\.className = "dive-slide-bg"/.test(src));
-check('slides build a sharp foreground', /fg\.className = "dive-slide-fg"/.test(src));
-check('backdrop is blurred in css', /\.dive-slide-bg \{[\s\S]*?filter:blur\(30px\)/.test(html));
-check('foreground is capped near native size', /background-size:min\(76vw, 440px\) auto/.test(html));
 check('slide url kept on the element', /slide\.dataset\.url = url;/.test(src));
 check('placeholder removal reads the dataset', /const url = ph\.dataset\.url \|\| "";/.test(src));
+
+
+// VIAL (from search) looked right while suggestion dives did not, and
+// the only difference between those paths is the tile placeholder. It
+// could survive two ways: loading after the real photo and appending
+// itself late, or never being dropped. Both are closed.
+check('late placeholder is refused', /if \(placeholder && _haveRealSlide\) return;/.test(src));
+check('real slide is flagged', /_haveRealSlide = true;/.test(src));
+check('flag resets per dive', /_haveRealSlide = false;/.test(src));
+check('placeholder never enters the rotation alive', /setTimeout\(dropPlaceholderSlide, SLIDE_FADE_MS\)/.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

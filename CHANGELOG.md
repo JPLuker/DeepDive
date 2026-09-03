@@ -4,6 +4,19 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.7.1
+- Reverted 2.7.0's blurred-backdrop dive screen. It was built on the
+  theory that 640x640 is too small to fill a phone, but a dive started
+  from the search box has always looked right at exactly that size, so
+  the theory was wrong and the change made a working screen worse.
+- Fixed: the real cause. A dive from a tile seeds the screen with the
+  tile's own small image while the artist is looked up. That stand-in
+  could survive the real photo two ways — by finishing its load after
+  the photo arrived, appending itself late and then taking its turn in
+  the rotation, or by never being dropped at all. Either way the blurry
+  copy was what stayed on screen. A dive from the search box has no
+  stand-in, which is why it always looked correct.
+
 ## 2.7.0
 - Changed: the dive screen no longer stretches one photo across the
   whole display. Spotify's largest artist image is 640x640; covering a

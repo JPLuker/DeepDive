@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.7.0.** If the build in `js/app.js` is well
+**Last updated at build 2.7.1.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -201,12 +201,11 @@ where you'd expect:
 - `market=from_token` is deprecated and fails the request outright
 - Library writes are `PUT /me/library?uris=`, 40 at a time
 
-**640x640 is the ceiling for an artist photo.** There is no larger
-variant to request. Full-bleed on a phone is therefore always an upscale
-of roughly 3.75x, and no amount of picking different URLs changes that —
-the dive screen solves it by blurring a cover-sized copy and laying a
-near-native copy over it. If a photo looks soft full-screen, check the
-display size before hunting for a bigger URL.
+**640x640 is the ceiling for an artist photo**, and it is enough. A
+full-bleed dive at that size looks right on a phone — this was doubted,
+"fixed" with a blurred backdrop in 2.7.0, and reverted in 2.7.1. If one
+entry point looks correct and another does not, the size is not the
+variable; find what differs between the two paths instead.
 
 **An `images` array is one image at three sizes, not three images.**
 Widest first: 640, 320, 160. This reads like a gallery and isn't one.

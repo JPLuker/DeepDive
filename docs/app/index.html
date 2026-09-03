@@ -457,26 +457,8 @@
      discovered without interrupting what's on screen. */
   .dive-slides { position:absolute; inset:0; }
   .dive-slide {
-    position:absolute; inset:0;
+    position:absolute; inset:0; background-size:cover; background-position:center;
     opacity:0; transition:opacity 1.1s ease;
-  }
-  /* Spotify's largest artist photo is 640x640. Stretched to cover a
-     1080x2400 phone that is a 3.75x upscale, which no choice of URL can
-     fix — so the photo stops doing two jobs. The backdrop fills the
-     screen and is blurred hard enough that its upscaling is invisible,
-     and a second copy sits on top at close to native size, where it
-     stays sharp. */
-  .dive-slide-bg {
-    position:absolute; inset:0;
-    background-size:cover; background-position:center;
-    filter:blur(30px) brightness(0.5) saturate(1.15);
-    transform:scale(1.15);
-  }
-  .dive-slide-fg {
-    position:absolute; inset:0;
-    background-repeat:no-repeat;
-    background-position:center 34%;
-    background-size:min(76vw, 440px) auto;
   }
   .dive-slide.on { opacity:1; }
 

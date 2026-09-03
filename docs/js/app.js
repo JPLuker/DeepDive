@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.7.0";
+export const BUILD = "2.7.1";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1612,6 +1612,8 @@ let _diveCancelled = false;
 let _diveImages = [];
 let _diveSlideTimer = null;
 let _diveSlideIndex = 0;
+// True once a genuine artist photo (not the tile stand-in) is on screen.
+let _haveRealSlide = false;
 
 /**
  * Fetch an artist's photos when the search result didn't carry any.
@@ -1642,6 +1644,7 @@ function showDiveScreen(heading, onCancel) {
   _diveImages = [];
   _diveSlideIndex = 0;
   document.getElementById("dive-slides").innerHTML = "";
+  _haveRealSlide = false;
   document.getElementById("dive-heading").textContent = heading;
   document.getElementById("dive-stage").textContent = "Starting…";
   document.getElementById("dive-fill").style.width = "0%";
@@ -1673,9 +1676,16 @@ function showDiveScreen(heading, onCancel) {
  */
 function addDiveImage(url, { placeholder = false } = {}) {
   if (!url || _diveImages.includes(url)) return;
+  // A real photo has already landed, so the tile stand-in is not wanted
+  // — even if its own load only finishes now. Without this the
+  // placeholder appended itself late and then took its turn in the
+  // rotation, putting the blurry thumbnail back on screen a few seconds
+  // into the dive.
+  if (placeholder && _haveRealSlide) return;
   const probe = new Image();
   probe.onload = () => {
     if (_diveImages.includes(url)) return;
+    if (placeholder && _haveRealSlide) return;
     const slides = document.getElementById("dive-slides");
     if (!slides) return;
     _diveImages.push(url);
@@ -1685,33 +1695,27 @@ function addDiveImage(url, { placeholder = false } = {}) {
     // Kept on the element rather than read back out of a style string,
     // so removing a slide doesn't depend on parsing CSS url() syntax.
     slide.dataset.url = url;
-    const css = `url("${url.replace(/"/g, "%22")}")`;
-    // Two layers from one image: a blurred fill behind, a near-native
-    // copy in front. See .dive-slide-bg / -fg in the stylesheet.
-    const bg = document.createElement("div");
-    bg.className = "dive-slide-bg";
-    bg.style.backgroundImage = css;
-    const fg = document.createElement("div");
-    fg.className = "dive-slide-fg";
-    fg.style.backgroundImage = css;
-    slide.appendChild(bg);
-    slide.appendChild(fg);
+    slide.style.backgroundImage = `url("${url.replace(/"/g, "%22")}")`;
     slides.appendChild(slide);
 
-    // The first image in shows immediately; the rest wait their turn in
-    // the rotation. A real photo arriving over the placeholder is the
-    // exception — it crossfades, because cutting straight from a blurry
-    // thumbnail to a sharp photo reads as a glitch.
-    const over = !placeholder && !!slides.querySelector('[data-placeholder="1"]');
-    if (_diveImages.length === 1 || over) {
-      // Two frames: the element must be laid out at opacity 0 before the
-      // class is added, or the browser coalesces both into one style
-      // computation and the transition never runs — which is why this
-      // was a hard cut rather than the fade the CSS already describes.
+    if (placeholder) {
+      if (_diveImages.length === 1) slide.classList.add("on");
+      return;
+    }
+
+    _haveRealSlide = true;
+    const ph = slides.querySelector('[data-placeholder="1"]');
+    if (ph) {
+      // Crossfade over the stand-in, then drop it. Two frames: the
+      // element must be laid out at opacity 0 before the class is added,
+      // or the browser coalesces both into one style computation and the
+      // transition never runs — which made this a hard cut.
       requestAnimationFrame(() => requestAnimationFrame(() => {
         slide.classList.add("on");
-        if (over) setTimeout(dropPlaceholderSlide, SLIDE_FADE_MS);
+        setTimeout(dropPlaceholderSlide, SLIDE_FADE_MS);
       }));
+    } else if (_diveImages.length === 1) {
+      slide.classList.add("on");
     }
   };
   probe.src = url;
