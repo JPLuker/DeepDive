@@ -81,16 +81,22 @@ export async function runSearch(client, artistName, opts = {}) {
   };
 
   report(`Finding "${artistName}" on Spotify…`);
-  // Hand the artist back as soon as they're known so the caller can show
-  // who's being dived rather than a bare progress bar. Guarded: a
-  // display callback must never be able to fail the search.
-  try { onArtist(artist); } catch (e) {}
   const artist = await client.findArtist(artistName);
   completed += STAGE_WEIGHTS.find_artist;
   if (!artist) {
     throw new Error(`No Spotify artist found matching "${artistName}".`);
   }
-  report(`Finding "${artistName}" on Spotify…`);
+  // Hand the artist back as soon as they're known so the caller can show
+  // who's being dived rather than a bare progress bar. Guarded: a display
+  // callback must never be able to fail the search.
+  //
+  // This call sat one line ABOVE the `const artist` declaration, inside
+  // that same guard. `const` has no hoisted value, so it threw a
+  // ReferenceError on every dive and the catch swallowed it — onArtist
+  // never fired at all. A dive launched from search showed a black
+  // screen, and one launched from a tile showed the 160px thumbnail for
+  // the whole run because nothing ever replaced it.
+  try { onArtist(artist); } catch (e) {}
 
   report("Reading your Liked Songs…");
   // With a libraryCache (incremental, browser-persisted), the whole

@@ -12,7 +12,7 @@ check('old card progress removed', !/function updateProgress\(/.test(src));
 
 // slideshow
 check('slides crossfade', /\.dive-slide \{[\s\S]{0,140}transition:opacity 1\.1s/.test(html));
-check('images added as discovered', /function addDiveImage\(url\)/.test(src));
+check('images added as discovered', /function addDiveImage\(url, \{ placeholder = false \} = \{\}\)/.test(src));
 check('broken urls never become blank slides', /probe\.onload = \(\) => \{[\s\S]{0,200}_diveImages\.push/.test(src));
 check('no duplicates', /_diveImages\.includes\(url\)/.test(src));
 check('rotation runs on a timer', /_diveSlideTimer = setInterval/.test(src));
@@ -59,6 +59,21 @@ check('searchArtists returns both sizes', /image_url_large: images\.length \? im
 check('suggestions carry a large url', /image_url_large: biggest\(a\.images\)/.test(sp + src));
 check('bigArt prefers the large url', /const bigArt = \(name, fallback, large\) => \{\s*if \(large\) return large;/.test(src));
 check('pins store a large url', /image_url_large: imageUrlLarge/.test(wl));
+
+
+// The onArtist callback sat one line above `const artist`, inside a
+// try/catch. `const` is in the temporal dead zone until its declaration
+// runs, so this threw a ReferenceError on every single dive and the
+// guard swallowed it — the callback never fired at all. A search dive
+// showed a black screen; a tile dive kept the 160px thumbnail for the
+// whole run. Order matters here, so it is pinned.
+const sr = rf2(new URL('../docs/js/search.js', import.meta.url), 'utf8');
+const declAt = sr.indexOf('const artist = await client.findArtist');
+const callAt = sr.indexOf('onArtist(artist)');
+check('artist is resolved before onArtist fires', declAt > -1 && callAt > declAt);
+check('placeholder is marked as such', /addDiveImage\(_pendingArtwork, \{ placeholder: true \}\)/.test(src));
+check('placeholder is dropped for a real photo', /function dropPlaceholderSlide\(\)/.test(src));
+check('real photos drop the placeholder', /if \(!placeholder\) dropPlaceholderSlide\(\);/.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

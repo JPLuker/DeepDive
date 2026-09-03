@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.6.6";
+export const BUILD = "2.6.7";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1512,7 +1512,9 @@ async function runSearchWithOptions(artistName, opts) {
   // The dive gets the whole screen: the artist fills it and the status
   // sits along the bottom.
   showDiveScreen(`Diving into ${artistName}…`, () => renderHome());
-  if (_pendingArtwork) addDiveImage(_pendingArtwork);
+  // The tile's own image, shown instantly so the screen isn't blank
+  // while the artist is looked up. Replaced by the real photo.
+  if (_pendingArtwork) addDiveImage(_pendingArtwork, { placeholder: true });
   try {
     // Preflight (issue #3): verify this token can actually do what the
     // scan is about to ask. Ported from the Flask health check, which
@@ -1648,23 +1650,42 @@ function showDiveScreen(heading, onCancel) {
 /**
  * Add a photo to the rotation. Loads it first, so a broken URL never
  * becomes a blank slide in the cycle.
+ *
+ * `placeholder` marks the tile-sized image shown at dive start for
+ * instant feedback. It is a 160px thumbnail on a full screen, so once a
+ * real photo arrives it is removed rather than left in the rotation —
+ * otherwise the dive alternates between sharp and blurry.
  */
-function addDiveImage(url) {
+function addDiveImage(url, { placeholder = false } = {}) {
   if (!url || _diveImages.includes(url)) return;
   const probe = new Image();
   probe.onload = () => {
     if (_diveImages.includes(url)) return;
-    _diveImages.push(url);
     const slides = document.getElementById("dive-slides");
     if (!slides) return;
+    if (!placeholder) dropPlaceholderSlide();
+    _diveImages.push(url);
     const slide = document.createElement("div");
     slide.className = "dive-slide";
+    if (placeholder) slide.dataset.placeholder = "1";
     slide.style.backgroundImage = `url("${url.replace(/"/g, "%22")}")`;
     slides.appendChild(slide);
     // First one in shows immediately; the rest wait their turn.
     if (_diveImages.length === 1) slide.classList.add("on");
   };
   probe.src = url;
+}
+
+/** Remove the low-res stand-in once a genuine photo is ready. */
+function dropPlaceholderSlide() {
+  const slides = document.getElementById("dive-slides");
+  if (!slides) return;
+  const ph = slides.querySelector('[data-placeholder="1"]');
+  if (!ph) return;
+  const url = (ph.style.backgroundImage || "").slice(5, -2);
+  _diveImages = _diveImages.filter((u) => u !== url);
+  ph.remove();
+  _diveSlideIndex = 0;
 }
 
 function startSlideshow() {

@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.6.6.** If the build in `js/app.js` is well
+**Last updated at build 2.6.7.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -136,6 +136,18 @@ them. But check the code first — sometimes the test is right.
 ---
 
 ## Things that have bitten, repeatedly
+
+**A guard that swallows the error it was written to survive.** The dive
+screen's `onArtist(artist)` sat one line above `const artist = await
+client.findArtist(...)`, wrapped in `try { } catch (e) {}` so that a
+display callback could never fail a search. `const` is in the temporal
+dead zone until its declaration executes, so it threw a ReferenceError
+on every dive — and the guard hid it completely. The callback had never
+once fired, through several releases that built features on top of it.
+Two rounds of photo fixes were made to code that was unreachable.
+
+*A bare `catch (e) {}` around a callback is a place a bug can live
+forever. If a guard is genuinely needed, log inside it.*
 
 **Regex edits that over-match.** A pattern meant to delete one block
 silently removed `loadPlaylistCards`, `renderCardRow` and a template's

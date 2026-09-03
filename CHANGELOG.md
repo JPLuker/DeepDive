@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.6.7
+- Fixed: the dive screen showed no photo at all when started from
+  search, and kept the blurry 44px-tile copy when started from a pin or
+  suggestion. `onArtist(artist)` was being called one line above
+  `const artist = await client.findArtist(...)`. `const` is in the
+  temporal dead zone until its declaration runs, so this threw a
+  ReferenceError on every dive — inside a try/catch written to stop a
+  display callback breaking a search, which swallowed it silently. The
+  callback had never fired. 2.6.6's photo fixes were correct but sat in
+  code that never ran.
+- Fixed: the tile image shown at dive start is now a placeholder that
+  the real photo replaces, rather than a second slide. Otherwise the
+  rotation alternated between the sharp photo and the blurry thumbnail.
+
 ## 2.6.6
 - Fixed: artist photos on the dive screen looked low-resolution partway
   through. Spotify's `images` array is one photograph at three sizes
