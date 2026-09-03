@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.7.0
+- Changed: the dive screen no longer stretches one photo across the
+  whole display. Spotify's largest artist image is 640x640; covering a
+  1080x2400 phone scales it 3.75x, so it was always going to look soft
+  no matter which URL was chosen. The photo now renders twice from the
+  same file — a heavily blurred copy filling the screen, where the
+  upscaling is invisible, and a second copy on top at close to native
+  size, where it stays sharp.
+- Fixed: three test suites had been asserting against the marketing
+  landing page instead of the app shell since the two were split. They
+  passed because the landing page inherited a copy of the stylesheet,
+  so the assertions matched CSS that was no longer the CSS being
+  shipped.
+
 ## 2.6.9
 - Fixed: suggestion and pin tiles were pixelated on Home. Tiles render
   at 56px, which is roughly 168 device pixels on a 3x phone, and they

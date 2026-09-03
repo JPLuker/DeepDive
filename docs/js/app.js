@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.6.9";
+export const BUILD = "2.7.0";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1682,7 +1682,20 @@ function addDiveImage(url, { placeholder = false } = {}) {
     const slide = document.createElement("div");
     slide.className = "dive-slide";
     if (placeholder) slide.dataset.placeholder = "1";
-    slide.style.backgroundImage = `url("${url.replace(/"/g, "%22")}")`;
+    // Kept on the element rather than read back out of a style string,
+    // so removing a slide doesn't depend on parsing CSS url() syntax.
+    slide.dataset.url = url;
+    const css = `url("${url.replace(/"/g, "%22")}")`;
+    // Two layers from one image: a blurred fill behind, a near-native
+    // copy in front. See .dive-slide-bg / -fg in the stylesheet.
+    const bg = document.createElement("div");
+    bg.className = "dive-slide-bg";
+    bg.style.backgroundImage = css;
+    const fg = document.createElement("div");
+    fg.className = "dive-slide-fg";
+    fg.style.backgroundImage = css;
+    slide.appendChild(bg);
+    slide.appendChild(fg);
     slides.appendChild(slide);
 
     // The first image in shows immediately; the rest wait their turn in
@@ -1715,7 +1728,7 @@ function dropPlaceholderSlide() {
   if (!slides) return;
   const ph = slides.querySelector('[data-placeholder="1"]');
   if (!ph) return;
-  const url = (ph.style.backgroundImage || "").slice(5, -2);
+  const url = ph.dataset.url || "";
   _diveImages = _diveImages.filter((u) => u !== url);
   ph.remove();
   _diveSlideIndex = 0;

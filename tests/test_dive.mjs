@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-const html=readFileSync(new URL('../docs/index.html', import.meta.url),'utf8');
+const html=readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
 const app=readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
 const src=readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
@@ -90,6 +90,17 @@ check('tile art uses the middle variant', /function tileImage\(images\)/.test(in
 check('library art no longer uses the smallest', !/entry\.image_url = smallestImage\(t\.album\.images\)/.test(ins));
 check('searchArtists tiles use the middle variant', /images\.length >= 2 \? images\[1\]\.url : images\[0\]\.url/.test(sp));
 check('full-size still reserved for the dive', /image_url_large: images\.length \? images\[0\]\.url : null/.test(sp));
+
+
+// Spotify's largest artist image is 640x640; covering a 1080x2400 phone
+// is a 3.75x upscale that no URL choice fixes. One image, two layers:
+// blurred fill behind, near-native copy in front.
+check('slides build a blurred backdrop', /bg\.className = "dive-slide-bg"/.test(src));
+check('slides build a sharp foreground', /fg\.className = "dive-slide-fg"/.test(src));
+check('backdrop is blurred in css', /\.dive-slide-bg \{[\s\S]*?filter:blur\(30px\)/.test(html));
+check('foreground is capped near native size', /background-size:min\(76vw, 440px\) auto/.test(html));
+check('slide url kept on the element', /slide\.dataset\.url = url;/.test(src));
+check('placeholder removal reads the dataset', /const url = ph\.dataset\.url \|\| "";/.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);
