@@ -92,6 +92,25 @@ sessions below:
   photo, then album covers as the catalogue is read, and every artist in
   turn for a sampler or library scan
 
+**Dive photography, 2.6.6-2.7.4.** What began as "artist photos look
+low-res" turned out to be five separate causes, fixed in order:
+`images` is one photo at three sizes and all three were being queued;
+`onArtist` had never once fired, because it was called a line above its
+own `const` declaration inside a `try/catch` that swallowed the
+ReferenceError; the suggestion row borrowed only the small variant from
+a cache that held both; tiles were fed a 64px image for a 56px slot;
+and finally the dive opened full-screen before it had anything to show,
+so it filled the gap with a stretched thumbnail. It now waits behind a
+spinner and opens onto a loaded photo. A blurred-backdrop treatment was
+tried at 2.7.0 on the theory that 640x640 is too small for a phone —
+that was wrong and was reverted, since dives from the search box had
+always looked correct at exactly that size.
+
+**Test suite recovered.** 30 of 34 suites had been dead since the app
+moved under `docs/`, and three more were asserting against the
+marketing page rather than the app shell. 48 assertions were running;
+455 run now.
+
 Fixed in 2.6.6: the dive's artist photo degraded to a 160px upscale
 partway through, and the slideshow appeared not to run — both caused by
 treating Spotify's `images` array as three photographs when it is one
@@ -121,9 +140,9 @@ the progress percentage had been dropped entirely.
 
 The least-touched screen since the rewrite, and the most dated.
 
-**Stopping point A — the dive screen**
-- Show the artist's photo while the dive runs, rather than a progress bar
-  on an empty page
+**Stopping point A — the dive screen** — *photo half shipped in 2.6.x;
+the dive is full-screen, artist-led, and waits for its photo before
+opening. Remaining:*
 - Rework the search appearance to match the rest of the app
 
 **Stopping point B — catalogue accuracy**
@@ -138,10 +157,10 @@ Two related defects in how releases are gathered:
   It should keep only the tracks they're actually credited on — which
   also cuts the request volume that makes this option so expensive.
 
-**Stopping point C — foundation**
-- Build the artist-photo display as a reusable component, so multi-artist
-  dives and the sampler can present a slideshow later
-- Make the sampler's run screen use it
+**Stopping point C — foundation** — *shipped. `showDiveScreen` /
+`addDiveImage` are shared, and the sampler and library scan both feed
+the same rotation. Note the sampler cannot preload the way a single
+dive does, since it spans many artists; it keeps the loading field.*
 
 ---
 
