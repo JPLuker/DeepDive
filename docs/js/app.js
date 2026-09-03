@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.7.3";
+export const BUILD = "2.7.4";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1512,7 +1512,7 @@ async function runSearchWithOptions(artistName, opts) {
   // thumbnail — looked pixelated, because a 56px tile image stretched
   // across a phone always will. A spinner on the page you were already
   // on costs a second or two and is never wrong.
-  showDiveSpinner(artistName);
+  showDiveSpinner();
   let artist = null;
   try {
     await preflight();
@@ -1662,13 +1662,10 @@ function showDiveScreen(heading, onCancel) {
  * the dive is full-bleed and opening it before there is a photo means
  * showing either a blank field or a stretched thumbnail.
  */
-function showDiveSpinner(artistName) {
+function showDiveSpinner() {
   _diveCancelled = false;
   const el = document.getElementById("dive-spinner");
-  if (!el) return;
-  const label = document.getElementById("dive-spinner-label");
-  if (label) label.textContent = `Finding ${artistName}…`;
-  el.hidden = false;
+  if (el) el.hidden = false;
 }
 
 function hideDiveSpinner() {

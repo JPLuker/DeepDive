@@ -4,6 +4,10 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.7.4
+- Changed: the spinner before a dive reads "Starting dive…" rather than
+  naming the artist.
+
 ## 2.7.3
 - Changed: the dive no longer opens full screen until it has a photo to
   show. Tapping an artist now brings up a spinner over the page you were

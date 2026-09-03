@@ -105,7 +105,8 @@ check('slide url kept on the element', /slide\.dataset\.url = url;/.test(src));
 // The full screen waits for a photo. Opening it earlier means showing
 // either an empty field or a stretched thumbnail, and both were tried.
 check('spinner exists', /id="dive-spinner"/.test(html));
-check('spinner shows before the dive', /showDiveSpinner\(artistName\);/.test(src));
+check('spinner shows before the dive', /showDiveSpinner\(\);/.test(src));
+check('spinner label is static', /Starting dive/.test(html));
 check('artist resolved before the screen opens', src.indexOf('await client.findArtist(artistName)') < src.indexOf('showDiveScreen(`Diving into'));
 check('photo preloaded before the screen opens', /await preloadPhoto\(largestImage\(artist\.images\)\)/.test(src));
 check('preload cannot hang the dive', /setTimeout\(done, timeoutMs\)/.test(src));
