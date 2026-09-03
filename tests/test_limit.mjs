@@ -14,7 +14,7 @@ check('cleared on any success', /if \(resp\.status < 400\) \{[\s\S]{0,120}remove
 check('reader exported', /export function limitedUntil\(\)/.test(sp));
 check('expired entries clear themselves', /if \(v <= Date\.now\(\)\) \{ localStorage\.removeItem/.test(sp));
 
-check('dives are blocked', /function startSearch\(artistName, artworkUrl = null\) \{\s*if \(blockedByRateLimit\(\)\) return;/.test(src));
+check('dives are blocked', /function startSearch\(artistName\) \{\s*if \(blockedByRateLimit\(\)\) return;/.test(src));
 check('sampler is blocked', /if \(blockedByRateLimit\(\)\) return;\s*showDiveScreen\("Building your sampler/.test(src));
 check('library scan is blocked', /if \(blockedByRateLimit\(\)\) return;\s*showDiveScreen\("Scanning your whole library/.test(src));
 check('home shows a standing notice', /\$\{rateLimitBanner\(\)\}/.test(src));

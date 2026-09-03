@@ -4,6 +4,17 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.7.2
+- Changed: a dive started from a tile no longer borrows that tile's
+  image to fill the screen while the artist is looked up. Tile art is a
+  thumbnail and looked pixelated stretched across a phone, which is the
+  whole reason a dive from the search box looked right and one from a
+  suggestion or pin did not. The dive now shows a quiet loading field
+  until the real photo is ready, then fades it in.
+- Removed the machinery that existed only to manage that stand-in: the
+  placeholder slide, its crossfade timer, the flag guarding load order,
+  and the artwork argument threaded through every dive entry point.
+
 ## 2.7.1
 - Reverted 2.7.0's blurred-backdrop dive screen. It was built on the
   theory that 640x640 is too small to fill a phone, but a dive started

@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.7.1";
+export const BUILD = "2.7.2";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -359,7 +359,6 @@ let _samplerPool = [];
 // module scope so the dive screen can borrow it without another read.
 let _cachedArt = null;
 // Artwork handed over by whatever started the dive.
-let _pendingArtwork = null;
 
 /**
  * A fresh handful each time. Drawing the top twelve by recency meant the
@@ -1110,7 +1109,7 @@ async function loadSuggestions() {
           </div>`).join("")}
       </div>`;
     el.querySelectorAll("[data-search]").forEach((b) =>
-      b.addEventListener("click", () => startSearch(b.dataset.search, b.dataset.art || null)));
+      b.addEventListener("click", () => startSearch(b.dataset.search)));
     return;
   }
 
@@ -1317,26 +1316,9 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     ? `<img src="${esc(imageUrl)}" alt="" class="tile-art" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'tile-art-fallback',textContent:'${initial(name)}'}))">`
     : `<span class="tile-art-fallback">${initial(name)}</span>`;
 
-  // The tile's own image is usually the artist's photo — that's what the
-  // listening endpoints return. Cached album art is only a stand-in for
-  // artists we have no photo for, so it must not take precedence, which
-  // is what was putting album covers on the dive screen.
-  //
-  // `fallback` is the tile-sized copy, fine at 44px and soft across a
-  // whole phone screen, so a full-size photo is preferred when the
-  // suggestion carried one.
-  const bigArt = (name, fallback, large) => {
-    if (large) return large;
-    if (fallback) return fallback;
-    if (_cachedArt && name) {
-      return _cachedArt.largeByName.get(name.trim().toLowerCase()) || "";
-    }
-    return "";
-  };
-
-  const tile = (name, imageUrl, sub, actions, isPin, largeUrl) => `
+  const tile = (name, imageUrl, sub, actions, isPin) => `
     <div class="tile-wrap${isPin ? " is-pin" : ""}">
-      <button class="tile" data-search="${esc(name)}" data-art="${esc(bigArt(name, imageUrl, largeUrl))}">
+      <button class="tile" data-search="${esc(name)}">
         ${art(name, imageUrl)}
         <span class="tile-text">
           <span class="tile-title">${esc(name)}</span>
@@ -1350,7 +1332,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     <div class="row-head"><h2>Pinned</h2></div>
     <div class="tile-grid">
       ${shownPins.map((p) => tile(p.name, p.image_url, null,
-        `<button class="tile-btn danger" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`, true, p.image_url_large)).join("")}
+        `<button class="tile-btn danger" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`, true)).join("")}
     </div>
     ${extraPins > 0 ? `<div style="text-align:center;margin-top:10px;"><button class="btn btn-ghost btn-small" id="show-more-pins">Show ${extraPins} more</button></div>` : ""}` : "";
 
@@ -1359,7 +1341,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     <div class="tile-grid">
       ${suggestions.map((sg) => tile(sg.name, sg.image_url, sg.reason,
         `<button class="tile-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" data-img-big="${esc(sg.image_url_large || "")}" title="Pin for later">+</button>
-         <button class="tile-btn danger" data-block="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" title="Never suggest this artist">&minus;</button>`, false, sg.image_url_large)).join("")}
+         <button class="tile-btn danger" data-block="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" title="Never suggest this artist">&minus;</button>`)).join("")}
     </div>` : "";
 
   // Never leave the row silently blank — an empty area with no
@@ -1417,7 +1399,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   if (sampBtn) sampBtn.addEventListener("click", () => openSampler(samplerArtists));
 
   el.querySelectorAll("[data-search]").forEach((b) =>
-    b.addEventListener("click", () => startSearch(b.dataset.search, b.dataset.art || null)));
+    b.addEventListener("click", () => startSearch(b.dataset.search)));
 
   const redraw = () => renderSuggestionRow(_row.el, _row.pins, _row.suggestions, _row.showAllPins, _row.state);
   // Repaint pins alone — suggestions and their images stay untouched.
@@ -1511,14 +1493,15 @@ async function preflight() {
 // Entry point from the search bar / pills / watchlist. Shows the intent
 // chooser first (unless the user opted out), then runs the search.
 /**
- * @param artworkUrl  The image the caller is already showing for this
- *   artist. Tiles have a working URL in hand — the same one rendering on
- *   the home screen — so handing it over is more reliable than the dive
- *   screen deriving its own, and needs no request at all.
+ * Tiles used to hand over the image they were already showing, so the
+ * dive screen had something up instantly. That image is a thumbnail,
+ * and full-screen it was visibly pixelated on every tile-started dive —
+ * which is why a dive from the search box looked right and one from a
+ * tile did not. The dive now shows a loading field until the real photo
+ * is ready, so no caller needs to supply artwork.
  */
-function startSearch(artistName, artworkUrl = null) {
+function startSearch(artistName) {
   if (blockedByRateLimit()) return;
-  _pendingArtwork = artworkUrl;
   _haveArtistPhoto = false;
   openIntentModal(artistName);
 }
@@ -1527,9 +1510,6 @@ async function runSearchWithOptions(artistName, opts) {
   // The dive gets the whole screen: the artist fills it and the status
   // sits along the bottom.
   showDiveScreen(`Diving into ${artistName}…`, () => renderHome());
-  // The tile's own image, shown instantly so the screen isn't blank
-  // while the artist is looked up. Replaced by the real photo.
-  if (_pendingArtwork) addDiveImage(_pendingArtwork, { placeholder: true });
   try {
     // Preflight (issue #3): verify this token can actually do what the
     // scan is about to ask. Ported from the Flask health check, which
@@ -1612,8 +1592,6 @@ let _diveCancelled = false;
 let _diveImages = [];
 let _diveSlideTimer = null;
 let _diveSlideIndex = 0;
-// True once a genuine artist photo (not the tile stand-in) is on screen.
-let _haveRealSlide = false;
 
 /**
  * Fetch an artist's photos when the search result didn't carry any.
@@ -1644,7 +1622,10 @@ function showDiveScreen(heading, onCancel) {
   _diveImages = [];
   _diveSlideIndex = 0;
   document.getElementById("dive-slides").innerHTML = "";
-  _haveRealSlide = false;
+  // Back to the loading field: a new dive has no photo yet, and the last
+  // dive's artist must not linger behind it.
+  const load0 = document.getElementById("dive-loading");
+  if (load0) load0.classList.remove("off");
   document.getElementById("dive-heading").textContent = heading;
   document.getElementById("dive-stage").textContent = "Starting…";
   document.getElementById("dive-fill").style.width = "0%";
@@ -1667,76 +1648,39 @@ function showDiveScreen(heading, onCancel) {
 
 /**
  * Add a photo to the rotation. Loads it first, so a broken URL never
- * becomes a blank slide in the cycle.
- *
- * `placeholder` marks the tile-sized image shown at dive start for
- * instant feedback. It is a 160px thumbnail on a full screen, so once a
- * real photo arrives it is removed rather than left in the rotation —
- * otherwise the dive alternates between sharp and blurry.
+ * becomes a blank slide in the cycle. The first one to arrive clears the
+ * loading field.
  */
-function addDiveImage(url, { placeholder = false } = {}) {
+function addDiveImage(url) {
   if (!url || _diveImages.includes(url)) return;
-  // A real photo has already landed, so the tile stand-in is not wanted
-  // — even if its own load only finishes now. Without this the
-  // placeholder appended itself late and then took its turn in the
-  // rotation, putting the blurry thumbnail back on screen a few seconds
-  // into the dive.
-  if (placeholder && _haveRealSlide) return;
   const probe = new Image();
   probe.onload = () => {
     if (_diveImages.includes(url)) return;
-    if (placeholder && _haveRealSlide) return;
     const slides = document.getElementById("dive-slides");
     if (!slides) return;
     _diveImages.push(url);
     const slide = document.createElement("div");
     slide.className = "dive-slide";
-    if (placeholder) slide.dataset.placeholder = "1";
-    // Kept on the element rather than read back out of a style string,
-    // so removing a slide doesn't depend on parsing CSS url() syntax.
     slide.dataset.url = url;
     slide.style.backgroundImage = `url("${url.replace(/"/g, "%22")}")`;
     slides.appendChild(slide);
-
-    if (placeholder) {
-      if (_diveImages.length === 1) slide.classList.add("on");
-      return;
-    }
-
-    _haveRealSlide = true;
-    const ph = slides.querySelector('[data-placeholder="1"]');
-    if (ph) {
-      // Crossfade over the stand-in, then drop it. Two frames: the
-      // element must be laid out at opacity 0 before the class is added,
-      // or the browser coalesces both into one style computation and the
-      // transition never runs — which made this a hard cut.
+    // First one in shows immediately; the rest wait their turn.
+    if (_diveImages.length === 1) {
+      // Two frames: the element must be laid out at opacity 0 before the
+      // class is added, or the browser coalesces both into one style
+      // computation and the transition never runs — a hard cut instead
+      // of the fade the stylesheet describes.
       requestAnimationFrame(() => requestAnimationFrame(() => {
         slide.classList.add("on");
-        setTimeout(dropPlaceholderSlide, SLIDE_FADE_MS);
+        const load = document.getElementById("dive-loading");
+        if (load) load.classList.add("off");
       }));
-    } else if (_diveImages.length === 1) {
-      slide.classList.add("on");
     }
   };
   probe.src = url;
 }
 
-// Matches the .dive-slide opacity transition in app/index.html. The
-// placeholder is held underneath for exactly this long so the incoming
-// photo fades over it rather than onto an empty backdrop.
-const SLIDE_FADE_MS = 1100;
 
-/** Remove the low-res stand-in once a genuine photo is ready. */
-function dropPlaceholderSlide() {
-  const slides = document.getElementById("dive-slides");
-  if (!slides) return;
-  const ph = slides.querySelector('[data-placeholder="1"]');
-  if (!ph) return;
-  const url = ph.dataset.url || "";
-  _diveImages = _diveImages.filter((u) => u !== url);
-  ph.remove();
-  _diveSlideIndex = 0;
-}
 
 function startSlideshow() {
   clearInterval(_diveSlideTimer);
@@ -2506,7 +2450,7 @@ function renderHistory() {
             </span>
           </span>
           <div class="watchlist-actions">
-            <button class="btn btn-ghost btn-small" data-redive="${esc(d.artistName)}" data-art="${esc(d.imageUrl || "")}">Dive again</button>
+            <button class="btn btn-ghost btn-small" data-redive="${esc(d.artistName)}">Dive again</button>
           </div>
         </div>`).join("") : `<p class="empty-note">No dives yet.</p>`}
       ${dives.length ? `<div class="actions"><button class="btn btn-ghost btn-small" id="clear-dives">Clear dive history</button></div>` : ""}
@@ -2525,7 +2469,7 @@ function renderHistory() {
 
   root.querySelector("[data-home]")?.addEventListener("click", () => renderHome());
   root.querySelectorAll("[data-redive]").forEach((b) =>
-    b.addEventListener("click", () => startSearch(b.dataset.redive, b.dataset.art || null)));
+    b.addEventListener("click", () => startSearch(b.dataset.redive)));
 
   const msg = document.getElementById("history-msg");
   const say = (text, isError) => {
@@ -2617,7 +2561,7 @@ function renderWatchlist() {
         <div class="watchlist-row">
           <span class="watchlist-name">${e.image_url ? `<img src="${esc(e.image_url)}" alt="" class="pill-avatar">` : ""}${esc(e.name)}</span>
           <div class="watchlist-actions">
-            <button class="btn btn-ghost btn-small" data-wl-search="${esc(e.name)}" data-art="${esc(e.image_url || "")}">Dive now</button>
+            <button class="btn btn-ghost btn-small" data-wl-search="${esc(e.name)}">Dive now</button>
             <button class="btn btn-ghost btn-small" data-wl-remove="${esc(e.id)}" data-name="${esc(e.name)}">Unpin</button>
           </div>
         </div>`).join("") : `<p class="empty-note">Nothing pinned. Pin an artist from the search suggestions, or from the dropdown as you type.</p>`}
@@ -2636,7 +2580,7 @@ function renderWatchlist() {
     </div>`;
 
   root.querySelector("[data-home]")?.addEventListener("click", () => renderHome());
-  root.querySelectorAll("[data-wl-search]").forEach((b) => b.addEventListener("click", () => startSearch(b.dataset.wlSearch, b.dataset.art || null)));
+  root.querySelectorAll("[data-wl-search]").forEach((b) => b.addEventListener("click", () => startSearch(b.dataset.wlSearch)));
   root.querySelectorAll("[data-wl-remove]").forEach((b) => b.addEventListener("click", () => {
         watchlist.unpin(b.dataset.wlRemove);
     renderWatchlist();

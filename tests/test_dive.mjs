@@ -12,7 +12,17 @@ check('old card progress removed', !/function updateProgress\(/.test(src));
 
 // slideshow
 check('slides crossfade', /\.dive-slide \{[\s\S]{0,140}transition:opacity 1\.1s/.test(html));
-check('images added as discovered', /function addDiveImage\(url, \{ placeholder = false \} = \{\}\)/.test(src));
+check('images added as discovered', /function addDiveImage\(url\)/.test(src));
+
+// The tile hand-off is gone. It existed so the dive screen was never
+// blank, but a 56px thumbnail stretched full-screen was pixelated on
+// every tile-started dive — the reason a search dive looked right and a
+// suggestion dive did not. A loading field covers the same gap and is
+// never wrong.
+check('no artwork is handed to the dive', !/startSearch\(artistName, artworkUrl/.test(src));
+check('loading field exists', /id="dive-loading"/.test(html));
+check('loading field clears on first photo', /load\.classList\.add\("off"\)/.test(src));
+check('loading field returns for a new dive', /load0\.classList\.remove\("off"\)/.test(src));
 check('broken urls never become blank slides', /probe\.onload = \(\) => \{[\s\S]{0,200}_diveImages\.push/.test(src));
 check('no duplicates', /_diveImages\.includes\(url\)/.test(src));
 check('rotation runs on a timer', /_diveSlideTimer = setInterval/.test(src));
@@ -57,7 +67,6 @@ const sp = rf2(new URL('../docs/js/spotify.js', import.meta.url), 'utf8');
 const wl = rf2(new URL('../docs/js/watchlist.js', import.meta.url), 'utf8');
 check('searchArtists returns both sizes', /image_url_large: images\.length \? images\[0\]\.url : null/.test(sp));
 check('suggestions carry a large url', /image_url_large: biggest\(a\.images\)/.test(sp + src));
-check('bigArt prefers the large url', /const bigArt = \(name, fallback, large\) => \{\s*if \(large\) return large;/.test(src));
 check('pins store a large url', /image_url_large: imageUrlLarge/.test(wl));
 
 
@@ -71,10 +80,6 @@ const sr = rf2(new URL('../docs/js/search.js', import.meta.url), 'utf8');
 const declAt = sr.indexOf('const artist = await client.findArtist');
 const callAt = sr.indexOf('onArtist(artist)');
 check('artist is resolved before onArtist fires', declAt > -1 && callAt > declAt);
-check('placeholder is marked as such', /addDiveImage\(_pendingArtwork, \{ placeholder: true \}\)/.test(src));
-check('placeholder is dropped for a real photo', /function dropPlaceholderSlide\(\)/.test(src));
-check('real photos drop the placeholder', /setTimeout\(dropPlaceholderSlide, SLIDE_FADE_MS\)/.test(src));
-check('placeholder is held for the crossfade', /const SLIDE_FADE_MS = 1100;/.test(src));
 // Two nested rAFs, not one: a single frame lets the browser coalesce the
 // append and the class change into one style pass, and the transition
 // never runs. That was the hard cut.
@@ -93,17 +98,8 @@ check('full-size still reserved for the dive', /image_url_large: images\.length 
 
 
 check('slide url kept on the element', /slide\.dataset\.url = url;/.test(src));
-check('placeholder removal reads the dataset', /const url = ph\.dataset\.url \|\| "";/.test(src));
 
 
-// VIAL (from search) looked right while suggestion dives did not, and
-// the only difference between those paths is the tile placeholder. It
-// could survive two ways: loading after the real photo and appending
-// itself late, or never being dropped. Both are closed.
-check('late placeholder is refused', /if \(placeholder && _haveRealSlide\) return;/.test(src));
-check('real slide is flagged', /_haveRealSlide = true;/.test(src));
-check('flag resets per dive', /_haveRealSlide = false;/.test(src));
-check('placeholder never enters the rotation alive', /setTimeout\(dropPlaceholderSlide, SLIDE_FADE_MS\)/.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

@@ -462,6 +462,20 @@
   }
   .dive-slide.on { opacity:1; }
 
+  /* Shown until a real photo is ready. The dive used to seed the screen
+     with the tile's own thumbnail to avoid a blank backdrop, but that
+     put a visibly pixelated image up on every dive started from a tile.
+     A quiet loading field costs nothing and is never wrong. */
+  .dive-loading {
+    position:absolute; inset:0;
+    background:
+      radial-gradient(120% 80% at 50% 30%, rgba(255,255,255,0.07), transparent 70%),
+      var(--bg);
+    animation:sk-pulse 1.6s ease-in-out infinite;
+    transition:opacity .5s ease;
+  }
+  .dive-loading.off { opacity:0; animation:none; pointer-events:none; }
+
   /* Enough darkness at the bottom for the text, while leaving the
      picture legible above it. */
   .dive-veil {
@@ -709,6 +723,7 @@
        otherwise empty page. -->
   <div class="dive-screen" id="dive-screen" hidden>
     <div class="dive-slides" id="dive-slides"></div>
+    <div class="dive-loading" id="dive-loading"></div>
     <div class="dive-veil"></div>
     <div class="dive-foot">
       <div class="dive-foot-inner">
