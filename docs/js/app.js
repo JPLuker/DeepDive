@@ -9,7 +9,7 @@
  */
 
 import * as auth from "./auth.js";
-import { SpotifyClient } from "./spotify.js";
+import { SpotifyClient, limitedUntil } from "./spotify.js";
 import * as search from "./search.js";
 import * as watchlist from "./watchlist.js";
 import { LibraryCache } from "./library-cache.js";
@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.6.4";
+export const BUILD = "2.6.5";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -260,6 +260,7 @@ async function renderHome() {
   setTitle("DeepDive");
   setActiveTab("home");
   root.innerHTML = `
+    ${rateLimitBanner()}
     <div class="search-shell">
       <div class="search-pill-form">
         <input type="text" id="artist-input" placeholder="Search an artist" autocomplete="off" autofocus>
@@ -408,6 +409,7 @@ async function runSampler(artists) {
   // any other search rather than a dialog reporting at you.
   // Cancelling has to set the flag the fetch loop checks between
   // artists, or the run continues invisibly after the screen closes.
+  if (blockedByRateLimit()) return;
   showDiveScreen("Building your sampler…", () => {
     _samplerCancelled = true;
     renderHome();
@@ -1485,6 +1487,7 @@ async function preflight() {
  *   screen deriving its own, and needs no request at all.
  */
 function startSearch(artistName, artworkUrl = null) {
+  if (blockedByRateLimit()) return;
   _pendingArtwork = artworkUrl;
   _haveArtistPhoto = false;
   openIntentModal(artistName);
@@ -2001,6 +2004,7 @@ async function startScrub() {
   // This previously wrote a button into the old progress card, which no
   // longer exists — the null reference would have thrown and killed the
   // scan at the first line.
+  if (blockedByRateLimit()) return;
   showDiveScreen("Scanning your whole library…", () => { scrubCancel.cancelled = true; });
   const cancelBtn = document.getElementById("dive-cancel");
   if (cancelBtn) cancelBtn.textContent = "Cancel & show what's found";
@@ -2131,6 +2135,36 @@ function confirmDialog({ title, body, confirmLabel = "Confirm", danger = false }
     document.addEventListener("keydown", onKey);
     wrap.querySelector('[data-c="yes"]').focus();
   });
+}
+
+/**
+ * Refuse to start long work while Spotify has us paused.
+ *
+ * Every request would fail on the first call, so starting a scan is
+ * worse than useless — it burns the user's time and produces a confusing
+ * failure several seconds in rather than an answer immediately.
+ */
+function blockedByRateLimit() {
+  const until = limitedUntil();
+  if (!until) return false;
+  const mins = Math.max(1, Math.round((until - Date.now()) / 60000));
+  const hrs = Math.floor(mins / 60);
+  const dur = hrs ? `${hrs}h ${mins % 60}m` : `${mins} minutes`;
+  const clock = new Date(until).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  flash(`Spotify has paused this app for about ${dur} — until roughly ${clock}. Nothing will work until then.`, true);
+  return true;
+}
+
+/** A standing notice while the pause is in effect. */
+function rateLimitBanner() {
+  const until = limitedUntil();
+  if (!until) return "";
+  const clock = new Date(until).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return `<div class="flash error" style="margin-bottom:16px;">
+    Spotify has paused this app until roughly ${esc(clock)}. Searches will
+    fail until then — this is a limit on your Spotify credentials, not a
+    fault in DeepDive.
+  </div>`;
 }
 
 function renderSettings() {

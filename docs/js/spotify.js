@@ -87,6 +87,24 @@ export class SpotifyApiError extends Error {
  * (rather than a raw token) lets auth.js refresh transparently mid-run,
  * the same way the Python get_token() refreshed when expired.
  */
+/**
+ * When the app is known to be rate-limited until, or null.
+ *
+ * Spotify sends no remaining-quota header — only Retry-After on a 429 —
+ * so this reflects a limit we have actually been told about, not a
+ * prediction. Expired entries clear themselves.
+ */
+export function limitedUntil() {
+  try {
+    const v = parseInt(localStorage.getItem("deepdive_limited_until") || "0", 10);
+    if (!v) return null;
+    if (v <= Date.now()) { localStorage.removeItem("deepdive_limited_until"); return null; }
+    return v;
+  } catch (e) {
+    return null;
+  }
+}
+
 export class SpotifyClient {
   constructor(getToken) {
     this._getToken = getToken;
@@ -188,6 +206,12 @@ export class SpotifyClient {
     }
     clearTimeout(timer);
 
+    // Any success means we're not limited, whatever we last stored. The
+    // remembered time is an upper bound; Spotify often lifts it sooner.
+    if (resp.status < 400) {
+      try { localStorage.removeItem("deepdive_limited_until"); } catch (e) {}
+    }
+
     if (resp.status >= 400) {
       let msg = null, reason = null;
       try {
@@ -251,6 +275,14 @@ export class SpotifyClient {
           if (!Number.isNaN(raSecs) && raSecs * 1000 > MAX_RATE_LIMIT_WAIT_MS) {
             e.sustained = true;
             e.retryAfterSeconds = raSecs;
+            // Remember when it lifts. Spotify publishes no remaining-quota
+            // header, so a 429's Retry-After is the only signal there is —
+            // and without storing it the app cheerfully starts another
+            // scan that fails on its first request.
+            try {
+              localStorage.setItem("deepdive_limited_until",
+                String(Date.now() + raSecs * 1000));
+            } catch (storeErr) {}
             throw e;
           }
 

@@ -69,7 +69,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.6.4
+## Shipped since — build 2.6.5
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:

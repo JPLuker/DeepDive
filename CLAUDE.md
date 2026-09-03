@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.6.4.** If the build in `js/app.js` is well
+**Last updated at build 2.6.5.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -179,6 +179,13 @@ where you'd expect:
   scoped track search
 - `market=from_token` is deprecated and fails the request outright
 - Library writes are `PUT /me/library?uris=`, 40 at a time
+
+**Spotify publishes no remaining-quota header** — no
+`X-RateLimit-Remaining`, nothing. The only signal is `Retry-After` on a
+429, which means the app cannot predict a limit, only remember one it has
+been told about. It stores the expiry and refuses to start dives, scans
+or samplers until it passes, since every request would fail on the first
+call.
 
 **Rate limiting is the recurring failure mode.** One request per release,
 no batching, so a prolific artist is hundreds of requests. `spotify.js`
