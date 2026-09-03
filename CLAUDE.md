@@ -1,7 +1,42 @@
 # CLAUDE.md — notes for whoever picks this up next
 
-Written at build **2.6.2** for a future session with no memory of this
-one. Read this before touching anything.
+Written for a future session with no memory of this one. Read this
+before touching anything.
+
+**Last updated at build 2.6.4.** If the build in `js/app.js` is well
+ahead of that, treat this file with suspicion and verify against the
+code — then bring it up to date.
+
+---
+
+## Keep these two files current — this is part of the work
+
+**`CLAUDE.md` (this file) and `ROADMAP.md` are the only memory this
+project has between sessions.** Chats end, sandboxes reset, and the next
+Claude starts from nothing but the repo. A stale handover is worse than
+none, because it will be trusted.
+
+Update them **as part of the change**, in the same commit, not as a
+tidy-up afterwards:
+
+- **Shipped something?** Move it out of the roadmap's upcoming sessions
+  and into "Shipped since", with the build number.
+- **Joseph rejected an idea, or one turned out to be unworkable?** Put it
+  under "Rejected, with reasons" — with the reason. The reason is the
+  valuable part; without it the idea gets reproposed.
+- **Hit a failure worth not repeating?** Add it to "Things that have
+  bitten". Every entry there cost real time; each one earned its place.
+- **Learned something about Spotify's API behaving differently to its
+  documentation?** Record it under the API section. That knowledge is
+  expensive to reacquire.
+- **Made a deliberate decision that looks arbitrary from outside?** Add
+  it to "Deliberate decisions worth not reversing", so it isn't undone by
+  someone assuming it was an oversight.
+- **Changed the version or release plan?** Update both files.
+
+Before finishing a session, re-read both and check they still describe
+reality. If something here contradicts the code, the code is right and
+this file needs fixing.
 
 ---
 

@@ -12,6 +12,20 @@ Rewritten after the 2.9 review. Two structural changes:
 
 ---
 
+## Keeping this current
+
+This file and `CLAUDE.md` are the project's memory between sessions —
+chats end and the next one starts from the repo alone.
+
+Update this **in the same commit as the change**: move shipped work into
+"Shipped since" with its build number, record rejected ideas with the
+reason they were rejected, and note anything that turned out to be
+blocked or more expensive than expected. A roadmap describing plans that
+already shipped, or still proposing something Joseph turned down, will
+actively mislead.
+
+---
+
 ## Versioning, going forward
 
 - **x.0** — identity shifts. 3.0 is concert prep. Nothing else earns one.
@@ -55,7 +69,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.6.2
+## Shipped since — build 2.6.4
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -77,6 +91,11 @@ sessions below:
 - **The dive is full-screen** with a crossfading slideshow: every artist
   photo, then album covers as the catalogue is read, and every artist in
   turn for a sampler or library scan
+
+Also fixed after the full-screen dive shipped (2.6.3–2.6.4): rate-limit
+warnings, the error view, the library scan's cancel and the sampler's
+cancel had all been left pointing at elements the rewrite removed, and
+the progress percentage had been dropped entirely.
 
 **Still open from the review notes:**
 
