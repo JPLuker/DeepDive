@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.6.8";
+export const BUILD = "2.6.9";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1155,7 +1155,13 @@ async function buildSuggestionRow(el) {
     if (!seed) { seed = Date.now() >>> 0; sessionStorage.setItem("deepdive_sugg_seed", String(seed)); }
   } catch (e) { seed = 12345; }
 
-  const smallest = (imgs) => (imgs && imgs.length ? imgs[imgs.length - 1].url : null);
+  // Tiles render at 56px, which is ~168 device pixels on a 3x phone.
+  // Spotify's smallest artist image is 160px and its smallest album
+  // image is only 64px, so the small variant visibly pixelates. Use the
+  // middle one (320/300) for tiles and keep the 640px for full screen.
+  const smallest = (imgs) => (imgs && imgs.length
+    ? (imgs.length >= 2 ? imgs[1].url : imgs[0].url)
+    : null);
   // Spotify returns one photo at three sizes, widest first. Tiles want
   // the small copy; the full-screen dive wants the 640px original, and
   // upscaling the small one is what made dive photos look soft.

@@ -81,5 +81,15 @@ check('placeholder is held for the crossfade', /const SLIDE_FADE_MS = 1100;/.tes
 check('fade waits two frames', /requestAnimationFrame\(\(\) => requestAnimationFrame\(/.test(src));
 check('suggestions borrow the large variant', /cachedArt\.largeById && cachedArt\.largeById\.get\(x\.id\)/.test(src));
 
+
+// Tiles are 56px CSS = ~168 device px at 3x. Spotify's smallest album
+// variant is 64px, so tiles fed the smallest image pixelate badly. The
+// middle variant is the minimum that holds up.
+const ins = rf2(new URL('../docs/js/insights.js', import.meta.url), 'utf8');
+check('tile art uses the middle variant', /function tileImage\(images\)/.test(ins));
+check('library art no longer uses the smallest', !/entry\.image_url = smallestImage\(t\.album\.images\)/.test(ins));
+check('searchArtists tiles use the middle variant', /images\.length >= 2 \? images\[1\]\.url : images\[0\]\.url/.test(sp));
+check('full-size still reserved for the dive', /image_url_large: images\.length \? images\[0\]\.url : null/.test(sp));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

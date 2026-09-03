@@ -363,7 +363,9 @@ export class SpotifyClient {
         // right for a search-result tile and wrong for anything larger.
         // `image_url_large` is the 640px original, for the full-screen
         // dive — the small one upscales to a visibly soft mess there.
-        image_url: images.length ? images[images.length - 1].url : null,
+        // Middle variant, not smallest: a 56px tile is ~168 device
+        // pixels at 3x and the 160px copy upscales visibly.
+        image_url: images.length ? (images.length >= 2 ? images[1].url : images[0].url) : null,
         image_url_large: images.length ? images[0].url : null,
       };
     });

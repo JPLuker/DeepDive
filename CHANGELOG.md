@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.6.9
+- Fixed: suggestion and pin tiles were pixelated on Home. Tiles render
+  at 56px, which is roughly 168 device pixels on a 3x phone, and they
+  were being fed Spotify's smallest variant — 160px for an artist and
+  only 64px for album art, so it was upscaled almost threefold. Tiles
+  now use the middle variant (320/300), which covers 3x at a fraction
+  of the bytes of the 640px original. The full-size copy stays reserved
+  for the full-screen dive.
+
 ## 2.6.8
 - Fixed: suggestion and pin tiles launched dives that stayed pixelated.
   The suggestion row borrows artwork from the library cache to avoid a

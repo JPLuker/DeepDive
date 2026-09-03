@@ -21,6 +21,22 @@ function smallestImage(images) {
   return images[images.length - 1].url || null;
 }
 
+/**
+ * The middle variant, for 56px tiles.
+ *
+ * Spotify's smallest album image is 64px and its smallest artist image
+ * is 160px. A 56px CSS tile is ~168 device pixels on a 3x phone, so the
+ * smallest album variant was being upscaled almost threefold — which is
+ * why suggestion tiles looked pixelated even once the dive was fixed.
+ * The middle variant (300px album / 320px artist) covers 3x comfortably
+ * at a fraction of the bytes of the 640px original.
+ */
+function tileImage(images) {
+  if (!images || !images.length) return null;
+  if (images.length >= 2) return images[1].url || images[0].url || null;
+  return images[0].url || null;
+}
+
 /** Spotify orders images largest first. Used where the art is displayed
  *  big — a 64px thumbnail stretched to 260px looks like a mistake. */
 function largestImage(images) {
@@ -46,7 +62,7 @@ function byArtist(tracks) {
     // isn't the artist's portrait, but it's a record they made, it's
     // free, and it's instant.
     if (!entry.image_url && t.album) {
-      entry.image_url = smallestImage(t.album.images);
+      entry.image_url = tileImage(t.album.images);
       entry.image_url_large = largestImage(t.album.images);
     }
     const added = t.added_at || "";
