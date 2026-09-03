@@ -45,7 +45,7 @@ export async function runSearch(client, artistName, opts = {}) {
     excludeLive = false, excludeCensored = false,
     excludeInstrumental = false, excludeAcappella = false,
     matchRemasters = false, onProgress = () => {}, onArtist = () => {}, onArtwork = () => {},
-    libraryCache = null, scopeToArtist = true,
+    libraryCache = null, scopeToArtist = true, resolvedArtist = null,
     includeAppearsOn = false,
   } = opts;
 
@@ -81,7 +81,11 @@ export async function runSearch(client, artistName, opts = {}) {
   };
 
   report(`Finding "${artistName}" on Spotify…`);
-  const artist = await client.findArtist(artistName);
+  // The caller may have resolved the artist already — the dive screen
+  // does, so it can load the photo before opening — in which case
+  // searching again would spend the request a second time for the same
+  // answer.
+  const artist = resolvedArtist || await client.findArtist(artistName);
   completed += STAGE_WEIGHTS.find_artist;
   if (!artist) {
     throw new Error(`No Spotify artist found matching "${artistName}".`);
@@ -93,9 +97,7 @@ export async function runSearch(client, artistName, opts = {}) {
   // This call sat one line ABOVE the `const artist` declaration, inside
   // that same guard. `const` has no hoisted value, so it threw a
   // ReferenceError on every dive and the catch swallowed it — onArtist
-  // never fired at all. A dive launched from search showed a black
-  // screen, and one launched from a tile showed the 160px thumbnail for
-  // the whole run because nothing ever replaced it.
+  // never fired at all.
   try { onArtist(artist); } catch (e) {}
 
   report("Reading your Liked Songs…");
@@ -200,7 +202,7 @@ export async function runFullScrub(client, opts = {}) {
     excludeInstrumental = false, excludeAcappella = false,
     matchRemasters = false, onProgress = () => {},
     isCancelled = () => false,
-    libraryCache = null, scopeToArtist = true,
+    libraryCache = null, scopeToArtist = true, resolvedArtist = null,
     includeAppearsOn = false,
   } = opts;
 

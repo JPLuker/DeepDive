@@ -77,7 +77,7 @@ check('pins store a large url', /image_url_large: imageUrlLarge/.test(wl));
 // showed a black screen; a tile dive kept the 160px thumbnail for the
 // whole run. Order matters here, so it is pinned.
 const sr = rf2(new URL('../docs/js/search.js', import.meta.url), 'utf8');
-const declAt = sr.indexOf('const artist = await client.findArtist');
+const declAt = sr.indexOf('const artist = resolvedArtist ||');
 const callAt = sr.indexOf('onArtist(artist)');
 check('artist is resolved before onArtist fires', declAt > -1 && callAt > declAt);
 // Two nested rAFs, not one: a single frame lets the browser coalesce the
@@ -100,6 +100,18 @@ check('full-size still reserved for the dive', /image_url_large: images\.length 
 check('slide url kept on the element', /slide\.dataset\.url = url;/.test(src));
 
 
+
+
+// The full screen waits for a photo. Opening it earlier means showing
+// either an empty field or a stretched thumbnail, and both were tried.
+check('spinner exists', /id="dive-spinner"/.test(html));
+check('spinner shows before the dive', /showDiveSpinner\(artistName\);/.test(src));
+check('artist resolved before the screen opens', src.indexOf('await client.findArtist(artistName)') < src.indexOf('showDiveScreen(`Diving into'));
+check('photo preloaded before the screen opens', /await preloadPhoto\(largestImage\(artist\.images\)\)/.test(src));
+check('preload cannot hang the dive', /setTimeout\(done, timeoutMs\)/.test(src));
+check('preload survives a broken url', /img\.onerror = done;/.test(src));
+check('resolved artist is reused, not refetched', /resolvedArtist: artist/.test(src));
+check('search accepts a resolved artist', /resolvedArtist \|\| await client\.findArtist/.test(sr));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

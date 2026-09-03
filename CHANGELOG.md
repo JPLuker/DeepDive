@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.7.3
+- Changed: the dive no longer opens full screen until it has a photo to
+  show. Tapping an artist now brings up a spinner over the page you were
+  already on while the artist is resolved and their photo downloaded;
+  the full screen opens onto the finished image. Previously it opened
+  immediately and had to fill the gap with something — a thumbnail,
+  which looked pixelated, or a blank field.
+- The artist lookup that used to happen inside the search now happens
+  before the screen opens, and is handed to the search rather than
+  repeated, so this costs no extra requests.
+- The photo preload gives up after five seconds and ignores a broken
+  URL, so a slow image can't hold a dive at the spinner. Artists with no
+  photo on Spotify go straight through.
+
 ## 2.7.2
 - Changed: a dive started from a tile no longer borrows that tile's
   image to fill the screen while the artist is looked up. Tile art is a

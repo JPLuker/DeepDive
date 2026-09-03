@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.7.2";
+export const BUILD = "2.7.3";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1507,32 +1507,41 @@ function startSearch(artistName) {
 }
 
 async function runSearchWithOptions(artistName, opts) {
-  // The dive gets the whole screen: the artist fills it and the status
-  // sits along the bottom.
-  showDiveScreen(`Diving into ${artistName}…`, () => renderHome());
+  // The full screen is not opened until there is a photo to put on it.
+  // Every attempt to fill that gap with something cheap — the tile's own
+  // thumbnail — looked pixelated, because a 56px tile image stretched
+  // across a phone always will. A spinner on the page you were already
+  // on costs a second or two and is never wrong.
+  showDiveSpinner(artistName);
+  let artist = null;
   try {
-    // Preflight (issue #3): verify this token can actually do what the
-    // scan is about to ask. Ported from the Flask health check, which
-    // was added after a token that looked valid 403'd on /me/playlists
-    // only AFTER a full search had completed. Costs ~3 cheap requests;
-    // saves an entire wasted scan.
-    updateDiveScreen(0, "Checking your Spotify connection…");
     await preflight();
+    artist = await client.findArtist(artistName);
+    if (!artist) {
+      throw new Error(`No Spotify artist found matching "${artistName}".`);
+    }
+    await preloadPhoto(largestImage(artist.images));
+  } catch (e) {
+    hideDiveSpinner();
+    if (!_diveCancelled) renderProgressError(e.message || String(e), e);
+    return;
+  }
+  if (_diveCancelled) { hideDiveSpinner(); return; }
 
+  hideDiveSpinner();
+  showDiveScreen(`Diving into ${artist.name}…`, () => renderHome());
+  const opening = largestImage(artist.images);
+  if (opening) { _haveArtistPhoto = true; addDiveImage(opening); }
+  else if (artist.id) fetchArtistImages(artist.id);
+
+  try {
     const result = await search.runSearch(client, artistName, {
       ...opts,
       libraryCache,
+      // Already resolved above so the photo could be loaded first —
+      // handed over so the search doesn't spend the request again.
+      resolvedArtist: artist,
       onProgress: (pct, stage) => updateDiveScreen(pct, stage),
-      onArtist: (a) => {
-        // `images` is ONE photograph at three sizes (640/320/160, widest
-        // first) — not three photographs. Adding them all queued the same
-        // picture three times, so the slideshow crossfaded between
-        // identical frames while cycling down through the small ones and
-        // stretching them full-screen. Take the largest, once.
-        const photo = largestImage(a && a.images);
-        if (photo) { _haveArtistPhoto = true; addDiveImage(photo); }
-        else if (a && a.id) fetchArtistImages(a.id);
-      },
       // Album art is a fallback for acts with no photo on Spotify, not
       // decoration to mix in alongside one.
       onArtwork: (url) => { if (!_haveArtistPhoto) addDiveImage(url); },
@@ -1646,12 +1655,54 @@ function showDiveScreen(heading, onCancel) {
   startSlideshow();
 }
 
+
+/**
+ * A spinner over whatever page you were on, shown while the artist is
+ * resolved and their photo downloaded. Deliberately not the dive screen:
+ * the dive is full-bleed and opening it before there is a photo means
+ * showing either a blank field or a stretched thumbnail.
+ */
+function showDiveSpinner(artistName) {
+  _diveCancelled = false;
+  const el = document.getElementById("dive-spinner");
+  if (!el) return;
+  const label = document.getElementById("dive-spinner-label");
+  if (label) label.textContent = `Finding ${artistName}…`;
+  el.hidden = false;
+}
+
+function hideDiveSpinner() {
+  const el = document.getElementById("dive-spinner");
+  if (el) el.hidden = true;
+}
+
+/**
+ * Resolve once the photo is decoded and ready to paint, so the dive
+ * screen opens onto it rather than onto a frame of nothing.
+ *
+ * Never rejects, and gives up after a few seconds: a slow or broken
+ * image must not be able to hold the dive at a spinner indefinitely.
+ * Without a URL at all it returns immediately — some artists have no
+ * photo, and they still get to be dived into.
+ */
+function preloadPhoto(url, timeoutMs = 5000) {
+  if (!url) return Promise.resolve();
+  return new Promise((resolve) => {
+    let settled = false;
+    const done = () => { if (!settled) { settled = true; resolve(); } };
+    const img = new Image();
+    img.onload = done;
+    img.onerror = done;
+    img.src = url;
+    setTimeout(done, timeoutMs);
+  });
+}
+
 /**
  * Add a photo to the rotation. Loads it first, so a broken URL never
  * becomes a blank slide in the cycle. The first one to arrive clears the
  * loading field.
- */
-function addDiveImage(url) {
+ */function addDiveImage(url) {
   if (!url || _diveImages.includes(url)) return;
   const probe = new Image();
   probe.onload = () => {
