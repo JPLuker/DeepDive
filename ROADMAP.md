@@ -45,7 +45,11 @@ Sabbath**. A retroactive renaming pass sits in 2.9.
 
 > **Built and pushed, not tagged.** The code is live so it can be tested,
 > but no GitHub release exists. **"Changes" by Black Sabbath is the next
-> tagged release**, cut from this work once testing confirms it.
+> tagged release** — but not soon. Joseph has deferred it deliberately:
+> there is substantial work still to come, including the playlist and
+> mix generation in 2.8, and he would rather cut one release covering
+> all of it than tag a staging post. Do not propose cutting it; he will
+> say when.
 > Everything since 2.4 is commits only.
 >
 > Work continued past this into what is now build **2.6.2**, listed under
