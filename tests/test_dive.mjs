@@ -32,5 +32,12 @@ check('library scan feeds it too', /onArtwork: \(url\) => addDiveImage\(url\),\s
 check('hidden on results', /hideDiveScreen\(\);\s*if \(_diveCancelled\) return;/.test(src) || /hideDiveScreen\(\);\s*lastResult/.test(src));
 check('hidden on error', /hideDiveScreen\(\);\s*if \(!_diveCancelled\) renderProgressError/.test(src));
 check('cancellable', /id="dive-cancel"/.test(app) && /_diveCancelled = true;/.test(src));
+
+// Percentage returned in 2.6.4 — the full-screen rewrite dropped it.
+check('percentage element exists', /id="dive-pct"/.test(app));
+check('right-aligned under the bar', /\.dive-pct \{ align-self:flex-end/.test(html));
+check('updated with progress', /pc\.textContent = `\$\{pct\}%`/.test(src));
+check('reset when a dive starts', /pc0\.textContent = "0%"/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

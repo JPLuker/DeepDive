@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.6.3";
+export const BUILD = "2.6.4";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1594,6 +1594,8 @@ function showDiveScreen(heading, onCancel) {
   document.getElementById("dive-heading").textContent = heading;
   document.getElementById("dive-stage").textContent = "Starting…";
   document.getElementById("dive-fill").style.width = "0%";
+  const pc0 = document.getElementById("dive-pct");
+  if (pc0) pc0.textContent = "0%";
   el.hidden = false;
 
   const cancel = document.getElementById("dive-cancel");
@@ -1645,7 +1647,9 @@ function startSlideshow() {
 function updateDiveScreen(pct, stage) {
   const fill = document.getElementById("dive-fill");
   const st = document.getElementById("dive-stage");
+  const pc = document.getElementById("dive-pct");
   if (fill) fill.style.width = `${pct}%`;
+  if (pc) pc.textContent = `${pct}%`;
   if (st && stage) st.textContent = stage;
   setTitle(`(${pct}%) DeepDive · Working`);
 }

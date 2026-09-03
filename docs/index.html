@@ -479,6 +479,9 @@
   .dive-stage { font-size:13.5px; color:var(--muted); min-height:19px; }
   .dive-track { height:3px; border-radius:999px; background:rgba(255,255,255,0.16); overflow:hidden; margin-top:6px; }
   .dive-track-fill { height:100%; width:0%; background:var(--accent-gradient); border-radius:999px; transition:width .4s ease; }
+  /* Right-aligned under the bar: present when wanted, out of the way of
+     the artist name and the stage line otherwise. */
+  .dive-pct { align-self:flex-end; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted-soft); letter-spacing:0.04em; margin-top:-2px; }
   .dive-cancel { align-self:flex-start; margin-top:12px; }
 
   @media (max-width: 640px) {
