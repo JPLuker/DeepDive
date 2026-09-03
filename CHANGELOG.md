@@ -4,6 +4,17 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.6.8
+- Fixed: suggestion and pin tiles launched dives that stayed pixelated.
+  The suggestion row borrows artwork from the library cache to avoid a
+  request per artist, but only took the small variant — the cache keeps
+  a large one alongside it, and nothing downstream had anything better
+  to reach for.
+- Changed: the real photo now crossfades over the low-res placeholder
+  instead of cutting to it. The slide was getting its visible class in
+  the same frame it was appended, so the browser coalesced both into one
+  style pass and the CSS transition never ran.
+
 ## 2.6.7
 - Fixed: the dive screen showed no photo at all when started from
   search, and kept the blurry 44px-tile copy when started from a pin or

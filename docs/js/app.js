@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.6.7";
+export const BUILD = "2.6.8";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1166,7 +1166,7 @@ async function buildSuggestionRow(el) {
   // the whole row with nothing to show and nothing to report. A missed
   // suggestion is a far better outcome than a blank page.
   let libraryPicks = [];
-  let cachedArt = { byId: new Map(), byName: new Map() };
+  let cachedArt = { byId: new Map(), byName: new Map(), largeById: new Map(), largeByName: new Map() };
   try {
     const cached = await Promise.race([
       libraryCache.peek(),
@@ -1217,8 +1217,17 @@ async function buildSuggestionRow(el) {
   // what was silently failing under rate limiting.
   for (const x of suggestions) {
     if (x.image_url) continue;
+    const key = (x.name || "").trim().toLowerCase();
     x.image_url = cachedArt.byId.get(x.id)
-      || cachedArt.byName.get((x.name || "").trim().toLowerCase())
+      || cachedArt.byName.get(key)
+      || null;
+    // The cache keeps a large variant of everything it keeps a small one
+    // of. Borrowing only the small copy is what left sampler slideshows
+    // and tile-launched dives pixelated: nothing downstream had anything
+    // better to reach for.
+    x.image_url_large = (cachedArt.largeById && cachedArt.largeById.get(x.id))
+      || (cachedArt.largeByName && cachedArt.largeByName.get(key))
+      || x.image_url_large
       || null;
   }
 
@@ -1663,18 +1672,36 @@ function addDiveImage(url, { placeholder = false } = {}) {
     if (_diveImages.includes(url)) return;
     const slides = document.getElementById("dive-slides");
     if (!slides) return;
-    if (!placeholder) dropPlaceholderSlide();
     _diveImages.push(url);
     const slide = document.createElement("div");
     slide.className = "dive-slide";
     if (placeholder) slide.dataset.placeholder = "1";
     slide.style.backgroundImage = `url("${url.replace(/"/g, "%22")}")`;
     slides.appendChild(slide);
-    // First one in shows immediately; the rest wait their turn.
-    if (_diveImages.length === 1) slide.classList.add("on");
+
+    // The first image in shows immediately; the rest wait their turn in
+    // the rotation. A real photo arriving over the placeholder is the
+    // exception — it crossfades, because cutting straight from a blurry
+    // thumbnail to a sharp photo reads as a glitch.
+    const over = !placeholder && !!slides.querySelector('[data-placeholder="1"]');
+    if (_diveImages.length === 1 || over) {
+      // Two frames: the element must be laid out at opacity 0 before the
+      // class is added, or the browser coalesces both into one style
+      // computation and the transition never runs — which is why this
+      // was a hard cut rather than the fade the CSS already describes.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        slide.classList.add("on");
+        if (over) setTimeout(dropPlaceholderSlide, SLIDE_FADE_MS);
+      }));
+    }
   };
   probe.src = url;
 }
+
+// Matches the .dive-slide opacity transition in app/index.html. The
+// placeholder is held underneath for exactly this long so the incoming
+// photo fades over it rather than onto an empty backdrop.
+const SLIDE_FADE_MS = 1100;
 
 /** Remove the low-res stand-in once a genuine photo is ready. */
 function dropPlaceholderSlide() {

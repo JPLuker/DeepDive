@@ -73,7 +73,13 @@ const callAt = sr.indexOf('onArtist(artist)');
 check('artist is resolved before onArtist fires', declAt > -1 && callAt > declAt);
 check('placeholder is marked as such', /addDiveImage\(_pendingArtwork, \{ placeholder: true \}\)/.test(src));
 check('placeholder is dropped for a real photo', /function dropPlaceholderSlide\(\)/.test(src));
-check('real photos drop the placeholder', /if \(!placeholder\) dropPlaceholderSlide\(\);/.test(src));
+check('real photos drop the placeholder', /setTimeout\(dropPlaceholderSlide, SLIDE_FADE_MS\)/.test(src));
+check('placeholder is held for the crossfade', /const SLIDE_FADE_MS = 1100;/.test(src));
+// Two nested rAFs, not one: a single frame lets the browser coalesce the
+// append and the class change into one style pass, and the transition
+// never runs. That was the hard cut.
+check('fade waits two frames', /requestAnimationFrame\(\(\) => requestAnimationFrame\(/.test(src));
+check('suggestions borrow the large variant', /cachedArt\.largeById && cachedArt\.largeById\.get\(x\.id\)/.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);
