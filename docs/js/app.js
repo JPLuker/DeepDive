@@ -249,7 +249,6 @@ function renderConnect() {
 // ============================================================
 async function renderHome() {
   setTitle("DeepDive");
-  clearDiveBackdrop();
   setActiveTab("home");
   root.innerHTML = `
     <div class="search-shell">
@@ -420,7 +419,6 @@ async function runSampler(artists) {
       // Show whose tracks are being fetched, using the same artwork
       // component the dive screen uses.
       const a = artists[Math.min(done, artists.length - 1)];
-      showProgressArt(a && a.image_url ? [{ url: a.image_url }] : null, a && a.name, a && a.id);
       updateDiveScreen(Math.round((done / total) * 100), `${a ? a.name : "Fetching"}… (${done}/${total})`);
       if (a && a.image_url) addDiveImage(a.image_url);
     });
@@ -1661,77 +1659,12 @@ function hideDiveScreen() {
  * Show the artist once known. Separate function so multi-artist dives
  * and the sampler can reuse it as a slideshow later.
  */
-/**
- * The artist's own photo is what's wanted here — album art is only a
- * stand-in. So anything local paints immediately (instant, no request),
- * and the artist record is fetched regardless to replace it with the
- * real portrait when it lands.
- */
-function showProgressArt(images, artistName, artistId) {
-  const slot = document.getElementById("prog-art");
-  if (!slot) return;
-
-  // Prefer the artist photo, but don't depend on it. Spotify's search
-  // results don't reliably carry images for this app — the same Feb 2026
-  // narrowing that removed `popularity` — so fall back to album art for
-  // that artist from the cached library, which is already local and
-  // costs nothing. An album cover is a fair stand-in for a portrait.
-  // Every branch reports what it found. Three silent fallbacks meant a
-  // blank screen with nothing to diagnose from, which is the same
-  // mistake the error handling in 2.1.5 was written to prevent.
-  const log = (...a) => console.log("[DeepDive art]", ...a);
-
-  let url = images && images.length ? images[0].url : null;
-  log("search images:", images ? images.length : "none", url ? "→ using" : "");
-
-  if (!url && artistName) {
-    if (!_cachedArt) {
-      log("cache: not loaded");
-    } else {
-      url = _cachedArt.byName.get(artistName.trim().toLowerCase()) || null;
-      log("cache lookup:", artistName, url ? "→ hit" : `→ miss (${_cachedArt.byName.size} artists cached)`);
-    }
-  }
-
-  // Paint whatever we have straight away so the screen isn't empty…
-  if (url) paintProgressArt(slot, url);
-
-  // …then get the real artist photo, which is the one that belongs here.
-  if (!artistId) { log("no artist id — keeping local art"); return; }
-
-  log("fetching artist photo", artistId);
-  client.get(`artists/${artistId}`)
-    .then((a) => {
-      const imgs = (a && a.images) || [];
-      log("artist photo:", imgs.length ? "found" : "none");
-      if (imgs.length) _haveArtistPhoto = true;
-      // The artist's own photo always wins over a stand-in, whatever is
-      // already on screen.
-      if (imgs.length) paintProgressArt(slot, imgs[0].url);
-    })
-    .catch((e) => log("artist photo failed:", e && (e.status || e.message)));
-}
 
 // Tracks whether a genuine artist photo has been shown, so a later
 // album-art fallback can't replace it.
 let _haveArtistPhoto = false;
 
-function clearDiveBackdrop() {
-  const bg = document.getElementById("dive-bg");
-  if (bg) { bg.classList.remove("visible"); bg.style.backgroundImage = ""; }
-}
 
-function setDiveBackdrop(url) {
-  const bg = document.getElementById("dive-bg");
-  if (!bg || !url) return;
-  const probe = new Image();
-  probe.onload = () => {
-    bg.style.backgroundImage = `url("${url.replace(/"/g, "%22")}")`;
-    bg.classList.add("visible");
-  };
-  probe.onerror = () => console.warn("[DeepDive art] backdrop failed:", url);
-  probe.src = url;
-}
 
 /**
  * Open a Spotify link in the desktop or mobile client where it exists,
@@ -1755,25 +1688,6 @@ function openInSpotify(webUrl) {
   }, 900);
 }
 
-function paintProgressArt(slot, url) {
-  setDiveBackdrop(url);
-  console.log("[DeepDive art] painting", url);
-  const img = new Image();
-  img.className = "prog-art";
-  img.alt = "";
-  // Report a load failure rather than vanishing silently — a URL that
-  // 404s or is blocked looked identical to having no artwork at all.
-  img.onerror = () => {
-    console.warn("[DeepDive art] image failed to load:", url);
-    slot.classList.remove("visible");
-    slot.innerHTML = "";
-  };
-  img.onload = () => console.log("[DeepDive art] loaded");
-  slot.innerHTML = "";
-  slot.appendChild(img);
-  slot.classList.add("visible");
-  img.src = url;
-}
 
 // Turn an error into something a person can act on, plus the technical
 // detail underneath. The point is that nobody should ever need to open
@@ -1893,7 +1807,6 @@ function trackRow(t, { checkbox = true, cls = "newt", sub = "" } = {}) {
 
 function renderResults(r) {
   setTitle("DeepDive · Results");
-  clearDiveBackdrop();
   const dups = r.duplicate_candidates || [];
   const news = r.new_tracks || [];
   const artistName = r.artist ? r.artist.name : "";
@@ -2032,7 +1945,6 @@ async function applyResults(r, action) {
 // ============================================================
 function renderScrubForm() {
   setTitle("DeepDive · Full library scan");
-  clearDiveBackdrop();
   setActiveTab("scrub");
   root.innerHTML = `
     <div class="card">
@@ -2202,7 +2114,6 @@ function confirmDialog({ title, body, confirmLabel = "Confirm", danger = false }
 
 function renderSettings() {
   setTitle("DeepDive · Settings");
-  clearDiveBackdrop();
   setActiveTab("settings");
   root.innerHTML = `
     <div class="card">
@@ -2387,7 +2298,6 @@ function renderSettings() {
 
 function renderHistory() {
   setTitle("DeepDive · History");
-  clearDiveBackdrop();
   setActiveTab("history");
   const dives = history.listDives();
   const created = history.listCreatedPlaylists();
@@ -2538,7 +2448,6 @@ function renderHistory() {
 
 function renderWatchlist() {
   setTitle("DeepDive · Pins & blocked");
-  clearDiveBackdrop();
   const pins = watchlist.pinned();
   const blocked = watchlist.listBlocked();
   root.innerHTML = `
