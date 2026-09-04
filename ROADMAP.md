@@ -244,6 +244,17 @@ page first. Same discipline as the setlist.fm check, and just as cheap.
 - Use demo mode to produce a clean screenshot per advertised feature
 - Place them on the marketing page
 
+**Open: demo mode may want real calls after all.** 2.8.3 made it fully
+offline, which is what makes it useful with the quota locked and what
+makes the staged results screen safe to photograph. But screenshots of
+real artwork and real library data look better than gradient-initial
+tiles, so Joseph is reconsidering a mode that keeps the fixed *shape*
+while fetching real content. That is a larger change than it sounds —
+it reintroduces auth, quota, and whatever happens to be in the library
+at the time, which is the exposure demo mode was built to avoid. Parked
+until the results screen has been reviewed; it may turn out the staged
+version is good enough for the page.
+
 **Stopping point C — housekeeping**
 - Rename existing GitHub releases to match the song-title convention
 
