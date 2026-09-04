@@ -434,6 +434,12 @@ export class SpotifyClient {
         id: album.id, name: album.name, release_date: album.release_date,
         album_type: album.album_type, // "album" | "single" | "compilation"
         album_group: ref.group,
+        // Middle variant: results rows show art at 56px, which is ~168
+        // device pixels at 3x. Already in this response, so free. Shared
+        // by reference across every track on the release.
+        image_url: (album.images && album.images.length)
+          ? (album.images.length >= 2 ? album.images[1].url : album.images[0].url)
+          : null,
       };
       // A guest spot puts someone else's entire album in the list. Only
       // the tracks this artist is actually credited on belong in their

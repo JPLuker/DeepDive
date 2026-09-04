@@ -140,6 +140,21 @@ recording. If anything, this errs toward keeping too much.*
 
 ---
 
+## 4e. Results screen appearance (2.8.1)
+
+Cosmetic, and the only part of this list not blocked on quota — but it
+also hasn't been seen rendered. Chrome wouldn't install in the sandbox,
+so it was designed by reading the stylesheet, not by looking at it.
+
+- [ ] Section headings read as plain headings, not uppercase pills
+- [ ] Track rows are filled blocks with album art on the left
+- [ ] Tapping anywhere on a row toggles its checkbox
+- [ ] The summary under the artist name is sentences, not counts
+      separated by dots
+- [ ] One prominent button, with the alternatives beside it as ghosts
+- [ ] **Settings, History and Pins also changed** — the heading style is
+      shared. Check those still look right
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

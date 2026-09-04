@@ -73,7 +73,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.0
+## Shipped since — build 2.8.1
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -144,10 +144,12 @@ the progress percentage had been dropped entirely.
 
 The least-touched screen since the rewrite, and the most dated.
 
-**Stopping point A — the dive screen** — *photo half shipped in 2.6.x;
-the dive is full-screen, artist-led, and waits for its photo before
-opening. Remaining:*
-- Rework the search appearance to match the rest of the app
+**Stopping point A — the dive screen** — *shipped. The dive is
+full-screen, artist-led and waits for its photo before opening (2.6.x),
+and the results screen was modernised in 2.8.1. Note the section-heading
+restyle is shared markup, so Settings, History, Pins and scan results
+moved with it — revert `.crate-header` in the stylesheet if that is
+unwanted.*
 
 **Stopping point B — catalogue accuracy** — *shipped in 2.8.0. Both
 defects fixed: the toggle is split in the dive options, the presets and

@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.0";
+export const BUILD = "2.8.1";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -721,8 +721,10 @@ function openCardModal(card) {
     else renderPlaylistOptions(lenRow, opts, paint, card.count);
     const list = tracksFor();
     summary.textContent = `Preview ${list.length} track${list.length === 1 ? "" : "s"}`;
+    // Read-only preview: same row treatment, no checkbox, and the
+    // artist rather than the album underneath since a mix spans many.
     preview.innerHTML = list.slice(0, 100).map((t) => `
-      <div class="track-row newt">
+      <div class="track-row newt is-static">
         <div class="track-meta">
           <div class="track-name">${esc(t.name)}</div>
           <div class="track-sub">${esc((t.artists && t.artists[0] && t.artists[0].name) || "")}${t.album && t.album.name ? ` · ${esc(t.album.name)}` : ""}</div>
@@ -1927,16 +1929,62 @@ function renderProgressError(msgOrErr, err) {
 // ============================================================
 // Results (like + playlist)
 // ============================================================
-function trackRow(t, { checkbox = true, cls = "newt", sub = "" } = {}) {
+/**
+ * The line under the artist's name.
+ *
+ * Was "12 already liked · 3 to confirm · 48 new" — a meta string of
+ * counts joined by middle dots, which reads as a status bar rather than
+ * an answer. This says what was found, in sentences.
+ */
+function resultsSummary(r, dupCount, newCount) {
+  const parts = [];
+  const liked = r.already_liked_count || 0;
+  if (liked) parts.push(`You already have ${liked} of these.`);
+  if (dupCount) {
+    parts.push(dupCount === 1
+      ? "1 more is a recording you own under a different release."
+      : `${dupCount} more are recordings you own under different releases.`);
+  }
+  parts.push(newCount === 1 ? "1 track is new to you." : `${newCount} tracks are new to you.`);
+  if (r.excluded_count) parts.push(`${r.excluded_count} were filtered out.`);
+  return parts.join(" ");
+}
+
+/** A track already in the library under some other release. */
+function dupRow(d) {
+  const matched = d.matched_liked_track ? d.matched_liked_track.name : "";
+  return trackRow(d.track, {
+    cls: "dup",
+    // Confirmed duplicates are collected under a different attribute
+    // from new tracks, since they're liked rather than added to a
+    // playlist.
+    attr: "data-dup",
+    match: matched ? `Matches “${matched}” — ${d.match_basis}` : d.match_basis,
+  });
+}
+
+/**
+ * One track. The whole row toggles its checkbox — a 19px box is a poor
+ * target on a phone, and the app's tiles already behave this way.
+ *
+ * `match` is the reason a row is in the "already yours" list; it reads
+ * as the row's own explanation rather than an annotation stuck beneath.
+ */
+function trackRow(t, { checkbox = true, cls = "newt", sub = "", match = "", attr = "data-tid" } = {}) {
+  const art = (t.album && t.album.image_url)
+    ? `<img src="${esc(t.album.image_url)}" alt="" class="track-art" loading="lazy">`
+    : `<span class="track-art-fallback">♪</span>`;
   return `
-    <div class="track-row ${cls}" data-rd="${esc((t.album && t.album.release_date) || "")}" data-title="${esc((t.name || "").toLowerCase())}">
-      ${checkbox ? `<input type="checkbox" data-tid="${esc(t.id)}" checked>` : ""}
-      <div class="track-meta">
-        <div class="track-name">${esc(t.name)}</div>
-        <div class="track-sub">${esc(sub || (t.album && t.album.name) || "")}</div>
-      </div>
-      <div class="track-dur">${t.duration_ms ? fmtDur(t.duration_ms) : ""}</div>
-    </div>`;
+    <label class="track-row ${cls}" data-rd="${esc((t.album && t.album.release_date) || "")}" data-title="${esc((t.name || "").toLowerCase())}">
+      ${art}
+      <span class="track-meta">
+        <span class="track-name">${esc(t.name)}</span>
+        <span class="track-sub">${esc(sub || (t.album && t.album.name) || "")}</span>
+        ${match ? `<span class="track-match">${esc(match)}</span>` : ""}
+      </span>
+      <span class="track-dur">${t.duration_ms ? fmtDur(t.duration_ms) : ""}</span>
+      ${checkbox ? `<input type="checkbox" ${attr}="${esc(t.id)}" checked>` : ""}
+    </label>`;
 }
 
 function renderResults(r) {
@@ -1948,26 +1996,17 @@ function renderResults(r) {
   root.innerHTML = `
     <div class="card">
       <h1>${esc(artistName)}</h1>
-      <p class="muted">${r.already_liked_count} already liked · ${dups.length} to confirm · ${news.length} new${r.excluded_count ? ` · ${r.excluded_count} excluded by filters` : ""}</p>
+      <p class="muted">${resultsSummary(r, dups.length, news.length)}</p>
       ${r.collapsed_count ? `<p class="crate-note">${r.collapsed_count} duplicate recording${r.collapsed_count === 1 ? "" : "s"} collapsed — the same track appeared on more than one release.</p>` : ""}
 
       ${dups.length ? `
-        <div class="crate-header"><span class="label teal">Already yours, elsewhere</span><span class="rule"></span></div>
+        <div class="crate-header"><span class="label">Already yours, elsewhere</span></div>
         <p class="crate-note">Same recording as something in your Liked Songs, under a different release. Checked = will be liked.</p>
         <div id="dup-list">
-          ${dups.map((d) => `
-            <div class="track-row dup">
-              <input type="checkbox" data-dup="${esc(d.track.id)}" checked>
-              <div class="track-meta">
-                <div class="track-name">${esc(d.track.name)}</div>
-                <div class="track-sub">${esc((d.track.album && d.track.album.name) || "")}</div>
-                <div class="track-match">${esc(d.match_basis)} · matches "${esc(d.matched_liked_track ? d.matched_liked_track.name : "")}"</div>
-              </div>
-              <div class="track-dur">${d.track.duration_ms ? fmtDur(d.track.duration_ms) : ""}</div>
-            </div>`).join("")}
+          ${dups.map((d) => dupRow(d)).join("")}
         </div>` : ""}
 
-      <div class="crate-header"><span class="label gold">New to you</span><span class="rule"></span></div>
+      <div class="crate-header"><span class="label">New to you</span></div>
       ${news.length ? `
         <div class="sort-row">
           <label for="new-sort">Sort by</label>
@@ -1987,9 +2026,15 @@ function renderResults(r) {
       </div>
 
       <div class="actions">
-        ${dups.length ? `<button class="btn btn-primary" data-action="like">Like Songs</button>` : ""}
-        ${news.length ? `<button class="btn btn-primary" data-action="playlist">Create Playlist Only</button>` : ""}
-        ${dups.length && news.length ? `<button class="btn btn-primary" data-action="both">Like Songs &amp; Create Playlist</button>` : ""}
+        ${dups.length && news.length
+          ? `<button class="btn btn-primary" data-action="both">Like ${dups.length} and build the playlist</button>
+             <button class="btn btn-ghost" data-action="like">Just like the ${dups.length}</button>
+             <button class="btn btn-ghost" data-action="playlist">Just build the playlist</button>`
+          : dups.length
+            ? `<button class="btn btn-primary" data-action="like">Like ${dups.length === 1 ? "this track" : `these ${dups.length}`}</button>`
+            : news.length
+              ? `<button class="btn btn-primary" data-action="playlist">Build the playlist</button>`
+              : ""}
         <button class="btn btn-ghost" data-home>Back to search</button>
       </div>
       <div class="flash hidden" id="result-msg" style="margin-top:18px;"></div>

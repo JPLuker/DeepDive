@@ -161,21 +161,54 @@
   input:focus, button:focus, a:focus, select:focus { outline:2px solid var(--ink); outline-offset:2px; }
   .search-row { display:flex; gap:10px; margin-top:20px; } .search-row input { flex:1; }
 
-  .crate-header { display:flex; align-items:center; gap:12px; margin:40px 0 8px; }
-  .crate-header .label { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; padding:4px 8px; border-radius:4px; border:1px solid currentColor; }
-  .crate-header .label.gold { background:var(--gold-soft); color:var(--gold); }
-  .crate-header .label.teal { background:var(--teal-soft); color:var(--teal); }
-  .crate-header .rule { flex:1; height:1px; background:var(--line); }
+  /* Section headings. These were a tracked-out uppercase monospace pill
+     beside a hairline rule — the last of the original Flask identity, and
+     still on Settings, History, Pins and results long after Home moved to
+     plain Inter headings. Same markup, restyled to match: no pill, no
+     rule, no uppercase. */
+  .crate-header { display:flex; align-items:baseline; gap:8px; margin:34px 0 10px; }
+  .crate-header .label {
+    font-family:'Inter',system-ui,sans-serif; font-size:19px; font-weight:700;
+    letter-spacing:-0.02em; text-transform:none; color:var(--ink);
+    background:none; padding:0; border-radius:0;
+  }
+  .crate-header .rule { display:none; }
   .crate-note { font-size:13px; color:var(--muted); margin:-4px 0 16px; }
 
-  .track-row { display:flex; align-items:flex-start; gap:14px; padding:12px 10px 12px 4px; border-bottom:1px solid var(--line); position:relative; }
-  .track-row::before { content:""; width:3px; align-self:stretch; background:var(--surface); border-radius:2px; flex-shrink:0; }
-  .track-row.dup::before { background:var(--teal); } .track-row.newt::before { background:var(--gold); }
-  .track-row input[type=checkbox] { margin-top:3px; width:17px; height:17px; accent-color:var(--accent); flex-shrink:0; }
-  .track-meta { flex:1; min-width:0; } .track-name { font-weight:600; font-size:15px; }
-  .track-sub { font-size:12.5px; color:var(--muted); margin-top:2px; }
-  .track-match { font-size:12px; color:var(--teal); margin-top:4px; font-family:'IBM Plex Mono',monospace; }
-  .track-dur { font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--muted-soft); flex-shrink:0; padding-top:2px; }
+  /* Track rows. Previously a bordered list with a 3px coloured spine per
+     row — outlines, against the app's "fills, not outlines" direction,
+     and no artwork on the one screen that has an album cover for every
+     line. Now the tile treatment: a filled surface, art flush to the
+     left edge, the whole row a hit target for its checkbox. */
+  .track-row {
+    display:flex; align-items:center; gap:12px;
+    background:var(--tile); border:none; border-radius:var(--radius-tile);
+    overflow:hidden; margin-bottom:6px; min-height:56px;
+    cursor:pointer; transition:background .15s ease;
+    position:relative; width:100%; text-align:left; font-family:inherit; color:var(--ink); padding:0;
+  }
+  .track-row:hover { background:var(--tile-hover); }
+  /* Preview lists aren't selectable, so they shouldn't invite a click. */
+  .track-row.is-static { cursor:default; }
+  .track-row.is-static:hover { background:var(--tile); }
+  .track-row.is-static .track-meta { padding-left:14px; }
+  .track-row:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .track-art { width:56px; height:56px; flex-shrink:0; object-fit:cover; display:block; background:var(--surface); }
+  .track-art-fallback {
+    width:56px; height:56px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    background:var(--surface); color:var(--muted-soft);
+  }
+  .track-meta { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; padding:8px 0; }
+  .track-name { font-weight:600; font-size:14px; letter-spacing:-0.01em; }
+  .track-sub { font-size:11.5px; color:var(--muted-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* The reason this row is here at all, so it reads as information
+     rather than a monospace annotation bolted underneath. */
+  .track-match { font-size:11.5px; color:var(--teal); }
+  .track-dur { font-size:12px; color:var(--muted-soft); flex-shrink:0; font-variant-numeric:tabular-nums; }
+  .track-row input[type=checkbox] {
+    width:19px; height:19px; accent-color:var(--accent); flex-shrink:0;
+    margin:0 14px 0 0; cursor:pointer;
+  }
 
   .pill-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
   .pill-wrap { position:relative; }
@@ -302,7 +335,7 @@
   .filter-options { display:flex; flex-direction:column; gap:10px; margin-top:16px; }
 
   .sort-row { display:flex; align-items:center; gap:10px; margin:4px 0 14px; }
-  .sort-row label { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+  .sort-row label { font-size:13px; color:var(--muted); }
   .sort-select { font-family:'Inter',sans-serif; font-size:13px; padding:7px 10px; border-radius:var(--radius); border:1.5px solid var(--line); background:var(--field); color:var(--ink); }
 
   .watchlist-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
@@ -313,7 +346,7 @@
   .empty-note { font-size:14px; color:var(--muted); padding:10px 0 4px; font-style:italic; }
   .actions { margin-top:32px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
   .playlist-name-field { margin:28px 0 20px; }
-  .playlist-name-field label { display:block; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  .playlist-name-field label { display:block; font-size:13px; color:var(--muted); margin-bottom:7px; }
 
   .progress-track { background:var(--surface); border-radius:var(--radius-pill); height:10px; overflow:hidden; margin:28px 0 12px; }
   .progress-fill { height:100%; background:var(--accent-gradient); border-radius:var(--radius-pill); width:0%; transition:width .35s; }
@@ -624,8 +657,8 @@
     .len-opt { padding:8px 13px; }
 
     /* Results rows need the space more than the padding. */
-    .track-row { padding:10px 4px 10px 2px; gap:10px; }
-    .track-name { font-size:14px; }
+    .track-row { gap:10px; }
+    .track-name { font-size:13.5px; }
     .actions .btn { flex:1; justify-content:center; }
 
     .watchlist-row { align-items:flex-start; }

@@ -4,6 +4,26 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.1
+- Changed: the results screen was the last place the original Flask
+  design showed through, and it has been brought in line with the rest
+  of the app.
+  - Section headings were tracked-out uppercase monospace pills beside a
+    hairline rule. They are now plain Inter headings, matching Home.
+    This markup is shared, so Settings, History, Pins and scan results
+    all move with it.
+  - Track rows were a bordered list with a coloured spine per row —
+    outlines, against the app's "fills, not outlines" direction — and
+    carried no artwork on the one screen where every line has an album
+    cover. They are now filled rows with the art flush to the left edge,
+    and the whole row toggles its checkbox.
+  - Album artwork is carried through the catalogue read to make that
+    possible. It was already in the response; nothing extra is fetched.
+  - The summary line was a meta string of counts joined by middle dots.
+    It now says what was found in sentences.
+  - Three primary buttons competed for the same action. There is one
+    primary now, and each button names what it does.
+
 ## 2.8.0
 - Changed: compilations and "appeared on" are now two separate choices.
   A greatest-hits record is the artist's own work; a various-artists
