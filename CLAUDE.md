@@ -112,6 +112,14 @@ half the site.
 
 ---
 
+## Untested work
+
+`TESTING.md` lists everything shipped but never run against a real
+account. The quota locked during the 2.6.6-2.8.0 session, so all of it
+is unverified. Keep that file current: add to it when shipping
+something Joseph hasn't been able to test, and clear items once he
+confirms them.
+
 ## Before you push
 
 ```bash
