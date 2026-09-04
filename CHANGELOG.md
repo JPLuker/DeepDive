@@ -4,6 +4,23 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.3
+- Rebuilt demo mode. It previously substituted a fixed artist list into
+  the suggestion row and drew it with the pre-2.2 `pill` markup — a UI
+  the app no longer has, so any screenshot taken from it advertised the
+  wrong product. It also couldn't stage anything but Home.
+- Demo screens now run ahead of every auth check and make no Spotify
+  calls at all, so the app can be photographed with the quota locked or
+  with no account: `?demo=home`, `?demo=results`, `?demo=sampler`,
+  `?demo=scan`, and `?demo=index` for a menu of them.
+- Each screen renders through the real renderer with fixed data, rather
+  than a second copy of the markup that can fall behind it.
+- No artwork URLs anywhere in the demo data — tiles and rows use the
+  app's own gradient-initial fallback. Self-contained, nothing to rot,
+  and no other artist's album covers on a marketing page.
+- Changed: the pre-dive spinner reads "Starting…" rather than "Starting
+  dive…", since a sampler isn't a dive.
+
 ## 2.8.2
 - Changed: the sampler now waits behind the spinner for its first two
   artist photos before opening, the same way a single dive waits for

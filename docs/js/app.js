@@ -17,11 +17,12 @@ import * as insights from "./insights.js";
 import * as matching from "./matching.js";
 import { bestStore } from "./storage.js";
 import * as history from "./history.js";
+import * as demo from "./demo.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.2";
+export const BUILD = "2.8.3";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1094,58 +1095,10 @@ function wireSearchBar() {
   document.addEventListener("click", (e) => { if (!list.contains(e.target) && e.target !== input) close(); });
 }
 
-// ---- hidden demo mode ----
-// Recommendations come from real listening history, so screenshots
-// expose whatever happens to be in the library. Demo mode substitutes a
-// fixed artist list so marketing images can be staged. Undocumented on
-// purpose. Enable with ?demo=Artist+One,Artist+Two (or ?demo=1 for a
-// built-in sample set). Persists for the session only.
-//
-// (These were accidentally removed alongside the old To-Dive row in 2.2
-// while the call site remained, throwing a ReferenceError before any
-// error guard could catch it — which is why the whole row silently
-// failed to render.)
-const DEMO_SAMPLE = [
-  "Fleetwood Mac", "Big Thief", "Talking Heads", "Fiona Apple",
-  "The Beths", "Wednesday", "Radiohead", "Sharon Van Etten",
-  "Turnstile", "Alvvays", "MJ Lenderman", "Japanese Breakfast",
-];
-
-function demoArtists() {
-  try {
-    const p = new URLSearchParams(window.location.search).get("demo");
-    if (p !== null) {
-      const list = p === "1" || p === ""
-        ? DEMO_SAMPLE
-        : p.split(",").map((x) => x.trim()).filter(Boolean);
-      sessionStorage.setItem("deepdive_demo", JSON.stringify(list));
-      return list;
-    }
-    const stored = sessionStorage.getItem("deepdive_demo");
-    if (stored) return JSON.parse(stored);
-  } catch (e) {}
-  return null;
-}
 
 async function loadSuggestions() {
   const el = document.getElementById("suggestions-row");
   if (!el) return;
-
-  let demo = null;
-  try { demo = demoArtists(); } catch (e) { demo = null; }
-  if (demo && demo.length) {
-    el.innerHTML = `
-      <p class="crate-note" style="margin-top:28px; text-align:center;">Based on what you've been listening to:</p>
-      <div class="pill-row" style="justify-content:center;">
-        ${demo.map((name) => `
-          <div class="pill-wrap">
-            <button class="pill" data-search="${esc(name)}">${esc(name)}</button>
-          </div>`).join("")}
-      </div>`;
-    el.querySelectorAll("[data-search]").forEach((b) =>
-      b.addEventListener("click", () => startSearch(b.dataset.search)));
-    return;
-  }
 
   try {
     await buildSuggestionRow(el);
@@ -2810,7 +2763,73 @@ function renderLanding() {
   document.getElementById("landing-start-2")?.addEventListener("click", go);
 }
 
+// ---- demo screens ----
+// Staged from fixed data in demo.js. No Spotify calls, no auth, no
+// cache. Each renders the real screen through the real renderer, so a
+// screenshot can't drift from what the app actually looks like — the
+// previous demo mode drew its own markup and ended up advertising a UI
+// that had been replaced.
+async function renderDemo(screen) {
+  switch (screen) {
+    case "results":
+      return renderResults(demo.DEMO_RESULTS);
+    case "scan":
+      return renderScrubResults(demo.DEMO_SCAN);
+    case "sampler":
+      _cards = _cards.filter((c) => c.id !== "sampler").concat(demo.DEMO_SAMPLER_CARD);
+      await renderDemoHome();
+      return openCardModal(demo.DEMO_SAMPLER_CARD);
+    case "index":
+      return renderDemoIndex();
+    case "home":
+    default:
+      return renderDemoHome();
+  }
+}
+
+async function renderDemoHome() {
+  await renderHome();
+  const el = document.getElementById("suggestions-row");
+  // The real renderer, given fixed data — not a second copy of the
+  // markup that can fall behind it.
+  if (el) renderSuggestionRow(el, demo.DEMO_PINS, demo.DEMO_SUGGESTIONS);
+}
+
+function renderDemoIndex() {
+  setTitle("DeepDive · Demo");
+  root.innerHTML = `
+    <div class="card">
+      <h1>Demo screens</h1>
+      <p class="muted">Staged from fixed data. Nothing here touches Spotify, so these work with the quota locked or with no account at all.</p>
+      <div class="tile-grid" style="margin-top:18px;">
+        ${demo.DEMO_SCREENS.map(([id, name, desc]) => `
+          <button class="tile" data-demo="${esc(id)}">
+            <span class="tile-art-fallback">${esc(name.charAt(0))}</span>
+            <span class="tile-text">
+              <span class="tile-title">${esc(name)}</span>
+              <span class="tile-sub">${esc(desc)}</span>
+            </span>
+          </button>`).join("")}
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost" id="demo-exit">Leave demo mode</button>
+      </div>
+    </div>`;
+  root.querySelectorAll("[data-demo]").forEach((b) =>
+    b.addEventListener("click", () => renderDemo(b.dataset.demo)));
+  document.getElementById("demo-exit").addEventListener("click", () => {
+    demo.exitDemo();
+    render();
+  });
+}
+
 async function render() {
+  // Demo screens are staged from fixed data and make no Spotify calls,
+  // so they run ahead of every auth check — the point is to be able to
+  // photograph the app without an account, or with the quota locked.
+  const screen = demo.demoScreen();
+  if (screen) return renderDemo(screen);
+
   // Explain before asking. Only on a genuinely first visit — once the
   // landing page has been seen, going straight to setup is the faster
   // path for someone returning to finish the job.

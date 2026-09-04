@@ -11,7 +11,8 @@ const src = readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 const mustExist = [
-  'demoArtists','loadSuggestions','buildSuggestionRow','renderSuggestionRow',
+  'loadSuggestions','buildSuggestionRow','renderSuggestionRow',
+  'renderDemo','renderDemoHome','renderDemoIndex',
   'renderHome','renderSetup','renderConnect','renderResults',
   'renderProgressError','renderWatchlist','renderHistory','renderSettings','showDiveScreen','updateDiveScreen','hideDiveScreen','addDiveImage','startSlideshow','fetchArtistImages','setDiveHeading','openInSpotify','renderSamplerIntro','runSampler','confirmDialog','applyBmcVisibility','renderLanding','landingSeen','markLandingSeen','renderScrubForm','renderScrubResults',
   'startSearch','runSearchWithOptions','startScrub','applyResults','preflight',
@@ -26,13 +27,25 @@ if (missing.length) console.log('  MISSING definitions:', missing.join(', '));
 check('every startup helper is defined', missing.length === 0);
 
 // Constants referenced by those helpers.
-for (const c of ['DEMO_SAMPLE','INTENTS','INTENT_KEY','BUILD','CARD_LENGTHS','BMC_KEY','FEATURES','LANDING_SEEN_KEY','CARDS_PER_LOAD','PLAYLIST_LENGTHS','PLAYLIST_ORDERS','SAMPLER_MAX_ARTISTS']) {
+for (const c of ['INTENTS','INTENT_KEY','BUILD','CARD_LENGTHS','BMC_KEY','FEATURES','LANDING_SEEN_KEY','CARDS_PER_LOAD','PLAYLIST_LENGTHS','PLAYLIST_ORDERS','SAMPLER_MAX_ARTISTS']) {
   check(`${c} is defined`, new RegExp(`const ${c}\\b`).test(src));
 }
 
+// The original regression this suite exists for: demoArtists was
+// deleted while still being called, throwing before any guard could
+// catch it. Demo mode moved to demo.js in 2.8.3, so the guarded call is
+// gone — what matters now is that the module it moved to is imported
+// and that the screens it routes to all exist.
+check('demo module is imported', /import \* as demo from "\.\/demo\.js";/.test(src));
+// Scoped to render(): getClientId is called from several other places,
+// so comparing first occurrences across the whole file proves nothing.
+const renderFn = src.slice(src.indexOf('async function render() {'), src.indexOf('// ---- support link visibility ----'));
+check('demo routes ahead of auth', renderFn.indexOf('demo.demoScreen()') < renderFn.indexOf('auth.getClientId()'));
+check('no orphaned demoArtists call', !/demoArtists\(\)/.test(src));
+
 // The specific regression: demoArtists was deleted while still being
 // called, and the call sat outside the try block so nothing caught it.
-check('the demo call is inside a guard', /try \{ demo = demoArtists\(\); \}/.test(src));
+
 
 // Every getElementById target must exist in the shell or be rendered by
 // app.js. Elements removed in a redesign leave callers behind that

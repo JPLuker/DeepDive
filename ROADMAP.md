@@ -28,20 +28,31 @@ actively mislead.
 
 ## Versioning, going forward
 
-- **x.0** — identity shifts. 3.0 is concert prep. Nothing else earns one.
+- **x.0** — identity shifts. **3.0 is concert prep**, and is reserved
+  for it. Nothing else earns one.
 - **x.y** — a feature someone would notice and could describe.
 - **x.y.z** — fixes and refinements to the release above.
 
-**Current state is renamed 2.4.** Published tags stay as they are —
-rewriting released history causes more confusion than it solves — but
-the roadmap and future builds use the corrected numbers.
+**Sessions no longer carry version numbers.** Builds outran the plan
+twice — the build reached 2.8.2 while the session labelled "2.8" hadn't
+started — and renumbering the sessions a third time only resets the
+same clock. Sessions are now named by what they do, and the build
+number follows the rules above as work lands.
+
+**A minor bump needs a feature behind it.** Don't move 2.3 to 2.4 for a
+handful of fixes; those stay 2.3.1, 2.3.2 and so on. Roll a build number
+back if it turns out to have been claimed without a feature under it.
+
+**Published tags stay as they are** — rewriting released history causes
+more confusion than it solves.
 
 **Release names** continue as songs. Next is **"Changes" by Black
-Sabbath**. A retroactive renaming pass sits in 2.9.
+Sabbath**. A retroactive renaming pass sits in the presentation
+session.
 
 ---
 
-## Session 1 — 2.5 "Changes" · Bugs and cleanup — **BUILT**
+## Session 1 — "Changes" · Bugs and cleanup — **BUILT**
 
 > **Built and pushed, not tagged.** The code is live so it can be tested,
 > but no GitHub release exists. **"Changes" by Black Sabbath is the next
@@ -73,7 +84,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.2
+## Shipped since — build 2.8.3
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -140,7 +151,7 @@ the progress percentage had been dropped entirely.
 
 ---
 
-## Session 2 — 2.6 · Search overhaul
+## Session 2 — Search overhaul
 
 The least-touched screen since the rewrite, and the most dated.
 
@@ -170,36 +181,30 @@ dive does, since it spans many artists; it keeps the loading field.*
 
 ---
 
-## Session 3 — 2.7 · Tile interactions
+## Session 3 — Navigation, and the tiles inside it
 
-⚠️ **Sequencing question.** The Home/Dives/Mixes restructure is currently
-the first stopping point of Session 4, but tile interactions land on
-Home, Pins and History — the exact screens that restructure moves. Doing
-tiles first risks doing them twice. Consider pulling the restructure
-ahead of this session.
+Merged: the restructure and the tile rework land on the same screens —
+Home, Pins, History — so doing them separately means building the tiles
+twice.
 
-**Stopping point A**
-- Hide pin and remove behind a swipe or overflow button instead of
-  sitting permanently beside every tile. They currently take width on
-  every row for actions used occasionally.
-
-**Stopping point B**
-- Apply the same treatment to the Pins and History rows
-
----
-
-## Session 4 — 2.8 · Playlist generation, widened
-
-"Way more playlist generation options", requested before 3.0.
-
-**Stopping point 0 — navigation and naming** *(from Joseph's notes)*
+**Stopping point A — structure** *(from Joseph's notes)*
 - Home becomes a summary rather than the full surface
 - A **Dives** destination giving the complete view of dive features
 - **Playlists** are renamed **Mixes**, with the sampler living under them
 
-Deliberately first in this session rather than its own: it renames and
-reorganises the exact screens the rest of the session widens, and doing
-it afterwards would mean touching all of them twice.
+**Stopping point B — tile actions**
+- Hide pin and remove behind a swipe or overflow button instead of
+  sitting permanently beside every tile. They currently take width on
+  every row for actions used occasionally.
+
+**Stopping point C**
+- Apply the same treatment to the Pins and History rows
+
+---
+
+## Session 4 — Playlist generation, widened
+
+"Way more playlist generation options", requested before 3.0.
 
 **Stopping point A — more sources**
 - Card types beyond the current fifteen
@@ -225,22 +230,19 @@ page first. Same discipline as the setlist.fm check, and just as cheap.
 
 ---
 
-## Session 5 — 2.9 · Presentation
+## Session 5 — Presentation
 
 **Stopping point A — marketing page overhaul**
 - The treatment the app got: artwork-led, tiles, gradient cards, with
   stats.fm as the reference
 
 **Stopping point B — screenshots**
-- **Extend demo mode first.** It currently only substitutes a fixed
-  artist list for the suggestion row — it cannot stage a results screen,
-  a sampler or a scan, which is most of what needs advertising. This is
-  real work hiding inside a one-line item.
+- ~~Extend demo mode~~ — *done in 2.8.3. `?demo=home|results|sampler|
+  scan|index` stages every screen from fixed data, ahead of auth, with
+  no Spotify calls. Screens render through the real renderers, so they
+  can't drift from the app.*
 - Use demo mode to produce a clean screenshot per advertised feature
 - Place them on the marketing page
-- Worth doing early regardless: with the Spotify quota locked there is
-  no other way to look at a results screen, and the untested pile in
-  `TESTING.md` only grows.
 
 **Stopping point C — housekeeping**
 - Rename existing GitHub releases to match the song-title convention

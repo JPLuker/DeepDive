@@ -93,9 +93,7 @@ rotate through. Not a bug.
 - [ ] If the first artists have no photo on Spotify, the screen still
       opens rather than hanging
 
-*Note: the spinner reads "Starting dive…" even for a sampler, which is
-the wrong word. Left alone because the label was deliberately made
-static; say if it should read "Starting…" instead.*
+*The spinner now reads "Starting…", since a sampler isn't a dive.*
 
 ## 3. Sampler screen layering
 
@@ -167,6 +165,18 @@ so it was designed by reading the stylesheet, not by looking at it.
 - [ ] One prominent button, with the alternatives beside it as ghosts
 - [ ] **Settings, History and Pins also changed** — the heading style is
       shared. Check those still look right
+
+## 4f. Demo mode (2.8.3)
+
+**This one needs no quota and no account** — it's the way to check
+section 4e and most of section 1 without waiting.
+
+- [ ] `…/DeepDive/app/?demo=index` lists the demo screens
+- [ ] `?demo=results` shows a finished dive — this is how to judge the
+      2.8.1 redesign right now
+- [ ] `?demo=home`, `?demo=sampler`, `?demo=scan` each render
+- [ ] None of them prompt to connect Spotify or hit the API
+- [ ] "Leave demo mode" returns to the real app
 
 ## 5. Home tiles
 
