@@ -84,7 +84,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.0
+## Shipped since — build 2.9.1
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -284,15 +284,21 @@ version is good enough for the page.
 
 ## Open bugs — from Joseph's notes, 4 Sept
 
-**Diving is slow at reading releases** — a standard dive, on the step
-that used to be the fastest. Strong candidate, not yet confirmed:
-`setMinimumPacing` never lowers an existing throttle, and the learned
-throttle is persisted to `localStorage.deepdive_throttle_ms`, so it
-survives reloads. Once an "Everything they've touched" dive sets 350ms,
-or a rate limit teaches a higher value, **every later dive keeps it** —
-including standard ones, which spend it on one request per release.
-`resetPacing()` was written for exactly this and **is never called from
-anywhere**. Check the stored value before assuming.
+**Diving is slow at reading releases** — *resolved in 2.9.1, and the
+first diagnosis was wrong.* It was not a stale throttle: suggestions
+loading instantly proved the quota was healthy. The throttle started at
+zero and only rose after a 429, so every session sprinted into the
+limit and took a 15s penalty before slowing down. A persisted learned
+value had been hiding that for months by protecting later dives; adding
+decay in 2.9.0 removed the protection and exposed it. Catalogue reads
+are now paced from the first request.
+
+*Still open underneath it:* nothing caches album tracklists, so every
+dive re-reads every release even for artists dived before. Pacing makes
+the cost predictable; caching would remove it. The cheap question first
+— is `GET /albums?ids=` genuinely still 403? That is recorded from
+February and never re-tested, and if batching came back this shrinks
+twentyfold.
 
 **Duplicate song in a sampler** — a censored version of a track already
 in the mix. The exclusion filters catch censored versions on a dive;

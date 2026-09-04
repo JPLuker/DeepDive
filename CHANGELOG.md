@@ -4,6 +4,19 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.1
+- Fixed: dives tripping Spotify's rate limit partway through and taking
+  a 15-second penalty. The adaptive throttle started at zero and only
+  rose *after* a 429, so every fresh session sprinted into the limit
+  first — the exact "penalty box first, slow afterwards" outcome it was
+  written to avoid. It went unnoticed because a learned value persisted
+  across sessions and quietly protected later dives; 2.9.0 added decay,
+  which removed that protection and brought the sprint back.
+- Catalogue reads are now paced from the first request: 250ms normally,
+  350ms for wide reads including guest appearances. A 60-release artist
+  spends about 15 seconds on pacing, which is less than a single
+  rate-limit penalty and, unlike one, predictable.
+
 ## 2.9.0
 - Changed: the results screen leads with the artist. Full-bleed photo,
   name beneath it, and colour-coded counts — duplicates in teal, new in

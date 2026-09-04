@@ -13,6 +13,7 @@
  */
 
 import * as matching from "./matching.js";
+import { CATALOG_PACING_MS, WIDE_CATALOG_PACING_MS } from "./spotify.js";
 import { filterLikedByArtist } from "./library-cache.js";
 
 // Same weights as app.py's STAGE_WEIGHTS, so the progress bar advances
@@ -72,14 +73,13 @@ export async function runSearch(client, artistName, opts = {}) {
 
   const includeGroups = buildIncludeGroups(includeCompilations, includeAppearsOn);
 
-  // Pace up front for the wide catalog read. A prolific artist's
-  // appears_on can be 300-500 releases, and since Spotify's Feb 2026
-  // changes that is one request each with no batching. Sprinting into
-  // that earns a rate limit within seconds and then everything is slow
-  // anyway, so start deliberate instead. Compilations alone are a
-  // handful of extra releases and don't need it.
-  if (includeAppearsOn && typeof client.setMinimumPacing === "function") {
-    client.setMinimumPacing(350);
+  // Pace from the first request, not after the first 429. Every catalog
+  // read is one request per release since Spotify removed batch ?ids=,
+  // so even a standard dive trips the limit if it sprints — and a
+  // 15-second penalty costs more than pacing the whole read. Wide reads
+  // are 300+ releases and need more still.
+  if (typeof client.setMinimumPacing === "function") {
+    client.setMinimumPacing(includeAppearsOn ? WIDE_CATALOG_PACING_MS : CATALOG_PACING_MS);
   }
 
   let completed = 0;
@@ -223,15 +223,15 @@ export async function runFullScrub(client, opts = {}) {
   } = opts;
 
   const includeGroups = buildIncludeGroups(includeCompilations, includeAppearsOn);
+  if (typeof client.setMinimumPacing === "function") {
+    client.setMinimumPacing(includeAppearsOn ? WIDE_CATALOG_PACING_MS : CATALOG_PACING_MS);
+  }
 
   // Pace up front for the wide catalog read. A prolific artist's
   // appears_on can be 300-500 releases, and since Spotify's Feb 2026
   // changes that is one request each with no batching. Sprinting into
   // that earns a rate limit within seconds and then everything is slow
   // anyway, so start deliberate instead.
-  if (includeAppearsOn && typeof client.setMinimumPacing === "function") {
-    client.setMinimumPacing(350);
-  }
 
   onProgress(0, "Reading your Liked Songs…");
   let likedTracks;

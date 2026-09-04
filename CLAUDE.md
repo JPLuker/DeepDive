@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.0.** If the build in `js/app.js` is well
+**Last updated at build 2.9.1.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -151,6 +151,16 @@ them. But check the code first — sometimes the test is right.
 ---
 
 ## Things that have bitten, repeatedly
+
+**A protection that only engages after the damage.** The rate-limit
+throttle started at zero and rose only after a 429, so every session
+took a penalty before slowing down — the outcome its own comment said
+it existed to avoid. It looked fine for months because a learned value
+persisted across sessions and protected later dives by accident. Adding
+decay removed the accident and the original bug reappeared.
+
+*When something adaptive looks like it works, check whether it works or
+whether stale state is covering for it.*
 
 **A guard that swallows the error it was written to survive.** The dive
 screen's `onArtist(artist)` sat one line above `const artist = await

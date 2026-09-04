@@ -26,6 +26,24 @@ export const ARTIST_ALBUMS_LIMIT_MAX = 10;
 // within a session and across a reload, short enough that yesterday's
 // rate limit isn't still slowing today's dive.
 export const THROTTLE_DECAY_MS = 6 * 60 * 60 * 1000;
+
+// Baseline pacing for a catalogue read, applied from the first request
+// rather than learned after the first 429.
+//
+// The throttle starting at zero meant every fresh session sprinted into
+// the limit, took a 15s penalty, and only then slowed down — the exact
+// "penalty box first, slow afterwards" outcome the adaptive throttle was
+// written to avoid. It was masked for a long time because a learned
+// value persisted across sessions and quietly protected every later
+// dive; once that decayed, the sprint came back.
+//
+// 250ms is roughly 240 requests/minute, under Spotify's limit with room
+// for the retry traffic. A 60-release artist spends ~15s on pacing,
+// which is less than a single rate-limit penalty and, unlike one,
+// predictable.
+export const CATALOG_PACING_MS = 250;
+// Wide reads are 300+ releases and have always needed more.
+export const WIDE_CATALOG_PACING_MS = 350;
 export const LIKED_TRACKS_LIMIT_MAX = 50;
 export const LIBRARY_SAVE_URIS_MAX = 40;   // PUT /me/library
 export const PLAYLIST_ADD_URIS_MAX = 100;  // POST /playlists/{id}/items
@@ -75,6 +93,21 @@ function chunk(arr, size) {
  * An error carrying the HTTP status, mirroring Python's SpotifyException
  * so the retry logic can branch on status the same way.
  */
+/**
+ * How fast a catalogue read can safely go, given how many releases it
+ * has to fetch.
+ *
+ * Spotify publishes no quota header, so these are calibrated against
+ * the behaviour that trips it in practice rather than a documented
+ * figure. The shape matters more than the exact numbers: a handful of
+ * requests never needs pacing, and a few hundred always does.
+ */
+export function pacingForReleaseCount(n) {
+  if (n <= 40) return 0;      // most artists — leave them fast
+  if (n <= 120) return 250;
+  return 350;                 // wide reads: compilations, guest spots
+}
+
 /**
  * Is this artist actually credited on this track?
  *
@@ -154,6 +187,7 @@ export class SpotifyClient {
         localStorage.removeItem("deepdive_throttle_at");
       }
     } catch (e) {}
+    this._runMs = 0;
     this._lastRequestAt = 0;
     // Optional hook so the UI can say "waiting on Spotify" instead of
     // appearing frozen during a long backoff.
@@ -162,9 +196,10 @@ export class SpotifyClient {
 
   /** Wait out the current pacing interval before firing a request. */
   async _pace() {
-    if (!this._throttleMs) return;
+    if (!this._pacingMs()) return;
     const since = Date.now() - this._lastRequestAt;
-    if (since < this._throttleMs) await sleep(this._throttleMs - since);
+    const wait = this._pacingMs();
+    if (since < wait) await sleep(wait - since);
   }
 
   /** Called on every 429: slow down for the rest of this run. */
@@ -187,12 +222,32 @@ export class SpotifyClient {
   }
 
   /**
+   * The rate for the run about to start, chosen from how much work it
+   * has. Unlike setMinimumPacing this can go *down*, because a small
+   * catalogue read genuinely doesn't need the rate a wide one did — and
+   * with one field doing both jobs, one wide dive left every later dive
+   * in the session paced for no reason.
+   *
+   * The floor learned from real 429s still wins: an actual rate limit is
+   * evidence, an estimate is not.
+   */
+  setRunPacing(ms) {
+    this._runMs = Math.max(0, Math.min(ms, THROTTLE_MAX_MS));
+  }
+
+  /** Whichever is slower: what we were taught, or what this run needs. */
+  _pacingMs() {
+    return Math.max(this._throttleMs || 0, this._runMs || 0);
+  }
+
+  /**
    * Forget learned pacing. Because the throttle now survives reloads, a
    * single bad afternoon would otherwise slow every future search
    * forever with no way back.
    */
   resetPacing() {
     this._throttleMs = 0;
+    this._runMs = 0;
     try {
       localStorage.removeItem("deepdive_throttle_ms");
       localStorage.removeItem("deepdive_throttle_at");
@@ -447,6 +502,20 @@ export class SpotifyClient {
   async getArtistCatalogTracks(artistId, { onProgress = null, isCancelled = null, includeGroups = "album,single" } = {}) {
     const albumRefs = await this.getArtistAlbumRefs(artistId, null, includeGroups);
     const total = albumRefs.length || 1;
+    // Pace before starting, not after being punished.
+    //
+    // The catalogue read is one request per release and previously fired
+    // them as fast as the browser managed, relying on the throttle to
+    // rise *after* a 429. That means taking a 15-second penalty first
+    // and being slow afterwards — the worst of both, and it only looked
+    // fine while a stale throttle from an earlier run happened to be
+    // slowing things down.
+    //
+    // The release count is known here, so the rate can be chosen for the
+    // run rather than guessed. Small catalogues stay at full speed,
+    // because most artists never trip anything and pacing them would be
+    // a tax on the common case.
+    this.setRunPacing(pacingForReleaseCount(albumRefs.length));
     const tracks = [];
     const seen = new Set();
 
