@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.7.4";
+export const BUILD = "2.7.5";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -413,6 +413,12 @@ async function runSampler(artists) {
     _samplerCancelled = true;
     renderHome();
   });
+  // The intro is a page in `root`, and the dive screen is a fixed
+  // overlay on top of it — so the intro was still sitting underneath for
+  // the whole run, and reappeared the moment the overlay went away, on
+  // cancel or on finish. Clear it now rather than rendering home behind
+  // it, which would spend requests reloading suggestions mid-sampler.
+  root.innerHTML = "";
   // Multi-artist run, so seed the slideshow with everyone up front —
   // this is the case the rotation was built for.
   // Full screen wants the 640px original, not the tile-sized copy.
@@ -456,7 +462,11 @@ async function runSampler(artists) {
   };
   _cards = _cards.filter((c) => c.id !== "sampler").concat(card);
   // Results in the dialog, where the preview and the name field belong —
-  // by this point there is something real to show.
+  // by this point there is something real to show. The dive screen comes
+  // down first and home goes back underneath, so the dialog opens over
+  // the app rather than over a blank page or a stale sampler intro.
+  hideDiveScreen();
+  await renderHome();
   document.querySelector(".playlist-name-field")?.classList.remove("hidden");
   document.querySelector("#card-modal details")?.classList.remove("hidden");
   openCardModal(card);

@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.7.5
+- Fixed: the sampler intro page stayed behind the dive screen for the
+  whole run. The intro renders into the page body and the dive screen is
+  a fixed overlay above it, and nothing ever cleared it — so it
+  reappeared the moment the overlay came down, both on cancel and behind
+  the results dialog. The intro is now cleared when the run starts, and
+  home is restored before the results open.
+
 ## 2.7.4
 - Changed: the spinner before a dive reads "Starting dive…" rather than
   naming the artist.

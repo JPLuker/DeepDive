@@ -114,5 +114,14 @@ check('preload survives a broken url', /img\.onerror = done;/.test(src));
 check('resolved artist is reused, not refetched', /resolvedArtist: artist/.test(src));
 check('search accepts a resolved artist', /resolvedArtist \|\| await client\.findArtist/.test(sr));
 
+
+// The sampler intro is a page in `root`; the dive screen is a fixed
+// overlay above it. Nothing cleared the intro, so it sat underneath for
+// the whole run and came back the moment the overlay went away — on
+// cancel, and behind the results dialog on success.
+const samplerBlock = src.slice(src.indexOf('async function runSampler'), src.indexOf('openCardModal(card);'));
+check('sampler clears its intro page', /root\.innerHTML = "";/.test(samplerBlock));
+check('sampler restores home before results', /hideDiveScreen\(\);\s*\n\s*await renderHome\(\);/.test(samplerBlock));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);
