@@ -40,28 +40,44 @@ function clamp01(x) {
  * @returns result object (same shape the Python put in RESULTS_CACHE)
  *          or throws on failure.
  */
+/**
+ * Which release groups to read for an artist.
+ *
+ * These were one toggle, and shouldn't have been. A greatest-hits record
+ * is the artist's own work and belongs with their albums; a various-
+ * artists compilation they guest on once is somebody else's record.
+ * Spotify separates them — "compilation" is the artist's own, while a
+ * guest spot lands in "appears_on" — so DeepDive can too.
+ *
+ * The cost is lopsided as well. Compilations are usually a handful of
+ * extra releases. "Appeared on" can be 300-500 for a prolific session
+ * player, at one request each. Bundling them meant nobody could take the
+ * cheap half without the expensive one.
+ */
+export function buildIncludeGroups(includeCompilations, includeAppearsOn) {
+  const groups = ["album", "single"];
+  if (includeCompilations) groups.push("compilation");
+  if (includeAppearsOn) groups.push("appears_on");
+  return groups.join(",");
+}
+
 export async function runSearch(client, artistName, opts = {}) {
   const {
     excludeLive = false, excludeCensored = false,
     excludeInstrumental = false, excludeAcappella = false,
     matchRemasters = false, onProgress = () => {}, onArtist = () => {}, onArtwork = () => {},
     libraryCache = null, scopeToArtist = true, resolvedArtist = null,
-    includeAppearsOn = false,
+    includeCompilations = false, includeAppearsOn = false,
   } = opts;
 
-  // "Appeared on" widens the catalog to compilations and releases the
-  // artist is only featured on. Off by default: it can balloon the
-  // number of releases to read (guest spots, comps, soundtracks), which
-  // makes scans slower and heavier on the API.
-  const includeGroups = includeAppearsOn
-    ? "album,single,compilation,appears_on"
-    : "album,single";
+  const includeGroups = buildIncludeGroups(includeCompilations, includeAppearsOn);
 
   // Pace up front for the wide catalog read. A prolific artist's
   // appears_on can be 300-500 releases, and since Spotify's Feb 2026
   // changes that is one request each with no batching. Sprinting into
   // that earns a rate limit within seconds and then everything is slow
-  // anyway, so start deliberate instead.
+  // anyway, so start deliberate instead. Compilations alone are a
+  // handful of extra releases and don't need it.
   if (includeAppearsOn && typeof client.setMinimumPacing === "function") {
     client.setMinimumPacing(350);
   }
@@ -203,12 +219,10 @@ export async function runFullScrub(client, opts = {}) {
     matchRemasters = false, onProgress = () => {},
     isCancelled = () => false,
     libraryCache = null, scopeToArtist = true, resolvedArtist = null,
-    includeAppearsOn = false,
+    includeCompilations = false, includeAppearsOn = false,
   } = opts;
 
-  const includeGroups = includeAppearsOn
-    ? "album,single,compilation,appears_on"
-    : "album,single";
+  const includeGroups = buildIncludeGroups(includeCompilations, includeAppearsOn);
 
   // Pace up front for the wide catalog read. A prolific artist's
   // appears_on can be 300-500 releases, and since Spotify's Feb 2026

@@ -71,6 +71,20 @@ function chunk(arr, size) {
  * An error carrying the HTTP status, mirroring Python's SpotifyException
  * so the retry logic can branch on status the same way.
  */
+/**
+ * Is this artist actually credited on this track?
+ *
+ * Simplified track objects from `albums/{id}` carry their own `artists`
+ * array, so this costs no extra request. Falls back to keeping the track
+ * when the field is missing rather than dropping it — a missing credit
+ * list should not silently delete a real track.
+ */
+export function isCreditedTo(track, artistId) {
+  const credits = track && track.artists;
+  if (!credits || !credits.length) return true;
+  return credits.some((a) => a && a.id === artistId);
+}
+
 export class SpotifyApiError extends Error {
   constructor(status, message, { retryAfter = null, reason = null } = {}) {
     super(message);
@@ -371,48 +385,72 @@ export class SpotifyClient {
     });
   }
 
-  async getArtistAlbumIds(artistId, onProgress = null, includeGroups = "album,single") {
-    const albumIds = [];
+  /**
+   * Returns `{ id, group }` per release rather than bare ids. `group` is
+   * Spotify's `album_group`: which relationship put this release in the
+   * artist's list — "album", "single", "compilation" or "appears_on".
+   *
+   * It matters because "appears_on" is the only one that isn't the
+   * artist's own record. A guest verse on someone else's album puts that
+   * whole album here, and the tracklist is almost entirely other
+   * people's work.
+   */
+  async getArtistAlbumRefs(artistId, onProgress = null, includeGroups = "album,single") {
+    const refs = [];
     let results = await this.get(`artists/${artistId}/albums`, {
       include_groups: includeGroups,
       limit: ARTIST_ALBUMS_LIMIT_MAX,
     });
     const total = (results && results.total) || 1;
     while (results) {
-      for (const a of results.items || []) albumIds.push(a.id);
-      if (onProgress) onProgress(albumIds.length, total);
+      for (const a of results.items || []) {
+        refs.push({ id: a.id, group: a.album_group || a.album_type || null });
+      }
+      if (onProgress) onProgress(refs.length, total);
       results = results.next ? await this.get(results.next) : null;
     }
-    return albumIds;
+    return refs;
+  }
+
+  async getArtistAlbumIds(artistId, onProgress = null, includeGroups = "album,single") {
+    const refs = await this.getArtistAlbumRefs(artistId, onProgress, includeGroups);
+    return refs.map((r) => r.id);
   }
 
   // Simplified tracks (NO ISRC), one request per album. Mirrors
   // get_artist_catalog_tracks. Supports a cancel check + checkpoint hook
   // for the scrub-resume design (both optional).
   async getArtistCatalogTracks(artistId, { onProgress = null, isCancelled = null, includeGroups = "album,single" } = {}) {
-    const albumIds = await this.getArtistAlbumIds(artistId, null, includeGroups);
-    const total = albumIds.length || 1;
+    const albumRefs = await this.getArtistAlbumRefs(artistId, null, includeGroups);
+    const total = albumRefs.length || 1;
     const tracks = [];
     const seen = new Set();
 
-    for (let i = 0; i < albumIds.length; i++) {
+    for (let i = 0; i < albumRefs.length; i++) {
       if (isCancelled && isCancelled()) break;
-      const album = await this.get(`albums/${albumIds[i]}`);
+      const ref = albumRefs[i];
+      const album = await this.get(`albums/${ref.id}`);
       const albumRef = {
         id: album.id, name: album.name, release_date: album.release_date,
         album_type: album.album_type, // "album" | "single" | "compilation"
+        album_group: ref.group,
       };
+      // A guest spot puts someone else's entire album in the list. Only
+      // the tracks this artist is actually credited on belong in their
+      // catalogue — the rest are another artist's record, and counting
+      // them made "appeared on" both wrong and enormous.
+      const creditedOnly = ref.group === "appears_on";
       let page = album.tracks || null;
       while (page) {
         for (const t of page.items || []) {
-          if (t.id && !seen.has(t.id)) {
-            seen.add(t.id);
-            t.album = albumRef;
-            // Preserve position within the release for track-order sorting.
-            t.track_number = t.track_number || null;
-            t.disc_number = t.disc_number || null;
-            tracks.push(t);
-          }
+          if (!t.id || seen.has(t.id)) continue;
+          if (creditedOnly && !isCreditedTo(t, artistId)) continue;
+          seen.add(t.id);
+          t.album = albumRef;
+          // Preserve position within the release for track-order sorting.
+          t.track_number = t.track_number || null;
+          t.disc_number = t.disc_number || null;
+          tracks.push(t);
         }
         page = page.next ? await this.get(page.next) : null;
       }

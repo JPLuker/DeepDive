@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.7.5";
+export const BUILD = "2.8.0";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -840,10 +840,16 @@ const INTENTS = [
     opts: { excludeLive: true, excludeCensored: true, excludeInstrumental: true, excludeAcappella: true },
   },
   {
+    id: "compilations",
+    name: "Include compilations",
+    desc: "Adds the artist's own compilations and greatest-hits records. Usually only a handful of extra releases, so barely slower.",
+    opts: { includeCompilations: true },
+  },
+  {
     id: "everything",
     name: "Everything they've touched",
-    desc: "Adds compilations and guest appearances. Can be many times slower — for prolific artists this means hundreds of extra requests, so DeepDive will pace itself and may pause when Spotify asks it to.",
-    opts: { includeAppearsOn: true },
+    desc: "Adds compilations plus records they only guest on. Can be many times slower — for prolific artists this means hundreds of extra requests, so DeepDive will pace itself and may pause when Spotify asks it to. Only the tracks they're credited on are kept.",
+    opts: { includeCompilations: true, includeAppearsOn: true },
   },
   {
     id: "custom",
@@ -872,7 +878,8 @@ function optionsForIntent(id, customOpts) {
   const intent = INTENTS.find((i) => i.id === id) || INTENTS[0];
   const base = {
     excludeLive: false, excludeCensored: false, excludeInstrumental: false,
-    excludeAcappella: false, matchRemasters: false, includeAppearsOn: false,
+    excludeAcappella: false, matchRemasters: false,
+    includeCompilations: false, includeAppearsOn: false,
   };
   if (intent.id === "custom") return { ...base, ...(customOpts || savedCustomOpts()) };
   return { ...base, ...intent.opts };
@@ -933,6 +940,7 @@ function openIntentModal(artistName, { force = false } = {}) {
   setBox("opt-instrumental", c.excludeInstrumental);
   setBox("opt-acappella", c.excludeAcappella);
   setBox("opt-remaster", c.matchRemasters);
+  setBox("opt-compilations", c.includeCompilations);
   setBox("opt-appears-on", c.includeAppearsOn);
 
   // In Custom, ticking the appeared-on box should raise the same warning.
@@ -985,6 +993,7 @@ function readCustomOptions() {
     excludeInstrumental: !!document.getElementById("opt-instrumental")?.checked,
     excludeAcappella: !!document.getElementById("opt-acappella")?.checked,
     matchRemasters: !!document.getElementById("opt-remaster")?.checked,
+    includeCompilations: !!document.getElementById("opt-compilations")?.checked,
     includeAppearsOn: !!document.getElementById("opt-appears-on")?.checked,
   };
 }
@@ -2081,7 +2090,8 @@ function renderScrubForm() {
         <label class="checkbox-option"><input type="checkbox" id="s-instrumental"> Exclude instrumentals</label>
         <label class="checkbox-option"><input type="checkbox" id="s-acappella"> Exclude a cappella versions</label>
         <label class="checkbox-option"><input type="checkbox" id="s-remaster"> Count remasters as duplicates</label>
-        <label class="checkbox-option"><input type="checkbox" id="s-appears-on"> Include compilations &amp; "appeared on"</label>
+        <label class="checkbox-option"><input type="checkbox" id="s-compilations"> Include compilations &amp; greatest hits</label>
+        <label class="checkbox-option"><input type="checkbox" id="s-appears-on"> Include releases they only guest on</label>
       </div>
       <div class="actions" style="margin-top:0;">
         <button class="btn btn-primary" id="scrub-go">Run full library scrub</button>
@@ -2099,6 +2109,7 @@ async function startScrub() {
     excludeInstrumental: document.getElementById("s-instrumental").checked,
     excludeAcappella: document.getElementById("s-acappella").checked,
     matchRemasters: document.getElementById("s-remaster").checked,
+    includeCompilations: document.getElementById("s-compilations").checked,
     includeAppearsOn: document.getElementById("s-appears-on").checked,
   };
   scrubCancel = { cancelled: false };

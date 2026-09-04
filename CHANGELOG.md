@@ -4,6 +4,21 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.0
+- Changed: compilations and "appeared on" are now two separate choices.
+  A greatest-hits record is the artist's own work; a various-artists
+  compilation they guest on once is somebody else's. They were a single
+  toggle, so taking the cheap half meant taking the expensive one too —
+  compilations are usually a handful of extra releases, while guest
+  appearances can be hundreds, at one request each.
+- Fixed: including "appeared on" pulled entire albums. One guest verse
+  dragged in the whole tracklist, so another artist's record was counted
+  as this artist's catalogue. Only tracks they're actually credited on
+  are kept now. This is a correctness fix and a rate-limit fix at once,
+  since the discarded tracks were being classified and matched.
+- A track with no credit list at all is kept rather than dropped: a
+  missing field shouldn't silently delete a real recording.
+
 ## 2.7.5
 - Fixed: the sampler intro page stayed behind the dive screen for the
   whole run. The intro renders into the page body and the dive screen is

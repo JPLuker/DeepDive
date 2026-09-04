@@ -73,7 +73,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.7.5
+## Shipped since — build 2.8.0
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -149,17 +149,11 @@ the dive is full-screen, artist-led, and waits for its photo before
 opening. Remaining:*
 - Rework the search appearance to match the rest of the app
 
-**Stopping point B — catalogue accuracy**
-
-Two related defects in how releases are gathered:
-
-- **Compilations and "appeared on" are one toggle and shouldn't be.** A
-  greatest-hits record is the artist's own work; a compilation they
-  guest on once is not. They need separating.
-- **"Appeared on" pulls whole albums.** If an artist features on one
-  track of a record, DeepDive currently takes the entire tracklist.
-  It should keep only the tracks they're actually credited on — which
-  also cuts the request volume that makes this option so expensive.
+**Stopping point B — catalogue accuracy** — *shipped in 2.8.0. Both
+defects fixed: the toggle is split in the dive options, the presets and
+the library scan, and `appears_on` releases keep only credited tracks.
+`album_group` is now carried through the catalogue read, which is what
+makes the distinction possible. Covered by `tests/test_catalogue.mjs`.*
 
 **Stopping point D — sampler photo loading** *(from Joseph's notes)*
 - Give the sampler the same treatment a single dive got: wait behind the

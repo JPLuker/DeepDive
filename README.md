@@ -53,8 +53,10 @@ and DeepDive treats them that way. The same recording on a different
 sleeve is what gets flagged.
 
 **It gets out of your way.** Filter out live cuts, radio edits,
-instrumentals, or a cappella versions. Include compilations and guest
-appearances if you want the deep cuts. Your call, every time.
+instrumentals, or a cappella versions. Pull in the artist's own
+compilations, or go further and include records they only guest on —
+separate choices, since one costs a handful of extra releases and the
+other can cost hundreds. Your call, every time.
 
 **Scan one artist or your entire library.** The full library scan crawls
 every artist you've liked. It takes a while and you can stop it whenever
@@ -124,8 +126,9 @@ then connect again.
 once. Wait a couple of minutes.
 
 **A scan is taking forever** — big catalogs genuinely take time, since
-every release gets read track by track. Including compilations and guest
-appearances makes it slower still.
+every release gets read track by track. Including records they only
+guest on makes it much slower: a prolific session player can have
+hundreds, at one request each. Compilations alone are cheap.
 
 ---
 
