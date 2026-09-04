@@ -63,6 +63,13 @@ rejected.
 
 ## Working with Joseph
 
+**Ideas go in the roadmap; bugs get fixed now.** When Joseph describes
+something broken, fix it in the moment. When he describes something he
+wants, the job is to find the right place for it in `ROADMAP.md` and
+write it there — including any decision it depends on — rather than
+building it immediately or asking what to do with it. He often sends a
+batch of notes mixing both; sort them and say which went where.
+
 - Correct him when he's wrong, kindly. He'll do the same, and he's
   usually right — several of the worst bugs here were found because he
   pushed back on an explanation of mine that didn't hold.

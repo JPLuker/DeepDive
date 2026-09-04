@@ -161,6 +161,17 @@ Two related defects in how releases are gathered:
   It should keep only the tracks they're actually credited on — which
   also cuts the request volume that makes this option so expensive.
 
+**Stopping point D — sampler photo loading** *(from Joseph's notes)*
+- Give the sampler the same treatment a single dive got: wait behind the
+  spinner until there is a photo, rather than opening onto the loading
+  field.
+- **Decision needed first.** A single dive preloads one photo. A sampler
+  spans 8-12 artists, and waiting for all of them is a visibly long
+  spinner. Either wait for the first artist only and stream the rest in
+  as they load, or wait for two or three so the rotation has something
+  to move between from the outset. The first is the lighter option and
+  the current recommendation, but it is Joseph's call.
+
 **Stopping point C — foundation** — *shipped. `showDiveScreen` /
 `addDiveImage` are shared, and the sampler and library scan both feed
 the same rotation. Note the sampler cannot preload the way a single
@@ -183,6 +194,15 @@ dive does, since it spans many artists; it keeps the loading field.*
 ## Session 4 — 2.8 · Playlist generation, widened
 
 "Way more playlist generation options", requested before 3.0.
+
+**Stopping point 0 — navigation and naming** *(from Joseph's notes)*
+- Home becomes a summary rather than the full surface
+- A **Dives** destination giving the complete view of dive features
+- **Playlists** are renamed **Mixes**, with the sampler living under them
+
+Deliberately first in this session rather than its own: it renames and
+reorganises the exact screens the rest of the session widens, and doing
+it afterwards would mean touching all of them twice.
 
 **Stopping point A — more sources**
 - Card types beyond the current fifteen
