@@ -21,7 +21,7 @@ import * as history from "./history.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.1";
+export const BUILD = "2.8.2";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -409,6 +409,19 @@ async function runSampler(artists) {
   // Cancelling has to set the flag the fetch loop checks between
   // artists, or the run continues invisibly after the screen closes.
   if (blockedByRateLimit()) return;
+
+  // Same rule as a single dive: the full screen doesn't open until there
+  // is a photo on it. A sampler can't preload all 8-12 without a long
+  // spinner, so it waits for the first two — enough that the first
+  // rotation has somewhere to go — and streams the rest in as they
+  // load. These URLs are already in hand from the suggestion row, so
+  // this costs downloads, not requests.
+  const photoFor = (a) => (a && (a.image_url_large || a.image_url)) || null;
+  const seeds = artists.map(photoFor).filter(Boolean).slice(0, 2);
+  showDiveSpinner();
+  await Promise.all(seeds.map((u) => preloadPhoto(u)));
+  hideDiveSpinner();
+
   showDiveScreen("Building your sampler…", () => {
     _samplerCancelled = true;
     renderHome();
@@ -419,10 +432,10 @@ async function runSampler(artists) {
   // cancel or on finish. Clear it now rather than rendering home behind
   // it, which would spend requests reloading suggestions mid-sampler.
   root.innerHTML = "";
-  // Multi-artist run, so seed the slideshow with everyone up front —
-  // this is the case the rotation was built for.
-  // Full screen wants the 640px original, not the tile-sized copy.
-  artists.forEach((a) => addDiveImage(a.image_url_large || a.image_url));
+  // Seeds first, so the two that are already decoded are the two that
+  // show while the rest arrive.
+  seeds.forEach((u) => addDiveImage(u));
+  artists.forEach((a) => addDiveImage(photoFor(a)));
   _samplerCancelled = false;
 
   // Cancelling is handled by the dive screen's own button, wired in
@@ -436,7 +449,7 @@ async function runSampler(artists) {
       // component the dive screen uses.
       const a = artists[Math.min(done, artists.length - 1)];
       updateDiveScreen(Math.round((done / total) * 100), `${a ? a.name : "Fetching"}… (${done}/${total})`);
-      if (a) addDiveImage(a.image_url_large || a.image_url);
+      if (a) addDiveImage(photoFor(a));
     });
     if (_samplerCancelled) return;
   } catch (e) {

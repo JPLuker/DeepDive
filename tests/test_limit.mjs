@@ -15,7 +15,13 @@ check('reader exported', /export function limitedUntil\(\)/.test(sp));
 check('expired entries clear themselves', /if \(v <= Date\.now\(\)\) \{ localStorage\.removeItem/.test(sp));
 
 check('dives are blocked', /function startSearch\(artistName\) \{\s*if \(blockedByRateLimit\(\)\) return;/.test(src));
-check('sampler is blocked', /if \(blockedByRateLimit\(\)\) return;\s*showDiveScreen\("Building your sampler/.test(src));
+// The guard used to sit directly above showDiveScreen. The sampler now
+// preloads photos behind a spinner first, so the two are no longer
+// adjacent — the guard must still be the first thing runSampler does.
+const samplerFn = src.slice(src.indexOf('async function runSampler'));
+check('sampler is blocked', /async function runSampler\(artists\) \{[\s\S]{0,600}?if \(blockedByRateLimit\(\)\) return;/.test(samplerFn));
+check('guard runs before any screen is shown',
+  samplerFn.indexOf('blockedByRateLimit()') < samplerFn.indexOf('showDiveSpinner()'));
 check('library scan is blocked', /if \(blockedByRateLimit\(\)\) return;\s*showDiveScreen\("Scanning your whole library/.test(src));
 check('home shows a standing notice', /\$\{rateLimitBanner\(\)\}/.test(src));
 // The sentence wraps in source, so match across whitespace.

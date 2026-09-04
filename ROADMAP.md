@@ -73,7 +73,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.1
+## Shipped since — build 2.8.2
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -157,16 +157,11 @@ the library scan, and `appears_on` releases keep only credited tracks.
 `album_group` is now carried through the catalogue read, which is what
 makes the distinction possible. Covered by `tests/test_catalogue.mjs`.*
 
-**Stopping point D — sampler photo loading** *(from Joseph's notes)*
-- Give the sampler the same treatment a single dive got: wait behind the
-  spinner until there is a photo, rather than opening onto the loading
-  field.
-- **Decision needed first.** A single dive preloads one photo. A sampler
-  spans 8-12 artists, and waiting for all of them is a visibly long
-  spinner. Either wait for the first artist only and stream the rest in
-  as they load, or wait for two or three so the rotation has something
-  to move between from the outset. The first is the lighter option and
-  the current recommendation, but it is Joseph's call.
+**Stopping point D — sampler photo loading** — *shipped in 2.8.2. Waits
+behind the spinner for the first two photos, enough for the opening
+rotation to have somewhere to go, then streams the rest in. Joseph left
+the count to judgement; two was chosen over one so the screen doesn't
+open onto something static.*
 
 **Stopping point C — foundation** — *shipped. `showDiveScreen` /
 `addDiveImage` are shared, and the sampler and library scan both feed
@@ -176,6 +171,12 @@ dive does, since it spans many artists; it keeps the loading field.*
 ---
 
 ## Session 3 — 2.7 · Tile interactions
+
+⚠️ **Sequencing question.** The Home/Dives/Mixes restructure is currently
+the first stopping point of Session 4, but tile interactions land on
+Home, Pins and History — the exact screens that restructure moves. Doing
+tiles first risks doing them twice. Consider pulling the restructure
+ahead of this session.
 
 **Stopping point A**
 - Hide pin and remove behind a swipe or overflow button instead of
@@ -231,11 +232,34 @@ page first. Same discipline as the setlist.fm check, and just as cheap.
   stats.fm as the reference
 
 **Stopping point B — screenshots**
+- **Extend demo mode first.** It currently only substitutes a fixed
+  artist list for the suggestion row — it cannot stage a results screen,
+  a sampler or a scan, which is most of what needs advertising. This is
+  real work hiding inside a one-line item.
 - Use demo mode to produce a clean screenshot per advertised feature
 - Place them on the marketing page
+- Worth doing early regardless: with the Spotify quota locked there is
+  no other way to look at a results screen, and the untested pile in
+  `TESTING.md` only grows.
 
 **Stopping point C — housekeeping**
 - Rename existing GitHub releases to match the song-title convention
+
+---
+
+## Not a session, but real work before 3.0
+
+- **Working through `TESTING.md`.** Everything from 2.6.6 to 2.8.2 is
+  unverified — the quota locked partway through that run. It is a
+  session's worth of checking on its own, and whatever it turns up.
+- **Export/import across two browsers** has never been tested. Storage
+  is per-browser, so this is the only thing standing between a lost
+  library cache and starting over.
+- **Version numbers have drifted twice.** The build is 2.8.1 while
+  Session 4 is still labelled "2.8" and hasn't started. A future session
+  reading this will be misled. Either renumber the sessions or drop the
+  version labels from the headings and let builds float — the second is
+  the recommendation, since builds have now outrun the plan twice.
 
 ---
 
@@ -244,6 +268,11 @@ page first. Same discipline as the setlist.fm check, and just as cheap.
 ⚠️ **Prerequisite — setlist.fm CORS check.** Still never run. If
 setlist.fm doesn't send permissive CORS headers, a browser-only app
 can't call them at all and the whole 3.x design needs rethinking.
+
+⚠️ **Prerequisite — setlist.fm API key.** Approval is not instant, and
+nothing else in this list depends on it, so the application should be
+in flight well before 3.0 starts rather than discovered as a wait at
+the beginning of it.
 
 Then 3.0 foundation (top-tracks, no extra keys), 3.1 real setlists,
 3.2 edge cases, 3.3 library-aware layer, 3.4 Last.fm ranking, and

@@ -42,8 +42,16 @@ check('fetches photos when search has none', /function fetchArtistImages\(artist
 // The sampler slideshow used `image_url`, which searchArtists sets to the
 // SMALLEST of Spotify's three sizes because it also feeds 44px tiles.
 // Full screen needs the 640px original, so both paths now prefer it.
-check('sampler seeds every artist', /artists\.forEach\(\(a\) => addDiveImage\(a\.image_url_large \|\| a\.image_url\)\)/.test(src));
-check('sampler adds each as it goes', /if \(a\) addDiveImage\(a\.image_url_large \|\| a\.image_url\)/.test(src));
+// A sampler spans 8-12 artists and cannot preload them all without a
+// long spinner, so it waits for the first two — enough for the first
+// rotation to have somewhere to go — and streams the rest in.
+check('sampler waits for two photos', /const seeds = artists\.map\(photoFor\)\.filter\(Boolean\)\.slice\(0, 2\)/.test(src));
+check('sampler shows the spinner while it waits', /showDiveSpinner\(\);\s*\n\s*await Promise\.all\(seeds\.map/.test(src));
+check('screen opens only after the wait', src.indexOf('await Promise.all(seeds.map') < src.indexOf('showDiveScreen("Building your sampler'));
+check('seeded photos go up first', /seeds\.forEach\(\(u\) => addDiveImage\(u\)\);/.test(src));
+check('sampler still seeds every artist', /artists\.forEach\(\(a\) => addDiveImage\(photoFor\(a\)\)\);/.test(src));
+check('sampler adds each as it goes', /if \(a\) addDiveImage\(photoFor\(a\)\);/.test(src));
+check('photo accessor prefers the full-size copy', /a\.image_url_large \|\| a\.image_url/.test(src));
 check('sampler no longer uses the tile-sized copy alone', !/addDiveImage\(a\.image_url\);/.test(src));
 check('library scan feeds it too', /onArtwork: \(url\) => addDiveImage\(url\),\s*\}\);/.test(src));
 

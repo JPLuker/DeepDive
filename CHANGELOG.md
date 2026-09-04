@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.2
+- Changed: the sampler now waits behind the spinner for its first two
+  artist photos before opening, the same way a single dive waits for
+  one. It can't preload all 8-12 without a visibly long spinner, so the
+  rest stream in as they load. Two rather than one, so the opening
+  rotation has somewhere to move to. The URLs are already in hand from
+  the suggestion row, so this costs downloads, not requests.
+
 ## 2.8.1
 - Changed: the results screen was the last place the original Flask
   design showed through, and it has been brought in line with the rest

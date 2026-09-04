@@ -84,6 +84,19 @@ rotate through. Not a bug.
 
 ---
 
+## 2b. Sampler photo loading (2.8.2)
+
+- [ ] Start a sampler. A spinner appears first, then the screen opens
+      with a photo already showing — no loading field
+- [ ] The rotation moves to a second photo rather than sitting on one
+- [ ] Later artists' photos join as the run goes on
+- [ ] If the first artists have no photo on Spotify, the screen still
+      opens rather than hanging
+
+*Note: the spinner reads "Starting dive…" even for a sampler, which is
+the wrong word. Left alone because the label was deliberately made
+static; say if it should read "Starting…" instead.*
+
 ## 3. Sampler screen layering
 
 - [ ] Start a sampler and let it finish
