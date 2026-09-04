@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.3";
+export const BUILD = "2.9.0";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1953,15 +1953,60 @@ function trackRow(t, { checkbox = true, cls = "newt", sub = "", match = "", attr
     </label>`;
 }
 
+/**
+ * The hero photo fades and drifts as you scroll into the lists. It's an
+ * establishing shot — once you're reading track names it's just taking
+ * up the screen, and holding it at full strength makes the list feel
+ * like it's behind something.
+ *
+ * Driven off scroll position rather than a scroll-linked CSS animation,
+ * which Safari still doesn't support. rAF-throttled so it isn't doing
+ * layout work on every scroll event.
+ */
+function attachHeroFade() {
+  const hero = document.getElementById("results-hero");
+  const photo = document.getElementById("results-hero-photo");
+  if (!hero || !photo) return;
+  let ticking = false;
+  const apply = () => {
+    ticking = false;
+    const h = hero.offsetHeight || 1;
+    const p = Math.min(1, Math.max(0, window.scrollY / h));
+    photo.style.opacity = String(1 - p * 0.85);
+    // A little slower than the page, so it recedes rather than sliding off.
+    photo.style.transform = `translateY(${(p * h * 0.18).toFixed(1)}px)`;
+  };
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(apply);
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  apply();
+}
+
 function renderResults(r) {
   setTitle("DeepDive · Results");
   const dups = r.duplicate_candidates || [];
   const news = r.new_tracks || [];
   const artistName = r.artist ? r.artist.name : "";
 
+  const photo = largestImage(r.artist && r.artist.images);
   root.innerHTML = `
-    <div class="card">
-      <h1>${esc(artistName)}</h1>
+    <div class="results-hero" id="results-hero">
+      <div class="results-hero-photo${photo ? "" : " is-blank"}" id="results-hero-photo"
+           ${photo ? `style="background-image:url('${esc(photo)}')"` : ""}></div>
+      <div class="results-hero-veil"></div>
+      <div class="results-hero-text">
+        <h1>${esc(artistName)}</h1>
+        <p class="results-stats">
+          ${dups.length ? `<span class="results-stat"><span class="dot dup"></span>${dups.length} duplicate${dups.length === 1 ? "" : "s"}</span>` : ""}
+          <span class="results-stat"><span class="dot new"></span>${news.length} new</span>
+          ${r.already_liked_count ? `<span class="results-stat"><span class="dot liked"></span>${r.already_liked_count} already liked</span>` : ""}
+        </p>
+      </div>
+    </div>
+    <div class="results-body">
       <p class="muted">${resultsSummary(r, dups.length, news.length)}</p>
       ${r.collapsed_count ? `<p class="crate-note">${r.collapsed_count} duplicate recording${r.collapsed_count === 1 ? "" : "s"} collapsed — the same track appeared on more than one release.</p>` : ""}
 
@@ -1991,22 +2036,21 @@ function renderResults(r) {
         <input type="text" id="playlist-name" value="DeepDive · ${esc(artistName)}">
       </div>
 
-      <div class="actions">
-        ${dups.length && news.length
-          ? `<button class="btn btn-primary" data-action="both">Like ${dups.length} and build the playlist</button>
-             <button class="btn btn-ghost" data-action="like">Just like the ${dups.length}</button>
-             <button class="btn btn-ghost" data-action="playlist">Just build the playlist</button>`
-          : dups.length
-            ? `<button class="btn btn-primary" data-action="like">Like ${dups.length === 1 ? "this track" : `these ${dups.length}`}</button>`
-            : news.length
-              ? `<button class="btn btn-primary" data-action="playlist">Build the playlist</button>`
-              : ""}
-        <button class="btn btn-ghost" data-home>Back to search</button>
-      </div>
       <div class="flash hidden" id="result-msg" style="margin-top:18px;"></div>
+
+    </div>
+
+    <div class="results-actions">
+      <div class="results-actions-row">
+        ${dups.length ? `<button class="btn btn-ghost" data-action="like">Like Songs</button>` : ""}
+        ${news.length ? `<button class="btn btn-ghost" data-action="playlist">Create Playlist</button>` : ""}
+        ${dups.length && news.length ? `<button class="btn btn-primary" data-action="both">Both</button>` : ""}
+      </div>
+      <button class="btn btn-ghost btn-back" data-home>Back to home</button>
     </div>`;
 
   root.querySelector("[data-home]").addEventListener("click", () => renderHome());
+  attachHeroFade();
 
   // sort — re-render the list from sorted data (preserves which rows are
   // checked by re-reading current checkbox state before re-rendering).
@@ -2336,6 +2380,10 @@ function renderSettings() {
         <button class="btn btn-ghost btn-small" id="go-history">Dive history</button>
       </div>
 
+      <div class="crate-header"><span class="label teal">Speed</span><span class="rule"></span></div>
+      <p class="nav-hint" style="margin-top:0;">DeepDive slows itself down after Spotify rate-limits it, and remembers that between sessions. It eases off on its own after a few hours — clear it here if a dive is crawling and you think it shouldn't be.</p>
+      <div class="btn-row"><button class="btn btn-ghost btn-small" id="set-reset-pacing">Reset pacing</button></div>
+
       <div class="crate-header"><span class="label teal">Your data</span><span class="rule"></span></div>
       <div class="actions">
         <button class="btn btn-ghost btn-small" id="set-export">Export backup</button>
@@ -2390,6 +2438,11 @@ function renderSettings() {
     bmc.checked = showBmc();
     bmc.addEventListener("change", () => setShowBmc(bmc.checked));
   }
+
+  document.getElementById("set-reset-pacing")?.addEventListener("click", () => {
+    client.resetPacing();
+    flash("Pacing cleared — the next dive starts at full speed.");
+  });
 
   document.getElementById("set-export")?.addEventListener("click", () => {
     const stamp = new Date().toISOString().slice(0, 10);

@@ -178,6 +178,25 @@ section 4e and most of section 1 without waiting.
 - [ ] None of them prompt to connect Spotify or hit the API
 - [ ] "Leave demo mode" returns to the real app
 
+## 4g. Results screen, second pass (2.9.0)
+
+- [ ] `?demo=results` — artist photo full bleed at the top, name and
+      three colour-coded counts beneath it
+- [ ] Scrolling fades the photo out rather than holding it
+- [ ] Like Songs / Create Playlist / Both stay docked at the bottom
+      while the lists scroll, Back to home underneath
+- [ ] The docked bar clears the mobile tab bar rather than sitting under
+      it, and the last track row isn't trapped behind it
+
+## 4h. Dive speed (2.9.0)
+
+- [ ] **Check first:** in the browser console,
+      `localStorage.deepdive_throttle_ms`. A large value means a learned
+      throttle was making every dive slow, which is the suspected cause
+      of "reading releases is slow now"
+- [ ] Settings → Speed → Reset pacing, then run a standard dive
+- [ ] Reading releases is back to being the fast part
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

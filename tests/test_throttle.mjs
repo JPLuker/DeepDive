@@ -1,4 +1,7 @@
 import { SpotifyClient } from '../docs/js/spotify.js';
+import { readFileSync } from 'fs';
+const sp = readFileSync(new URL('../docs/js/spotify.js', import.meta.url),'utf8');
+const app = readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 const ok = (body={}) => ({status:200,headers:{get:()=>null},json:async()=>body,text:async()=>JSON.stringify(body)});
 const rl = (retryAfter='0') => ({status:429,headers:{get:(k)=>k==='Retry-After'?retryAfter:null},json:async()=>({error:{message:'rate'}}),text:async()=>'{}'});
@@ -67,6 +70,16 @@ const rl = (retryAfter='0') => ({status:429,headers:{get:(k)=>k==='Retry-After'?
   const r=await c.get('me');
   check('bad UI callback does not break retry', r.ok===1);
 }
+
+// The throttle persisting was right; persisting forever was not.
+// setMinimumPacing only ever raises, so one wide dive or one bad
+// afternoon of 429s permanently slowed every later dive — and
+// resetPacing(), written for exactly this, was never called from
+// anywhere.
+check('learned pacing decays', /THROTTLE_DECAY_MS/.test(sp));
+check('decay is time-stamped', /deepdive_throttle_at/.test(sp));
+check('stale pacing is cleared on load', /localStorage\.removeItem\("deepdive_throttle_ms"\);\s*\n\s*localStorage\.removeItem\("deepdive_throttle_at"\);/.test(sp));
+check('there is a manual way back', /set-reset-pacing/.test(app) && /client\.resetPacing\(\)/.test(app));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

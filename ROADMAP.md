@@ -84,7 +84,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.3
+## Shipped since — build 2.9.0
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -192,13 +192,35 @@ twice.
 - A **Dives** destination giving the complete view of dive features
 - **Playlists** are renamed **Mixes**, with the sampler living under them
 
-**Stopping point B — tile actions**
+**Stopping point B — settings, twice over** *(from Joseph's notes)*
+- The Settings page needs a complete rework
+- Credit Joseph's LinkedIn and GitHub at the bottom of it
+- The artist popup becomes where the *dive* settings live, with dip and
+  dive as the two actions at the bottom of it. Settings splits in two:
+  app settings on the Settings page, run settings at the point of use.
+
+**Stopping point C — tile actions**
 - Hide pin and remove behind a swipe or overflow button instead of
   sitting permanently beside every tile. They currently take width on
   every row for actions used occasionally.
 
-**Stopping point C**
+**Stopping point D**
 - Apply the same treatment to the Pins and History rows
+
+---
+
+**Stopping point E — quota is invisible to the user** *(from Joseph's
+notes)*
+- The end user has no idea why things aren't loading. A red banner at
+  the top of Home explaining the situation.
+- The suggestion row is the natural benchmark: if it times out, the API
+  is unavailable, so raise the banner from that rather than adding a
+  separate probe.
+
+**Stopping point F — small friction** *(from Joseph's notes)*
+- Close the keyboard when an artist search is submitted
+- Refresh button on the suggestion row
+- Random dip / random dive
 
 ---
 
@@ -260,6 +282,25 @@ version is good enough for the page.
 
 ---
 
+## Open bugs — from Joseph's notes, 4 Sept
+
+**Diving is slow at reading releases** — a standard dive, on the step
+that used to be the fastest. Strong candidate, not yet confirmed:
+`setMinimumPacing` never lowers an existing throttle, and the learned
+throttle is persisted to `localStorage.deepdive_throttle_ms`, so it
+survives reloads. Once an "Everything they've touched" dive sets 350ms,
+or a rate limit teaches a higher value, **every later dive keeps it** —
+including standard ones, which spend it on one request per release.
+`resetPacing()` was written for exactly this and **is never called from
+anywhere**. Check the stored value before assuming.
+
+**Duplicate song in a sampler** — a censored version of a track already
+in the mix. The exclusion filters catch censored versions on a dive;
+the sampler either isn't applying them or isn't de-duplicating across
+artists.
+
+---
+
 ## Not a session, but real work before 3.0
 
 - **Working through `TESTING.md`.** Everything from 2.6.6 to 2.8.2 is
@@ -273,6 +314,15 @@ version is good enough for the page.
   reading this will be misled. Either renumber the sessions or drop the
   version labels from the headings and let builds float — the second is
   the recommendation, since builds have now outrun the plan twice.
+
+---
+
+## Beyond 3.0 — recorded so it isn't lost
+
+- **Competitor review.** What stats.fm and others do that DeepDive
+  doesn't. Worth doing before 4.0 scope is settled rather than after.
+- **4.5 → 5.0: a real app store release**, packaged as an `.aab` for
+  Android. Joseph corrected 4.0 to 4.5 as the version this follows.
 
 ---
 

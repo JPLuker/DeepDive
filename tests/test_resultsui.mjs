@@ -39,22 +39,36 @@ check('playlist field label is not uppercase mono', !/\.playlist-name-field labe
 
 // --- actions ----------------------------------------------------------
 // Three btn-primary buttons side by side is no hierarchy at all.
-const actions = src.slice(src.indexOf('<div class="actions">'), src.indexOf('data-home>Back to search'));
-// The three btn-primary occurrences are mutually exclusive branches —
-// only one ever renders — so counting them in source proves nothing.
-// What matters is that within the branch offering all three choices,
-// exactly one is primary and the alternatives are ghosts.
-const bothBranch = actions.slice(actions.indexOf('data-action="both"'), actions.indexOf('data-action="playlist">Just'));
-check('the combined action is the only primary in its branch',
-  /btn-primary/.test(actions.slice(0, actions.indexOf('data-action="both"') + 20)) &&
-  (bothBranch.match(/btn-primary/g) || []).length === 0);
-check('alternatives are ghosts', (bothBranch.match(/btn-ghost/g) || []).length >= 1);
-check('actions say what they do', /Just build the playlist/.test(actions));
+const actions = src.slice(src.indexOf('<div class="results-actions">'), src.indexOf('data-home>Back to home'));
+// Three named actions — Like Songs, Create Playlist, Both — with Both
+// as the primary and Back to home on its own row beneath. Joseph's
+// call; the earlier single-primary scheme hid what the alternatives
+// actually did behind "Just…" phrasing.
+check('three named actions', /data-action="like">Like Songs/.test(actions) && /data-action="playlist">Create Playlist/.test(actions) && /data-action="both">Both/.test(actions));
+check('both is the primary', /btn btn-primary" data-action="both"/.test(actions));
+check('back to home sits under them', /btn-back" data-home>Back to home/.test(src));
+check('actions are docked, not inline', /<div class="results-actions">/.test(src));
+
 
 // --- duplicate rows ---------------------------------------------------
 check('duplicates share the row builder', /function dupRow/.test(src));
 check('checkbox attribute is passed, not string-replaced', /attr = "data-tid"/.test(src));
 check('no html string surgery', !/\.replace\('data-tid=', 'data-dup='\)/.test(src));
+
+// The artist leads, as on the dive: full-bleed photo, name and
+// colour-coded counts beneath it, fading as you scroll into the lists.
+check('hero escapes the page gutters', /\.results-hero \{[\s\S]*?margin:0 -24px 0;/.test(html));
+check('hero has a photo layer', /id="results-hero-photo"/.test(src));
+check('hero falls back to a gradient', /\.results-hero-photo\.is-blank/.test(html));
+check('counts are colour coded', /\.results-stat \.dot\.dup \{ background:var\(--teal\)/.test(html) && /\.results-stat \.dot\.new \{ background:var\(--gold\)/.test(html));
+check('all three counts render', /dot dup/.test(src) && /dot new/.test(src) && /dot liked/.test(src));
+check('hero fades on scroll', /function attachHeroFade/.test(src));
+// Safari has no scroll-linked CSS animations, and an unthrottled scroll
+// handler doing layout is a jank generator.
+check('fade is rAF-throttled', /requestAnimationFrame\(apply\)/.test(src));
+check('scroll listener is passive', /\{ passive: true \}/.test(src));
+check('actions clear the mobile tab bar', /\.results-actions \{ bottom:calc\(60px \+ env\(safe-area-inset-bottom\)\)/.test(html));
+check('body clears the docked actions', /\.results-body \{ padding-bottom:132px; \}/.test(html));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

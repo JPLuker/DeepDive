@@ -22,6 +22,10 @@ const API_BASE = "https://api.spotify.com/v1/";
 // Feb 2026 schema limits — from Spotify's published spec, not guesses.
 export const SEARCH_LIMIT_MAX = 10;
 export const ARTIST_ALBUMS_LIMIT_MAX = 10;
+// How long learned pacing survives. Long enough to still be cautious
+// within a session and across a reload, short enough that yesterday's
+// rate limit isn't still slowing today's dive.
+export const THROTTLE_DECAY_MS = 6 * 60 * 60 * 1000;
 export const LIKED_TRACKS_LIMIT_MAX = 50;
 export const LIBRARY_SAVE_URIS_MAX = 40;   // PUT /me/library
 export const PLAYLIST_ADD_URIS_MAX = 100;  // POST /playlists/{id}/items
@@ -134,7 +138,21 @@ export class SpotifyClient {
     this._throttleMs = 0;
     try {
       const saved = parseInt(localStorage.getItem("deepdive_throttle_ms") || "0", 10);
-      if (saved > 0) this._throttleMs = Math.min(saved, THROTTLE_MAX_MS);
+      const at = parseInt(localStorage.getItem("deepdive_throttle_at") || "0", 10);
+      // Decay it. The throttle persisting was right — the penalty
+      // outlives the tab — but it persisted *forever*, and
+      // setMinimumPacing only ever raises. One wide "everything they've
+      // touched" dive, or one bad afternoon of 429s, permanently slowed
+      // every later dive, including standard ones that spend it on one
+      // request per release. resetPacing() was written for this and was
+      // never called from anywhere, so there was no way back.
+      const ageMs = at ? Date.now() - at : Infinity;
+      if (saved > 0 && ageMs < THROTTLE_DECAY_MS) {
+        this._throttleMs = Math.min(saved, THROTTLE_MAX_MS);
+      } else if (saved > 0) {
+        localStorage.removeItem("deepdive_throttle_ms");
+        localStorage.removeItem("deepdive_throttle_at");
+      }
     } catch (e) {}
     this._lastRequestAt = 0;
     // Optional hook so the UI can say "waiting on Spotify" instead of
@@ -152,7 +170,10 @@ export class SpotifyClient {
   /** Called on every 429: slow down for the rest of this run. */
   _backOff() {
     this._throttleMs = Math.min(this._throttleMs + THROTTLE_STEP_MS, THROTTLE_MAX_MS);
-    try { localStorage.setItem("deepdive_throttle_ms", String(this._throttleMs)); } catch (e) {}
+    try {
+      localStorage.setItem("deepdive_throttle_ms", String(this._throttleMs));
+      localStorage.setItem("deepdive_throttle_at", String(Date.now()));
+    } catch (e) {}
   }
 
   /**
@@ -172,7 +193,10 @@ export class SpotifyClient {
    */
   resetPacing() {
     this._throttleMs = 0;
-    try { localStorage.removeItem("deepdive_throttle_ms"); } catch (e) {}
+    try {
+      localStorage.removeItem("deepdive_throttle_ms");
+      localStorage.removeItem("deepdive_throttle_at");
+    } catch (e) {}
   }
 
   // One HTTP request. Throws SpotifyApiError on >=400 so the retry

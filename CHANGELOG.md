@@ -4,6 +4,23 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.0
+- Changed: the results screen leads with the artist. Full-bleed photo,
+  name beneath it, and colour-coded counts — duplicates in teal, new in
+  gold, already liked in white. The photo fades and drifts as you scroll
+  into the lists rather than holding the screen.
+- Changed: the three actions — Like Songs, Create Playlist, Both — are
+  docked at the bottom and stay put while you scroll, with Back to home
+  on its own row beneath them. The decision is the point of the screen,
+  and scrolling to the end to reach it was friction.
+- Fixed: learned rate-limit pacing persisted forever. `setMinimumPacing`
+  only ever raises, and the value is stored across sessions, so one wide
+  "everything they've touched" dive or one afternoon of 429s
+  permanently slowed every later dive — including standard ones, which
+  spend it on one request per release. `resetPacing()` existed for this
+  and was never called from anywhere. Pacing now decays after six hours,
+  and Settings has a Reset pacing control.
+
 ## 2.8.3
 - Rebuilt demo mode. It previously substituted a fixed artist list into
   the suggestion row and drew it with the pre-2.2 `pill` markup — a UI

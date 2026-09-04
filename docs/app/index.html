@@ -239,6 +239,64 @@
   .tile-skeleton, .sk-art, .sk-line { animation:sk-pulse 1.4s ease-in-out infinite; }
   @keyframes sk-pulse { 0%,100% { opacity:1; } 50% { opacity:0.55; } }
 
+  /* ---- results screen ---- */
+  /* The artist leads, the way the dive does. The photo is full bleed and
+     escapes .wrap's gutters, and it fades as you scroll into the lists —
+     it's an establishing shot, not something to scroll past repeatedly. */
+  .results-hero {
+    position:relative; margin:0 -24px 0; height:min(46vh, 340px);
+    overflow:hidden; background:var(--surface);
+  }
+  .results-hero-photo {
+    position:absolute; inset:0;
+    background-size:cover; background-position:center 30%;
+    will-change:opacity, transform;
+  }
+  .results-hero-photo.is-blank {
+    background:linear-gradient(150deg,var(--accent-top),var(--accent-bottom));
+  }
+  /* Enough darkness at the bottom for the name to sit on, while leaving
+     the picture legible above it — same treatment as the dive. */
+  .results-hero-veil {
+    position:absolute; inset:0;
+    background:linear-gradient(to bottom, rgba(0,0,0,0) 38%, rgba(0,0,0,0.35) 62%, rgba(0,0,0,0.82) 100%);
+  }
+  .results-hero-text { position:absolute; left:0; right:0; bottom:0; padding:0 24px 18px; }
+  .results-hero-text h1 {
+    color:#fff; margin:0 0 8px; font-size:30px; font-weight:700; letter-spacing:-0.025em;
+    text-shadow:0 1px 14px rgba(0,0,0,0.4);
+  }
+  /* Counts carry colour so the three categories are readable at a
+     glance, and the same colours key the rows below. */
+  .results-stats { display:flex; flex-wrap:wrap; gap:6px; margin:0; }
+  .results-stat {
+    font-size:12px; font-weight:600; padding:4px 9px; border-radius:var(--radius-pill);
+    background:rgba(255,255,255,0.14); color:#fff;
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  }
+  .results-stat .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:baseline; }
+  .results-stat .dot.dup { background:var(--teal); }
+  .results-stat .dot.new { background:var(--gold); }
+  .results-stat .dot.liked { background:rgba(255,255,255,0.75); }
+
+  .results-body { padding-top:22px; }
+  /* Clears the docked actions so the last row isn't trapped under them. */
+  .results-body { padding-bottom:132px; }
+
+  /* Stays put while the lists scroll: the decision is the point of the
+     screen, and scrolling back to the bottom to make it is friction. */
+  .results-actions {
+    position:fixed; left:0; right:0; bottom:0; z-index:35;
+    padding:12px 16px calc(14px + env(safe-area-inset-bottom));
+    background:color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    border-top:1px solid var(--line);
+    display:flex; flex-direction:column; gap:8px; align-items:stretch;
+  }
+  .results-actions-row { display:flex; gap:8px; }
+  .results-actions-row .btn { flex:1; justify-content:center; padding:12px 10px; }
+  .results-actions .btn-back { justify-content:center; padding:9px; font-weight:500; }
+
   /* ---- artwork tiles ---- */
   /* Two columns, artwork flush to the edge and doing the work. A 26px
      circle beside a label wastes the one genuinely visual asset here. */
@@ -582,6 +640,10 @@
     .dive-bar { bottom:calc(60px + env(safe-area-inset-bottom)); }
     body.diving .wrap { padding-bottom:calc(148px + env(safe-area-inset-bottom)); }
     #flash-slot .flash { margin-bottom:calc(84px + env(safe-area-inset-bottom)); }
+    .results-actions { bottom:calc(60px + env(safe-area-inset-bottom)); padding-bottom:12px; }
+    .results-body { padding-bottom:190px; }
+    .results-hero { margin:0 -18px 0; }
+    .results-hero-text { padding:0 18px 16px; }
   }
 
   /* ---- mobile ----------------------------------------------------
