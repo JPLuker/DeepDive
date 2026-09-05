@@ -327,6 +327,35 @@ artists.
 
 ---
 
+## Next — Desktop layout
+
+The app is mobile-first and desktop was never given a layout of its own.
+Every breakpoint in the stylesheet is `max-width` (640px and 380px);
+there is nothing above mobile. `.wrap` is capped at 760px regardless of
+viewport, so on a 1920px screen the app is a 760px column with two
+thirds of the screen empty.
+
+Specifics from Joseph's screenshot at 1920px:
+
+- Tiles sit two across in a 760px column. There is room for four to six.
+- A single pinned artist occupies half the width of its row.
+- The search field floats alone at the top of an otherwise empty band.
+- Playlist cards are the only thing that reads as deliberate at this
+  width.
+- No visible navigation — the bottom tab bar is mobile-only, so desktop
+  has no persistent way between Home and Settings.
+
+Work: add breakpoints above 640px, widen `.wrap` progressively, let the
+tile grid grow its column count with the viewport rather than staying at
+two, and give desktop a navigation affordance that isn't the phone tab
+bar. The results screen's docked action bar and full-bleed hero will
+need checking at width too — both were designed against a phone.
+
+Not a restyle. The visual language stays; it just needs to use the
+space.
+
+---
+
 ## Compliance — from the API guidance, 4 Sept
 
 - **Attribution is missing.** The Developer Terms require attributing
