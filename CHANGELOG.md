@@ -4,6 +4,18 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.2
+- Fixed: removing a playlist used `DELETE /playlists/{id}/followers`,
+  which is deprecated in favour of Remove Items from Library. Every
+  other deprecated endpoint we tested returns 403 in Development Mode,
+  and all three callers swallow errors to keep a bulk cleanup running —
+  so playlist deletion was most likely failing silently. It now uses
+  `DELETE /me/library`, which needs no new scope.
+- Added `API_SURFACE.md`: every endpoint DeepDive calls, checked against
+  the OpenAPI schema, with the deprecated ones to avoid, the scopes we
+  hold, where we're out of line with the Developer Terms, and where a
+  dive's requests actually go.
+
 ## 2.9.1
 - Fixed: dives tripping Spotify's rate limit partway through and taking
   a 15-second penalty. The adaptive throttle started at zero and only

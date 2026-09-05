@@ -740,13 +740,21 @@ export class SpotifyClient {
   /**
    * Remove a playlist from the user's library.
    *
-   * Spotify has no true delete — you unfollow your own playlist, which
-   * takes it out of your library and is what "delete" means in their own
-   * apps. The playlist object survives server-side, so this is less
-   * destructive than the name suggests.
+   * Spotify has no true delete — you remove your own playlist from your
+   * library, which is what "delete" means in their own apps. The
+   * playlist object survives server-side, so this is less destructive
+   * than the name suggests.
+   *
+   * This used `DELETE /playlists/{id}/followers`, which the OpenAPI
+   * schema marks deprecated in favour of Remove Items from Library.
+   * Everything else deprecated that we tested returns 403 in Dev Mode,
+   * so this was likely failing silently — the callers all swallow the
+   * error to keep a bulk cleanup going.
    */
   async deletePlaylist(playlistId) {
-    await this._call("DELETE", `playlists/${playlistId}/followers`);
+    await this._call("DELETE", "me/library", {
+      params: { uris: `spotify:playlist:${playlistId}` },
+    });
   }
 
   /**

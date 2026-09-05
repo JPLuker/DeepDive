@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.1.** If the build in `js/app.js` is well
+**Last updated at build 2.9.2.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -231,6 +231,12 @@ full-bleed dive at that size looks right on a phone — this was doubted,
 "fixed" with a blurred backdrop in 2.7.0, and reverted in 2.7.1. If one
 entry point looks correct and another does not, the size is not the
 variable; find what differs between the two paths instead.
+
+`API_SURFACE.md` is the audit of what we call, what we must not call,
+and where we're out of line with the Developer Terms. Check it before
+adding an endpoint, and re-check the schema when Spotify announces
+changes — we deliberately do not mirror their docs, because a local
+copy goes stale and this year proved how fast.
 
 **Deprecated in the schema means 403 in Dev Mode.** Tested twice on
 4 Sept 2026: `/albums?ids=` and `/artists/{id}/top-tracks` are both
