@@ -4,6 +4,22 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.12
+- Settings reorganised. It was nine sections, most of them a heading
+  above a single button, in no particular order — Appearance and Theme
+  were separated by Playlists, and "Manage" said nothing about the pins
+  inside it. Theme and the support-link switch are now one Appearance
+  section, and the pins section is named for what it contains.
+- Added an **Advanced** section, collapsed by default, holding anything
+  that is irreversible, asks for a credential, or is only meaningful
+  when something has gone wrong: Client ID and Redirect URI, backup
+  import/export, Reset pacing, and the build-number toggle.
+- Added: a switch for the build number in the top bar, off by default.
+  It reads well and has settled several "is this deployed yet?"
+  questions, but it is developer furniture.
+- Added Spotify attribution, which the Developer Terms require and which
+  was missing from the app entirely.
+
 ## 2.9.11
 - Fixed: the desktop layout sat slightly left of centre. A centred block
   is centred inside the space the scrollbar leaves, so any page long

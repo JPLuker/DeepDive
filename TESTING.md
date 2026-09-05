@@ -230,6 +230,24 @@ running a dive.
 this was written against the stylesheet. The rail and the docked action
 bar are the two things most likely to be off.*
 
+## 4k. Settings rework (2.9.12)
+
+No quota needed.
+
+- [ ] Advanced is collapsed when the page opens, and a casual read can
+      stop at it
+- [ ] Opening it shows Speed, Your data, Diagnostics and Credentials
+- [ ] Theme and the support-link switch are together under Appearance
+- [ ] "Show build number" is **off** — turning it on puts the version
+      back in the top bar, turning it off removes it
+- [ ] Every button still works: scan, find playlists, pins, history,
+      reset pacing, export, import, refresh, disconnect, save Client ID
+- [ ] The Spotify attribution line is present
+
+*The button check matters most — the whole page was rewritten, and
+although every element id was preserved, that was verified by reading
+rather than by clicking.*
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

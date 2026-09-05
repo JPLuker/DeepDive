@@ -23,8 +23,15 @@ check('skeletons shown while loading', /sk-lines/.test(src));
 check('skeletons pulse', /@keyframes sk-pulse/.test(html));
 
 // settings
-check('Manage section', /<span class="label teal">Manage<\/span>/.test(src));
-check('History is its own section', /<span class="label gold">History<\/span>/.test(src));
+// "Manage" said nothing about what was inside it, and the teal/gold
+// label classes stopped meaning anything when the headings were
+// restyled from pills to plain type.
+check('pins section is named for its contents', /<span class="label">Pins &amp; blocked<\/span>/.test(src));
+check('History is its own section', /<span class="label">History<\/span>/.test(src));
+// Scoped to renderSettings: teal/gold labels are still used on other
+// screens, so checking the whole file proves nothing about this one.
+const settingsFn = src.slice(src.indexOf('function renderSettings'), src.indexOf('const msg = document.getElementById("settings-msg")'));
+check('no colour classes left on settings headings', !/<span class="label (teal|gold)">/.test(settingsFn));
 
 // spotify client
 check('opens the client via URI', /const uri = `spotify:\$\{m\[1\]\}:\$\{m\[2\]\}`/.test(src));

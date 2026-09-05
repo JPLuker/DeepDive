@@ -68,7 +68,11 @@ check('no orphaned demoArtists call', !/demoArtists\(\)/.test(src));
 // anything else in boot can fail.
 const shell = readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
 check('build tag exists in the shell', /id="build-tag"/.test(shell));
-check('build tag is filled at boot', /tag\.textContent = BUILD;/.test(src));
+// The tag is opt-in now — developer furniture, off unless asked for —
+// so boot applies the preference rather than the value.
+check('build tag is filled at boot', /applyBuildTagVisibility\(\);/.test(src));
+check('build tag is off by default', /localStorage\.getItem\(BUILD_TAG_KEY\) === "1"/.test(src));
+check('and toggleable from settings', /id="set-show-build"/.test(src));
 check('and set before the redirect handling', src.indexOf('tag.textContent = BUILD') < src.indexOf('handleRedirectCallback'));
 
 console.log(`\n${pass} passed, ${fail} failed`);

@@ -532,6 +532,28 @@
   .topnav-btn:hover { color:var(--ink); background:var(--tile); }
   .topnav-btn.active { color:var(--ink); background:var(--tile); }
 
+  /* Collapsed by default. The point is that a casual user never has to
+     read past it, so it should look like one row rather than a section
+     header with contents hidden behind it. */
+  .advanced { margin-top:34px; border-top:1px solid var(--line); padding-top:6px; }
+  .advanced > summary {
+    cursor:pointer; list-style:none; padding:12px 2px;
+    font-size:14px; font-weight:600; color:var(--muted);
+    display:flex; align-items:center; gap:8px;
+  }
+  .advanced > summary::-webkit-details-marker { display:none; }
+  .advanced > summary::before {
+    content:""; width:6px; height:6px; flex:0 0 auto;
+    border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor;
+    transform:rotate(-45deg); transition:transform .18s ease;
+  }
+  .advanced[open] > summary::before { transform:rotate(45deg); }
+  .advanced > summary:hover { color:var(--ink); }
+  .advanced[open] > summary { color:var(--ink); }
+  /* The first heading inside shouldn't push away from the summary the
+     way a mid-page section does. */
+  .advanced .crate-header:first-of-type { margin-top:18px; }
+
   .settings-build { margin:26px 0 0; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; color:var(--muted-soft); }
 
   /* Sampler intro: the artists it's about to fetch, so the page shows

@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.11";
+export const BUILD = "2.9.12";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -2400,71 +2400,88 @@ function renderSettings() {
     <div class="card">
       <h1>Settings</h1>
 
-      <div class="crate-header"><span class="label teal">Scan</span><span class="rule"></span></div>
+      <div class="crate-header"><span class="label">Library</span></div>
       <p class="nav-hint" style="margin-top:0;">Crawl every artist in your library at once. Thorough, and slow — one request per release.</p>
       <div class="actions"><button class="btn btn-ghost btn-small" id="go-scrub">Full library scan</button></div>
 
-      <div class="crate-header"><span class="label gold">Appearance</span><span class="rule"></span></div>
+      <div class="crate-header"><span class="label">Playlists</span></div>
+      <p class="nav-hint" style="margin-top:0;">Find playlists DeepDive created — including ones made before it kept a record of them.</p>
+      <div class="actions"><button class="btn btn-ghost btn-small" id="find-playlists">Find DeepDive playlists</button></div>
+      <div id="playlist-cleanup"></div>
+      <div id="playlist-cleanup-all"></div>
+
+      <div class="crate-header"><span class="label">Pins &amp; blocked</span></div>
+      <p class="nav-hint" style="margin-top:0;">Artists you've pinned, and ones you've told DeepDive to stop suggesting.</p>
+      <div class="actions">
+        <button class="btn btn-ghost btn-small" id="go-pins">Pins &amp; blocked</button>
+      </div>
+
+      <div class="crate-header"><span class="label">History</span></div>
+      <p class="nav-hint" style="margin-top:0;">What you've dived, what DeepDive created, and how to undo it.</p>
+      <div class="actions">
+        <button class="btn btn-ghost btn-small" id="go-history">Dive history</button>
+      </div>
+
+      <!-- Theme and the support-link switch were two separate sections
+           with an unrelated one between them. They are the same thing. -->
+      <div class="crate-header"><span class="label">Appearance</span></div>
+      <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Theme">
+        <button class="theme-opt" data-theme-choice="light">Light</button>
+        <button class="theme-opt" data-theme-choice="dark">Dark</button>
+        <button class="theme-opt" data-theme-choice="system">System</button>
+      </div>
       <label class="nav-switch" style="padding-left:0;">
         <span>Show support link</span>
         <input type="checkbox" id="set-show-bmc">
         <span class="switch-track"><span class="switch-thumb"></span></span>
       </label>
 
-      <div class="crate-header"><span class="label teal">Playlists</span><span class="rule"></span></div>
-      <p class="nav-hint" style="margin-top:0;">Find playlists DeepDive created — including ones made before it kept a record of them.</p>
-      <div class="actions"><button class="btn btn-ghost btn-small" id="find-playlists">Find DeepDive playlists</button></div>
-      <div id="playlist-cleanup"></div>
-
-      <div id="playlist-cleanup-all"></div>
-
-      <div class="crate-header"><span class="label gold">Theme</span><span class="rule"></span></div>
-      <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Theme">
-        <button class="theme-opt" data-theme-choice="light">Light</button>
-        <button class="theme-opt" data-theme-choice="dark">Dark</button>
-        <button class="theme-opt" data-theme-choice="system">System</button>
-      </div>
-
-      <div class="crate-header"><span class="label teal">Manage</span><span class="rule"></span></div>
-      <div class="actions">
-        <button class="btn btn-ghost btn-small" id="go-pins">Pins &amp; blocked</button>
-      </div>
-
-      <div class="crate-header"><span class="label gold">History</span><span class="rule"></span></div>
-      <p class="nav-hint" style="margin-top:0;">What you've dived, what DeepDive created, and how to undo it.</p>
-      <div class="actions">
-        <button class="btn btn-ghost btn-small" id="go-history">Dive history</button>
-      </div>
-
-      <div class="crate-header"><span class="label teal">Speed</span><span class="rule"></span></div>
-      <p class="nav-hint" style="margin-top:0;">DeepDive slows itself down after Spotify rate-limits it, and remembers that between sessions. It eases off on its own after a few hours — clear it here if a dive is crawling and you think it shouldn't be.</p>
-      <div class="btn-row"><button class="btn btn-ghost btn-small" id="set-reset-pacing">Reset pacing</button></div>
-
-      <div class="crate-header"><span class="label teal">Your data</span><span class="rule"></span></div>
-      <div class="actions">
-        <button class="btn btn-ghost btn-small" id="set-export">Export backup</button>
-        <button class="btn btn-ghost btn-small" id="set-import">Import backup</button>
-        <input type="file" id="set-import-file" accept="application/json,.json" style="display:none;">
-      </div>
-
-      <div class="crate-header"><span class="label gold">Spotify</span><span class="rule"></span></div>
+      <div class="crate-header"><span class="label">Spotify</span></div>
       <div class="actions">
         <button class="btn btn-ghost btn-small" id="set-refresh">Refresh library</button>
         <button class="btn btn-ghost btn-small" id="set-disconnect">Disconnect</button>
       </div>
-      <div class="nav-settings" style="padding:14px 0 0;">
-        <label class="nav-field-label" for="set-client-id">Client ID</label>
-        <input type="text" id="set-client-id" class="nav-input" placeholder="paste your Client ID" autocomplete="off" spellcheck="false">
-        <button class="btn btn-ghost btn-small" id="set-save-id" style="margin-top:8px;">Save Client ID</button>
-        <div class="nav-field-label" style="margin-top:16px;">Redirect URI</div>
-        <div class="nav-uri" id="set-redirect-uri"></div>
-        <p class="nav-hint">Must match your Spotify app exactly.</p>
-      </div>
+      <p class="nav-hint">Music metadata and artwork are provided by Spotify. DeepDive is not affiliated with Spotify AB.</p>
+
+      <!-- Everything below is either irreversible, only meaningful if
+           something has gone wrong, or asks for a credential. None of it
+           belongs in front of someone who just wants to dive an artist,
+           so it collapses by default. -->
+      <details class="advanced" id="advanced">
+        <summary>Advanced</summary>
+
+        <div class="crate-header"><span class="label">Speed</span></div>
+        <p class="nav-hint" style="margin-top:0;">DeepDive slows itself down after Spotify rate-limits it, and remembers that between sessions. It eases off on its own after a few hours — clear it here if a dive is crawling and you think it shouldn't be.</p>
+        <div class="btn-row"><button class="btn btn-ghost btn-small" id="set-reset-pacing">Reset pacing</button></div>
+
+        <div class="crate-header"><span class="label">Your data</span></div>
+        <p class="nav-hint" style="margin-top:0;">Pins, history and settings live in this browser only. A backup is the only way to move them to another browser or get them back after clearing site data.</p>
+        <div class="actions">
+          <button class="btn btn-ghost btn-small" id="set-export">Export backup</button>
+          <button class="btn btn-ghost btn-small" id="set-import">Import backup</button>
+          <input type="file" id="set-import-file" accept="application/json,.json" style="display:none;">
+        </div>
+
+        <div class="crate-header"><span class="label">Diagnostics</span></div>
+        <label class="nav-switch" style="padding-left:0;">
+          <span>Show build number</span>
+          <input type="checkbox" id="set-show-build">
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+        </label>
+
+        <div class="crate-header"><span class="label">Credentials</span></div>
+        <div class="nav-settings" style="padding:4px 0 0;">
+          <label class="nav-field-label" for="set-client-id">Client ID</label>
+          <input type="text" id="set-client-id" class="nav-input" placeholder="paste your Client ID" autocomplete="off" spellcheck="false">
+          <button class="btn btn-ghost btn-small" id="set-save-id" style="margin-top:8px;">Save Client ID</button>
+          <div class="nav-field-label" style="margin-top:16px;">Redirect URI</div>
+          <div class="nav-uri" id="set-redirect-uri"></div>
+          <p class="nav-hint">Must match your Spotify app exactly.</p>
+        </div>
+      </details>
+
       <div class="flash hidden" id="settings-msg" style="margin-top:14px;"></div>
 
-      <!-- The build number moved here when the drawer was removed. It
-           earns its place: knowing which version is actually loaded has
-           settled several "is this deployed yet?" questions. -->
       <p class="settings-build">DeepDive · build ${esc(BUILD)}</p>
     </div>`;
 
@@ -2493,6 +2510,15 @@ function renderSettings() {
   if (bmc) {
     bmc.checked = showBmc();
     bmc.addEventListener("change", () => setShowBmc(bmc.checked));
+  }
+
+  const buildSwitch = document.getElementById("set-show-build");
+  if (buildSwitch) {
+    buildSwitch.checked = showBuildTag();
+    buildSwitch.addEventListener("change", () => {
+      setShowBuildTag(buildSwitch.checked);
+      applyBuildTagVisibility();
+    });
   }
 
   document.getElementById("set-reset-pacing")?.addEventListener("click", () => {
@@ -2952,6 +2978,20 @@ async function render() {
 // Some people would rather not see a donate prompt every time they open
 // the app. It costs nothing to let them turn it off, and a support link
 // that can't be dismissed is worse than one that can.
+// The build tag reads well and has settled several "is this deployed
+// yet?" questions, but it is developer furniture. Off unless asked for.
+const BUILD_TAG_KEY = "deepdive_show_build";
+function showBuildTag() {
+  try { return localStorage.getItem(BUILD_TAG_KEY) === "1"; } catch (e) { return false; }
+}
+function setShowBuildTag(on) {
+  try { localStorage.setItem(BUILD_TAG_KEY, on ? "1" : "0"); } catch (e) {}
+}
+function applyBuildTagVisibility() {
+  const el = document.getElementById("build-tag");
+  if (el) el.textContent = showBuildTag() ? BUILD : "";
+}
+
 const BMC_KEY = "deepdive_show_bmc";
 function showBmc() {
   try { return localStorage.getItem(BMC_KEY) !== "0"; } catch (e) { return true; }
@@ -3028,8 +3068,7 @@ function registerServiceWorker() {
 async function boot() {
   // Put the build on screen before anything else can fail, so a stale
   // cached bundle is visible rather than inferred.
-  const tag = document.getElementById("build-tag");
-  if (tag) tag.textContent = BUILD;
+  applyBuildTagVisibility();
 
   // A remembered pause is an upper bound from a Retry-After, and it
   // blocks the requests that would disprove it. Check once on startup so
