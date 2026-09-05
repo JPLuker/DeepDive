@@ -197,6 +197,17 @@ section 4e and most of section 1 without waiting.
 - [ ] Settings → Speed → Reset pacing, then run a standard dive
 - [ ] Reading releases is back to being the fast part
 
+## 4i. Rate-limit lockout (2.9.3)
+
+**Check this first — it may be what's blocking you right now.**
+
+- [ ] In the browser console: `localStorage.deepdive_limited_until`
+- [ ] If it returns a number, that's the stale pause. Clear it with
+      `localStorage.removeItem('deepdive_limited_until')` and reload
+- [ ] On 2.9.3 this should self-correct: startup makes one request and
+      clears the flag if Spotify answers
+- [ ] The red banner now has a "Check again" button that does the same
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

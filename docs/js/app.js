@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.2";
+export const BUILD = "2.9.3";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1097,6 +1097,20 @@ function wireSearchBar() {
 
 
 async function loadSuggestions() {
+  document.getElementById("rl-recheck")?.addEventListener("click", async (ev) => {
+    const btn = ev.currentTarget;
+    btn.disabled = true;
+    btn.textContent = "Checking…";
+    const stillLimited = await verifyRateLimit();
+    if (stillLimited) {
+      btn.disabled = false;
+      btn.textContent = "Still paused — check again";
+    } else {
+      flash("Spotify is responding again.");
+      renderHome();
+    }
+  });
+
   const el = document.getElementById("suggestions-row");
   if (!el) return;
 
@@ -2314,6 +2328,29 @@ function confirmDialog({ title, body, confirmLabel = "Confirm", danger = false }
  * worse than useless — it burns the user's time and produces a confusing
  * failure several seconds in rather than an answer immediately.
  */
+/**
+ * Ask Spotify whether the pause is actually still in effect.
+ *
+ * The stored time is an upper bound taken from a Retry-After, and the
+ * only thing that clears it is a successful response. But the flag
+ * blocks dives, samplers and scans before they issue a request — so it
+ * blocked the very calls that would have cleared it. With Home served
+ * from cache, nothing made a live call at all and the lockout held
+ * itself in place until it expired on its own, however wrong it was.
+ *
+ * One cheap request settles it. A success clears the flag through the
+ * normal path in `_call`.
+ */
+async function verifyRateLimit() {
+  if (!limitedUntil()) return false;
+  try {
+    await client.get("me");
+  } catch (e) {
+    // Still limited, or offline. Either way leave the flag alone.
+  }
+  return !!limitedUntil();
+}
+
 function blockedByRateLimit() {
   const until = limitedUntil();
   if (!until) return false;
@@ -2334,6 +2371,7 @@ function rateLimitBanner() {
     Spotify has paused this app until roughly ${esc(clock)}. Searches will
     fail until then — this is a limit on your Spotify credentials, not a
     fault in DeepDive.
+    <button class="btn btn-ghost btn-small" id="rl-recheck" style="margin-top:10px;">Check again</button>
   </div>`;
 }
 
@@ -2967,6 +3005,10 @@ function registerServiceWorker() {
 }
 
 async function boot() {
+  // A remembered pause is an upper bound from a Retry-After, and it
+  // blocks the requests that would disprove it. Check once on startup so
+  // it can't outlive the real limit.
+  try { await verifyRateLimit(); } catch (e) {}
   registerServiceWorker();
   applyBmcVisibility();
   // Handle a PKCE redirect coming back from Spotify.

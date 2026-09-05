@@ -8,7 +8,17 @@ const src = readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 check('expiry stored on a sustained 429', /deepdive_limited_until/.test(sp));
-check('stored from Retry-After', /Date\.now\(\) \+ raSecs \* 1000/.test(sp));
+// Capped rather than stored verbatim. The flag blocks the requests that
+// would disprove it, so trusting a multi-hour Retry-After meant one
+// header could lock the app out for hours with no way to recover. The
+// cap is self-correcting: a still-live ban earns a fresh 429.
+check('stored from Retry-After', /Date\.now\(\) \+ Math\.min\(raSecs \* 1000, MAX_STORED_LIMIT_MS\)/.test(sp));
+check('stored pause is capped', /const MAX_STORED_LIMIT_MS = 60 \* 60 \* 1000;/.test(sp));
+// The deadlock itself: a remembered pause must be re-checkable.
+check('a pause can be re-checked', /async function verifyRateLimit/.test(src));
+check('re-checked on startup', /try \{ await verifyRateLimit\(\); \} catch \(e\) \{\}/.test(src));
+check('and manually from the banner', /id="rl-recheck"/.test(src));
+check('success clears the flag', /if \(resp\.status < 400\) \{[\s\S]{0,120}removeItem\("deepdive_limited_until"\)/.test(sp));
 check('storage failure cannot break the request', /catch \(storeErr\) \{\}/.test(sp));
 check('cleared on any success', /if \(resp\.status < 400\) \{[\s\S]{0,120}removeItem\("deepdive_limited_until"\)/.test(sp));
 check('reader exported', /export function limitedUntil\(\)/.test(sp));

@@ -4,6 +4,21 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.3
+- Fixed: the app could report itself rate-limited while everything else
+  loaded instantly, and stay that way. A sustained 429 stores when the
+  pause lifts, taken from `Retry-After`, and only a *successful* response
+  clears it — but the flag aborts dives, samplers and scans before they
+  issue a request. So it blocked the very calls that would have cleared
+  it, and with Home served from cache nothing made a live call at all.
+  The lockout held itself in place until the stored time expired,
+  however wrong it was.
+- The pause is now re-checked with one cheap request on startup, and the
+  banner has a "Check again" button. A success clears it immediately.
+- A stored pause is capped at one hour rather than trusting a
+  `Retry-After` verbatim. Self-correcting: if the ban really is longer,
+  the next attempt earns a fresh 429.
+
 ## 2.9.2
 - Fixed: removing a playlist used `DELETE /playlists/{id}/followers`,
   which is deprecated in favour of Remove Items from Library. Every

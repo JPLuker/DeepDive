@@ -53,6 +53,8 @@ const MAX_ATTEMPTS = 4;
 const RETRY_BASE_DELAY_MS = 1500;
 const MAX_RATE_LIMIT_ATTEMPTS = 10;
 const MAX_RATE_LIMIT_WAIT_MS = 90000;
+// The longest a remembered pause is trusted before being re-checked.
+const MAX_STORED_LIMIT_MS = 60 * 60 * 1000;
 
 // ---------------------------------------------------------------------
 // Adaptive throttle
@@ -373,8 +375,14 @@ export class SpotifyClient {
             // and without storing it the app cheerfully starts another
             // scan that fails on its first request.
             try {
-              localStorage.setItem("deepdive_limited_until",
-                String(Date.now() + raSecs * 1000));
+              // Capped. A Retry-After can be hours, and storing it
+              // verbatim means trusting one header to lock the app out
+              // for that long — while the flag itself blocks the
+              // requests that would disprove it. Capping is
+              // self-correcting: if the ban really is longer, the next
+              // attempt earns a fresh 429 and stores another hour.
+              const until = Date.now() + Math.min(raSecs * 1000, MAX_STORED_LIMIT_MS);
+              localStorage.setItem("deepdive_limited_until", String(until));
             } catch (storeErr) {}
             throw e;
           }

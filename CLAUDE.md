@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.2.** If the build in `js/app.js` is well
+**Last updated at build 2.9.3.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -151,6 +151,16 @@ them. But check the code first — sometimes the test is right.
 ---
 
 ## Things that have bitten, repeatedly
+
+**A flag that blocks the thing that would clear it.** The remembered
+rate-limit pause was written from a Retry-After and cleared only by a
+successful response — while itself aborting every dive, sampler and
+scan before a request went out. Nothing could disprove it. It presented
+as "rate limited even though everything loads instantly", because Home
+was rendering from cache and making no live call.
+
+*Any latch that persists needs a route out that doesn't depend on the
+thing it latches.*
 
 **A protection that only engages after the damage.** The rate-limit
 throttle started at zero and rose only after a 429, so every session
