@@ -44,6 +44,14 @@ const app=readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 check('count removed from the card face', !/pcard-count/.test(app));
 // Superseded by 2.3.6: the row sits at the bottom of the page, so all
 // cards are shown rather than hidden behind a 'more' click.
-check('all cards rendered, none hidden', !/CARDS_VISIBLE/.test(app) && !/More ideas/.test(app) && /_cards\.map/.test(app));
+// Mixes still shows every card — no 'more' click hiding ideas below the
+// fold. Home shows a short preview with a link through, which is a
+// different thing: it doesn't pretend to be the whole set.
+check('all cards rendered, none hidden', !/CARDS_VISIBLE/.test(app) && !/More ideas/.test(app) && /shown\.map/.test(app));
+check('mixes shows the lot', /const shown = limit \? _cards\.slice\(0, limit\) : _cards;/.test(app));
+// The button is built by sectionHead from arguments, so the rendered
+// string never appears in source — check the call instead.
+check('home preview links onward', /sectionHead\("Mixes", "from your library", "mixes", "All mixes"\)/.test(app));
+check('and shows only a taste', /loadPlaylistCards\(\{ into: "home-mixes", limit: 3/.test(app));
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

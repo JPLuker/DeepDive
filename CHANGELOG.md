@@ -4,6 +4,18 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.24
+- **Home is a summary.** It had become the whole app on one page, which
+  is why everything else was hard to find — there was nowhere else to
+  look. It now carries the search field, a short row of pins and
+  suggestions, and a taste of your mixes, each linking through.
+- **Dives** is a destination of its own: search, the full pin and
+  suggestion lists, the full library scan, dive history, and pins and
+  blocked artists.
+- **Playlists are now Mixes**, with the sampler living alongside them.
+- Both navigations carry all four destinations — the bottom bar on
+  mobile, the top bar on desktop.
+
 ## 2.8.23
 - Fixed: a mix could contain both the censored and uncensored cut of the
   same song. A clean edit is a genuinely different recording — its own

@@ -84,7 +84,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.23
+## Shipped since — build 2.8.24
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -187,10 +187,10 @@ Merged: the restructure and the tile rework land on the same screens —
 Home, Pins, History — so doing them separately means building the tiles
 twice.
 
-**Stopping point A — structure** *(from Joseph's notes)*
-- Home becomes a summary rather than the full surface
-- A **Dives** destination giving the complete view of dive features
-- **Playlists** are renamed **Mixes**, with the sampler living under them
+**Stopping point A — structure** — *shipped in 2.8.24. Home is a
+summary with links through; Dives owns search, pins, suggestions, the
+library scan and history; Playlists are Mixes with the sampler
+alongside. Both navigations carry all four.*
 
 **Stopping point B — settings, twice over** *(from Joseph's notes)*
 - ~~Show build number toggle~~ — *shipped in 2.8.16, under Advanced,

@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.23";
+export const BUILD = "2.8.24";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -265,11 +265,16 @@ function renderConnect() {
 // ============================================================
 // Home (search + autofill + recommendations + To-Dive)
 // ============================================================
-async function renderHome() {
-  setTitle("DeepDive");
-  setActiveTab("home");
-  root.innerHTML = `
-    ${rateLimitBanner()}
+/**
+ * The search field, shared by Home and Dives.
+ *
+ * Home keeps one because searching an artist is what people open
+ * DeepDive to do, and burying it a tab deep would be perverse. Dives
+ * keeps the same one because that's where you land when you came
+ * specifically to dive.
+ */
+function searchShellHtml() {
+  return `
     <div class="search-shell">
       <div class="search-pill-form">
         <input type="text" id="artist-input" placeholder="Search an artist" autocomplete="off" autofocus>
@@ -281,13 +286,85 @@ async function renderHome() {
         </button>
       </div>
       <div class="autofill-list" id="autofill-list"></div>
-    </div>
+    </div>`;
+}
+
+/** A row heading that links through to the destination owning it. */
+function sectionHead(title, qual, tab, linkText) {
+  return `
+    <div class="row-head">
+      <h2>${esc(title)}</h2>
+      ${qual ? `<span class="qual">${esc(qual)}</span>` : ""}
+      <button class="row-more" data-tab="${esc(tab)}">${esc(linkText)}</button>
+    </div>`;
+}
+
+/**
+ * Home is a summary now: a search field and a taste of each
+ * destination. It had become the entire app on one page, which is why
+ * everything else was hard to find — there was nowhere else to look.
+ */
+async function renderHome() {
+  setTitle("DeepDive");
+  setActiveTab("home");
+  root.innerHTML = `
+    ${rateLimitBanner()}
+    ${searchShellHtml()}
     <div id="suggestions-row"></div>
-    <div id="playlist-cards"></div>`;
+    <div id="home-mixes"></div>`;
 
   wireSearchBar();
-  loadSuggestions();
+  loadSuggestions({ compact: true });
+  loadPlaylistCards({ into: "home-mixes", limit: 3, headHtml: sectionHead("Mixes", "from your library", "mixes", "All mixes") });
+}
+
+/**
+ * Everything about diving in one place: search, the full pin and
+ * suggestion lists, a whole-library scan, history and pins.
+ */
+async function renderDives() {
+  setTitle("DeepDive · Dives");
+  setActiveTab("dives");
+  root.innerHTML = `
+    ${rateLimitBanner()}
+    ${searchShellHtml()}
+    <div id="suggestions-row"></div>
+    <div class="crate-header"><span class="label">More ways to dive</span></div>
+    <p class="nav-hint" style="margin-top:0;">A full scan crawls every artist in your library — thorough, and slow, at one request per release.</p>
+    <div class="actions">
+      <button class="btn btn-ghost btn-small" id="go-scrub">Full library scan</button>
+      <button class="btn btn-ghost btn-small" id="go-history">Dive history</button>
+      <button class="btn btn-ghost btn-small" id="go-pins">Pins &amp; blocked</button>
+    </div>`;
+
+  wireSearchBar();
+  loadSuggestions({ showAllPins: true });
+  document.getElementById("go-scrub")?.addEventListener("click", () => renderScrubForm());
+  document.getElementById("go-history")?.addEventListener("click", () => renderHistory());
+  document.getElementById("go-pins")?.addEventListener("click", () => renderWatchlist());
+}
+
+/** Mixes — what Playlists were called — with the sampler alongside. */
+async function renderMixes() {
+  setTitle("DeepDive · Mixes");
+  setActiveTab("mixes");
+  root.innerHTML = `
+    ${rateLimitBanner()}
+    <div class="row-head"><h2>Mixes</h2><span class="qual">from your library</span></div>
+    <p class="nav-hint" style="margin-top:0;">Built from what DeepDive already knows about your library. Nothing is created until you confirm it.</p>
+    <div id="playlist-cards"></div>
+    <div class="crate-header"><span class="label">Sampler</span></div>
+    <p class="nav-hint" style="margin-top:0;">A few tracks each from artists you've barely heard.</p>
+    <div class="actions"><button class="btn btn-ghost btn-small" id="go-sampler">Build a sampler</button></div>`;
+
   loadPlaylistCards();
+  document.getElementById("go-sampler")?.addEventListener("click", () => {
+    if (_samplerPool.length >= 2) return openSampler(_samplerPool);
+    // The pool comes from the suggestion row, which Mixes doesn't
+    // render. Send them where it's built rather than failing silently.
+    flash("Open Dives first — the sampler draws from your suggestions.");
+    renderDives();
+  });
 }
 
 // ---- playlist suggestion cards (2.3) ----
@@ -302,9 +379,18 @@ let _allCards = [];
 // it so refreshing is worth doing.
 const CARDS_PER_LOAD = 6;
 
-async function loadPlaylistCards() {
-  const el = document.getElementById("playlist-cards");
+/**
+ * @param into     Element id to render into; Mixes owns "playlist-cards",
+ *                 Home borrows a different one for its short preview.
+ * @param limit    How many cards to show. Home shows a taste, Mixes all.
+ * @param headHtml Optional heading, so Home's preview can say where the
+ *                 rest live rather than looking like the whole set.
+ */
+async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml = "" } = {}) {
+  const el = document.getElementById(into);
   if (!el) return;
+  el._cardLimit = limit;
+  el._cardHead = headHtml;
   try {
     const cached = await Promise.race([
       libraryCache.peek(),
@@ -338,10 +424,16 @@ async function loadPlaylistCards() {
  * starting point.
  */
 function renderCardRow(el) {
+  // Mixes shows the lot; Home shows a few with a way through to the
+  // rest, so its preview doesn't read as the whole set.
+  const limit = el._cardLimit || 0;
+  const shown = limit ? _cards.slice(0, limit) : _cards;
+  const head = el._cardHead
+    || `<div class="row-head"><h2>Mixes</h2><span class="qual">from your library</span></div>`;
   el.innerHTML = `
-    <div class="row-head"><h2>Playlists</h2><span class="qual">from your library</span></div>
+    ${head}
     <div class="card-row">
-      ${_cards.map((c, i) => `
+      ${shown.map((c, i) => `
         <button class="pcard" data-card="${esc(c.id)}" style="--h:${(200 + i * 47) % 360};">
           <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
           <span class="pcard-title">${esc(c.title)}</span>
@@ -1121,7 +1213,12 @@ function wireSearchBar() {
 }
 
 
-async function loadSuggestions() {
+/**
+ * @param compact     Home shows a short row with a way through to Dives.
+ * @param showAllPins Dives is where the full pin list belongs.
+ */
+async function loadSuggestions({ compact = false, showAllPins = false } = {}) {
+  _suggestOpts = { compact, showAllPins };
   document.getElementById("rl-recheck")?.addEventListener("click", async (ev) => {
     const btn = ev.currentTarget;
     btn.disabled = true;
@@ -1270,7 +1367,7 @@ async function buildSuggestionRow(el) {
   // or forever. Pins are the user's own deliberate choices and must
   // never wait on a decorative lookup.
   try {
-    renderSuggestionRow(el, pins, suggestions, false, { listeningFailed, hasCache: libraryPicks.length > 0 });
+    renderSuggestionRow(el, pins, suggestions, _suggestOpts.showAllPins, { listeningFailed, hasCache: libraryPicks.length > 0 });
   } catch (e) {
     el.innerHTML = `<p class="crate-note row-label">Couldn't build suggestions.</p>`;
   }
@@ -1293,7 +1390,7 @@ async function buildSuggestionRow(el) {
       // Only redraw if the row is still on screen and something changed;
       // the user may have navigated away while this was in flight.
       if (changed && document.getElementById("suggestions-row") === el) {
-        renderSuggestionRow(el, pins, suggestions);
+        renderSuggestionRow(el, pins, suggestions, _suggestOpts.showAllPins);
       }
     } catch (e) { /* photos are optional; the row is already up */ }
   }
@@ -1327,10 +1424,14 @@ function addPinToRow(name) {
 // adjust this and redraw rather than re-running the whole build, which
 // would fire API calls again and visibly flash the row.
 let _row = null;
+let _suggestOpts = { compact: false, showAllPins: false };
 
 function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state = {}) {
   _row = { el, pins, suggestions, showAllPins, state };
-  const PIN_VISIBLE = 8;
+  // Home shows a taste and points at Dives; Dives shows everything.
+  const compact = _suggestOpts.compact;
+  const PIN_VISIBLE = compact ? 4 : 8;
+  if (compact) suggestions = suggestions.slice(0, 4);
   const shownPins = showAllPins ? pins : pins.slice(0, PIN_VISIBLE);
   const extraPins = pins.length - shownPins.length;
 
@@ -1363,7 +1464,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     ${extraPins > 0 ? `<div style="text-align:center;margin-top:10px;"><button class="btn btn-ghost btn-small" id="show-more-pins">Show ${extraPins} more</button></div>` : ""}` : "";
 
   const suggHtml = suggestions.length ? `
-    <div class="row-head"><h2>Suggested</h2><span class="qual">for you</span></div>
+    <div class="row-head"><h2>Suggested</h2><span class="qual">for you</span>${compact ? `<button class="row-more" data-tab="dives">All dives</button>` : ""}</div>
     <div class="tile-grid">
       ${suggestions.map((sg) => tile(sg.name, sg.image_url, sg.reason,
         `<button class="tile-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" data-img-big="${esc(sg.image_url_large || "")}" title="Pin for later">+</button>
@@ -1406,6 +1507,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   // playlist cards: it's about artists you've barely explored, which is
   // the same subject as the row above it.
   const samplerArtists = samplerSourceArtists();
+  _samplerPool = samplerArtists;
   const samplerHtml = samplerArtists.length >= 2 ? `
     <div class="sampler-row">
       <button class="btn btn-ghost btn-sampler" id="sampler-btn">
@@ -3363,6 +3465,8 @@ function setActiveTab(name) {
     const name = tab.dataset.tab;
     setActiveTab(name);
     if (name === "home") return renderHome();
+    if (name === "dives") return renderDives();
+    if (name === "mixes") return renderMixes();
     if (name === "settings") return renderSettings();
   });
 })();

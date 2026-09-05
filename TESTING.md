@@ -288,6 +288,28 @@ Confirmed already: catalogue accuracy, sampler cancel, playlist cleanup.
       against what you saw: releases counted, how many weren't the
       artist's own, tracks dropped as uncredited.
 
+## 7. Navigation (2.8.24)
+
+No quota needed for most of this — it's structure.
+
+- [ ] Four destinations in the nav: Home, Dives, Mixes, Settings. On
+      desktop they're in the top bar; on mobile, the bottom bar
+- [ ] The current one is highlighted, and stays highlighted after
+      navigating
+- [ ] **Home** — search field, a short row of pins and suggestions, and
+      three mixes. "All dives" and "All mixes" links go where they say
+- [ ] **Dives** — search, every pin, full suggestions, and buttons for
+      full library scan, dive history, pins and blocked. All three
+      buttons must actually open something: one of them called a
+      function that didn't exist before this build
+- [ ] **Mixes** — the full card row plus "Build a sampler"
+- [ ] **Sampler from Mixes** — if you go straight to Mixes without
+      visiting Home or Dives, the sampler has no artists to work with.
+      It should send you to Dives with an explanation rather than
+      failing silently
+- [ ] Nothing that worked before has gone missing — searching, pinning,
+      opening a mix card
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky
