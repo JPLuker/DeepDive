@@ -341,6 +341,33 @@ export class SpotifyClient {
   // honoring Retry-After). Non-transient errors (403, 400, 404, 401)
   // raise immediately — a removed endpoint will never succeed on retry,
   // so failing fast surfaces it. Mirrors _call() in the Python.
+  /**
+   * Fire one request and report what came back, without retrying,
+   * backing off, or touching the remembered pause.
+   *
+   * Diagnostics only. Every other path deliberately hides a 429 behind
+   * retries — which is right in normal use and useless when the
+   * question is *which* endpoints are refused. Retrying here would also
+   * spend more of whatever budget is already short.
+   */
+  async probe(path, params = null) {
+    const started = Date.now();
+    try {
+      await this._request("GET", path, { params });
+      return { path, status: 200, ok: true, ms: Date.now() - started };
+    } catch (e) {
+      return {
+        path,
+        status: (e && e.status) || 0,
+        ok: false,
+        reason: (e && e.reason) || null,
+        retryAfter: (e && e.retryAfter) || null,
+        message: (e && e.message) || String(e),
+        ms: Date.now() - started,
+      };
+    }
+  }
+
   async _call(method, pathOrUrl, opts) {
     let attempt = 0;
     let rateLimitAttempts = 0;

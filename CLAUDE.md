@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.13.** If the build in `js/app.js` is well
+**Last updated at build 2.9.14.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -151,6 +151,13 @@ them. But check the code first — sometimes the test is right.
 ---
 
 ## Things that have bitten, repeatedly
+
+**Reach for the endpoint test before theorising.** Settings → Advanced
+→ Diagnostics fires one request at each endpoint and reports the raw
+status. A whole session went into competing explanations for "rate
+limited" — stale throttle, spent quota bucket, rolling 30-second limit
+— none of which could be told apart without knowing which endpoints
+answer. Ten requests settle it. Run it first.
 
 **A flag that blocks the thing that would clear it.** The remembered
 rate-limit pause was written from a Retry-After and cleared only by a

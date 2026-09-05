@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.14
+- Added an endpoint test under Advanced → Diagnostics. It fires one
+  request at each Spotify endpoint DeepDive uses and reports the status,
+  including the quota reason when there is one, then says what the
+  pattern means: everything refused with a quota error, everything
+  rate-limited, some groups refused while others answer, or all clear.
+- It doesn't retry. Every other path hides a 429 behind retries, which
+  is right in normal use and useless when the question is which
+  endpoints are refused — and retrying would spend more of a budget
+  that's already short.
+- Fixed public ids and 350ms pacing, so a failure means the endpoint
+  rather than the data, and the test can't be what trips the limit it
+  then reports.
+
 ## 2.9.13
 - Fixed: the sampler asked for `/artists/{id}/top-tracks` once per
   artist and fell back to search each time it was refused. That endpoint

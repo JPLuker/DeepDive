@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.13";
+export const BUILD = "2.9.14";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -2404,6 +2404,80 @@ function rateLimitBanner() {
   </div>`;
 }
 
+// ---- endpoint diagnostics ----
+// Fixed, well-known public ids so the probe doesn't depend on the
+// user's library, and so a failure means the endpoint rather than the
+// data. Read-only throughout: nothing here writes to an account.
+const PROBE_ARTIST = "0hEurMDQu99nJRq8pTxO14";
+const PROBE_ALBUM = "4aawyAB9vmqN3uQ7FjRGTy";
+const PROBE_TRACK = "11dFghVXANMlKmJXsNCbNl";
+
+// Grouped by what the app uses them for, so the result reads as "which
+// part of DeepDive is refused" rather than a list of paths. Whether
+// Spotify's own quota buckets follow these groupings is exactly what
+// this is meant to find out — the boundaries aren't published.
+const PROBES = [
+  ["Account", "me", null],
+  ["Your library", "me/tracks", { limit: 1 }],
+  ["Listening history", "me/top/artists", { limit: 1 }],
+  ["Recently played", "me/player/recently-played", { limit: 1 }],
+  ["Your playlists", "me/playlists", { limit: 1 }],
+  ["Search", "search", { q: "artist:\"Radiohead\"", type: "artist", limit: 1 }],
+  ["Artist details", `artists/${PROBE_ARTIST}`, null],
+  ["Artist releases — dives start here", `artists/${PROBE_ARTIST}/albums`, { include_groups: "album,single", limit: 1 }],
+  ["Album tracklist — the bulk of a dive", `albums/${PROBE_ALBUM}`, null],
+  ["Track details", `tracks/${PROBE_TRACK}`, null],
+];
+
+async function runEndpointTest(into) {
+  into.innerHTML = `<p class="nav-hint">Testing ${PROBES.length} endpoints, one request each…</p>`;
+  const rows = [];
+  for (const [label, path, params] of PROBES) {
+    const r = await client.probe(path, params);
+    rows.push([label, r]);
+    into.innerHTML = renderProbeRows(rows, PROBES.length);
+    // Paced, so the test itself can't be what trips a rate limit and
+    // then reports the endpoints below it as broken.
+    await new Promise((res) => setTimeout(res, 350));
+  }
+  into.innerHTML = renderProbeRows(rows, PROBES.length) + probeVerdict(rows);
+}
+
+function renderProbeRows(rows, total) {
+  const body = rows.map(([label, r]) => {
+    const detail = r.ok
+      ? `${r.ms}ms`
+      : `${r.status}${r.reason ? ` · ${esc(r.reason)}` : ""}${r.retryAfter ? ` · retry after ${esc(String(r.retryAfter))}s` : ""}`;
+    return `<tr><td>${r.ok ? "✓" : "✗"}</td><td>${esc(label)}</td><td>${detail}</td></tr>`;
+  }).join("");
+  return `<table class="diag-table probe-table">${body}</table>
+    ${rows.length < total ? `<p class="nav-hint">${rows.length} of ${total}…</p>` : ""}`;
+}
+
+/**
+ * The point of the exercise: say what the pattern means, rather than
+ * leaving ten status codes for someone to interpret.
+ */
+function probeVerdict(rows) {
+  const failed = rows.filter(([, r]) => !r.ok);
+  if (!failed.length) {
+    return `<p class="nav-hint">Every endpoint answered. If a dive still fails, it's the number of requests it makes rather than the endpoints it uses — try a small artist, and check Speed above.</p>`;
+  }
+  const all = failed.length === rows.length;
+  const quota = failed.some(([, r]) => r.reason === "QUOTA_EXCEEDED");
+  const limited = failed.some(([, r]) => r.status === 429);
+  if (all && quota) {
+    return `<p class="nav-hint">Everything is refused with a quota error. This is a limit on your Spotify credentials and only time refills it.</p>`;
+  }
+  if (all && limited) {
+    return `<p class="nav-hint">Everything is rate-limited. That's a burst limit rather than a spent budget — wait a minute and run this again before concluding anything.</p>`;
+  }
+  if (limited || quota) {
+    return `<p class="nav-hint">Some endpoints answer while others are refused, which means the budget is per-group rather than app-wide. The refused ones are the ones to avoid until they recover.</p>`;
+  }
+  return `<p class="nav-hint">Some endpoints failed without a rate limit — check the status codes above. 403 usually means the endpoint is restricted for this app rather than temporarily unavailable.</p>`;
+}
+
 function renderSettings() {
   setTitle("DeepDive · Settings");
   setActiveTab("settings");
@@ -2479,6 +2553,9 @@ function renderSettings() {
           <input type="checkbox" id="set-show-build">
           <span class="switch-track"><span class="switch-thumb"></span></span>
         </label>
+        <p class="nav-hint">Test each Spotify endpoint DeepDive uses, one request each. Use this when something is refused and it isn't clear what — it shows which parts are available rather than leaving it to guesswork.</p>
+        <div class="btn-row"><button class="btn btn-ghost btn-small" id="set-test-endpoints">Test endpoints</button></div>
+        <div id="endpoint-test"></div>
 
         <div class="crate-header"><span class="label">Credentials</span></div>
         <div class="nav-settings" style="padding:4px 0 0;">
@@ -2531,6 +2608,18 @@ function renderSettings() {
       applyBuildTagVisibility();
     });
   }
+
+  document.getElementById("set-test-endpoints")?.addEventListener("click", async (ev) => {
+    const btn = ev.currentTarget;
+    btn.disabled = true;
+    btn.textContent = "Testing…";
+    try {
+      await runEndpointTest(document.getElementById("endpoint-test"));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Test endpoints";
+    }
+  });
 
   document.getElementById("set-reset-pacing")?.addEventListener("click", () => {
     client.resetPacing();

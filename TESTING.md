@@ -248,6 +248,26 @@ No quota needed.
 although every element id was preserved, that was verified by reading
 rather than by clicking.*
 
+## 4l. Endpoint test (2.9.14)
+
+**Run this first when anything is refused.** Settings → Advanced →
+Diagnostics → Test endpoints. Ten requests, paced, read-only.
+
+- [ ] It lists every endpoint with a tick or a status code
+- [ ] The verdict line at the end says what the pattern means
+
+What the result tells us — this is the thing a whole session of guessing
+could not settle:
+
+- **Everything refused** → an app-wide limit. If the reason says
+  QUOTA_EXCEEDED it's a spent budget and only time helps; if it's a bare
+  429 it's the rolling 30-second limit, so wait a minute and re-run.
+- **"Artist releases" and "Album tracklist" refused while the account
+  and library endpoints answer** → the budget really is per-group, and
+  dives are blocked while samplers keep working.
+- **Everything answers but a dive still fails** → it's request *volume*,
+  not the endpoints. Pacing and asking for fewer releases are the levers.
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky
