@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.4";
+export const BUILD = "2.9.5";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3023,6 +3023,11 @@ function registerServiceWorker() {
 }
 
 async function boot() {
+  // Put the build on screen before anything else can fail, so a stale
+  // cached bundle is visible rather than inferred.
+  const tag = document.getElementById("build-tag");
+  if (tag) tag.textContent = BUILD;
+
   // A remembered pause is an upper bound from a Retry-After, and it
   // blocks the requests that would disprove it. Check once on startup so
   // it can't outlive the real limit.

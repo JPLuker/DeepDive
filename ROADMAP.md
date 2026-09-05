@@ -84,7 +84,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.4
+## Shipped since — build 2.9.5
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -324,6 +324,35 @@ artists.
   reading this will be misled. Either renumber the sessions or drop the
   version labels from the headings and let builds float — the second is
   the recommendation, since builds have now outrun the plan twice.
+
+---
+
+## Quota — what changed since "Try" (v2.5.0, 1 Sept)
+
+Diffed the dive path against the last release. **Per-dive request count
+is unchanged** — still one `albums/{id}` per release, same
+`include_groups`, same page size. Nothing added a call. So the dive
+method is not what drained the quota.
+
+What did change is the surroundings, and two of them matter:
+
+- **Retries count against quota.** `MAX_RATE_LIMIT_ATTEMPTS` is 10, and
+  every attempt is a real request. So a rate limit converts itself into
+  quota burn: hit the limit once and the app can fire ten more requests
+  trying to get past it, each spending budget it no longer has. Before
+  2.9.4 that included `QUOTA_EXCEEDED` responses, which could never
+  succeed. This is the amplifier, and 10 is worth reconsidering now that
+  quota exhaustion exits immediately — but it changes retry semantics,
+  so it's Joseph's call rather than a quiet edit.
+- **Quota is now counted per developer account, not per Client ID**
+  (Spotify, July 2026). Every Development Mode app under the account
+  shares one budget. Combined with a day of repeated testing — each dive
+  ~70 catalogue requests, each cancelled dive still spending what it
+  spent — that is enough on its own.
+
+Conclusion: nothing in 2.6-2.9 made a dive more expensive. Heavy testing
+against a newly-shared per-account budget, multiplied by a 10x retry
+policy, drained the catalogue bucket.
 
 ---
 

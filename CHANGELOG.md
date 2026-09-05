@@ -4,6 +4,12 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.5
+- Added: the build number now shows in the top bar on every screen. It
+  was only at the bottom of Settings and in diagnostics, which made it
+  easy to test a stale cached bundle after a push and draw the wrong
+  conclusion from the result.
+
 ## 2.9.4
 - Fixed: a quota limit was being retried like a rate limit. Both arrive
   as 429, but they mean different things — Spotify's July 2026 change

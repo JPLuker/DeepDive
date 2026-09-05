@@ -62,5 +62,14 @@ check('no orphaned demoArtists call', !/demoArtists\(\)/.test(src));
   check('no references to elements that do not exist', orphans.length === 0);
 }
 
+// Confirming which build is loaded meant scrolling to the bottom of
+// Settings, so a stale cached bundle was easy to test by accident and
+// draw the wrong conclusion from. It goes on screen now, set before
+// anything else in boot can fail.
+const shell = readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
+check('build tag exists in the shell', /id="build-tag"/.test(shell));
+check('build tag is filled at boot', /tag\.textContent = BUILD;/.test(src));
+check('and set before the redirect handling', src.indexOf('tag.textContent = BUILD') < src.indexOf('handleRedirectCallback'));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

@@ -505,6 +505,14 @@
 
   .landing-foot { text-align:center; border-top:1px solid var(--line); padding-top:28px; display:flex; flex-direction:column; align-items:center; gap:14px; }
 
+  /* Always on screen. Confirming which build is loaded was taking a trip
+     to the bottom of Settings, which made it easy to test a stale one
+     after a push and draw the wrong conclusion. */
+  .build-tag {
+    font-size:10.5px; color:var(--muted-soft); letter-spacing:0.02em;
+    padding-left:2px; user-select:all;
+  }
+
   .settings-build { margin:26px 0 0; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; color:var(--muted-soft); }
 
   /* Sampler intro: the artists it's about to fetch, so the page shows
@@ -751,7 +759,7 @@
   <div class="dive-bg" id="dive-bg"></div>
 
   <div class="topbar">
-    <span class="topbar-left"></span>
+    <span class="topbar-left"><span class="build-tag" id="build-tag"></span></span>
     <span class="wordmark" data-nav="home"><img src="../assets/dd-logo.png" alt="" class="wordmark-icon">DeepDive</span>
     <span class="topbar-right">
       <a class="coffee-btn" id="coffee-link" href="https://buymeacoffee.com/OSJoseph" target="_blank" rel="noopener" title="Buy me a coffee" aria-label="Buy me a coffee">
