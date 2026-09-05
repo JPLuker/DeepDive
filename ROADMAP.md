@@ -84,7 +84,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.15
+## Shipped since — build 2.8.21
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -193,9 +193,9 @@ twice.
 - **Playlists** are renamed **Mixes**, with the sampler living under them
 
 **Stopping point B — settings, twice over** *(from Joseph's notes)*
-- ~~Show build number toggle~~ — *shipped in 2.9.12, under Advanced,
+- ~~Show build number toggle~~ — *shipped in 2.8.16, under Advanced,
   off by default.*
-- The wider Settings rework is now partly done: 2.9.12 regrouped the
+- The wider Settings rework is now partly done: 2.8.16 regrouped the
   sections and split out Advanced. Still outstanding from Joseph's
   notes — LinkedIn and GitHub credit at the bottom, and moving run
   settings into the artist popup.
@@ -290,13 +290,13 @@ version is good enough for the page.
 
 ## Open bugs — from Joseph's notes, 4 Sept
 
-**Diving is slow at reading releases** — *resolved in 2.9.1, and the
+**Diving is slow at reading releases** — *resolved in 2.8.5, and the
 first diagnosis was wrong.* It was not a stale throttle: suggestions
 loading instantly proved the quota was healthy. The throttle started at
 zero and only rose after a 429, so every session sprinted into the
 limit and took a 15s penalty before slowing down. A persisted learned
 value had been hiding that for months by protecting later dives; adding
-decay in 2.9.0 removed the protection and exposed it. Catalogue reads
+decay in 2.8.4 removed the protection and exposed it. Catalogue reads
 are now paced from the first request.
 
 *Closed underneath it:* an album-tracklist cache would remove the cost
@@ -357,7 +357,7 @@ What did change is the surroundings, and two of them matter:
   every attempt is a real request. So a rate limit converts itself into
   quota burn: hit the limit once and the app can fire ten more requests
   trying to get past it, each spending budget it no longer has. Before
-  2.9.4 that included `QUOTA_EXCEEDED` responses, which could never
+  2.8.8 that included `QUOTA_EXCEEDED` responses, which could never
   succeed. This is the amplifier, and 10 is worth reconsidering now that
   quota exhaustion exits immediately — but it changes retry semantics,
   so it's Joseph's call rather than a quiet edit.

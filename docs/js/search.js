@@ -62,6 +62,13 @@ export function buildIncludeGroups(includeCompilations, includeAppearsOn) {
   return groups.join(",");
 }
 
+/** Rounded, and never to the second — false precision on an estimate. */
+function fmtEta(secs) {
+  if (secs < 60) return `${Math.max(5, Math.round(secs / 5) * 5)} seconds`;
+  const mins = Math.round(secs / 30) / 2;
+  return mins <= 1 ? "a minute" : `${mins % 1 ? mins.toFixed(1) : mins} minutes`;
+}
+
 export async function runSearch(client, artistName, opts = {}) {
   const {
     excludeLive = false, excludeCensored = false,
@@ -141,8 +148,18 @@ export async function runSearch(client, artistName, opts = {}) {
   const likedIndex = matching.buildLikedIndexes(comparisonSet);
 
   report(`Reading ${artist.name}'s releases…`);
+  // Once the release count is known the rest of this stage is one
+  // request each, so the remaining time is arithmetic rather than a
+  // guess. A bar moving at an unknown rate is what made a slow dive
+  // indistinguishable from a stuck one.
   const catalogTracks = await client.getArtistCatalogTracks(artist.id, {
-    onProgress: stageCb("catalog", `Reading ${artist.name}'s releases…`),
+    onProgress: (done, total) => {
+      const left = Math.max(0, total - done);
+      const secs = typeof client.estimateSeconds === "function" ? client.estimateSeconds(left) : 0;
+      const eta = secs > 5 ? ` — about ${fmtEta(secs)} left` : "";
+      stageCb("catalog", `Reading ${artist.name}'s releases…`)(done, total);
+      report(`Reading ${artist.name}'s releases… (${done}/${total})${eta}`);
+    },
     includeGroups,
   });
 

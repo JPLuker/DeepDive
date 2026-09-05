@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.15";
+export const BUILD = "2.8.21";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -612,6 +612,8 @@ let _samplerCancelled = false;
 // endpoints 403 for the whole app, so one refusal answers for the rest
 // of the session.
 let _topTracksBlocked = false;
+// So a failure screen can offer to retry the thing that failed.
+let _lastDiveArtist = null;
 
 /**
  * Three tracks per artist: the one you already liked, then two you
@@ -1514,6 +1516,7 @@ async function preflight() {
  */
 function startSearch(artistName) {
   if (blockedByRateLimit()) return;
+  _lastDiveArtist = artistName;
   _haveArtistPhoto = false;
   openIntentModal(artistName);
 }
@@ -1924,15 +1927,36 @@ function renderProgressError(msgOrErr, err) {
     <div class="card">
       <h1>${esc(info.headline)}</h1>
       <p class="muted" style="line-height:1.55;">${esc(info.detail)}</p>
+      <div id="err-diagnosis"><p class="nav-hint">Checking what went wrong…</p></div>
       <details class="diag">
         <summary>Technical details</summary>
         ${diagnosticsHtml()}
       </details>
       <div class="actions">
         <button class="btn btn-primary" id="err-home">Back to search</button>
+        <button class="btn btn-ghost hidden" id="err-retry">Try again</button>
       </div>
     </div>`;
   document.getElementById("err-home")?.addEventListener("click", () => renderHome());
+
+  // Run on its own rather than waiting to be asked. Half of what went
+  // wrong today was self-inflicted and self-repairable, and nobody
+  // should have to know to go looking in Advanced for that.
+  const slot = document.getElementById("err-diagnosis");
+  diagnose().then((d) => {
+    if (!slot.isConnected) return;
+    slot.innerHTML = renderDiagnosisBlock(d);
+    if (d.code === "DD-OK" || d.code === "DD-FIXED" || d.code === "DD-RATE") {
+      const retry = document.getElementById("err-retry");
+      if (retry && _lastDiveArtist) {
+        retry.classList.remove("hidden");
+        retry.textContent = `Try ${_lastDiveArtist} again`;
+        retry.addEventListener("click", () => startSearch(_lastDiveArtist));
+      }
+    }
+  }).catch(() => {
+    if (slot.isConnected) slot.innerHTML = `<p class="nav-hint">The checks couldn't run either — that usually means no connection.</p>`;
+  });
 }
 
 // ============================================================
@@ -2404,6 +2428,135 @@ function rateLimitBanner() {
   </div>`;
 }
 
+// ---- self-diagnosis ----
+//
+// Built from the failures this project actually had, in the order they
+// were mistaken for each other. Every one of them presented as "it's
+// slow" or "it's rate limited" and none could be told apart by looking:
+//
+//   - a remembered pause that blocked the requests that would clear it
+//   - learned pacing that outlived the rate limit that taught it, making
+//     a ten-second dive take a minute with nothing failing
+//   - a genuinely spent quota, which no amount of retrying fixes
+//   - a burst limit, which waiting does fix
+//
+// So the diagnosis tries the repairs it can make, then names what's
+// left with a code stable enough to quote in a bug report.
+const DIAG = {
+  OK:      { code: "DD-OK",      headline: "Everything is working" },
+  REPAIRED:{ code: "DD-FIXED",   headline: "Fixed it" },
+  QUOTA:   { code: "DD-QUOTA",   headline: "Your Spotify quota is spent" },
+  RATE:    { code: "DD-RATE",    headline: "Spotify is rate-limiting this app" },
+  AUTH:    { code: "DD-AUTH",    headline: "Spotify won't accept the login" },
+  FORBID:  { code: "DD-FORBID",  headline: "Spotify refused an endpoint" },
+  NET:     { code: "DD-NET",     headline: "Couldn't reach Spotify" },
+  UNKNOWN: { code: "DD-UNKNOWN", headline: "Something failed and the checks came back clean" },
+};
+
+// A pause or a throttle is only trustworthy while the thing that taught
+// it is still true. After this long with no fresh 429, it is a guess.
+const STALE_LEARNING_MS = 15 * 60 * 1000;
+
+function lastRateLimitAt() {
+  try { return parseInt(localStorage.getItem("deepdive_throttle_at") || "0", 10); } catch (e) { return 0; }
+}
+
+/**
+ * Check, repair what can be repaired, and report. `deep` runs the full
+ * endpoint sweep; the shallow version is three requests and is what
+ * runs on its own after a failure.
+ */
+async function diagnose({ deep = false } = {}) {
+  const notes = [];
+  let repaired = false;
+
+  // 1. A remembered pause that nothing has been able to disprove,
+  //    because it blocks the requests that would disprove it.
+  if (limitedUntil()) {
+    const still = await verifyRateLimit();
+    if (!still) { repaired = true; notes.push("Cleared a rate-limit pause that had already lifted."); }
+  }
+
+  // 2. Pacing learned from a rate limit that is no longer happening.
+  //    This is the one that cost the most time to find: nothing fails,
+  //    it is simply five times slower, and nothing says so.
+  const pacing = client.currentPacing ? client.currentPacing() : 0;
+  const learnedAgo = Date.now() - lastRateLimitAt();
+  if (pacing >= 400 && learnedAgo > STALE_LEARNING_MS) {
+    const check = await client.probe("me");
+    if (check.ok) {
+      client.resetPacing();
+      repaired = true;
+      notes.push(`Cleared ${pacing}ms of pacing left over from an earlier rate limit — dives were slower than they needed to be.`);
+    }
+  }
+
+  // 3. What actually answers.
+  const paths = deep
+    ? PROBES
+    : [["Account", "me", null],
+       ["Artist releases", `artists/${PROBE_ARTIST}/albums`, { include_groups: "album,single", limit: 1 }],
+       ["Album tracklist", `albums/${PROBE_ALBUM}`, null]];
+  const results = [];
+  for (const [label, path, params] of paths) {
+    const pr = await client.probe(path, params);
+    if (pr.ok) client.noteLatency(pr.ms);
+    results.push([label, pr]);
+    await new Promise((res) => setTimeout(res, 250));
+  }
+
+  const failed = results.filter(([, r]) => !r.ok).map(([, r]) => r);
+  let verdict;
+  if (!failed.length) verdict = repaired ? DIAG.REPAIRED : DIAG.OK;
+  else if (failed.some((r) => r.reason === "QUOTA_EXCEEDED")) verdict = DIAG.QUOTA;
+  else if (failed.some((r) => r.status === 429)) verdict = DIAG.RATE;
+  else if (failed.some((r) => r.status === 401)) verdict = DIAG.AUTH;
+  else if (failed.some((r) => r.status === 403)) verdict = DIAG.FORBID;
+  else if (failed.some((r) => r.status === 0)) verdict = DIAG.NET;
+  else verdict = DIAG.UNKNOWN;
+
+  return { ...verdict, repaired, notes, results, pacing: client.currentPacing ? client.currentPacing() : 0 };
+}
+
+/** What to tell someone for each outcome, and whether to offer a retry. */
+function diagnosisAdvice(d) {
+  switch (d.code) {
+    case "DD-OK":
+      return "Every check passed, so whatever went wrong isn't happening now. Worth trying again.";
+    case "DD-FIXED":
+      return "The checks found something and cleared it. Try again.";
+    case "DD-QUOTA":
+      return "Your Spotify app has used up its request budget. Waiting is the only fix — it refills on its own. Dives that include compilations and guest appearances spend it far faster.";
+    case "DD-RATE":
+      return "Too many requests too quickly. This clears on its own within a minute or two; nothing is broken.";
+    case "DD-AUTH":
+      return "The login has expired or been revoked. Disconnect and reconnect Spotify in Settings.";
+    case "DD-FORBID":
+      return "Spotify refused an endpoint outright rather than rate-limiting it. That's an app-level restriction, not something waiting will fix.";
+    case "DD-NET":
+      return "No response at all. Check the connection, and any extension or blocker that might be stopping requests to Spotify.";
+    default:
+      return "The checks all passed, so the failure was something else. The technical details below are worth quoting if you report this.";
+  }
+}
+
+function renderDiagnosisBlock(d) {
+  const notes = d.notes.length
+    ? `<ul class="diag-notes">${d.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>`
+    : "";
+  const rows = d.results.map(([label, r]) =>
+    `<tr><td>${r.ok ? "✓" : "✗"}</td><td>${esc(label)}</td><td>${r.ok ? `${r.ms}ms` : `${r.status}${r.reason ? ` · ${esc(r.reason)}` : ""}`}</td></tr>`).join("");
+  const good = d.code === "DD-OK" || d.code === "DD-FIXED";
+  return `
+    <div class="diag-verdict ${good ? "is-good" : "is-bad"}">
+      <div class="diag-verdict-head">${esc(d.headline)}</div>
+      <p class="nav-hint" style="margin-top:4px;">${esc(diagnosisAdvice(d))}</p>
+      ${notes}
+      <table class="diag-table probe-table">${rows}</table>
+      <div class="diag-code">${esc(d.code)}</div>
+    </div>`;
+}
+
 // ---- endpoint diagnostics ----
 // Fixed, well-known public ids so the probe doesn't depend on the
 // user's library, and so a failure means the endpoint rather than the
@@ -2434,6 +2587,7 @@ async function runEndpointTest(into) {
   const rows = [];
   for (const [label, path, params] of PROBES) {
     const r = await client.probe(path, params);
+    if (r.ok) client.noteLatency(r.ms);
     rows.push([label, r]);
     into.innerHTML = renderProbeRows(rows, PROBES.length);
     // Paced, so the test itself can't be what trips a rate limit and

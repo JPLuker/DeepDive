@@ -4,7 +4,27 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
-## 2.9.15
+## 2.8.21
+- Rolled the version back into 2.8.x. 2.9 is reserved for the finished
+  rework and was claimed early; everything shipped as 2.9.0–2.9.15 is
+  renumbered 2.8.4–2.8.19.
+- Added self-diagnosis. When a dive fails, DeepDive now checks itself
+  before reporting anything: it clears a remembered rate-limit pause
+  that has already lifted, and clears learned pacing left over from a
+  rate limit that stopped happening — both of which caused failures
+  during development that looked like Spotify problems and weren't.
+- If it repairs something it says so and offers to retry. If it can't,
+  it gives a short error code — DD-QUOTA, DD-RATE, DD-AUTH, DD-FORBID,
+  DD-NET — with plain-language advice for each, so "it broke" becomes
+  something reportable.
+- The endpoint test now reads as a speed test as well as a pass/fail:
+  it measures what a request actually costs and keeps a rolling
+  estimate.
+- Dives use that estimate to show time remaining while reading
+  releases, instead of a bar moving at an unknown rate. A slow dive and
+  a stuck dive used to look identical.
+
+## 2.8.19
 - Fixed: the endpoint test reported DeepDive's own throttle as Spotify's
   response time. `_request` paces before it fetches, and the probe timed
   the whole call — so a self-imposed 1200ms wait looked like a slow API.
@@ -15,7 +35,7 @@
   can be five times slower than usual with nothing failing and nothing
   on screen explaining why.
 
-## 2.9.14
+## 2.8.18
 - Added an endpoint test under Advanced → Diagnostics. It fires one
   request at each Spotify endpoint DeepDive uses and reports the status,
   including the quota reason when there is one, then says what the
@@ -29,7 +49,7 @@
   rather than the data, and the test can't be what trips the limit it
   then reports.
 
-## 2.9.13
+## 2.8.17
 - Fixed: the sampler asked for `/artists/{id}/top-tracks` once per
   artist and fell back to search each time it was refused. That endpoint
   is deprecated and refused for the whole app, not per artist, so every
@@ -37,7 +57,7 @@
   something already known. The first refusal is now remembered for the
   session.
 
-## 2.9.12
+## 2.8.16
 - Settings reorganised. It was nine sections, most of them a heading
   above a single button, in no particular order — Appearance and Theme
   were separated by Playlists, and "Manage" said nothing about the pins
@@ -53,7 +73,7 @@
 - Added Spotify attribution, which the Developer Terms require and which
   was missing from the app entirely.
 
-## 2.9.11
+## 2.8.15
 - Fixed: the desktop layout sat slightly left of centre. A centred block
   is centred inside the space the scrollbar leaves, so any page long
   enough to scroll loses about eight pixels on the right. The scrollbar
@@ -62,7 +82,7 @@
 - Section edges now share one gutter variable rather than each element
   carrying whatever padding it happened to have.
 
-## 2.9.10
+## 2.8.14
 - Added a desktop layout. Every breakpoint in the stylesheet was
   `max-width`, so the base styles were a 760px column that a wide screen
   simply centred — two thirds of the display empty — and because the tab
@@ -78,13 +98,13 @@
 - The results screen's docked actions now clear the rail instead of
   sitting under it.
 
-## 2.9.5
+## 2.8.9
 - Added: the build number now shows in the top bar on every screen. It
   was only at the bottom of Settings and in diagnostics, which made it
   easy to test a stale cached bundle after a push and draw the wrong
   conclusion from the result.
 
-## 2.9.4
+## 2.8.8
 - Fixed: a quota limit was being retried like a rate limit. Both arrive
   as 429, but they mean different things — Spotify's July 2026 change
   added a `reason` field so they can be told apart, and DeepDive was
@@ -97,7 +117,7 @@
   while a dive can't start at all: reading a catalogue draws on a
   different budget from your library and listening history.
 
-## 2.9.3
+## 2.8.7
 - Fixed: the app could report itself rate-limited while everything else
   loaded instantly, and stay that way. A sustained 429 stores when the
   pause lifts, taken from `Retry-After`, and only a *successful* response
@@ -112,7 +132,7 @@
   `Retry-After` verbatim. Self-correcting: if the ban really is longer,
   the next attempt earns a fresh 429.
 
-## 2.9.2
+## 2.8.6
 - Fixed: removing a playlist used `DELETE /playlists/{id}/followers`,
   which is deprecated in favour of Remove Items from Library. Every
   other deprecated endpoint we tested returns 403 in Development Mode,
@@ -124,20 +144,20 @@
   hold, where we're out of line with the Developer Terms, and where a
   dive's requests actually go.
 
-## 2.9.1
+## 2.8.5
 - Fixed: dives tripping Spotify's rate limit partway through and taking
   a 15-second penalty. The adaptive throttle started at zero and only
   rose *after* a 429, so every fresh session sprinted into the limit
   first — the exact "penalty box first, slow afterwards" outcome it was
   written to avoid. It went unnoticed because a learned value persisted
-  across sessions and quietly protected later dives; 2.9.0 added decay,
+  across sessions and quietly protected later dives; 2.8.4 added decay,
   which removed that protection and brought the sprint back.
 - Catalogue reads are now paced from the first request: 250ms normally,
   350ms for wide reads including guest appearances. A 60-release artist
   spends about 15 seconds on pacing, which is less than a single
   rate-limit penalty and, unlike one, predictable.
 
-## 2.9.0
+## 2.8.4
 - Changed: the results screen leads with the artist. Full-bleed photo,
   name beneath it, and colour-coded counts — duplicates in teal, new in
   gold, already liked in white. The photo fades and drifts as you scroll

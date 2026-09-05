@@ -381,6 +381,34 @@ export class SpotifyClient {
   /** Current self-imposed pacing, for display. */
   currentPacing() { return this._pacingMs(); }
 
+  /**
+   * A rolling estimate of what one request costs, kept so a dive can
+   * say how long it will take instead of showing a bar that moves at an
+   * unknown rate. Measured net of our own pacing, since that is added
+   * back separately and would otherwise be counted twice.
+   */
+  noteLatency(ms) {
+    if (!(ms > 0)) return;
+    // Weighted toward recent samples without lurching on one slow call.
+    this._latencyMs = this._latencyMs ? Math.round(this._latencyMs * 0.7 + ms * 0.3) : Math.round(ms);
+    try { localStorage.setItem("deepdive_latency_ms", String(this._latencyMs)); } catch (e) {}
+  }
+
+  latency() {
+    if (this._latencyMs) return this._latencyMs;
+    try {
+      const saved = parseInt(localStorage.getItem("deepdive_latency_ms") || "0", 10);
+      if (saved > 0) { this._latencyMs = saved; return saved; }
+    } catch (e) {}
+    return 0;
+  }
+
+  /** Expected seconds for a run of `n` sequential requests. */
+  estimateSeconds(n) {
+    const per = (this.latency() || 400) + this._pacingMs();
+    return Math.round((per * n) / 1000);
+  }
+
   async _call(method, pathOrUrl, opts) {
     let attempt = 0;
     let rateLimitAttempts = 0;

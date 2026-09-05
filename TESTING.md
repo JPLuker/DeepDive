@@ -178,7 +178,7 @@ section 4e and most of section 1 without waiting.
 - [ ] None of them prompt to connect Spotify or hit the API
 - [ ] "Leave demo mode" returns to the real app
 
-## 4g. Results screen, second pass (2.9.0)
+## 4g. Results screen, second pass (2.8.4)
 
 - [ ] `?demo=results` — artist photo full bleed at the top, name and
       three colour-coded counts beneath it
@@ -188,7 +188,7 @@ section 4e and most of section 1 without waiting.
 - [ ] The docked bar clears the mobile tab bar rather than sitting under
       it, and the last track row isn't trapped behind it
 
-## 4h. Dive speed (2.9.0)
+## 4h. Dive speed (2.8.4)
 
 - [ ] **Check first:** in the browser console,
       `localStorage.deepdive_throttle_ms`. A large value means a learned
@@ -197,18 +197,18 @@ section 4e and most of section 1 without waiting.
 - [ ] Settings → Speed → Reset pacing, then run a standard dive
 - [ ] Reading releases is back to being the fast part
 
-## 4i. Rate-limit lockout (2.9.3)
+## 4i. Rate-limit lockout (2.8.7)
 
 **Check this first — it may be what's blocking you right now.**
 
 - [ ] In the browser console: `localStorage.deepdive_limited_until`
 - [ ] If it returns a number, that's the stale pause. Clear it with
       `localStorage.removeItem('deepdive_limited_until')` and reload
-- [ ] On 2.9.3 this should self-correct: startup makes one request and
+- [ ] On 2.8.7 this should self-correct: startup makes one request and
       clears the flag if Spotify answers
 - [ ] The red banner now has a "Check again" button that does the same
 
-## 4j. Desktop layout (2.9.10)
+## 4j. Desktop layout (2.8.14)
 
 Testable in the browser with no quota — resize the window rather than
 running a dive.
@@ -230,7 +230,7 @@ running a dive.
 this was written against the stylesheet. The rail and the docked action
 bar are the two things most likely to be off.*
 
-## 4k. Settings rework (2.9.12)
+## 4k. Settings rework (2.8.16)
 
 No quota needed.
 
@@ -248,7 +248,7 @@ No quota needed.
 although every element id was preserved, that was verified by reading
 rather than by clicking.*
 
-## 4l. Endpoint test (2.9.14)
+## 4l. Endpoint test (2.8.18)
 
 **Run this first when anything is refused.** Settings → Advanced →
 Diagnostics → Test endpoints. Ten requests, paced, read-only.

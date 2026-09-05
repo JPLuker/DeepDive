@@ -554,6 +554,19 @@
      way a mid-page section does. */
   .advanced .crate-header:first-of-type { margin-top:18px; }
 
+  /* A verdict, not a wall of status codes: green when it's fine, and
+     an error code short enough to quote when it isn't. */
+  .diag-verdict { margin-top:14px; padding:14px 16px; border-radius:var(--radius); border:1px solid var(--line); }
+  .diag-verdict.is-good { border-color:var(--teal); background:var(--teal-soft); }
+  .diag-verdict.is-bad { border-color:var(--gold); background:var(--gold-soft); }
+  .diag-verdict-head { font-weight:700; font-size:15px; letter-spacing:-0.015em; }
+  .diag-notes { margin:8px 0 0; padding-left:18px; font-size:13px; color:var(--muted); }
+  .diag-notes li { margin-bottom:4px; }
+  .diag-code {
+    margin-top:10px; font-family:'IBM Plex Mono',monospace; font-size:11px;
+    letter-spacing:0.08em; color:var(--muted-soft); user-select:all;
+  }
+
   .probe-paced { color:var(--gold); }
   .probe-table { width:100%; margin-top:10px; font-size:12.5px; }
   .probe-table td { padding:5px 8px 5px 0; vertical-align:top; }
