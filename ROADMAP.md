@@ -321,6 +321,13 @@ anything at all. Worth replacing the heuristic with something
 deterministic — a plain web link with an "open in app" affordance
 beside it, rather than guessing which one the person can use.
 
+**Confirmation should be a dialog, not a line on a dead page.** After
+liking or building a playlist, the result appears as a small banner
+above the buttons while the results list — now acted on and no longer
+actionable — stays on screen behind it. It should surface in the middle
+of the screen and close the results page behind it. Joseph's call:
+next update, not now.
+
 **Duplicate song in a sampler** — a censored version of a track already
 in the mix. The exclusion filters catch censored versions on a dive;
 the sampler either isn't applying them or isn't de-duplicating across
