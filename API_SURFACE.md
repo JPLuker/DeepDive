@@ -60,6 +60,21 @@ at any acceptable cost. Dips need either an external source (Last.fm
 `artist.getTopTracks` is the obvious one, already planned for
 similarity) or a different definition.
 
+## Quota buckets — why one thing works and another doesn't
+
+Spotify groups endpoints into separate quota budgets. Requests in the
+same bucket share a limit, so a healthy home screen says nothing about
+whether a dive can run.
+
+Observed 5 Sept 2026: suggestions and the library loaded instantly while
+`GET /artists/{id}/albums` returned 429 on its very first call. The
+user-data bucket was fine; the catalogue bucket was spent. Pacing cannot
+help with this — it is refusal on request one, not a burst.
+
+A 429 carries `reason` in the body. `QUOTA_EXCEEDED` means the budget is
+gone and retrying is pointless; anything else is a rate limit worth
+backing off from. Treat them differently.
+
 ## Scopes
 
 Requested: `user-library-read`, `user-library-modify`,

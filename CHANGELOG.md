@@ -4,6 +4,19 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.4
+- Fixed: a quota limit was being retried like a rate limit. Both arrive
+  as 429, but they mean different things — Spotify's July 2026 change
+  added a `reason` field so they can be told apart, and DeepDive was
+  parsing it off the response and then ignoring it. A `QUOTA_EXCEEDED`
+  429 now stops immediately instead of retrying ten times over two
+  minutes, since every retry was guaranteed to fail and spent more of
+  the budget that was already gone.
+- The message says what actually happened. Spotify groups endpoints into
+  separate budgets, which is why the home screen can load instantly
+  while a dive can't start at all: reading a catalogue draws on a
+  different budget from your library and listening history.
+
 ## 2.9.3
 - Fixed: the app could report itself rate-limited while everything else
   loaded instantly, and stay that way. A sustained 429 stores when the

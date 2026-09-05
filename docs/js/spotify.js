@@ -357,6 +357,30 @@ export class SpotifyClient {
           await sleep(RETRY_BASE_DELAY_MS * attempt);
         } else if (e.status === 429) {
           rateLimitAttempts += 1;
+
+          // A quota limit is not a rate limit, and retrying is actively
+          // harmful. Spotify's July 2026 change puts `reason` in the 429
+          // body so the two can be told apart: QUOTA_EXCEEDED means the
+          // budget for this endpoint's bucket is spent, so every retry
+          // fails and spends more of what is already gone. Waiting ten
+          // attempts over two minutes cannot refill a quota. Stop.
+          //
+          // This is also why a dive can 429 on its very first catalogue
+          // request while the home screen loads instantly — endpoints
+          // are grouped into buckets, and the user-data bucket can be
+          // healthy while the metadata bucket is empty.
+          if (e.reason === "QUOTA_EXCEEDED") {
+            e.quotaExhausted = true;
+            const raSecs = parseFloat(e.retryAfter);
+            if (!Number.isNaN(raSecs)) {
+              try {
+                const until = Date.now() + Math.min(raSecs * 1000, MAX_STORED_LIMIT_MS);
+                localStorage.setItem("deepdive_limited_until", String(until));
+              } catch (storeErr) {}
+            }
+            throw e;
+          }
+
           // Slow every subsequent request, not just this retry — the
           // point is to stop hitting the limit again three calls later.
           this._backOff();

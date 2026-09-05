@@ -49,5 +49,15 @@ check('active limit reported', limitedUntil(now + 5000, now) === now + 5000);
 check('expired limit ignored', limitedUntil(now - 5000, now) === null);
 check('no limit reported when unset', limitedUntil(0, now) === null);
 
+// QUOTA_EXCEEDED is not a rate limit. Retrying a spent budget fails
+// every time and spends more of what is already gone — Joseph watched
+// it reach "attempt 3, waiting 45s" against an endpoint that could not
+// succeed. The reason field was already being parsed off the 429 body
+// and then ignored.
+check('quota exhaustion is detected', /e\.reason === "QUOTA_EXCEEDED"/.test(sp));
+check('and is not retried', /e\.quotaExhausted = true;[\s\S]{0,400}throw e;/.test(sp));
+check('quota errors are explained separately', /err\.quotaExhausted/.test(src));
+check('explanation says waiting will not help', /isn't something waiting a few seconds fixes/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

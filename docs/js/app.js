@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.3";
+export const BUILD = "2.9.4";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1806,6 +1806,24 @@ function openInSpotify(webUrl) {
 function explainError(err) {
   const status = err && err.status;
   const ra = err && (err.retryAfterSeconds ?? parseFloat(err.retryAfter));
+
+  // A quota limit and a rate limit both arrive as 429 but mean different
+  // things, and telling someone to "wait a moment" when their daily
+  // budget is spent is worse than saying nothing. Spotify distinguishes
+  // them with a reason field; so do we.
+  if (err && err.quotaExhausted) {
+    return {
+      headline: "Your Spotify app has used up its quota",
+      detail:
+        "This is a limit on your own Spotify credentials, not a fault in DeepDive, " +
+        "and it isn't something waiting a few seconds fixes. Spotify groups endpoints " +
+        "into separate budgets, which is why the home screen can still load normally " +
+        "while a dive can't start — reading an artist's catalogue draws on a different " +
+        "budget from your library and listening history. It refills on its own; try " +
+        "again later. Dives that read compilations and guest appearances spend far " +
+        "more of it than standard ones.",
+    };
+  }
 
   if (status === 429 && !Number.isNaN(ra) && ra > 0) {
     const until = new Date(Date.now() + ra * 1000);
