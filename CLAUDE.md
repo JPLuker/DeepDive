@@ -232,6 +232,31 @@ full-bleed dive at that size looks right on a phone — this was doubted,
 entry point looks correct and another does not, the size is not the
 variable; find what differs between the two paths instead.
 
+**Deprecated in the schema means 403 in Dev Mode.** Tested twice on
+4 Sept 2026: `/albums?ids=` and `/artists/{id}/top-tracks` are both
+marked `deprecated: true` in the OpenAPI schema and both returned 403
+with a valid token, while their non-deprecated neighbours returned 200.
+So the schema is a reliable predictor — check it at
+`https://developer.spotify.com/reference/web-api/open-api-schema.yaml`
+before designing anything around an endpoint, rather than discovering
+it at runtime.
+
+Everything DeepDive currently calls is non-deprecated. Already migrated
+off `/playlists/{id}/tracks` and the type-specific library endpoints.
+
+**No popularity data is available.** `artist.popularity` was removed in
+February, `/artists/{id}/top-tracks` 403s, and the simplified track
+objects from `albums/{id}` carry no `popularity` field. Anything
+described as "most popular" needs an external source or a different
+definition. This directly affects **dips**.
+
+**Spotify's Developer Terms forbid caching content beyond immediate
+use.** This rules out the album-tracklist cache that would otherwise be
+the obvious fix for dive speed — tracklists never change, which is
+exactly why keeping them permanently is the thing prohibited. Pacing is
+the whole fix. `library-cache.js` (24h reconcile on the user's own
+Liked Songs) predates this reading and is Joseph's call.
+
 **Batch `?ids=` really is gone — retested 4 Sept 2026.** With a fresh
 client-credentials token, `GET /v1/albums?ids=a,b` returned **403**
 while `GET /v1/albums/a` returned **200** seconds later. So one request

@@ -293,9 +293,10 @@ value had been hiding that for months by protecting later dives; adding
 decay in 2.9.0 removed the protection and exposed it. Catalogue reads
 are now paced from the first request.
 
-*Still open underneath it:* nothing caches album tracklists, so every
-dive re-reads every release even for artists dived before. Pacing makes
-the cost predictable; caching would remove it.
+*Closed underneath it:* an album-tracklist cache would remove the cost
+entirely, but Spotify's Developer Terms forbid caching content beyond
+immediate use, and a permanent store of tracklists is squarely what
+that prohibits. Pacing is the whole fix. Don't reopen this.
 
 Batching was tested on 4 Sept 2026 and is confirmed dead — `?ids=`
 returns 403 in Dev Mode while the single-album endpoint returns 200. So
@@ -323,6 +324,19 @@ artists.
   reading this will be misled. Either renumber the sessions or drop the
   version labels from the headings and let builds float — the second is
   the recommendation, since builds have now outrun the plan twice.
+
+---
+
+## Compliance — from the API guidance, 4 Sept
+
+- **Attribution is missing.** The Developer Terms require attributing
+  content to Spotify; there is none anywhere in the app shell. Small,
+  cheap, and the clearest gap we have.
+- **`library-cache.js` needs a decision.** It persists the user's Liked
+  Songs with a 24-hour reconcile window. Defensible as the user's own
+  data serving an immediate function, but not obviously "immediate
+  use". Options: leave it, shorten the window, or make it session-only
+  at a real cost in requests. Joseph's call.
 
 ---
 
