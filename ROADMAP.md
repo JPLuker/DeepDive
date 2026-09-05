@@ -84,7 +84,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.10.0
+## Shipped since — build 2.9.10
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:

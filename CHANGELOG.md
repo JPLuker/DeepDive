@@ -4,7 +4,7 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
-## 2.10.0
+## 2.9.10
 - Added a desktop layout. Every breakpoint in the stylesheet was
   `max-width`, so the base styles were a 760px column that a wide screen
   simply centred — two thirds of the display empty — and because the tab

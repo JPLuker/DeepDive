@@ -208,7 +208,7 @@ section 4e and most of section 1 without waiting.
       clears the flag if Spotify answers
 - [ ] The red banner now has a "Check again" button that does the same
 
-## 4j. Desktop layout (2.10.0)
+## 4j. Desktop layout (2.9.10)
 
 Testable in the browser with no quota — resize the window rather than
 running a dive.
