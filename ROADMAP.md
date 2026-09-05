@@ -295,10 +295,13 @@ are now paced from the first request.
 
 *Still open underneath it:* nothing caches album tracklists, so every
 dive re-reads every release even for artists dived before. Pacing makes
-the cost predictable; caching would remove it. The cheap question first
-— is `GET /albums?ids=` genuinely still 403? That is recorded from
-February and never re-tested, and if batching came back this shrinks
-twentyfold.
+the cost predictable; caching would remove it.
+
+Batching was tested on 4 Sept 2026 and is confirmed dead — `?ids=`
+returns 403 in Dev Mode while the single-album endpoint returns 200. So
+one request per release is the floor, and **caching album tracklists is
+now the only remaining lever on dive speed.** It is the next piece of
+real work on this.
 
 **Duplicate song in a sampler** — a censored version of a track already
 in the mix. The exclusion filters catch censored versions on a dive;

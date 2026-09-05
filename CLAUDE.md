@@ -232,6 +232,19 @@ full-bleed dive at that size looks right on a phone — this was doubted,
 entry point looks correct and another does not, the size is not the
 variable; find what differs between the two paths instead.
 
+**Batch `?ids=` really is gone — retested 4 Sept 2026.** With a fresh
+client-credentials token, `GET /v1/albums?ids=a,b` returned **403**
+while `GET /v1/albums/a` returned **200** seconds later. So one request
+per release is the floor for a catalogue read, and there is no batching
+route back. Don't re-open this without a new test; do re-test if
+Spotify announces changes, because it is the single biggest lever on
+dive speed.
+
+Note the current public rate-limit docs still describe Get Multiple
+Albums as a batching option. They are describing Extended Quota
+behaviour; Dev Mode apps get 403. The docs are not a reliable guide to
+what this app can do.
+
 **An `images` array is one image at three sizes, not three images.**
 Widest first: 640, 320, 160. This reads like a gallery and isn't one.
 Treating it as one gave the dive a "slideshow" that crossfaded between
