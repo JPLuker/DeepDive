@@ -48,5 +48,14 @@ check('build tag is in the top bar right', /topbar-right">\s*\n\s*<span class="b
 // Mobile untouched.
 check('mobile breakpoint intact', /@media \(max-width: 640px\)/.test(h));
 
+// A centred layout sits left of true centre once a scrollbar appears,
+// because centring happens inside the space the scrollbar leaves. That
+// reads as an uneven right margin.
+check('scrollbar gutter is reserved', /scrollbar-gutter:stable both-edges/.test(h));
+check('one gutter variable', /--gutter:28px;/.test(h));
+check('wrap uses it', /\.wrap \{ padding:0 var\(--gutter\) 96px; \}/.test(desk));
+check('topbar uses it', /\.topbar \{ margin:0 auto; padding-left:var\(--gutter\)/.test(desk));
+check('flash uses it', /\.flash \{ padding-left:var\(--gutter\)/.test(desk));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

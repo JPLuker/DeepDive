@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.11
+- Fixed: the desktop layout sat slightly left of centre. A centred block
+  is centred inside the space the scrollbar leaves, so any page long
+  enough to scroll loses about eight pixels on the right. The scrollbar
+  gutter is now reserved on both sides, which also stops the page
+  shifting sideways when a short view becomes a long one.
+- Section edges now share one gutter variable rather than each element
+  carrying whatever padding it happened to have.
+
 ## 2.9.10
 - Added a desktop layout. Every breakpoint in the stylesheet was
   `max-width`, so the base styles were a 760px column that a wide screen

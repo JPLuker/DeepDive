@@ -51,7 +51,7 @@
     /* Desktop rail width and content measure; used by the min-width
        blocks below and overridden at the widest breakpoint. */
     /* Content measure for the desktop breakpoints below. */
-    --measure:880px;
+    --measure:880px; --gutter:28px;
   }
   /* Dark theme — soft charcoal, not true black (avoids the harsh
      halation of light text on pure black). Only colour tokens change;
@@ -72,7 +72,11 @@
     --accent-top:#2FB6FF; --accent-bottom:#3B5BFF; --accent:#3E7BFF;
     --tile:#16181D; --tile-hover:#1F222A;
   }
-  html { background:var(--bg); }
+  /* Reserve the scrollbar's width on both sides, so a centred layout
+     stays centred instead of sitting ~8px left of true centre on any
+     page long enough to scroll. Cheap, and it also stops the whole page
+     shifting sideways when a short view becomes a long one. */
+  html { background:var(--bg); scrollbar-gutter:stable both-edges; }
   body, .card, .nav-drawer, input, .sort-select, .pill, .autofill-list, .settings-panel {
     transition: background-color .2s ease, color .2s ease, border-color .2s ease;
   }
@@ -685,9 +689,12 @@
   @media (min-width: 900px) {
     .topnav { display:flex; gap:2px; }
 
+    /* One measure and one gutter for everything, or section edges
+       disagree by whatever padding each element happened to carry. */
     .wrap, .flash, .row-head, .topbar { max-width:var(--measure); }
-    .topbar { margin:0 auto; padding-left:28px; padding-right:28px; }
-    .wrap { padding:0 28px 96px; }
+    .topbar { margin:0 auto; padding-left:var(--gutter); padding-right:var(--gutter); }
+    .wrap { padding:0 var(--gutter) 96px; }
+    .flash { padding-left:var(--gutter); padding-right:var(--gutter); }
     .search-shell { max-width:680px; }
 
     .tile-grid { grid-template-columns:repeat(3,1fr); gap:10px; }
