@@ -1,13 +1,14 @@
 // Desktop layout.
 //
-// Every breakpoint in this stylesheet used to be max-width, so the base
-// styles were a 760px column that a 1920px screen simply centred — with
-// .tabbar hidden above 640px, desktop had no navigation at all.
+// Every breakpoint used to be max-width, so the base styles were a 760px
+// column that a wide screen centred — and with .tabbar hidden above
+// 640px, desktop had no navigation at all.
 //
-// The fix is structural rather than a scale-up: the tab bar becomes a
-// fixed left rail using the same markup, and the grids grow their
-// column count with the viewport. The content measure stays bounded,
-// because the tile vocabulary reads as sparse stretched across 1920px.
+// The first attempt made the tab bar a left rail. It was wrong twice
+// over: two buttons at the top of a full-height column left most of it
+// empty, and the tabs carry text labels that don't fit a 48px square.
+// Navigation lives in the top bar the app already has, driven by the
+// same delegated [data-tab] handler.
 import { readFileSync } from 'fs';
 const h = readFileSync(new URL('../docs/app/index.html', import.meta.url), 'utf8');
 const js = readFileSync(new URL('../docs/js/app.js', import.meta.url), 'utf8');
@@ -18,35 +19,34 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
 const desk = h.slice(h.indexOf('@media (min-width: 900px)'), h.indexOf('/* ---- mobile'));
 const wide = h.slice(h.indexOf('@media (min-width: 1280px)'), h.indexOf('/* ---- mobile'));
 
-check('there is a desktop breakpoint at all', desk.length > 0);
+check('there is a desktop breakpoint', desk.length > 0);
 check('and a wider one above it', wide.length > 0);
 
-// Navigation. The rail reuses the mobile markup, so nothing in the JS
-// needs to know which layout is showing.
-check('rail is the tab bar, not new markup', /\.tabbar \{[\s\S]*?position:fixed/.test(desk));
-check('rail is vertical', /flex-direction:column/.test(desk));
-check('page clears the rail', /body \{ padding-left:var\(--rail\); \}/.test(desk));
-check('rail uses the real active class', /\.tabbar \.tab\.active/.test(desk));
-check('active class matches the JS', /classList\.toggle\("active"/.test(js));
+// Navigation
+check('top-bar nav exists', /<button class="topnav-btn" data-tab="home">/.test(h));
+check('and settings', /<button class="topnav-btn" data-tab="settings">/.test(h));
+check('hidden until desktop', /\.topnav \{ display:none; \}/.test(h));
+check('shown at desktop', /\.topnav \{ display:flex/.test(desk));
+check('reuses the delegated handler', /e\.target\.closest\("\[data-tab\]"\)/.test(js));
+check('active state covers both navs', /querySelectorAll\("\.tab, \.topnav-btn"\)/.test(js));
 
-// Grids grow rather than staying at two.
-check('tiles widen to three', /\.tile-grid \{ grid-template-columns:repeat\(3,1fr\)/.test(desk));
-check('and four when there is room', /\.tile-grid \{ grid-template-columns:repeat\(4,1fr\); \}/.test(wide));
-check('cards widen too', /\.card-row \{ grid-template-columns:repeat\(4,1fr\); \}/.test(wide));
+// The rail is gone, and so is everything that had to work around it.
+check('no left rail', !/--rail/.test(h));
+check('body is not offset', !/body \{ padding-left/.test(desk));
+check('docked actions are not offset', !/\.results-actions \{ left:/.test(desk));
 
-// Everything bound to the old 760px measure has to move together, or
-// the page becomes columns of different widths stacked on each other.
-check('measure is a variable', /--measure:/.test(h));
-check('wrap, flash and row heads share it', /\.wrap, \.flash, \.row-head \{ max-width:var\(--measure\); \}/.test(desk));
-check('topbar shares it', /\.topbar \{ max-width:var\(--measure\)/.test(desk));
+// Density, not width.
+check('tiles go to three', /\.tile-grid \{ grid-template-columns:repeat\(3,1fr\)/.test(desk));
+check('then four', /\.tile-grid \{ grid-template-columns:repeat\(4,1fr\); \}/.test(wide));
+check('cards follow', /\.card-row \{ grid-template-columns:repeat\(4,1fr\); \}/.test(wide));
+check('measure is bounded, not full width', /--measure:1080px;/.test(wide));
+check('everything shares the measure', /\.wrap, \.flash, \.row-head, \.topbar \{ max-width:var\(--measure\); \}/.test(desk));
 
-// Fixed elements must clear the rail rather than sit beneath it.
-check('docked results actions clear the rail', /\.results-actions \{ left:var\(--rail\); \}/.test(desk));
+// Build tag sits with the support link rather than alone in a corner.
+check('build tag is in the top bar right', /topbar-right">\s*\n\s*<span class="build-tag"/.test(h));
 
-// Mobile is untouched: these are min-width rules and the phone
-// breakpoint stays max-width.
-check('mobile breakpoint still exists', /@media \(max-width: 640px\)/.test(h));
-check('desktop rules do not use max-width', !/@media \(min-width: 900px\)[\s\S]{0,40}max-width:\s*640/.test(h));
+// Mobile untouched.
+check('mobile breakpoint intact', /@media \(max-width: 640px\)/.test(h));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

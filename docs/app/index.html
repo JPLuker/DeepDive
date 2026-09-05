@@ -50,7 +50,8 @@
     --radius-tile:10px;
     /* Desktop rail width and content measure; used by the min-width
        blocks below and overridden at the widest breakpoint. */
-    --rail:72px; --measure:880px;
+    /* Content measure for the desktop breakpoints below. */
+    --measure:880px;
   }
   /* Dark theme — soft charcoal, not true black (avoids the harsh
      halation of light text on pure black). Only colour tokens change;
@@ -511,10 +512,21 @@
   /* Always on screen. Confirming which build is loaded was taking a trip
      to the bottom of Settings, which made it easy to test a stale one
      after a push and draw the wrong conclusion. */
+  /* Sits with the support link rather than floating alone in the
+     corner, where it read as debris rather than information. */
   .build-tag {
     font-size:10.5px; color:var(--muted-soft); letter-spacing:0.02em;
-    padding-left:2px; user-select:all;
+    user-select:all; align-self:center;
   }
+
+  .topnav { display:none; }
+  .topnav-btn {
+    background:none; border:none; cursor:pointer; padding:7px 12px;
+    border-radius:var(--radius-pill); color:var(--muted);
+    font-family:inherit; font-size:13.5px; font-weight:600; letter-spacing:-0.01em;
+  }
+  .topnav-btn:hover { color:var(--ink); background:var(--tile); }
+  .topnav-btn.active { color:var(--ink); background:var(--tile); }
 
   .settings-build { margin:26px 0 0; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; color:var(--muted-soft); }
 
@@ -658,51 +670,32 @@
   }
 
   /* ---- desktop ---------------------------------------------------
-     The counterpart to the mobile breakpoint below. Between them the
-     base styles were a 760px column that a 1920px screen centred, with
-     two thirds of the display empty and — because .tabbar is hidden
-     above 640px — no navigation at all.
+     Counterpart to the mobile breakpoint below. The base styles were a
+     760px column that a wide screen centred, with no navigation at all
+     above 640px because .tabbar is hidden there.
 
-     This is not the phone layout stretched. Two structural changes:
-     the tab bar becomes a fixed left rail (same markup, so nothing in
-     the JS changes), and the grids grow their column count with the
-     viewport instead of staying at two. The column itself stays
-     bounded: stats.fm and Spotify both keep content in a readable
-     measure at width rather than letting rows run the full display,
-     and the tile vocabulary reads as sparse when stretched. */
+     A first attempt turned the tab bar into a left rail. It was wrong:
+     two buttons at the top of a full-height column left a metre of dead
+     space, and the tabs carry text labels that don't fit a 48px square.
+     Navigation goes in the top bar the app already has — no new
+     furniture, and the delegated [data-tab] handler drives it
+     unchanged. The rest is density: grids grow their column count while
+     the measure stays bounded, because these tiles read as sparse
+     stretched across a whole display. */
   @media (min-width: 900px) {
-    body { padding-left:var(--rail); }
+    .topnav { display:flex; gap:2px; }
 
-    .tabbar {
-      display:flex; flex-direction:column; align-items:center; gap:6px;
-      position:fixed; left:0; top:0; bottom:0; width:var(--rail);
-      padding:18px 8px; z-index:40;
-      background:var(--tile); border-right:1px solid var(--line);
-      border-top:none;
-    }
-    .tabbar .tab {
-      flex:0 0 auto; width:48px; height:48px;
-      border-radius:var(--radius-tile);
-      display:flex; align-items:center; justify-content:center;
-    }
-    .tabbar .tab.active { background:var(--tile-hover); }
-
-    /* Everything that was pinned to a 760px measure widens together,
-       or the page comes apart into columns of different widths. */
-    .wrap, .flash, .row-head { max-width:var(--measure); }
-    .topbar { max-width:var(--measure); margin:0 auto; padding-left:32px; padding-right:32px; }
-    .wrap { padding:0 32px 96px; }
+    .wrap, .flash, .row-head, .topbar { max-width:var(--measure); }
+    .topbar { margin:0 auto; padding-left:28px; padding-right:28px; }
+    .wrap { padding:0 28px 96px; }
     .search-shell { max-width:680px; }
 
     .tile-grid { grid-template-columns:repeat(3,1fr); gap:10px; }
     .card-row { grid-template-columns:repeat(3,1fr); gap:12px; }
 
-    /* Fixed elements have to clear the rail rather than sit under it. */
-    .results-actions { left:var(--rail); }
-    .results-hero { margin:0 -32px 0; }
-    .results-body { padding-bottom:120px; }
-    .results-actions-row { max-width:var(--measure); margin:0 auto; width:100%; }
-    .results-actions .btn-back { max-width:var(--measure); margin:0 auto; width:100%; }
+    .results-actions-row, .results-actions .btn-back {
+      max-width:var(--measure); margin:0 auto; width:100%;
+    }
   }
 
   @media (min-width: 1280px) {
@@ -816,9 +809,15 @@
   <div class="dive-bg" id="dive-bg"></div>
 
   <div class="topbar">
-    <span class="topbar-left"><span class="build-tag" id="build-tag"></span></span>
+    <span class="topbar-left">
+      <span class="topnav">
+        <button class="topnav-btn" data-tab="home">Home</button>
+        <button class="topnav-btn" data-tab="settings">Settings</button>
+      </span>
+    </span>
     <span class="wordmark" data-nav="home"><img src="../assets/dd-logo.png" alt="" class="wordmark-icon">DeepDive</span>
     <span class="topbar-right">
+      <span class="build-tag" id="build-tag"></span>
       <a class="coffee-btn" id="coffee-link" href="https://buymeacoffee.com/OSJoseph" target="_blank" rel="noopener" title="Buy me a coffee" aria-label="Buy me a coffee">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 9h1.6a2.4 2.4 0 0 1 0 4.8H17"/><line x1="7" y1="2.5" x2="7" y2="5"/><line x1="11" y1="2.5" x2="11" y2="5"/><line x1="15" y1="2.5" x2="15" y2="5"/></svg>
       </a>

@@ -213,17 +213,18 @@ section 4e and most of section 1 without waiting.
 Testable in the browser with no quota — resize the window rather than
 running a dive.
 
-- [ ] At full width: a narrow icon rail down the left with Home and
-      Settings, and the active one highlighted
-- [ ] Content sits beside the rail, not underneath it
+- [ ] At full width: Home and Settings sit in the top bar on the left,
+      with the current one highlighted
+- [ ] No left rail — the first attempt had one and it was wrong
 - [ ] Suggestion tiles are three across around 900–1280px, four above
 - [ ] Playlist cards do the same
 - [ ] The wordmark lines up with the content below it, not centred on
       the whole screen
 - [ ] Drag the window narrow: below 900px it should return to the phone
       layout with the bottom tab bar, no half-state in between
-- [ ] `?demo=results` at desktop width — the docked buttons should clear
-      the rail rather than starting under it
+- [ ] `?demo=results` at desktop width — the docked buttons line up with
+      the content rather than spanning the whole window
+- [ ] The build tag sits beside the support link in the top bar
 
 *Built without being rendered: Chrome won't install in the sandbox, so
 this was written against the stylesheet. The rail and the docked action

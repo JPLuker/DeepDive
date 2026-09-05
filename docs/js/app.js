@@ -2977,7 +2977,10 @@ let _currentTab = "home";
 
 function setActiveTab(name) {
   _currentTab = name;
-  document.querySelectorAll(".tab").forEach((t) =>
+  // Two sets of navigation share one active state: the bottom tab bar
+  // on mobile and the top-bar links on desktop. Only one is visible at
+  // a time, but both are always in the DOM.
+  document.querySelectorAll(".tab, .topnav-btn").forEach((t) =>
     t.classList.toggle("active", t.dataset.tab === name));
 }
 

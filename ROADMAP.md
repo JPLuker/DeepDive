@@ -193,6 +193,11 @@ twice.
 - **Playlists** are renamed **Mixes**, with the sampler living under them
 
 **Stopping point B — settings, twice over** *(from Joseph's notes)*
+- **Show build number** — a toggle in Settings, **off by default**. The
+  build tag reads well on mobile and Joseph wants to keep it, but as
+  something opted into rather than shown to everyone. It stays visible
+  for now because it's load-bearing for testing; wire the toggle before
+  anyone else sees the app.
 - The Settings page needs a complete rework
 - Credit Joseph's LinkedIn and GitHub at the bottom of it
 - The artist popup becomes where the *dive* settings live, with dip and
