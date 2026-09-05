@@ -54,5 +54,15 @@ const adv = src.slice(advStart, src.indexOf('</details>', advStart));
 check('button is in advanced', /id="set-test-endpoints"/.test(adv));
 check('output area is in advanced', /id="endpoint-test"/.test(adv));
 
+// The probe measured the whole call, and _request paces before it
+// fetches — so a self-imposed 1200ms throttle read as a slow Spotify
+// and sent a debugging session after the wrong thing.
+check('pacing is measured separately', /const paced = this\._pacingMs\(\);/.test(sp));
+check('response time excludes our own wait', /ms: Math\.max\(0, total - paced\)/.test(sp));
+check('total is kept too', /total \}/.test(sp) || /total,/.test(sp));
+check('current pacing is exposed', /currentPacing\(\) \{ return this\._pacingMs\(\); \}/.test(sp));
+check('verdict warns about heavy pacing', /paced >= 400/.test(src));
+check('and points at the reset', /Reset pacing above/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -351,11 +351,19 @@ export class SpotifyClient {
    * spend more of whatever budget is already short.
    */
   async probe(path, params = null) {
+    // Report our own pacing separately from Spotify's response time.
+    // Measuring the whole call made a self-imposed 1200ms throttle look
+    // like a slow API, which sent an entire debugging session after the
+    // wrong thing. `_request` paces before it fetches, so the wait is
+    // inside the number unless it's subtracted out.
+    const paced = this._pacingMs();
     const started = Date.now();
     try {
       await this._request("GET", path, { params });
-      return { path, status: 200, ok: true, ms: Date.now() - started };
+      const total = Date.now() - started;
+      return { path, status: 200, ok: true, ms: Math.max(0, total - paced), paced, total };
     } catch (e) {
+      const total = Date.now() - started;
       return {
         path,
         status: (e && e.status) || 0,
@@ -363,10 +371,15 @@ export class SpotifyClient {
         reason: (e && e.reason) || null,
         retryAfter: (e && e.retryAfter) || null,
         message: (e && e.message) || String(e),
-        ms: Date.now() - started,
+        ms: Math.max(0, total - paced),
+        paced,
+        total,
       };
     }
   }
+
+  /** Current self-imposed pacing, for display. */
+  currentPacing() { return this._pacingMs(); }
 
   async _call(method, pathOrUrl, opts) {
     let attempt = 0;

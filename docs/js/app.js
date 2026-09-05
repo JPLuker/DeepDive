@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.14";
+export const BUILD = "2.9.15";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -2445,8 +2445,10 @@ async function runEndpointTest(into) {
 
 function renderProbeRows(rows, total) {
   const body = rows.map(([label, r]) => {
+    // Spotify's time first, our own wait second. Conflating them made a
+    // self-imposed throttle read as a slow API.
     const detail = r.ok
-      ? `${r.ms}ms`
+      ? `${r.ms}ms${r.paced ? ` <span class="probe-paced">+${r.paced}ms waiting</span>` : ""}`
       : `${r.status}${r.reason ? ` · ${esc(r.reason)}` : ""}${r.retryAfter ? ` · retry after ${esc(String(r.retryAfter))}s` : ""}`;
     return `<tr><td>${r.ok ? "✓" : "✗"}</td><td>${esc(label)}</td><td>${detail}</td></tr>`;
   }).join("");
@@ -2460,8 +2462,15 @@ function renderProbeRows(rows, total) {
  */
 function probeVerdict(rows) {
   const failed = rows.filter(([, r]) => !r.ok);
+  const paced = client.currentPacing ? client.currentPacing() : 0;
+  // The most likely reason a dive feels slow while nothing is failing,
+  // and invisible unless it is said out loud: pacing is remembered
+  // across sessions and only ever rises on its own.
+  const pacingNote = paced >= 400
+    ? `<p class="nav-hint">DeepDive is currently waiting <strong>${paced}ms</strong> before every request, learned from an earlier rate limit. On an artist with 40 releases that alone adds about ${Math.round(paced * 40 / 1000)} seconds. If dives feel slow and nothing is being refused, this is why — clear it with Reset pacing above.</p>`
+    : "";
   if (!failed.length) {
-    return `<p class="nav-hint">Every endpoint answered. If a dive still fails, it's the number of requests it makes rather than the endpoints it uses — try a small artist, and check Speed above.</p>`;
+    return pacingNote + `<p class="nav-hint">Every endpoint answered. If a dive still fails, it's the number of requests it makes rather than the endpoints it uses — try a small artist.</p>`;
   }
   const all = failed.length === rows.length;
   const quota = failed.some(([, r]) => r.reason === "QUOTA_EXCEEDED");

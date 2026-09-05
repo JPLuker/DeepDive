@@ -4,6 +4,17 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.15
+- Fixed: the endpoint test reported DeepDive's own throttle as Spotify's
+  response time. `_request` paces before it fetches, and the probe timed
+  the whole call — so a self-imposed 1200ms wait looked like a slow API.
+  Response time and our own waiting are now shown separately.
+- The endpoint test now says outright when pacing is heavy, with what it
+  costs on a 40-release artist and where to clear it. Learned pacing is
+  remembered across sessions and only ever rises on its own, so a dive
+  can be five times slower than usual with nothing failing and nothing
+  on screen explaining why.
+
 ## 2.9.14
 - Added an endpoint test under Advanced → Diagnostics. It fires one
   request at each Spotify endpoint DeepDive uses and reports the status,
