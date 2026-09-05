@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.5.** If the build in `js/app.js` is well
+**Last updated at build 2.10.0.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -319,6 +319,13 @@ It looked like rate limiting for two days.
 ## Design direction
 
 Modernised in 2.8–2.9 against Spotify and stats.fm as references.
+
+- **Two layouts, not one that scales.** Mobile is the primary influence
+  and desktop takes its structure from it: at 900px the tab bar becomes
+  a fixed left rail (same markup) and the grids grow their column count.
+  The content measure is bounded at 880/1080px rather than filling the
+  display — both reference apps keep a readable column at width, and
+  these tiles look sparse stretched wider.
 
 - **Artwork leads.** Tiles are 56px album art flush to the edge, two
   across. Suggestions carry a reason line — "1 song liked", "last added

@@ -48,6 +48,9 @@
     --bg:#FAFAFA; --tile:#F2F2F3; --tile-hover:#EAEAEC;
     --radius:14px; --radius-lg:22px; --radius-pill:999px;
     --radius-tile:10px;
+    /* Desktop rail width and content measure; used by the min-width
+       blocks below and overridden at the widest breakpoint. */
+    --rail:72px; --measure:880px;
   }
   /* Dark theme — soft charcoal, not true black (avoids the harsh
      halation of light text on pure black). Only colour tokens change;
@@ -652,6 +655,60 @@
     .results-body { padding-bottom:190px; }
     .results-hero { margin:0 -18px 0; }
     .results-hero-text { padding:0 18px 16px; }
+  }
+
+  /* ---- desktop ---------------------------------------------------
+     The counterpart to the mobile breakpoint below. Between them the
+     base styles were a 760px column that a 1920px screen centred, with
+     two thirds of the display empty and — because .tabbar is hidden
+     above 640px — no navigation at all.
+
+     This is not the phone layout stretched. Two structural changes:
+     the tab bar becomes a fixed left rail (same markup, so nothing in
+     the JS changes), and the grids grow their column count with the
+     viewport instead of staying at two. The column itself stays
+     bounded: stats.fm and Spotify both keep content in a readable
+     measure at width rather than letting rows run the full display,
+     and the tile vocabulary reads as sparse when stretched. */
+  @media (min-width: 900px) {
+    body { padding-left:var(--rail); }
+
+    .tabbar {
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+      position:fixed; left:0; top:0; bottom:0; width:var(--rail);
+      padding:18px 8px; z-index:40;
+      background:var(--tile); border-right:1px solid var(--line);
+      border-top:none;
+    }
+    .tabbar .tab {
+      flex:0 0 auto; width:48px; height:48px;
+      border-radius:var(--radius-tile);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .tabbar .tab.active { background:var(--tile-hover); }
+
+    /* Everything that was pinned to a 760px measure widens together,
+       or the page comes apart into columns of different widths. */
+    .wrap, .flash, .row-head { max-width:var(--measure); }
+    .topbar { max-width:var(--measure); margin:0 auto; padding-left:32px; padding-right:32px; }
+    .wrap { padding:0 32px 96px; }
+    .search-shell { max-width:680px; }
+
+    .tile-grid { grid-template-columns:repeat(3,1fr); gap:10px; }
+    .card-row { grid-template-columns:repeat(3,1fr); gap:12px; }
+
+    /* Fixed elements have to clear the rail rather than sit under it. */
+    .results-actions { left:var(--rail); }
+    .results-hero { margin:0 -32px 0; }
+    .results-body { padding-bottom:120px; }
+    .results-actions-row { max-width:var(--measure); margin:0 auto; width:100%; }
+    .results-actions .btn-back { max-width:var(--measure); margin:0 auto; width:100%; }
+  }
+
+  @media (min-width: 1280px) {
+    :root { --measure:1080px; }
+    .tile-grid { grid-template-columns:repeat(4,1fr); }
+    .card-row { grid-template-columns:repeat(4,1fr); }
   }
 
   /* ---- mobile ----------------------------------------------------

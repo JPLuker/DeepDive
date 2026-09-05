@@ -4,6 +4,22 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.10.0
+- Added a desktop layout. Every breakpoint in the stylesheet was
+  `max-width`, so the base styles were a 760px column that a wide screen
+  simply centred — two thirds of the display empty — and because the tab
+  bar is hidden above 640px, desktop had no navigation at all.
+- The tab bar becomes a fixed left rail at 900px and up. Same markup, so
+  nothing in the app logic knows which layout is showing.
+- Tiles go to three across at 900px and four at 1280px; playlist cards
+  do the same. The content measure widens to 880px, then 1080px.
+- The measure stays bounded rather than filling the display. Both
+  reference points Joseph gave keep content in a readable column at
+  width, and the tile vocabulary reads as sparse stretched across a
+  1920px screen.
+- The results screen's docked actions now clear the rail instead of
+  sitting under it.
+
 ## 2.9.5
 - Added: the build number now shows in the top bar on every screen. It
   was only at the bottom of Settings and in diagnostics, which made it
