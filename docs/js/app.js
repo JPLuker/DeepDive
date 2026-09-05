@@ -22,13 +22,21 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.21";
+export const BUILD = "2.8.22";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
 // fetch changes on later searches. Persisted in IndexedDB. See
 // library-cache.js for the correctness (checksum) design.
 const libraryCache = new LibraryCache(client, bestStore());
+
+// Last catalogue read, for diagnostics. Whether credit filtering
+// engaged was previously invisible, which is how it stayed broken.
+let _catalogLog = [];
+client.onCatalogAlbum = (entry) => {
+  _catalogLog.push(entry);
+  if (_catalogLog.length > 400) _catalogLog.shift();
+};
 
 // When Spotify rate-limits us the client waits and retries, which can be
 // anywhere from fifteen to ninety seconds. Without saying so the dive
@@ -1757,6 +1765,12 @@ function startSlideshow() {
 }
 
 function updateDiveScreen(pct, stage) {
+  // A cancelled run keeps reporting progress until its loop notices the
+  // flag, and those late callbacks used to re-set the tab title after
+  // hideDiveScreen had cleared it — leaving "(33%) Working" on a tab
+  // showing the home screen, which read as stuck rather than cancelled.
+  const screen = document.getElementById("dive-screen");
+  if (!screen || screen.hidden) return;
   const fill = document.getElementById("dive-fill");
   const st = document.getElementById("dive-stage");
   const pc = document.getElementById("dive-pct");
@@ -1883,6 +1897,29 @@ function explainError(err) {
 }
 
 /** The technical detail, shown on demand — the network-console view. */
+/**
+ * Did credit filtering actually engage on the last dive?
+ *
+ * The point of instrumenting this is that the answer used to be
+ * unknowable from outside — the filter could be dead and everything
+ * would look normal, only with too many tracks.
+ */
+function catalogSummaryHtml() {
+  if (!_catalogLog.length) return "";
+  const guest = _catalogLog.filter((e) => e.creditedOnly);
+  const dropped = _catalogLog.reduce((n, e) => n + e.dropped, 0);
+  const noGroup = _catalogLog.filter((e) => !e.group).length;
+  const rows = guest.slice(-8).map((e) =>
+    `<tr><td>${esc(e.name)}</td><td style="text-align:right;">kept ${e.kept}, dropped ${e.dropped}</td></tr>`).join("");
+  return `
+    <div class="diag-block">
+      <div class="diag-label">Last catalogue read</div>
+      <div>${_catalogLog.length} releases · ${guest.length} not their own · ${dropped} tracks dropped as uncredited</div>
+      ${noGroup ? `<div>${noGroup} releases arrived with no album_group</div>` : ""}
+      ${rows ? `<table class="diag-table">${rows}</table>` : ""}
+    </div>`;
+}
+
 function diagnosticsHtml() {
   const log = client.log || { counts: {}, total: 0 };
   const rows = Object.entries(log.counts)
@@ -1904,6 +1941,7 @@ function diagnosticsHtml() {
       <div class="diag-label">Requests this session (${log.total})</div>
       <table class="diag-table">${rows || "<tr><td>none</td><td></td></tr>"}</table>
     </div>
+    ${catalogSummaryHtml()}
     <div class="diag-block">
       <div class="diag-label">Build</div>
       <div>${esc(BUILD)}</div>
@@ -2180,20 +2218,48 @@ async function applyResults(r, action) {
         newIds
       );
       parts.push(`Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}.`);
-      msg.innerHTML = `${esc(parts.join(" "))} <a href="${esc(res.url)}" data-spotify style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
-      msg.classList.remove("hidden", "error");
       btns.forEach((b) => (b.disabled = false));
+      showActionResult({ headline: "Done", detail: parts.join(" "), url: res.url });
       return;
     }
-    msg.textContent = parts.length ? parts.join(" ") : "Nothing selected.";
-    msg.classList.remove("hidden", "error");
+    if (parts.length) showActionResult({ headline: "Done", detail: parts.join(" ") });
+    else showActionResult({ headline: "Nothing selected", detail: "Tick the tracks you want before choosing an action.", ok: false });
   } catch (e) {
-    msg.textContent = `Something went wrong: ${e.message || e}`;
-    msg.classList.remove("hidden");
-    msg.classList.add("error");
+    showActionResult({ headline: "That didn't work", detail: `${e.message || e}`, ok: false });
   } finally {
     btns.forEach((b) => (b.disabled = false));
   }
+}
+
+/**
+ * The outcome of liking or building, shown in the middle of the screen.
+ *
+ * It used to appear as a banner above the buttons, with the results
+ * list still behind it — a page that had just been acted on and was no
+ * longer actionable, inviting a second press of the same button. The
+ * dialog closes that page when dismissed.
+ */
+function showActionResult({ headline, detail, url, ok = true }) {
+  const wrap = document.createElement("div");
+  wrap.className = "action-result";
+  wrap.innerHTML = `
+    <div class="action-result-card">
+      <div class="action-result-head">${esc(headline)}</div>
+      ${detail ? `<p class="action-result-detail">${esc(detail)}</p>` : ""}
+      <div class="action-result-actions">
+        ${url ? `<a class="btn btn-primary" href="${esc(url)}" data-spotify>Open playlist</a>` : ""}
+        <button class="btn ${url ? "btn-ghost" : "btn-primary"}" data-ar-close>Done</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  const close = () => {
+    wrap.remove();
+    // The work is finished, so the page it was done on shouldn't remain.
+    if (ok) renderHome();
+  };
+  wrap.querySelector("[data-ar-close]").addEventListener("click", close);
+  wrap.addEventListener("click", (e) => { if (e.target === wrap) close(); });
+  wrap.querySelector("[data-ar-close]").focus();
 }
 
 // ============================================================
@@ -2821,7 +2887,6 @@ function renderSettings() {
         <div class="watchlist-row">
           <span class="watchlist-name"><span>
             <span style="display:block;">${esc(p.name)}</span>
-            <span class="pill-reason">${p.tracks} track${p.tracks === 1 ? "" : "s"}</span>
           </span></span>
           <div class="watchlist-actions">
             ${p.url ? `<a class="btn btn-ghost btn-small" href="${esc(p.url)}" data-spotify>Open</a>` : ""}

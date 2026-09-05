@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.8.21.** If the build in `js/app.js` is well
+**Last updated at build 2.8.22.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -178,6 +178,18 @@ decay removed the accident and the original bug reappeared.
 
 *When something adaptive looks like it works, check whether it works or
 whether stale state is covering for it.*
+
+**A `||` fallback that makes a conditional silently never fire.** The
+guest-track filter keyed off `album_group === "appears_on"`, read as
+`a.album_group || a.album_type`. When the optional field was absent the
+fallback produced "album", the condition was never true, and entire
+records by other artists came through as the artist's own catalogue for
+twenty builds. Its test passed throughout, because the test supplied
+the field itself.
+
+*Prefer a field that is always present over an optional one with a
+fallback. And if a test constructs the input, check it fails when the
+behaviour is removed.*
 
 **A guard that swallows the error it was written to survive.** The dive
 screen's `onArtist(artist)` sat one line above `const artist = await

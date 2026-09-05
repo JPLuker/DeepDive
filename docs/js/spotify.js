@@ -623,10 +623,27 @@ export class SpotifyClient {
       if (isCancelled && isCancelled()) break;
       const ref = albumRefs[i];
       const album = await this.get(`albums/${ref.id}`);
+      // Whose record is this?
+      //
+      // This used to hang entirely on `album_group === "appears_on"`,
+      // read from the artist-albums listing. That was fragile in two
+      // ways: the field is documented as optional, and the code fell
+      // back to `album_type` when it was absent — which is "album" for
+      // an album, so the guest check silently never fired and whole
+      // records by other artists came through as this artist's work.
+      //
+      // The album's own `artists` array is always present and answers
+      // the question directly. If they are not credited on the release,
+      // it is somebody else's record and only their tracks belong here.
+      // `album_group` is kept as a second signal, not the only one.
+      const albumArtists = album.artists || [];
+      const ownRelease = albumArtists.some((a) => a && a.id === artistId);
+      const creditedOnly = !ownRelease || ref.group === "appears_on";
       const albumRef = {
         id: album.id, name: album.name, release_date: album.release_date,
         album_type: album.album_type, // "album" | "single" | "compilation"
         album_group: ref.group,
+        own_release: ownRelease,
         // Middle variant: results rows show art at 56px, which is ~168
         // device pixels at 3x. Already in this response, so free. Shared
         // by reference across every track on the release.
@@ -634,16 +651,13 @@ export class SpotifyClient {
           ? (album.images.length >= 2 ? album.images[1].url : album.images[0].url)
           : null,
       };
-      // A guest spot puts someone else's entire album in the list. Only
-      // the tracks this artist is actually credited on belong in their
-      // catalogue — the rest are another artist's record, and counting
-      // them made "appeared on" both wrong and enormous.
-      const creditedOnly = ref.group === "appears_on";
+      let kept = 0, dropped = 0;
       let page = album.tracks || null;
       while (page) {
         for (const t of page.items || []) {
           if (!t.id || seen.has(t.id)) continue;
-          if (creditedOnly && !isCreditedTo(t, artistId)) continue;
+          if (creditedOnly && !isCreditedTo(t, artistId)) { dropped++; continue; }
+          kept++;
           seen.add(t.id);
           t.album = albumRef;
           // Preserve position within the release for track-order sorting.
@@ -652,6 +666,15 @@ export class SpotifyClient {
           tracks.push(t);
         }
         page = page.next ? await this.get(page.next) : null;
+      }
+      // Instrumented deliberately. The previous version of this filter
+      // shipped broken and stayed broken through twenty builds because
+      // nothing showed whether it engaged — and its test supplied the
+      // very field that turned out to be missing.
+      if (this.onCatalogAlbum) {
+        this.onCatalogAlbum({
+          name: album.name, group: ref.group, ownRelease, creditedOnly, kept, dropped,
+        });
       }
       if (onProgress) onProgress(i + 1, total);
     }

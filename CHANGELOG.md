@@ -4,6 +4,29 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.22
+- Fixed: including guest appearances still pulled entire albums by other
+  artists. Ownership hung on `album_group === "appears_on"` from the
+  artist-albums listing, and when that optional field was absent the
+  code fell back to `album_type` — which is "album" for an album, so the
+  guest check never fired. Ownership is now decided from the album's own
+  `artists`, which is always present: if the artist isn't credited on
+  the release, only their tracks are kept. This also catches
+  various-artists compilations, which were never tagged `appears_on`.
+- The catalogue read is now instrumented, and diagnostics shows how many
+  releases weren't the artist's own and how many tracks were dropped as
+  uncredited. Whether this filter engaged was previously unobservable,
+  which is how it stayed broken.
+- Fixed: cancelling a sampler left "(33%) Working" in the tab title, so
+  it looked stuck. Hiding the screen did reset the title; the run's
+  in-flight progress callbacks then set it straight back.
+- Removed the track count from playlist cleanup — it read 0 for
+  everything.
+- Changed: liking or building now reports in a dialog in the middle of
+  the screen, and dismissing it returns home. It used to be a banner
+  above the buttons, leaving a results list that had already been acted
+  on sitting there inviting a second press.
+
 ## 2.8.21
 - Rolled the version back into 2.8.x. 2.9 is reserved for the finished
   rework and was claimed early; everything shipped as 2.9.0–2.9.15 is
