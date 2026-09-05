@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.12";
+export const BUILD = "2.9.13";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -608,6 +608,10 @@ const CARD_LENGTHS = PLAYLIST_LENGTHS;
 const SAMPLER_MAX_ARTISTS = 12;
 
 let _samplerCancelled = false;
+// Set the first time /artists/{id}/top-tracks is refused. Deprecated
+// endpoints 403 for the whole app, so one refusal answers for the rest
+// of the session.
+let _topTracksBlocked = false;
 
 /**
  * Three tracks per artist: the one you already liked, then two you
@@ -640,9 +644,16 @@ async function buildSampler(artists, perArtist, onProgress) {
       // fails outright, while omitting it uses the token's own market.
       let tracks = [];
       try {
+        // Once it has been refused once, it will be refused for every
+        // artist in the run — it's an app-level restriction, not a
+        // per-artist one. Asking anyway cost a guaranteed-failing
+        // request per artist, eight to twelve per sampler, each one
+        // spending quota to learn something already known.
+        if (_topTracksBlocked) throw new Error("top-tracks unavailable");
         const res = await client.get(`artists/${a.id}/top-tracks`);
         tracks = (res && res.tracks) || [];
       } catch (topErr) {
+        if (topErr && topErr.status === 403) _topTracksBlocked = true;
         const res = await client.get("search", {
           q: `artist:"${a.name}"`, type: "track", limit: 10,
         });

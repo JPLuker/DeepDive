@@ -84,7 +84,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.12
+## Shipped since — build 2.9.13
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -309,6 +309,17 @@ returns 403 in Dev Mode while the single-album endpoint returns 200. So
 one request per release is the floor, and **caching album tracklists is
 now the only remaining lever on dive speed.** It is the next piece of
 real work on this.
+
+**Spotify links don't reach the web player without the desktop app.**
+`openInSpotify` already has a fallback — it navigates to the `spotify:`
+URI, watches for `visibilitychange`, and opens the web URL after 900ms
+if nothing handled it. So this is a fallback that fails rather than a
+missing one, and the likely causes are timing: a browser that shows an
+"open this app?" prompt changes visibility itself and cancels the
+fallback, and a silently-blocked custom-scheme navigation never fires
+anything at all. Worth replacing the heuristic with something
+deterministic — a plain web link with an "open in app" affordance
+beside it, rather than guessing which one the person can use.
 
 **Duplicate song in a sampler** — a censored version of a track already
 in the mix. The exclusion filters catch censored versions on a dive;

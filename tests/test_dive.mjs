@@ -131,5 +131,16 @@ const samplerBlock = src.slice(src.indexOf('async function runSampler'), src.ind
 check('sampler clears its intro page', /root\.innerHTML = "";/.test(samplerBlock));
 check('sampler restores home before results', /hideDiveScreen\(\);\s*\n\s*await renderHome\(\);/.test(samplerBlock));
 
+// The sampler and a dive use different endpoints entirely — the sampler
+// never reads a catalogue — which is why one kept working while the
+// other was refused. Worth pinning, since it is the evidence that the
+// two draw on separate quota buckets.
+check('sampler does not read catalogues', !/artists\/\$\{a\.id\}\/albums/.test(src));
+check('sampler uses top-tracks then search', /artists\/\$\{a\.id\}\/top-tracks/.test(src) && /q: `artist:/.test(src));
+// A deprecated endpoint is refused for the whole app, so asking once per
+// artist spent a guaranteed-failing request eight to twelve times a run.
+check('a refusal is remembered', /_topTracksBlocked = true;/.test(src));
+check('and short-circuits the rest of the run', /if \(_topTracksBlocked\) throw new Error/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

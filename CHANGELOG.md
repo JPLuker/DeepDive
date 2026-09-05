@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.13
+- Fixed: the sampler asked for `/artists/{id}/top-tracks` once per
+  artist and fell back to search each time it was refused. That endpoint
+  is deprecated and refused for the whole app, not per artist, so every
+  sampler run spent eight to twelve guaranteed-failing requests to learn
+  something already known. The first refusal is now remembered for the
+  session.
+
 ## 2.9.12
 - Settings reorganised. It was nine sections, most of them a heading
   above a single button, in no particular order — Appearance and Theme
