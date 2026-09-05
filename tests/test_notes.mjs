@@ -34,7 +34,14 @@ const settingsFn = src.slice(src.indexOf('function renderSettings'), src.indexOf
 check('no colour classes left on settings headings', !/<span class="label (teal|gold)">/.test(settingsFn));
 
 // spotify client
-check('opens the client via URI', /const uri = `spotify:\$\{m\[1\]\}:\$\{m\[2\]\}`/.test(src));
+// The URI-then-timer approach is gone. It raced a 900ms fallback
+// against visibilitychange, and both failure modes look identical from
+// the page: an "open this app?" prompt backgrounds it and cancels the
+// fallback, and a blocked custom-scheme navigation fires nothing.
+// Someone without the desktop app got neither the app nor the website.
+check('opens the web player', /window\.open\(webUrl, "_blank", "noopener"\)/.test(src));
+check('no custom-scheme guessing', !/spotify:\$\{/.test(src));
+check('no visibility heuristic', !/visibilitychange", onHide/.test(src));
 check('falls back to web', /window\.open\(webUrl, "_blank", "noopener"\)/.test(src));
 check('cancels fallback if handled', /visibilitychange/.test(src));
 check('links routed through it', /a\[data-spotify\]/.test(src));

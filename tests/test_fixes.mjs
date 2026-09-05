@@ -25,5 +25,14 @@ check('failures use it too, without navigating away', /headline: "That didn't wo
 check('no selection is not treated as success', /headline: "Nothing selected"[\s\S]{0,120}ok: false/.test(src));
 check('old banner path is gone', !/msg\.classList\.remove\("hidden", "error"\)/.test(src.slice(src.indexOf('async function confirmResults'), src.indexOf('function showActionResult'))));
 
+// A clean edit is a different recording — own ISRC, title differing by
+// one annotation — so collapseDuplicateRecordings correctly keeps both.
+// Correct for a dive, wrong for a mix, where it means the same song
+// twice in a row with one version bleeped.
+const mt = readFileSync(new URL('../docs/js/matching.js', import.meta.url), 'utf8');
+check('uncensored sibling is preferred', /export function preferUncensored/.test(mt));
+check('sampler applies it', /matching\.preferUncensored\(tracks\)/.test(src));
+check('after collapsing, not instead of it', src.indexOf('collapseDuplicateRecordings(tracks)') < src.indexOf('preferUncensored(tracks)'));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -84,7 +84,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.22
+## Shipped since — build 2.8.23
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -310,16 +310,10 @@ one request per release is the floor, and **caching album tracklists is
 now the only remaining lever on dive speed.** It is the next piece of
 real work on this.
 
-**Spotify links don't reach the web player without the desktop app.**
-`openInSpotify` already has a fallback — it navigates to the `spotify:`
-URI, watches for `visibilitychange`, and opens the web URL after 900ms
-if nothing handled it. So this is a fallback that fails rather than a
-missing one, and the likely causes are timing: a browser that shows an
-"open this app?" prompt changes visibility itself and cancels the
-fallback, and a silently-blocked custom-scheme navigation never fires
-anything at all. Worth replacing the heuristic with something
-deterministic — a plain web link with an "open in app" affordance
-beside it, rather than guessing which one the person can use.
+~~**Spotify links don't reach the web player without the desktop app.**~~
+*Fixed in 2.8.23 — links open the web player, which works for everyone
+and offers the hand-off to the desktop app itself. The URI-and-timer
+heuristic is gone.*
 
 ~~**Confirmation should be a dialog, not a line on a dead page.**~~
 *Shipped in 2.8.22.* Original note kept below for context.

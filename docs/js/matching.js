@@ -620,6 +620,39 @@ export function collapseDuplicateRecordings(tracks) {
  * the same two-phase approach used for candidate matching, rather than
  * fetching ISRCs for the entire catalog.
  */
+/**
+ * Where a mix contains both a censored and an uncensored cut of the
+ * same song, keep the uncensored one.
+ *
+ * `collapseDuplicateRecordings` can't do this: a clean edit is a
+ * genuinely different recording with its own ISRC and a title that
+ * differs by the annotation, so by every test it applies they are two
+ * songs. For a dive that is correct — you may want both. For a mix it
+ * is a duplicate, and hearing the same song twice in a row with one
+ * version bleeped is the complaint.
+ *
+ * Titles are compared with the censored annotation removed, so this
+ * only ever pairs a track with its own clean or explicit sibling.
+ */
+export function preferUncensored(tracks) {
+  const baseOf = (t) => {
+    let n = bracketsToParens((t && t.name) || "").toLowerCase();
+    for (const pat of CENSORED_PATTERNS) n = n.replace(pat, "");
+    return n.replace(/\s+/g, " ").trim();
+  };
+  const best = new Map();
+  for (const t of tracks || []) {
+    if (!t || !t.id) continue;
+    const key = baseOf(t);
+    const held = best.get(key);
+    if (!held) { best.set(key, t); continue; }
+    // Keep whichever isn't the censored cut; if neither or both are,
+    // the first one stays and nothing is lost.
+    if (isRadioEditOrCensored(held) && !isRadioEditOrCensored(t)) best.set(key, t);
+  }
+  return Array.from(best.values());
+}
+
 export function collapseNeedsIsrc(tracks) {
   const byTitle = new Map();
   for (const t of tracks) {

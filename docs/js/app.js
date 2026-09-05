@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.22";
+export const BUILD = "2.8.23";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -678,6 +678,10 @@ async function buildSampler(artists, perArtist, onProgress) {
       // with three copies of one song. The searches already do this;
       // the sampler didn't.
       tracks = matching.collapseDuplicateRecordings(tracks).tracks;
+      // A clean edit survives that collapse — different ISRC, different
+      // title by one annotation — so a mix could carry both cuts of the
+      // same song back to back. Correct for a dive, wrong for a mix.
+      tracks = matching.preferUncensored(tracks);
 
       // Split what came back into the already-liked and the rest.
       const liked = new Set(a.likedTrackIds || []);
@@ -1808,22 +1812,22 @@ let _haveArtistPhoto = false;
  * Open a Spotify link in the desktop or mobile client where it exists,
  * falling back to the web player.
  *
- * The spotify: URI opens the installed app. If nothing handles it the
- * browser does nothing at all, so a timer opens the web link instead —
- * a handled URI backgrounds the page, which cancels the fallback.
+ * Opens the web player, always.
+ *
+ * This used to navigate to a `spotify:` URI and race a 900ms timer
+ * against a `visibilitychange` to decide whether the desktop app had
+ * taken it. Both outcomes look identical from here: a browser that
+ * shows an "open this app?" prompt backgrounds the page itself and
+ * cancels the fallback, and a silently-blocked custom-scheme navigation
+ * fires nothing at all. Someone without the app got neither the app nor
+ * the website.
+ *
+ * The web player works for everyone and offers to hand off to the
+ * desktop app itself, so it does the same job without guessing.
  */
 function openInSpotify(webUrl) {
-  const m = /open\.spotify\.com\/(playlist|album|artist|track)\/([A-Za-z0-9]+)/.exec(webUrl || "");
-  if (!m) { window.open(webUrl, "_blank", "noopener"); return; }
-  const uri = `spotify:${m[1]}:${m[2]}`;
-  let handled = false;
-  const onHide = () => { handled = true; };
-  document.addEventListener("visibilitychange", onHide, { once: true });
-  window.location.href = uri;
-  setTimeout(() => {
-    document.removeEventListener("visibilitychange", onHide);
-    if (!handled && !document.hidden) window.open(webUrl, "_blank", "noopener");
-  }, 900);
+  if (!webUrl) return;
+  window.open(webUrl, "_blank", "noopener");
 }
 
 

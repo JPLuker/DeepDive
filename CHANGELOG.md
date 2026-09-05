@@ -4,6 +4,21 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.23
+- Fixed: a mix could contain both the censored and uncensored cut of the
+  same song. A clean edit is a genuinely different recording — its own
+  ISRC, a title differing by one annotation — so the duplicate collapse
+  correctly kept both. Correct for a dive, where you might want either;
+  wrong for a mix, where it means the same song twice with one version
+  bleeped. Mixes now keep the uncensored cut when both appear.
+- Changed: Spotify links open the web player. They used to navigate to a
+  `spotify:` URI and race a timer against the page being backgrounded to
+  decide whether the desktop app had taken it — but a browser prompting
+  "open this app?" backgrounds the page itself and cancels the fallback,
+  and a blocked custom-scheme navigation fires nothing at all. Someone
+  without the desktop app got neither the app nor the website. The web
+  player works for everyone and offers the hand-off itself.
+
 ## 2.8.22
 - Fixed: including guest appearances still pulled entire albums by other
   artists. Ownership hung on `album_group === "appears_on"` from the

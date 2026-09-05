@@ -268,6 +268,26 @@ could not settle:
 - **Everything answers but a dive still fails** → it's request *volume*,
   not the endpoints. Pacing and asking for fewer releases are the levers.
 
+## 6. Current batch (2.8.22–2.8.23)
+
+Confirmed already: catalogue accuracy, sampler cancel, playlist cleanup.
+
+- [ ] **Confirmation dialog** — like or build something. The result
+      should appear centred over the screen with an "Open playlist"
+      button, and dismissing it should return home rather than leaving
+      the results list you just acted on. *Needs quota.*
+- [ ] **Censored duplicates** — run a sampler and check no song appears
+      twice with one version bleeped. Hard to force; worth watching for
+      over a few runs rather than testing directly.
+- [ ] **Spotify links** — "Open playlist" and the Open buttons in
+      playlist cleanup should reach the web player every time, including
+      where the desktop app isn't installed. Previously these could do
+      nothing at all.
+- [ ] **Catalogue instrumentation** — after a dive, Settings → Advanced →
+      Technical details shows "Last catalogue read". Sanity-check it
+      against what you saw: releases counted, how many weren't the
+      artist's own, tracks dropped as uncredited.
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky
