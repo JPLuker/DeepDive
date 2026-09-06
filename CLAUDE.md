@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.8.25.** If the build in `js/app.js` is well
+**Last updated at build 2.8.26.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -178,6 +178,14 @@ decay removed the accident and the original bug reappeared.
 
 *When something adaptive looks like it works, check whether it works or
 whether stale state is covering for it.*
+
+**Never delete CSS with a line-based regex.** Removing the sampler
+button's styles took out the selector line and left the declarations
+and closing brace behind. Everything after that stray brace was parsed
+as garbage, so rules far below it stopped applying and the mixes grid
+collapsed — while the app booted normally and every suite passed.
+`tests/test_css.mjs` now checks both stylesheets for balance and for
+declarations outside a rule.
 
 **A `||` fallback that makes a conditional silently never fire.** The
 guest-track filter keyed off `album_group === "appears_on"`, read as

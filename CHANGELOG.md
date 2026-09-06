@@ -4,6 +4,19 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.26
+- Fixed: the mixes grid collapsed into a staircase of odd-width cards on
+  mobile. Removing the old sampler button styles deleted the rule's
+  selector line but left its declarations and closing brace behind, and
+  from that stray brace onward the browser parsed the rest of the
+  stylesheet as garbage — so every rule below it, the mixes grid
+  included, stopped applying.
+- Added a structural check on both stylesheets: braces must balance,
+  there must be no stray closing brace, and no declarations may sit
+  outside a rule. Nothing would have caught this otherwise — the app
+  booted, and every suite asserts against source text rather than
+  parsing the CSS.
+
 ## 2.8.25
 - The sampler is now the first card in the mixes grid rather than a
   full-width strip below the suggestion row. It is a mix like the
