@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.24";
+export const BUILD = "2.8.25";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -315,7 +315,10 @@ async function renderHome() {
 
   wireSearchBar();
   loadSuggestions({ compact: true });
-  loadPlaylistCards({ into: "home-mixes", limit: 3, headHtml: sectionHead("Mixes", "from your library", "mixes", "All mixes") });
+  // One row of cards, whatever a row holds at this width — the sampler
+  // card takes the first slot.
+  const perRow = window.innerWidth >= 1280 ? 4 : (window.innerWidth >= 900 ? 3 : 2);
+  loadPlaylistCards({ into: "home-mixes", limit: perRow, headHtml: sectionHead("Mixes", "from your library", "mixes", "All mixes") });
 }
 
 /**
@@ -350,21 +353,10 @@ async function renderMixes() {
   setActiveTab("mixes");
   root.innerHTML = `
     ${rateLimitBanner()}
-    <div class="row-head"><h2>Mixes</h2><span class="qual">from your library</span></div>
-    <p class="nav-hint" style="margin-top:0;">Built from what DeepDive already knows about your library. Nothing is created until you confirm it.</p>
-    <div id="playlist-cards"></div>
-    <div class="crate-header"><span class="label">Sampler</span></div>
-    <p class="nav-hint" style="margin-top:0;">A few tracks each from artists you've barely heard.</p>
-    <div class="actions"><button class="btn btn-ghost btn-small" id="go-sampler">Build a sampler</button></div>`;
+    <p class="nav-hint">Built from what DeepDive already knows about your library. Nothing is created until you confirm it.</p>
+    <div id="playlist-cards"></div>`;
 
   loadPlaylistCards();
-  document.getElementById("go-sampler")?.addEventListener("click", () => {
-    if (_samplerPool.length >= 2) return openSampler(_samplerPool);
-    // The pool comes from the suggestion row, which Mixes doesn't
-    // render. Send them where it's built rather than failing silently.
-    flash("Open Dives first — the sampler draws from your suggestions.");
-    renderDives();
-  });
 }
 
 // ---- playlist suggestion cards (2.3) ----
@@ -397,6 +389,15 @@ async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml 
       new Promise((resolve) => setTimeout(() => resolve([]), 2500)),
     ]);
     if (!cached || !cached.length) { el.innerHTML = ""; return; }
+    // The sampler is a card now, so its pool has to exist wherever
+    // cards are drawn. It was only built while loading suggestions,
+    // which Mixes doesn't do — so the card would never have appeared
+    // there. Same cached read, no extra cost.
+    if (!_samplerPool.length) {
+      try {
+        _samplerPool = insights.artistsBarelyExplored(cached, { maxTracks: 3, limit: 500 });
+      } catch (poolErr) { /* the other cards are still worth showing */ }
+    }
     // A fresh seed each load, so a refresh brings different ideas. The
     // artist suggestions above are deliberately session-stable — you
     // should be able to come back to one you spotted — but playlists are
@@ -430,9 +431,20 @@ function renderCardRow(el) {
   const shown = limit ? _cards.slice(0, limit) : _cards;
   const head = el._cardHead
     || `<div class="row-head"><h2>Mixes</h2><span class="qual">from your library</span></div>`;
+  // The sampler leads. It is a mix like the rest — a few tracks each
+  // from artists you've barely heard — and it used to sit below the
+  // suggestion row as a full-width strip of its own, which made it look
+  // like a different kind of thing entirely.
+  const samplerCard = _samplerPool.length >= 2 ? `
+    <button class="pcard is-sampler" data-sampler>
+      <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg></span>
+      <span class="pcard-title">Sampler</span>
+      <span class="pcard-sub">a few tracks each from artists you've barely heard</span>
+    </button>` : "";
   el.innerHTML = `
     ${head}
     <div class="card-row">
+      ${samplerCard}
       ${shown.map((c, i) => `
         <button class="pcard" data-card="${esc(c.id)}" style="--h:${(200 + i * 47) % 360};">
           <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
@@ -440,6 +452,7 @@ function renderCardRow(el) {
           <span class="pcard-sub">${esc(c.subtitle)}</span>
         </button>`).join("")}
     </div>`;
+  el.querySelector("[data-sampler]")?.addEventListener("click", () => openSampler(samplerSourceArtists()));
   el.querySelectorAll("[data-card]").forEach((b) =>
     b.addEventListener("click", () => openCardModal((_allCards.length ? _allCards : _cards).find((c) => c.id === b.dataset.card))));
 }
@@ -1429,9 +1442,16 @@ let _suggestOpts = { compact: false, showAllPins: false };
 function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state = {}) {
   _row = { el, pins, suggestions, showAllPins, state };
   // Home shows a taste and points at Dives; Dives shows everything.
+  //
+  // The counts are per row rather than absolute. Four items is a full
+  // row on a phone and half an empty one on a desktop grid four across,
+  // which made Home look unfinished at width rather than deliberately
+  // short.
   const compact = _suggestOpts.compact;
-  const PIN_VISIBLE = compact ? 4 : 8;
-  if (compact) suggestions = suggestions.slice(0, 4);
+  const perRow = typeof window !== "undefined" && window.innerWidth >= 1280 ? 4
+    : (typeof window !== "undefined" && window.innerWidth >= 900 ? 3 : 2);
+  const PIN_VISIBLE = compact ? perRow : 8;
+  if (compact) suggestions = suggestions.slice(0, perRow * 2);
   const shownPins = showAllPins ? pins : pins.slice(0, PIN_VISIBLE);
   const extraPins = pins.length - shownPins.length;
 
@@ -1503,28 +1523,14 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   }
   const pinsSection = el.querySelector("#pins-section");
   const suggSection = el.querySelector("#sugg-section");
-  // The sampler belongs at the end of the suggestions, not among the
-  // playlist cards: it's about artists you've barely explored, which is
-  // the same subject as the row above it.
-  const samplerArtists = samplerSourceArtists();
-  _samplerPool = samplerArtists;
-  const samplerHtml = samplerArtists.length >= 2 ? `
-    <div class="sampler-row">
-      <button class="btn btn-ghost btn-sampler" id="sampler-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        Sampler
-      </button>
-    </div>` : "";
 
   if (state.pinsOnly) {
     pinsSection.innerHTML = pinsHtml;
   } else {
     pinsSection.innerHTML = pinsHtml;
-    suggSection.innerHTML = suggHtml + emptyHtml + samplerHtml;
+    suggSection.innerHTML = suggHtml + emptyHtml;
   }
 
-  const sampBtn = document.getElementById("sampler-btn");
-  if (sampBtn) sampBtn.addEventListener("click", () => openSampler(samplerArtists));
 
   el.querySelectorAll("[data-search]").forEach((b) =>
     b.addEventListener("click", () => startSearch(b.dataset.search)));

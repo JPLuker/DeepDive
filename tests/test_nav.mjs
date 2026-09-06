@@ -25,7 +25,10 @@ check('renderMixes exists', /async function renderMixes\(\)/.test(src));
 const home = src.slice(src.indexOf('async function renderHome()'), src.indexOf('async function renderDives()'));
 check('home keeps the search field', /searchShellHtml\(\)/.test(home));
 check('home suggestions are compact', /loadSuggestions\(\{ compact: true \}\)/.test(home));
-check('home mixes are a preview', /limit: 3/.test(home));
+check('home mixes are a preview', /limit: perRow/.test(home));
+// Counts are per row rather than absolute, so Home looks deliberately
+// short at any width instead of unfinished on a wide screen.
+check('preview fills a row at any width', /window\.innerWidth >= 1280 \? 4/.test(home));
 check('home does not own the full card row', !/id="playlist-cards"/.test(home));
 
 // Dives: the full surface.
@@ -37,7 +40,13 @@ check('dives owns history and pins', /id="go-history"/.test(dives) && /id="go-pi
 // Mixes: the renamed Playlists, with the sampler.
 const mixes = src.slice(src.indexOf('async function renderMixes()'), src.indexOf('async function loadPlaylistCards'));
 check('mixes owns the card row', /id="playlist-cards"/.test(mixes));
-check('mixes offers the sampler', /id="go-sampler"/.test(mixes));
+// The sampler is a card in the grid now, always first — it is a mix
+// like the others, and a full-width strip below the suggestion row made
+// it look like a different kind of thing.
+check('sampler is a card', /class="pcard is-sampler" data-sampler/.test(src));
+check('and leads the row', src.indexOf('${samplerCard}') < src.indexOf('${shown.map('));
+check('its pool is built wherever cards are drawn', /if \(!_samplerPool\.length\) \{/.test(src));
+check('no leftover sampler strip', !/sampler-btn/.test(src));
 
 // The handlers must call functions that exist — renderPins didn't.
 for (const fn of ['renderWatchlist', 'renderHistory', 'renderScrubForm', 'openSampler']) {

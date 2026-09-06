@@ -297,16 +297,22 @@ No quota needed for most of this — it's structure.
 - [ ] The current one is highlighted, and stays highlighted after
       navigating
 - [ ] **Home** — search field, a short row of pins and suggestions, and
-      three mixes. "All dives" and "All mixes" links go where they say
+      a row of mixes. "All dives" and "All mixes" links go where they say
+- [ ] **Home at desktop width** — rows should fill rather than trailing
+      off half empty. Drag the window between widths and the counts
+      should change
 - [ ] **Dives** — search, every pin, full suggestions, and buttons for
       full library scan, dive history, pins and blocked. All three
       buttons must actually open something: one of them called a
       function that didn't exist before this build
-- [ ] **Mixes** — the full card row plus "Build a sampler"
-- [ ] **Sampler from Mixes** — if you go straight to Mixes without
-      visiting Home or Dives, the sampler has no artists to work with.
-      It should send you to Dives with an explanation rather than
-      failing silently
+- [ ] **Mixes** — one heading, not two, and the sampler is the first
+      card in the grid
+- [ ] **Sampler from Mixes** — go straight to Mixes without visiting
+      Home or Dives first. The sampler card should still be there and
+      still work; its pool is built from the same cached read the other
+      cards use
+- [ ] Launch the sampler twice — it should draw a different handful each
+      time, not the same twelve
 - [ ] Nothing that worked before has gone missing — searching, pinning,
       opening a mix card
 

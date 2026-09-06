@@ -361,15 +361,11 @@
 
   /* Sampler: a full-width accent row rather than a dashed pill. It's an
      action, not another tag in the list above it. */
-  .sampler-row { margin-top:12px; }
-  .btn-sampler {
     display:flex; align-items:center; justify-content:center; gap:9px;
     width:100%; padding:14px; border:none; border-radius:var(--radius);
     background:var(--tile); color:var(--ink); font-size:14px; font-weight:600;
     cursor:pointer; font-family:inherit; transition:background .15s ease;
   }
-  .btn-sampler:hover { background:var(--tile-hover); }
-  .btn-sampler svg { width:15px; height:15px; color:var(--accent); }
 
   /* ---- playlist cards ---- */
   /* Gradient fills rather than outlines. Six identical bordered boxes
@@ -393,6 +389,11 @@
   }
   .pcard > * { position:relative; z-index:1; }
   .pcard:hover { transform:translateY(-2px); filter:brightness(1.12); }
+  /* The sampler leads the row and isn't built from a library rule like
+     the others, so it reads as its own thing without leaving the grid. */
+  .pcard.is-sampler { --h:210; }
+  .pcard.is-sampler .pcard-icon { opacity:1; }
+
   .pcard-icon { opacity:0.85; margin-bottom:auto; }
   .pcard-icon svg { width:18px; height:18px; }
   .pcard-title { font-size:14.5px; font-weight:700; letter-spacing:-0.01em; line-height:1.2; }

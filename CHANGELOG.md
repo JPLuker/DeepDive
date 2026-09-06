@@ -4,6 +4,23 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.25
+- The sampler is now the first card in the mixes grid rather than a
+  full-width strip below the suggestion row. It is a mix like the
+  others, and sitting apart made it look like a different kind of thing.
+- Fixed: Mixes rendered its own heading and the card row rendered
+  another, so the page said "Mixes — from your library" twice.
+- Fixed: the sampler's artist pool was only built while loading
+  suggestions, which Mixes doesn't do — so its card would never have
+  appeared there. It is now built wherever cards are drawn, from the
+  same cached read.
+- Fixed: the pool was being reassigned to its own trimmed output on
+  every render, so it shrank to twelve artists and stopped being a pool
+  to draw different handfuls from.
+- Home's preview counts follow the grid instead of being fixed. Four
+  items is a full row on a phone and a half-empty one on a desktop grid
+  four across, which is why Home looked unfinished at width.
+
 ## 2.8.24
 - **Home is a summary.** It had become the whole app on one page, which
   is why everything else was hard to find — there was nowhere else to

@@ -32,7 +32,11 @@ check('hue rotates per card', /--h:\$\{\(200 \+ i \* 47\) % 360\}/.test(src));
 check('three across on desktop', /\.card-row \{ display:grid; grid-template-columns:repeat\(3,1fr\)/.test(html));
 
 // sampler
-check('sampler is a full-width row', /\.btn-sampler \{[\s\S]{0,200}width:100%/.test(html));
+// Superseded in 2.8.25: the sampler is a card at the head of the mixes
+// grid. A full-width strip below the suggestion row made it look like a
+// different kind of thing when it is a mix like the rest.
+check('sampler is the first mix card', /\.pcard\.is-sampler/.test(html));
+check('the full-width strip is gone', !/btn-sampler|sampler-row/.test(html));
 check('sampler no longer dashed', !/\.btn-sampler[^}]*border-style:dashed/.test(html));
 
 // mobile

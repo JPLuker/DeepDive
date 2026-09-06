@@ -52,6 +52,8 @@ check('mixes shows the lot', /const shown = limit \? _cards\.slice\(0, limit\) :
 // The button is built by sectionHead from arguments, so the rendered
 // string never appears in source — check the call instead.
 check('home preview links onward', /sectionHead\("Mixes", "from your library", "mixes", "All mixes"\)/.test(app));
-check('and shows only a taste', /loadPlaylistCards\(\{ into: "home-mixes", limit: 3/.test(app));
+// The limit is computed from viewport width now: three cards is a full
+// row on a phone and a half-empty one on a four-across desktop grid.
+check('and shows only a taste', /loadPlaylistCards\(\{ into: "home-mixes", limit: perRow/.test(app));
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);
