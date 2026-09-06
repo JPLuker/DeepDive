@@ -60,5 +60,19 @@ check('one sampler pool, not two', (src.match(/let _samplerPool/g) || []).length
 // "Playlists" is the old name for this.
 check('mixes is the user-facing name', /<h2>Mixes<\/h2>/.test(src));
 
+// "More ways to dive" was three identical pills with one warning
+// floating above all of them, so the most expensive action in the app
+// looked exactly like opening a list of pins. Each row carries its own
+// description now, which is where the cost belongs.
+check('dive destinations are rows', /function navRow\(idAttr, title, detail\)/.test(src));
+check('the scan explains its cost', /one request per release/.test(dives));
+check('history explains itself', /how to undo it/.test(dives));
+check('pins explain themselves', /stop suggesting/.test(dives));
+check('no loose pill row left', !/<div class="actions">\s*\n\s*<button class="btn btn-ghost btn-small" id="go-scrub"/.test(src));
+// Ids stay literal, or the orphan audit stops seeing them — the same
+// mistake the settings helpers made an hour earlier.
+check('nav row ids are literal', src.includes('id="go-scrub"') && src.includes('id="go-history"'));
+check('rows share the settings shape', /class="set-row set-row-nav"/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

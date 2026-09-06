@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.29
+- Reworked "More ways to dive" on the Dives page. It was three identical
+  pills with a single warning floating above all of them, so a full
+  library scan — the most expensive thing in the app — looked exactly
+  like opening a list of pins. They're now rows that each say what they
+  do, with the cost attached to the one that has it, matching the
+  settings rows.
+
 ## 2.8.28
 - Fixed: the support-link switch looked broken. The rebuilt settings
   page renamed the wrapper class, and the checked-state styling was

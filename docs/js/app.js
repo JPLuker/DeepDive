@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.28";
+export const BUILD = "2.8.29";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -289,6 +289,34 @@ function searchShellHtml() {
     </div>`;
 }
 
+/**
+ * A destination row: what it is, what it does, and a chevron.
+ *
+ * These were three identical pills with a single warning floating above
+ * all of them — so a full library scan, which is the most expensive
+ * thing in the app, looked exactly like opening a list of pins. Each
+ * row carries its own description now, which is where the cost belongs.
+ *
+ * Same shape as the settings rows; the classes are shared deliberately
+ * so the two pages don't drift apart.
+ *
+ * The id arrives as a literal attribute string rather than a value to
+ * interpolate, so `id="go-scrub"` still appears in the source and the
+ * getElementById orphan audit can see it.
+ */
+function navRow(idAttr, title, detail) {
+  return `
+    <button class="set-row set-row-nav" ${idAttr}>
+      <span class="set-row-text">
+        <span class="set-row-title">${title}</span>
+        <span class="set-row-detail">${esc(detail)}</span>
+      </span>
+      <span class="set-row-chevron" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+      </span>
+    </button>`;
+}
+
 /** A row heading that links through to the destination owning it. */
 function sectionHead(title, qual, tab, linkText) {
   return `
@@ -332,12 +360,11 @@ async function renderDives() {
     ${rateLimitBanner()}
     ${searchShellHtml()}
     <div id="suggestions-row"></div>
-    <div class="crate-header"><span class="label">More ways to dive</span></div>
-    <p class="nav-hint" style="margin-top:0;">A full scan crawls every artist in your library — thorough, and slow, at one request per release.</p>
-    <div class="actions">
-      <button class="btn btn-ghost btn-small" id="go-scrub">Full library scan</button>
-      <button class="btn btn-ghost btn-small" id="go-history">Dive history</button>
-      <button class="btn btn-ghost btn-small" id="go-pins">Pins &amp; blocked</button>
+    <div class="set-group">
+      <div class="set-group-label">More ways to dive</div>
+      ${navRow('id="go-scrub"', "Full library scan", "Crawls every artist you've liked. Thorough, and slow — one request per release.")}
+      ${navRow('id="go-history"', "Dive history", "What you've dived, what DeepDive built, and how to undo it.")}
+      ${navRow('id="go-pins"', "Pins &amp; blocked", "Artists you've pinned, and ones you've told DeepDive to stop suggesting.")}
     </div>`;
 
   wireSearchBar();

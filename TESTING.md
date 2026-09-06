@@ -301,10 +301,12 @@ No quota needed for most of this — it's structure.
 - [ ] **Home at desktop width** — rows should fill rather than trailing
       off half empty. Drag the window between widths and the counts
       should change
-- [ ] **Dives** — search, every pin, full suggestions, and buttons for
-      full library scan, dive history, pins and blocked. All three
-      buttons must actually open something: one of them called a
-      function that didn't exist before this build
+- [ ] **Dives** — search, every pin, full suggestions, and three rows
+      under "More ways to dive". Each row should say what it does, with
+      the scan carrying its own cost warning rather than one hint
+      floating above all three
+- [ ] All three rows must actually open something — the whole row is the
+      target, not just the chevron
 - [ ] **Mixes** — one heading, not two, and the sampler is the first
       card in the grid
 - [ ] **Sampler from Mixes** — go straight to Mixes without visiting

@@ -618,6 +618,19 @@
   .set-row-title { font-size:14.5px; font-weight:600; letter-spacing:-0.01em; }
   .set-row-detail { font-size:12.5px; color:var(--muted); margin-top:3px; line-height:1.45; }
   .set-row-control { display:flex; gap:8px; flex-shrink:0; }
+  /* A row that navigates rather than holding a control. Whole row is
+     the target — a chevron is not a button, it's a hint. */
+  .set-row-nav {
+    width:100%; text-align:left; border:none; cursor:pointer;
+    font-family:inherit; color:var(--ink);
+    transition:background .15s ease;
+  }
+  .set-row-nav:hover { background:var(--tile-hover); }
+  .set-row-nav:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .set-row-nav .set-row-text { display:flex; flex-direction:column; }
+  .set-row-chevron { flex-shrink:0; color:var(--muted-soft); display:flex; }
+  .set-row-chevron svg { width:18px; height:18px; }
+
   .set-row-actions { display:flex; justify-content:flex-end; margin:-2px 0 6px; }
   .set-note { font-size:12.5px; color:var(--muted-soft); margin:8px 2px 0; line-height:1.5; }
   .set-switch { display:inline-flex; align-items:center; cursor:pointer; }
