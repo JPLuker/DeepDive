@@ -20,7 +20,9 @@ const desk = h.slice(h.indexOf('@media (min-width: 900px)'), h.indexOf('/* ---- 
 const wide = h.slice(h.indexOf('@media (min-width: 1280px)'), h.indexOf('/* ---- mobile'));
 
 check('there is a desktop breakpoint', desk.length > 0);
-check('and a wider one above it', wide.length > 0);
+// The second breakpoint is gone: the measure and the column count are
+// both continuous now, so there was nothing left for it to switch.
+check('no second breakpoint needed', !/@media \\(min-width: 1280px\\)/.test(h));
 
 // Navigation
 check('top-bar nav exists', /<button class="topnav-btn" data-tab="home">/.test(h));
@@ -36,10 +38,15 @@ check('body is not offset', !/body \{ padding-left/.test(desk));
 check('docked actions are not offset', !/\.results-actions \{ left:/.test(desk));
 
 // Density, not width.
-check('tiles go to three', /\.tile-grid \{ grid-template-columns:repeat\(3,1fr\)/.test(desk));
-check('then four', /\.tile-grid \{ grid-template-columns:repeat\(4,1fr\); \}/.test(wide));
-check('cards follow', /\.card-row \{ grid-template-columns:repeat\(4,1fr\); \}/.test(wide));
-check('measure is bounded, not full width', /--measure:1080px;/.test(wide));
+// auto-fill rather than a fixed count: every width between the old
+// steps was either cramped or half empty.
+check('tiles fill by available width', /\.tile-grid \{ grid-template-columns:repeat\(auto-fill, minmax\(230px, 1fr\)\)/.test(desk));
+check('cards do the same', /\.card-row \{ grid-template-columns:repeat\(auto-fill, minmax\(240px, 1fr\)\)/.test(desk));
+// Home shows one row of each, so its counts must agree with the CSS
+// or it leaves a half-empty row.
+check('js mirrors the css rule', js.includes('function columnsAtWidth()') && /minmax\(230px/.test(desk));
+check('no breakpoint guessing left in js', !/innerWidth >= 1280 \? 4/.test(js));
+check('measure is fluid but bounded', /--measure:clamp\(860px, 88vw, 1440px\)/.test(desk));
 check('everything shares the measure', /\.wrap, \.flash, \.row-head, \.topbar \{ max-width:var\(--measure\); \}/.test(desk));
 
 // Build tag sits with the support link rather than alone in a corner.

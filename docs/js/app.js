@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.29";
+export const BUILD = "2.8.30";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -266,6 +266,24 @@ function renderConnect() {
 // Home (search + autofill + recommendations + To-Dive)
 // ============================================================
 /**
+ * How many tiles fit in a row at this width.
+ *
+ * Home shows one row of each thing, so it has to agree with the CSS or
+ * it leaves a half-empty row. The grid is `auto-fill` with a 230px
+ * minimum inside a measure of `clamp(860px, 88vw, 1440px)`, so this
+ * mirrors that rather than guessing at breakpoints — which is what left
+ * every width between the old steps either cramped or sparse.
+ */
+function columnsAtWidth() {
+  if (typeof window === "undefined") return 2;
+  const vw = window.innerWidth;
+  if (vw < 900) return 2;
+  const measure = Math.min(1440, Math.max(860, vw * 0.88));
+  const gutters = 56;
+  return Math.max(2, Math.floor((measure - gutters) / 240));
+}
+
+/**
  * The search field, shared by Home and Dives.
  *
  * Home keeps one because searching an artist is what people open
@@ -345,7 +363,7 @@ async function renderHome() {
   loadSuggestions({ compact: true });
   // One row of cards, whatever a row holds at this width — the sampler
   // card takes the first slot.
-  const perRow = window.innerWidth >= 1280 ? 4 : (window.innerWidth >= 900 ? 3 : 2);
+  const perRow = columnsAtWidth();
   loadPlaylistCards({ into: "home-mixes", limit: perRow, headHtml: sectionHead("Mixes", "from your library", "mixes", "All mixes") });
 }
 
@@ -360,8 +378,7 @@ async function renderDives() {
     ${rateLimitBanner()}
     ${searchShellHtml()}
     <div id="suggestions-row"></div>
-    <div class="set-group">
-      <div class="set-group-label">More ways to dive</div>
+    <div class="set-group set-group-spaced">
       ${navRow('id="go-scrub"', "Full library scan", "Crawls every artist you've liked. Thorough, and slow — one request per release.")}
       ${navRow('id="go-history"', "Dive history", "What you've dived, what DeepDive built, and how to undo it.")}
       ${navRow('id="go-pins"', "Pins &amp; blocked", "Artists you've pinned, and ones you've told DeepDive to stop suggesting.")}
@@ -1475,8 +1492,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   // which made Home look unfinished at width rather than deliberately
   // short.
   const compact = _suggestOpts.compact;
-  const perRow = typeof window !== "undefined" && window.innerWidth >= 1280 ? 4
-    : (typeof window !== "undefined" && window.innerWidth >= 900 ? 3 : 2);
+  const perRow = columnsAtWidth();
   const PIN_VISIBLE = compact ? perRow : 8;
   if (compact) suggestions = suggestions.slice(0, perRow * 2);
   const shownPins = showAllPins ? pins : pins.slice(0, PIN_VISIBLE);

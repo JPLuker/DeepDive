@@ -28,7 +28,9 @@ check('home suggestions are compact', /loadSuggestions\(\{ compact: true \}\)/.t
 check('home mixes are a preview', /limit: perRow/.test(home));
 // Counts are per row rather than absolute, so Home looks deliberately
 // short at any width instead of unfinished on a wide screen.
-check('preview fills a row at any width', /window\.innerWidth >= 1280 \? 4/.test(home));
+// Counts come from columnsAtWidth() now, which mirrors the CSS
+// auto-fill rule rather than guessing at breakpoints.
+check('preview fills a row at any width', home.includes('columnsAtWidth()'));
 check('home does not own the full card row', !/id="playlist-cards"/.test(home));
 
 // Dives: the full surface.

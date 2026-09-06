@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.8.29.** If the build in `js/app.js` is well
+**Last updated at build 2.8.30.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -354,6 +354,12 @@ It looked like rate limiting for two days.
 
 Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
+- **Widths are continuous, not stepped.** The measure is
+  `clamp(860px, 88vw, 1440px)` and grids use `auto-fill` with a minimum
+  column width, so the layout follows the window. Fixed column counts at
+  breakpoints left every width in between wrong in one direction or the
+  other. If JS needs a column count, it calls `columnsAtWidth()`, which
+  mirrors the CSS — two copies of the rule drift.
 - **Two layouts, not one that scales.** Mobile is the primary influence
   and desktop takes its structure from it: at 900px the tab bar becomes
   a fixed left rail (same markup) and the grids grow their column count.

@@ -601,6 +601,9 @@
      unattached to the control it described. Rows on filled surfaces,
      same vocabulary as tiles and track rows. */
   .set-group { margin:0 0 26px; }
+  /* Following a tile grid rather than another group, so it needs real
+     clearance — it was sitting hard against the tiles above. */
+  .set-group-spaced { margin-top:34px; }
   .set-group-label {
     font-size:12px; font-weight:600; letter-spacing:0.02em;
     color:var(--muted-soft); margin:0 0 8px 2px;
@@ -801,25 +804,29 @@
 
     /* One measure and one gutter for everything, or section edges
        disagree by whatever padding each element happened to carry. */
+    /* Fluid rather than two fixed steps. A fixed 880 then 1080 meant
+       every width in between was either cramped or half empty; this
+       tracks the viewport with a floor and a ceiling. */
+    :root { --measure:clamp(860px, 88vw, 1440px); }
     .wrap, .flash, .row-head, .topbar { max-width:var(--measure); }
     .topbar { margin:0 auto; padding-left:var(--gutter); padding-right:var(--gutter); }
     .wrap { padding:0 var(--gutter) 96px; }
     .flash { padding-left:var(--gutter); padding-right:var(--gutter); }
     .search-shell { max-width:680px; }
 
-    .tile-grid { grid-template-columns:repeat(3,1fr); gap:10px; }
-    .card-row { grid-template-columns:repeat(3,1fr); gap:12px; }
+    /* Auto-fill means the column count follows the available width
+       instead of jumping at a breakpoint, so nothing is ever stretched
+       to fill a row it can't fill. */
+    .tile-grid { grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:10px; }
+    .card-row { grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px; }
 
     .results-actions-row, .results-actions .btn-back {
       max-width:var(--measure); margin:0 auto; width:100%;
     }
   }
 
-  @media (min-width: 1280px) {
-    :root { --measure:1080px; }
-    .tile-grid { grid-template-columns:repeat(4,1fr); }
-    .card-row { grid-template-columns:repeat(4,1fr); }
-  }
+  /* No second breakpoint: the measure and the column count are both
+     continuous now, so there is nothing left for one to switch. */
 
   /* ---- mobile ----------------------------------------------------
      Nothing above this point adapts to width: the app was built and

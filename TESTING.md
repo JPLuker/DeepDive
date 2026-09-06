@@ -298,9 +298,11 @@ No quota needed for most of this — it's structure.
       navigating
 - [ ] **Home** — search field, a short row of pins and suggestions, and
       a row of mixes. "All dives" and "All mixes" links go where they say
-- [ ] **Home at desktop width** — rows should fill rather than trailing
-      off half empty. Drag the window between widths and the counts
-      should change
+- [ ] **Drag the window slowly from narrow to full width.** Columns
+      should be added one at a time as room appears, with no jump and no
+      row left half empty at any point. This is the thing that was
+      wrong: fixed counts meant every width between the breakpoints was
+      either cramped or sparse
 - [ ] **Dives** — search, every pin, full suggestions, and three rows
       under "More ways to dive". Each row should say what it does, with
       the scan carrying its own cost warning rather than one hint

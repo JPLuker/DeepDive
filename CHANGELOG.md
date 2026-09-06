@@ -4,6 +4,19 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.30
+- The desktop layout is continuous rather than stepped. The measure was
+  fixed at 880px, then 1080px above 1280px wide, and tile columns
+  snapped from three to four at the same point — so every width in
+  between was either cramped or half empty. The measure is now
+  `clamp(860px, 88vw, 1440px)` and the grids fill by available width, so
+  the column count follows the window instead of jumping.
+- Home's preview counts read from the same rule as the CSS rather than
+  their own copy of the breakpoints, so a preview row fills at any
+  width.
+- Removed the "More ways to dive" label — the rows say what they are —
+  and gave the group real clearance from the tiles above it.
+
 ## 2.8.29
 - Reworked "More ways to dive" on the Dives page. It was three identical
   pills with a single warning floating above all of them, so a full
