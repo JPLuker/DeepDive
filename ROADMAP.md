@@ -84,7 +84,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.26
+## Shipped since — build 2.8.27
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -192,7 +192,12 @@ summary with links through; Dives owns search, pins, suggestions, the
 library scan and history; Playlists are Mixes with the sampler
 alongside. Both navigations carry all four.*
 
-**Stopping point B — settings, twice over** *(from Joseph's notes)*
+**Stopping point B — settings** — *rebuilt in 2.8.27: grouped rows in
+the current visual language, credit footer added, and the scan, pins and
+history removed as duplicates of Dives. Still outstanding: moving run
+settings into the artist popup.*
+
+**Original note:**
 - ~~Show build number toggle~~ — *shipped in 2.8.16, under Advanced,
   off by default.*
 - The wider Settings rework is now partly done: 2.8.16 regrouped the

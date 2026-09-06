@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.27
+- Settings rebuilt. It was headings above loose buttons — the shape of a
+  form rather than a list of things you can change — with every
+  description floating unattached to the control it described. It is now
+  grouped rows on filled surfaces, the same vocabulary as tiles and
+  track rows, with the control on the right of the thing it controls.
+- Controls that can't share a line with a label on a phone — the theme
+  picker, the Client ID field — get their own row instead of being
+  squeezed alongside.
+- Removed the full library scan, pins and history from Settings. Dives
+  has owned them since 2.8.24 and listing them in both places was
+  duplication.
+- Added a footer crediting Joseph, with GitHub and LinkedIn links.
+
 ## 2.8.26
 - Fixed: the mixes grid collapsed into a staircase of odd-width cards on
   mobile. Removing the old sampler button styles deleted the rule's

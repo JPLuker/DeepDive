@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.26";
+export const BUILD = "2.8.27";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -2819,100 +2819,152 @@ function probeVerdict(rows) {
   return `<p class="nav-hint">Some endpoints failed without a rate limit — check the status codes above. 403 usually means the endpoint is restricted for this app rather than temporarily unavailable.</p>`;
 }
 
+/**
+ * One row per setting: a label, a line saying what it does, and the
+ * control on the right.
+ *
+ * The page was headings above loose buttons, which is the shape of a
+ * form rather than a list of things you can change, and it left every
+ * description floating unattached to the control it described. Rows are
+ * the same filled-surface vocabulary as tiles and track rows.
+ */
+function settingRow({ title, detail = "", control = "", id = "" }) {
+  return `
+    <div class="set-row"${id ? ` id="${id}"` : ""}>
+      <div class="set-row-text">
+        <div class="set-row-title">${esc(title)}</div>
+        ${detail ? `<div class="set-row-detail">${esc(detail)}</div>` : ""}
+      </div>
+      <div class="set-row-control">${control}</div>
+    </div>`;
+}
+
+// Controls are written out with literal ids rather than built from
+// arguments. Interpolating an id hides it from the getElementById
+// orphan audit, which is the check that catches a handler still bound
+// to markup that has been deleted.
+const setSwitch = (idAttr, on) => `<label class="set-switch">
+    <input type="checkbox" ${idAttr}${on ? " checked" : ""}>
+    <span class="switch-track"><span class="switch-thumb"></span></span>
+  </label>`;
+
 function renderSettings() {
   setTitle("DeepDive · Settings");
   setActiveTab("settings");
   root.innerHTML = `
-    <div class="card">
-      <h1>Settings</h1>
+    <div class="row-head"><h2>Settings</h2></div>
 
-      <div class="crate-header"><span class="label">Library</span></div>
-      <p class="nav-hint" style="margin-top:0;">Crawl every artist in your library at once. Thorough, and slow — one request per release.</p>
-      <div class="actions"><button class="btn btn-ghost btn-small" id="go-scrub">Full library scan</button></div>
+    <div class="set-group">
+      <div class="set-group-label">Appearance</div>
+      <div class="set-row set-row-block">
+        <div class="set-row-text">
+          <div class="set-row-title">Theme</div>
+          <div class="set-row-detail">System follows your device.</div>
+        </div>
+        <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Theme">
+          <button class="theme-opt" data-theme-choice="light">Light</button>
+          <button class="theme-opt" data-theme-choice="dark">Dark</button>
+          <button class="theme-opt" data-theme-choice="system">System</button>
+        </div>
+      </div>
+      ${settingRow({
+        title: "Support link",
+        detail: "Shows a coffee cup in the top bar.",
+        control: setSwitch('id="set-show-bmc"'),
+      })}
+    </div>
 
-      <div class="crate-header"><span class="label">Playlists</span></div>
-      <p class="nav-hint" style="margin-top:0;">Find playlists DeepDive created — including ones made before it kept a record of them.</p>
-      <div class="actions"><button class="btn btn-ghost btn-small" id="find-playlists">Find DeepDive playlists</button></div>
+    <div class="set-group">
+      <div class="set-group-label">Spotify</div>
+      ${settingRow({
+        title: "Refresh library",
+        detail: "Re-read your Liked Songs. DeepDive does this on its own daily.",
+        control: `<button class="btn btn-ghost btn-small" id="set-refresh">Refresh</button>`,
+      })}
+      ${settingRow({
+        title: "Tidy up playlists",
+        detail: "Find playlists DeepDive created, including ones made before it kept a record.",
+        control: `<button class="btn btn-ghost btn-small" id="find-playlists">Find them</button>`,
+      })}
       <div id="playlist-cleanup"></div>
       <div id="playlist-cleanup-all"></div>
+      ${settingRow({
+        title: "Disconnect",
+        detail: "Sign out of Spotify. Your pins and history stay.",
+        control: `<button class="btn btn-ghost btn-small" id="set-disconnect">Disconnect</button>`,
+      })}
+      <p class="set-note">Music metadata and artwork are provided by Spotify. DeepDive is not affiliated with Spotify AB.</p>
+    </div>
 
-      <div class="crate-header"><span class="label">Pins &amp; blocked</span></div>
-      <p class="nav-hint" style="margin-top:0;">Artists you've pinned, and ones you've told DeepDive to stop suggesting.</p>
-      <div class="actions">
-        <button class="btn btn-ghost btn-small" id="go-pins">Pins &amp; blocked</button>
+    <details class="advanced" id="advanced">
+      <summary>Advanced</summary>
+
+      <div class="set-group">
+        <div class="set-group-label">Speed</div>
+        ${settingRow({
+          title: "Reset pacing",
+          detail: "DeepDive slows down after Spotify rate-limits it and remembers that between sessions. Clear it if dives are crawling and nothing is failing.",
+          control: `<button class="btn btn-ghost btn-small" id="set-reset-pacing">Reset</button>`,
+        })}
       </div>
 
-      <div class="crate-header"><span class="label">History</span></div>
-      <p class="nav-hint" style="margin-top:0;">What you've dived, what DeepDive created, and how to undo it.</p>
-      <div class="actions">
-        <button class="btn btn-ghost btn-small" id="go-history">Dive history</button>
-      </div>
-
-      <!-- Theme and the support-link switch were two separate sections
-           with an unrelated one between them. They are the same thing. -->
-      <div class="crate-header"><span class="label">Appearance</span></div>
-      <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Theme">
-        <button class="theme-opt" data-theme-choice="light">Light</button>
-        <button class="theme-opt" data-theme-choice="dark">Dark</button>
-        <button class="theme-opt" data-theme-choice="system">System</button>
-      </div>
-      <label class="nav-switch" style="padding-left:0;">
-        <span>Show support link</span>
-        <input type="checkbox" id="set-show-bmc">
-        <span class="switch-track"><span class="switch-thumb"></span></span>
-      </label>
-
-      <div class="crate-header"><span class="label">Spotify</span></div>
-      <div class="actions">
-        <button class="btn btn-ghost btn-small" id="set-refresh">Refresh library</button>
-        <button class="btn btn-ghost btn-small" id="set-disconnect">Disconnect</button>
-      </div>
-      <p class="nav-hint">Music metadata and artwork are provided by Spotify. DeepDive is not affiliated with Spotify AB.</p>
-
-      <!-- Everything below is either irreversible, only meaningful if
-           something has gone wrong, or asks for a credential. None of it
-           belongs in front of someone who just wants to dive an artist,
-           so it collapses by default. -->
-      <details class="advanced" id="advanced">
-        <summary>Advanced</summary>
-
-        <div class="crate-header"><span class="label">Speed</span></div>
-        <p class="nav-hint" style="margin-top:0;">DeepDive slows itself down after Spotify rate-limits it, and remembers that between sessions. It eases off on its own after a few hours — clear it here if a dive is crawling and you think it shouldn't be.</p>
-        <div class="btn-row"><button class="btn btn-ghost btn-small" id="set-reset-pacing">Reset pacing</button></div>
-
-        <div class="crate-header"><span class="label">Your data</span></div>
-        <p class="nav-hint" style="margin-top:0;">Pins, history and settings live in this browser only. A backup is the only way to move them to another browser or get them back after clearing site data.</p>
-        <div class="actions">
-          <button class="btn btn-ghost btn-small" id="set-export">Export backup</button>
-          <button class="btn btn-ghost btn-small" id="set-import">Import backup</button>
-          <input type="file" id="set-import-file" accept="application/json,.json" style="display:none;">
-        </div>
-
-        <div class="crate-header"><span class="label">Diagnostics</span></div>
-        <label class="nav-switch" style="padding-left:0;">
-          <span>Show build number</span>
-          <input type="checkbox" id="set-show-build">
-          <span class="switch-track"><span class="switch-thumb"></span></span>
-        </label>
-        <p class="nav-hint">Test each Spotify endpoint DeepDive uses, one request each. Use this when something is refused and it isn't clear what — it shows which parts are available rather than leaving it to guesswork.</p>
-        <div class="btn-row"><button class="btn btn-ghost btn-small" id="set-test-endpoints">Test endpoints</button></div>
+      <div class="set-group">
+        <div class="set-group-label">Diagnostics</div>
+        ${settingRow({
+          title: "Show build number",
+          detail: "Puts the version in the top bar.",
+          control: setSwitch('id="set-show-build"', showBuildTag()),
+        })}
+        ${settingRow({
+          title: "Test endpoints",
+          detail: "Checks each Spotify endpoint DeepDive uses and measures what a request costs.",
+          control: `<button class="btn btn-ghost btn-small" id="set-test-endpoints">Run test</button>`,
+        })}
         <div id="endpoint-test"></div>
+      </div>
 
-        <div class="crate-header"><span class="label">Credentials</span></div>
-        <div class="nav-settings" style="padding:4px 0 0;">
-          <label class="nav-field-label" for="set-client-id">Client ID</label>
+      <div class="set-group">
+        <div class="set-group-label">Your data</div>
+        <p class="set-note">Pins, history and settings live in this browser only. A backup is the only way to move them elsewhere or recover them after clearing site data.</p>
+        ${settingRow({
+          title: "Backup",
+          detail: "Export everything to a file, or restore from one.",
+          control: `<button class="btn btn-ghost btn-small" id="set-export">Export</button>
+            <button class="btn btn-ghost btn-small" id="set-import">Import</button>
+            <input type="file" id="set-import-file" accept="application/json,.json" style="display:none;">`,
+        })}
+      </div>
+
+      <div class="set-group">
+        <div class="set-group-label">Credentials</div>
+        <div class="set-row set-row-block">
+          <div class="set-row-text">
+            <div class="set-row-title">Client ID</div>
+            <div class="set-row-detail">From your own Spotify app.</div>
+          </div>
           <input type="text" id="set-client-id" class="nav-input" placeholder="paste your Client ID" autocomplete="off" spellcheck="false">
-          <button class="btn btn-ghost btn-small" id="set-save-id" style="margin-top:8px;">Save Client ID</button>
-          <div class="nav-field-label" style="margin-top:16px;">Redirect URI</div>
-          <div class="nav-uri" id="set-redirect-uri"></div>
-          <p class="nav-hint">Must match your Spotify app exactly.</p>
         </div>
-      </details>
+        <div class="set-row-actions"><button class="btn btn-ghost btn-small" id="set-save-id">Save Client ID</button></div>
+        <div class="set-row set-row-block">
+          <div class="set-row-text">
+            <div class="set-row-title">Redirect URI</div>
+            <div class="set-row-detail">Must match your Spotify app exactly.</div>
+          </div>
+          <div class="nav-uri" id="set-redirect-uri"></div>
+        </div>
+      </div>
+    </details>
 
-      <div class="flash hidden" id="settings-msg" style="margin-top:14px;"></div>
+    <div class="flash hidden" id="settings-msg" style="margin-top:14px;"></div>
 
+    <footer class="set-footer">
+      <p class="set-credit">Made by Joseph Luker</p>
+      <div class="set-links">
+        <a href="https://github.com/JPLuker/DeepDive" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.linkedin.com/in/josephluker" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
       <p class="settings-build">DeepDive · build ${esc(BUILD)}</p>
-    </div>`;
+    </footer>`;
 
   const msg = document.getElementById("settings-msg");
   const say = (t, err) => { msg.textContent = t; msg.classList.remove("hidden"); msg.classList.toggle("error", !!err); };

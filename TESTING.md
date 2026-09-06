@@ -316,6 +316,24 @@ No quota needed for most of this — it's structure.
 - [ ] Nothing that worked before has gone missing — searching, pinning,
       opening a mix card
 
+## 8. Settings rebuilt (2.8.27)
+
+No quota needed.
+
+- [ ] Grouped rows on filled surfaces — a label, a line explaining it,
+      and the control on the right — rather than headings above loose
+      buttons
+- [ ] Theme picker and Client ID field each get their own line rather
+      than being squeezed beside a label
+- [ ] Scan, pins and history are **gone** from Settings — Dives owns
+      them. Check they still work there
+- [ ] Footer credits you, with working GitHub and LinkedIn links
+- [ ] **Every control still works**, since the page was rewritten again:
+      refresh library, find playlists, disconnect, theme, support-link
+      switch, reset pacing, build-number switch, test endpoints, export,
+      import, save Client ID
+- [ ] Advanced still collapsed by default
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

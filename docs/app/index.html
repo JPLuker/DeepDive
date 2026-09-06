@@ -592,6 +592,40 @@
   .probe-table td:first-child { width:18px; color:var(--muted-soft); }
   .probe-table td:last-child { color:var(--muted); text-align:right; white-space:nowrap; }
 
+  /* ---- settings ----
+     Was headings above loose buttons: the shape of a form rather than a
+     list of things you can change, with every description floating
+     unattached to the control it described. Rows on filled surfaces,
+     same vocabulary as tiles and track rows. */
+  .set-group { margin:0 0 26px; }
+  .set-group-label {
+    font-size:12px; font-weight:600; letter-spacing:0.02em;
+    color:var(--muted-soft); margin:0 0 8px 2px;
+  }
+  .set-row {
+    display:flex; align-items:center; gap:16px;
+    background:var(--tile); border-radius:var(--radius-tile);
+    padding:14px 16px; margin-bottom:6px;
+  }
+  /* Where the control needs its own line rather than sitting alongside:
+     a segmented theme picker or a text field can't share a row with a
+     label on a phone. */
+  .set-row-block { flex-direction:column; align-items:stretch; gap:12px; }
+  .set-row-text { flex:1; min-width:0; }
+  .set-row-title { font-size:14.5px; font-weight:600; letter-spacing:-0.01em; }
+  .set-row-detail { font-size:12.5px; color:var(--muted); margin-top:3px; line-height:1.45; }
+  .set-row-control { display:flex; gap:8px; flex-shrink:0; }
+  .set-row-actions { display:flex; justify-content:flex-end; margin:-2px 0 6px; }
+  .set-note { font-size:12.5px; color:var(--muted-soft); margin:8px 2px 0; line-height:1.5; }
+  .set-switch { display:inline-flex; align-items:center; cursor:pointer; }
+  .set-switch input { position:absolute; opacity:0; width:0; height:0; }
+
+  .set-footer { margin-top:38px; padding-top:20px; border-top:1px solid var(--line); text-align:center; }
+  .set-credit { font-size:13px; color:var(--muted); margin:0; }
+  .set-links { display:flex; gap:18px; justify-content:center; margin-top:8px; }
+  .set-links a { font-size:13px; font-weight:600; color:var(--accent); text-decoration:none; }
+  .set-links a:hover { text-decoration:underline; }
+
   .settings-build { margin:26px 0 0; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; color:var(--muted-soft); }
 
   /* Sampler intro: the artists it's about to fetch, so the page shows

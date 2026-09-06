@@ -26,8 +26,10 @@ check('skeletons pulse', /@keyframes sk-pulse/.test(html));
 // "Manage" said nothing about what was inside it, and the teal/gold
 // label classes stopped meaning anything when the headings were
 // restyled from pills to plain type.
-check('pins section is named for its contents', /<span class="label">Pins &amp; blocked<\/span>/.test(src));
-check('History is its own section', /<span class="label">History<\/span>/.test(src));
+// Pins and history moved to Dives in 2.8.24 and Settings was rebuilt
+// as grouped rows in 2.8.27, so neither is a heading in Settings now.
+check('pins live on Dives', /id="go-pins"/.test(src.slice(src.indexOf('async function renderDives'), src.indexOf('async function renderMixes'))));
+check('history lives on Dives', /id="go-history"/.test(src.slice(src.indexOf('async function renderDives'), src.indexOf('async function renderMixes'))));
 // Scoped to renderSettings: teal/gold labels are still used on other
 // screens, so checking the whole file proves nothing about this one.
 const settingsFn = src.slice(src.indexOf('function renderSettings'), src.indexOf('const msg = document.getElementById("settings-msg")'));
