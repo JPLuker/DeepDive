@@ -74,7 +74,10 @@ for (const id of ['set-refresh','find-playlists','set-disconnect','set-reset-pac
 
 // Joseph's note: credit at the bottom of settings.
 check('credited', /Made by Joseph Luker/.test(src));
-check('github linked', /github\.com\/JPLuker\/DeepDive/.test(src));
+// The credit links to Joseph, not the repository — this is a footer
+// crediting a person, not a project link.
+check('github links to the profile', /github\.com\/JPLuker"/.test(src));
+check('not the repo', !/github\.com\/JPLuker\/DeepDive" target/.test(src));
 check('linkedin linked', /linkedin\.com\/in\//.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);

@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.27";
+export const BUILD = "2.8.28";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -2960,7 +2960,7 @@ function renderSettings() {
     <footer class="set-footer">
       <p class="set-credit">Made by Joseph Luker</p>
       <div class="set-links">
-        <a href="https://github.com/JPLuker/DeepDive" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/JPLuker" target="_blank" rel="noopener">GitHub</a>
         <a href="https://www.linkedin.com/in/josephluker" target="_blank" rel="noopener">LinkedIn</a>
       </div>
       <p class="settings-build">DeepDive · build ${esc(BUILD)}</p>

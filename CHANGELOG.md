@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.28
+- Fixed: the support-link switch looked broken. The rebuilt settings
+  page renamed the wrapper class, and the checked-state styling was
+  scoped to the old one — so the checkbox toggled underneath while the
+  switch never moved.
+- Fixed: the GitHub link in the footer pointed at the repository rather
+  than Joseph's profile. It's a credit, not a project link.
+
 ## 2.8.27
 - Settings rebuilt. It was headings above loose buttons — the shape of a
   form rather than a list of things you can change — with every

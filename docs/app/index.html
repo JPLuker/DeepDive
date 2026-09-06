@@ -137,9 +137,12 @@
   .nav-switch input { position:absolute; opacity:0; pointer-events:none; }
   .switch-track { position:relative; width:38px; height:21px; border-radius:999px; background:var(--surface); border:1.5px solid var(--line); flex-shrink:0; transition:background .15s ease, border-color .15s ease; }
   .switch-thumb { position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:var(--muted); transition:transform .15s ease, background .15s ease; }
-  .nav-switch input:checked + .switch-track { background:var(--accent-gradient); border-color:transparent; }
-  .nav-switch input:checked + .switch-track .switch-thumb { transform:translateX(17px); background:#fff; }
-  .nav-switch input:focus-visible + .switch-track { outline:2px solid var(--ink); outline-offset:2px; }
+  .nav-switch input:checked + .switch-track,
+  .set-switch input:checked + .switch-track { background:var(--accent-gradient); border-color:transparent; }
+  .nav-switch input:checked + .switch-track .switch-thumb,
+  .set-switch input:checked + .switch-track .switch-thumb { transform:translateX(17px); background:#fff; }
+  .nav-switch input:focus-visible + .switch-track,
+  .set-switch input:focus-visible + .switch-track { outline:2px solid var(--ink); outline-offset:2px; }
 
   .nav-settings { padding:0 12px 4px; }
   .nav-field-label { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted-soft); margin-bottom:5px; }

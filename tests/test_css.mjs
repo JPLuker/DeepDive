@@ -62,5 +62,13 @@ for (const [name, doc] of [['app shell', html], ['landing page', landing]]) {
 // The rule that actually broke, worth naming.
 check('mixes grid rule survives', /\.card-row \{ display:grid;/.test(html));
 
+// Renaming a wrapper silently drops any styling scoped to the old
+// class. The support-link switch kept toggling its checkbox while the
+// visual never moved, because the checked-state rules were bound to
+// .nav-switch and the settings rebuild used .set-switch.
+check('both switch wrappers get checked styling', /\.nav-switch input:checked \+ \.switch-track,\s*\n\s*\.set-switch input:checked \+ \.switch-track/.test(html));
+check('and both move the thumb', /\.set-switch input:checked \+ \.switch-track \.switch-thumb/.test(html));
+check('and both show focus', /\.set-switch input:focus-visible \+ \.switch-track/.test(html));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

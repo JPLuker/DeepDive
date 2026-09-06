@@ -327,7 +327,9 @@ No quota needed.
       than being squeezed beside a label
 - [ ] Scan, pins and history are **gone** from Settings — Dives owns
       them. Check they still work there
-- [ ] Footer credits you, with working GitHub and LinkedIn links
+- [ ] Footer credits you. GitHub goes to your **profile**, not the repo
+- [ ] The support-link switch actually slides when toggled, and the
+      coffee cup appears and disappears from the top bar to match
 - [ ] **Every control still works**, since the page was rewritten again:
       refresh library, find playlists, disconnect, theme, support-link
       switch, reset pacing, build-number switch, test endpoints, export,
