@@ -341,10 +341,6 @@
   /* Pin and remove are occasional. They used to hold width on every row
      permanently on touch, where there is no hover to hide behind. Now
      they sit behind an overflow and are revealed one row at a time. */
-  /* opacity alone hid these visually while leaving them in the layout
-     and still clickable — so the invisible buttons sat exactly where
-     the overflow control is and swallowed every tap, and the width was
-     never actually reclaimed. */
   /* Out of the layout until revealed, at every width. opacity alone
      left them clickable on top of the overflow control and never gave
      back the width they were hidden to reclaim. */
@@ -356,7 +352,7 @@
   }
   .tile-more:hover { color:var(--ink); background:var(--tile-hover); }
   .tile-more svg { width:16px; height:16px; display:block; }
-  .tile-wrap.show-actions .tile-more { color:var(--ink); }
+  .tile-wrap.show-actions .tile-more { display:none; }
   .tile-wrap.show-actions .tile-actions { display:flex; }
   /* No hover reveal. It was a second behaviour that only existed above
      the mobile breakpoint, where the overflow was hidden — so which one

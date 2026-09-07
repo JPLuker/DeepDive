@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.36
+- Fixed: revealing a tile's actions worked, but the overflow control
+  stayed put on top of them. It is absolutely positioned over the right
+  edge, which is exactly where the revealed buttons appear — so it
+  covered the unpin button it had just uncovered. It now steps aside
+  once open.
+
 ## 2.8.35
 - Reworked the tile overflow rather than patching it a third time. Two
   structural faults remained, either of which killed the button on its

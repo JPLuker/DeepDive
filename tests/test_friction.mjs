@@ -57,6 +57,11 @@ check('visible at every width', /\.tile-more \{[\s\S]{0,200}display:block/.test(
 check('no hover reveal left', !/\.tile:hover \.tile-actions/.test(css));
 check('actions are out of the layout until revealed', /\.tile-actions \{ display:none;/.test(css));
 check('and return when revealed', /\.tile-wrap\.show-actions \.tile-actions \{ display:flex; \}/.test(css));
+// The control is absolutely positioned over the right edge, which is
+// exactly where the revealed buttons land — so once open it covered the
+// unpin button it had just uncovered. Three of the four failures in
+// this feature were things sitting on top of each other.
+check('overflow gets out of the way once open', /\.tile-wrap\.show-actions \.tile-more \{ display:none; \}/.test(css));
 check('handler is delegated, not per-render', /function initTileOverflow/.test(src));
 check('bound to the document once', /document\.addEventListener\("click", \(e\) => \{\s*\n\s*const btn = e\.target\.closest\("\[data-more\]"\)/.test(src));
 check('no per-element binding remains', !/querySelectorAll\("\[data-more\]"\)/.test(src));
