@@ -43,7 +43,11 @@ check('banner is styled as a problem', /\.api-banner \{[\s\S]{0,200}border:1px s
 // Pin and remove are occasional actions that held width on every row —
 // permanently on touch, where there is no hover to hide behind.
 check('overflow control exists', /class="tile-more" data-more/.test(src));
-check('actions hidden until revealed', /\.tile-wrap\.show-actions \.tile-actions \{ opacity:1; \}/.test(css));
+check('actions hidden until revealed', /\.tile-wrap\.show-actions \.tile-actions \{ opacity:1; pointer-events:auto; \}/.test(css));
+// opacity alone left them clickable and still occupying width, so
+// the invisible buttons intercepted every tap meant for the
+// overflow and the space was never given back.
+check('hidden actions cannot be clicked', /\.tile-actions \{[\s\S]{0,140}pointer-events:none/.test(css));
 check('touch no longer shows them always', !/\.tile-actions \{ opacity:1; \}   \/\* no hover on touch \*\//.test(css));
 check('overflow is the way in on touch', /\.tile-more \{ display:block; \}/.test(css));
 check('one row open at a time', /el\.querySelectorAll\("\.tile-wrap\.show-actions"\)/.test(src));

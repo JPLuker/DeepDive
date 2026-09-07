@@ -4,6 +4,16 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.34
+- Fixed: the "…" button on tiles did nothing. The pin and remove buttons
+  were hidden with `opacity:0`, which hides them visually while leaving
+  them in the layout and still clickable — so the invisible buttons sat
+  exactly where the overflow control is and swallowed every tap meant
+  for it.
+- That also meant the width was never actually reclaimed, which was the
+  entire point of moving them behind an overflow. On touch they now
+  leave the layout completely until revealed.
+
 ## 2.8.33
 - Pins, blocked artists, dive history and playlist cleanup now use
   filled rows, matching track rows and settings rows. They were a

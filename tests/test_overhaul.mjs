@@ -42,7 +42,11 @@ check('sampler no longer dashed', !/\.btn-sampler[^}]*border-style:dashed/.test(
 // mobile
 check('tiles single-column on phones', /\.tile-grid \{ grid-template-columns:1fr; \}/.test(html));
 check('card grid halves on phones', /\.card-row \{ grid-template-columns:repeat\(2,1fr\); gap:8px; \}/.test(html));
-check('actions always visible on touch', /\.tile-actions \{ opacity:1; \}/.test(html));
+// Superseded in 2.8.32/33: showing them always is what took the
+// width on every row, and in 2.8.34 keeping them in the layout
+// while invisible is what made the overflow unresponsive.
+check('actions leave the layout on touch', /\.tile-actions \{ display:none; \}/.test(html));
+check('and come back when revealed', /\.tile-wrap\.show-actions \.tile-actions \{ display:flex/.test(html));
 
 // the app shell must carry the same CSS
 check('app shell has the tile styles', /\.tile-grid/.test(app));

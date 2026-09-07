@@ -368,6 +368,9 @@ once you're back online.
 - [ ] Tapping anywhere else closes it
 - [ ] Tapping "⋯" does **not** start a dive — the tile behind it is also
       a button, so this is the thing most likely to be wrong
+- [ ] Tapping "⋯" actually responds. In 2.8.32 it didn't: the hidden
+      buttons were still in the layout on top of it, eating the tap
+- [ ] With the actions hidden, the tile name has the full row width
 - [ ] On desktop, hovering a tile still reveals the actions as before
 
 ## 11. Pins, history and list rows (2.8.33)

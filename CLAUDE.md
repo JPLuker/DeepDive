@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.8.33.** If the build in `js/app.js` is well
+**Last updated at build 2.8.34.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -190,6 +190,12 @@ whether stale state is covering for it.*
 that catches a handler still bound to markup that was deleted. It has
 caught two real bugs in a day. A slightly more verbose call site is
 worth keeping it able to see.
+
+**`opacity:0` is not hidden.** It leaves an element in the layout and
+still clickable. Tile actions hidden that way sat on top of the
+overflow button that was meant to reveal them and ate every tap, and
+the width they were supposed to give back was never given back. Use
+`display:none`, or `pointer-events:none` where a fade is wanted.
 
 **Never delete CSS with a line-based regex.** Removing the sampler
 button's styles took out the selector line and left the declarations
