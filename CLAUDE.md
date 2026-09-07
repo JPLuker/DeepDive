@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.0.** If the build in `js/app.js` is well
+**Last updated at build 2.8.32.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -62,6 +62,11 @@ rejected.
 ---
 
 ## Working with Joseph
+
+**Version numbers are Joseph's call.** 2.9 marks the finished rework
+and has been claimed early twice — the second time by deciding a
+session's completion amounted to it. Finishing a session is not
+finishing the rework. Bump patches and let him say when.
 
 **Ideas go in the roadmap; bugs get fixed now.** When Joseph describes
 something broken, fix it in the moment. When he describes something he

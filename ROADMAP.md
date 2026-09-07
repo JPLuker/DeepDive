@@ -28,6 +28,13 @@ actively mislead.
 
 ## Versioning, going forward
 
+**2.9 is Joseph's to call, not something to infer from a finished
+session.** It was claimed twice by accident — once mid-session, and
+again at the end of Session 3 on the reasoning that the navigation
+rework was done. Sessions 4 and 5 are still ahead, and most of
+`TESTING.md` is unverified. Ship patches; wait to be told.
+
+
 - **x.0** — identity shifts. **3.0 is concert prep**, and is reserved
   for it. Nothing else earns one.
 - **x.y** — a feature someone would notice and could describe.
@@ -84,7 +91,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.0
+## Shipped since — build 2.8.32
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -211,7 +218,7 @@ settings into the artist popup.*
   built. Still outstanding is the second half — dip and dive as the two
   actions at the bottom of it — which waits on dips existing.*
 
-**Stopping point C — tile actions** — *shipped in 2.9.0: behind an
+**Stopping point C — tile actions** — *shipped in 2.8.32: behind an
 overflow button, one row open at a time.*
 
 **Original note:**

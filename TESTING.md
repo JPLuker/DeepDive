@@ -359,7 +359,7 @@ once you're back online.
 - [ ] "Check connection" clears it when things work again
 - [ ] It doesn't linger once a normal load succeeds
 
-## 10. Tile actions (2.9.0)
+## 10. Tile actions (2.8.32)
 
 - [ ] On a phone, pin and remove no longer sit on every tile. A "⋯"
       button appears instead
