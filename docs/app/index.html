@@ -338,7 +338,19 @@
   .tile-text { flex:1; min-width:0; padding-right:12px; display:flex; flex-direction:column; gap:2px; }
   .tile-title { font-size:14px; font-weight:600; letter-spacing:-0.01em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .tile-sub { font-size:11.5px; color:var(--muted-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* Pin and remove are occasional. They used to hold width on every row
+     permanently on touch, where there is no hover to hide behind. Now
+     they sit behind an overflow and are revealed one row at a time. */
   .tile-actions { display:flex; gap:4px; padding-right:8px; opacity:0; transition:opacity .15s ease; }
+  .tile-more {
+    position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer; padding:6px;
+    color:var(--muted-soft); display:none; border-radius:8px; z-index:1;
+  }
+  .tile-more:hover { color:var(--ink); background:var(--tile-hover); }
+  .tile-more svg { width:16px; height:16px; display:block; }
+  .tile-wrap.show-actions .tile-more { color:var(--ink); }
+  .tile-wrap.show-actions .tile-actions { opacity:1; }
   .tile:hover .tile-actions, .tile-wrap:focus-within .tile-actions { opacity:1; }
   .tile-wrap { position:relative; display:flex; }
   .tile-wrap .tile { flex:1; }
@@ -898,7 +910,12 @@
     /* Artwork tiles go single-column; two 56px thumbnails plus text
        don't fit side by side at phone width. */
     .tile-grid { grid-template-columns:1fr; }
-    .tile-actions { opacity:1; }   /* no hover on touch */
+    /* No hover on touch, so the overflow button is how these are
+       reached — showing them always is what took the width. */
+    .tile-actions { opacity:0; }
+    .tile-wrap.show-actions .tile-actions { opacity:1; }
+    .tile-more { display:block; }
+    .tile-wrap.show-actions .tile { padding-right:0; }
     .card-row { grid-template-columns:repeat(2,1fr); gap:8px; }
     .pcard { min-height:92px; padding:12px; }
     .row-head { margin:28px auto 12px; }

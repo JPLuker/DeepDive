@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.31";
+export const BUILD = "2.9.0";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1538,7 +1538,11 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
           ${sub ? `<span class="tile-sub">${esc(sub)}</span>` : ""}
         </span>
       </button>
-      ${actions ? `<span class="tile-actions">${actions}</span>` : ""}
+      ${actions ? `
+        <button class="tile-more" data-more aria-label="More for ${esc(name)}" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+        <span class="tile-actions">${actions}</span>` : ""}
     </div>`;
 
   const pinsHtml = shownPins.length ? `
@@ -1670,6 +1674,31 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     if (!pool.length) return flash("Nothing to pick from yet.");
     const pick = pool[Math.floor(Math.random() * pool.length)];
     startSearch(pick.name);
+  });
+
+  // Pin and remove sit behind an overflow rather than taking width on
+  // every row for something used occasionally. One open at a time —
+  // two rows of revealed buttons is the clutter this was meant to fix.
+  el.querySelectorAll("[data-more]").forEach((b) => b.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    const wrap = b.closest(".tile-wrap");
+    const open = wrap.classList.contains("show-actions");
+    el.querySelectorAll(".tile-wrap.show-actions").forEach((w) => {
+      w.classList.remove("show-actions");
+      w.querySelector("[data-more]")?.setAttribute("aria-expanded", "false");
+    });
+    if (!open) {
+      wrap.classList.add("show-actions");
+      b.setAttribute("aria-expanded", "true");
+    }
+  }));
+
+  // Anywhere else closes it, so a revealed row can't be left behind.
+  document.addEventListener("click", () => {
+    el.querySelectorAll(".tile-wrap.show-actions").forEach((w) => {
+      w.classList.remove("show-actions");
+      w.querySelector("[data-more]")?.setAttribute("aria-expanded", "false");
+    });
   });
 
   el.querySelectorAll("[data-block]").forEach((b) => b.addEventListener("click", (ev) => {

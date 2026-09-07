@@ -359,6 +359,17 @@ once you're back online.
 - [ ] "Check connection" clears it when things work again
 - [ ] It doesn't linger once a normal load succeeds
 
+## 10. Tile actions (2.9.0)
+
+- [ ] On a phone, pin and remove no longer sit on every tile. A "⋯"
+      button appears instead
+- [ ] Tapping it reveals that tile's actions; tapping another tile's
+      button closes the first
+- [ ] Tapping anywhere else closes it
+- [ ] Tapping "⋯" does **not** start a dive — the tile behind it is also
+      a button, so this is the thing most likely to be wrong
+- [ ] On desktop, hovering a tile still reveals the actions as before
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

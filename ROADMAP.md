@@ -84,7 +84,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.31
+## Shipped since — build 2.9.0
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -206,11 +206,15 @@ settings into the artist popup.*
   settings into the artist popup.
 - The Settings page needs a complete rework
 - Credit Joseph's LinkedIn and GitHub at the bottom of it
-- The artist popup becomes where the *dive* settings live, with dip and
-  dive as the two actions at the bottom of it. Settings splits in two:
-  app settings on the Settings page, run settings at the point of use.
+- ~~The artist popup becomes where the dive settings live~~ — *already
+  true: the intent chooser has held all seven run settings since it was
+  built. Still outstanding is the second half — dip and dive as the two
+  actions at the bottom of it — which waits on dips existing.*
 
-**Stopping point C — tile actions**
+**Stopping point C — tile actions** — *shipped in 2.9.0: behind an
+overflow button, one row open at a time.*
+
+**Original note:**
 - Hide pin and remove behind a swipe or overflow button instead of
   sitting permanently beside every tile. They currently take width on
   every row for actions used occasionally.

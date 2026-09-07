@@ -40,5 +40,26 @@ check('a successful load clears it too', /if \(!listeningFailed\) clearApiBanner
 check('banner appears on both suggestion pages', (src.match(/<div id="api-banner">/g) || []).length === 2);
 check('banner is styled as a problem', /\.api-banner \{[\s\S]{0,200}border:1px solid var\(--danger\)/.test(css));
 
+// Pin and remove are occasional actions that held width on every row —
+// permanently on touch, where there is no hover to hide behind.
+check('overflow control exists', /class="tile-more" data-more/.test(src));
+check('actions hidden until revealed', /\.tile-wrap\.show-actions \.tile-actions \{ opacity:1; \}/.test(css));
+check('touch no longer shows them always', !/\.tile-actions \{ opacity:1; \}   \/\* no hover on touch \*\//.test(css));
+check('overflow is the way in on touch', /\.tile-more \{ display:block; \}/.test(css));
+check('one row open at a time', /el\.querySelectorAll\("\.tile-wrap\.show-actions"\)/.test(src));
+check('clicking elsewhere closes it', /document\.addEventListener\("click", \(\) => \{[\s\S]{0,180}show-actions/.test(src));
+check('state is announced', /aria-expanded/.test(src));
+// The toggle must not also trigger the tile's own search.
+check('toggle does not start a dive', /ev\.stopPropagation\(\);\s*\n\s*const wrap = b\.closest\("\.tile-wrap"\)/.test(src));
+
+// Run settings already live in the artist popup — the intent modal has
+// held all seven since it was built, so that item needed marking done
+// rather than rebuilding.
+const shell = readFileSync(new URL('../docs/app/index.html', import.meta.url), 'utf8');
+for (const id of ['opt-live','opt-censored','opt-instrumental','opt-acappella','opt-remaster','opt-compilations','opt-appears-on']) {
+  check(`${id} is in the artist popup`, shell.includes(`id="${id}"`));
+}
+check('and inside the intent modal', shell.indexOf('id="intent-modal"') < shell.indexOf('id="opt-live"'));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.0 — the rework, finished
+- Pin and remove now sit behind an overflow button on each tile rather
+  than taking width on every row for actions used occasionally. On touch
+  they were permanently visible, since there is no hover to hide behind.
+  One row opens at a time and tapping elsewhere closes it.
+- Run settings were already in the artist popup — all seven have been
+  there since the intent chooser was built — so that item was marked
+  done rather than rebuilt.
+
+This closes the rework. Home is a summary, Dives and Mixes are
+destinations of their own, Settings has been rebuilt, the desktop layout
+is continuous rather than stepped, and the app diagnoses and repairs
+itself when Spotify is the problem.
+
 ## 2.8.31
 - The keyboard now closes when you submit a search. On a phone it stayed
   up over the dive screen that had just opened, covering the thing you
