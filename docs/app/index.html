@@ -421,10 +421,18 @@
   .sort-row label { font-size:13px; color:var(--muted); }
   .sort-select { font-family:'Inter',sans-serif; font-size:13px; padding:7px 10px; border-radius:var(--radius); border:1.5px solid var(--line); background:var(--field); color:var(--ink); }
 
-  .watchlist-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  /* Filled rows rather than a bordered list — the same treatment track
+     rows and settings rows got. The actions stay visible: unlike a tile,
+     these are full-width rows where acting on the entry is the point,
+     and most carry a single button that hiding would only add a tap to. */
+  .watchlist-row {
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:var(--tile); border-radius:var(--radius-tile);
+    padding:12px 14px; margin-bottom:6px;
+  }
   .watchlist-row.watchlist-done .watchlist-name { color:var(--muted-soft); text-decoration:line-through; }
-  .watchlist-name { font-weight:600; font-size:15px; display:flex; align-items:center; gap:10px; }
-  .watchlist-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .watchlist-name { font-weight:600; font-size:14.5px; display:flex; align-items:center; gap:10px; min-width:0; }
+  .watchlist-actions { display:flex; gap:8px; flex-wrap:wrap; flex-shrink:0; }
 
   .empty-note { font-size:14px; color:var(--muted); padding:10px 0 4px; font-style:italic; }
   .actions { margin-top:32px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }

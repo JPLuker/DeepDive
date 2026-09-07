@@ -61,5 +61,21 @@ for (const id of ['opt-live','opt-censored','opt-instrumental','opt-acappella','
 }
 check('and inside the intent modal', shell.indexOf('id="intent-modal"') < shell.indexOf('id="opt-live"'));
 
+// Pins and History: filled rows, matching track rows and settings rows.
+// The overflow half of that item was deliberately not applied — most of
+// these rows carry a single action, and hiding one button behind a menu
+// is more taps for nothing. They are full-width rows where acting on
+// the entry is the point, not narrow grid cells where two buttons
+// crowded out a name.
+check('list rows are filled surfaces', /\.watchlist-row \{[\s\S]{0,200}background:var\(--tile\)/.test(css));
+check('and no longer a bordered list', !/\.watchlist-row \{[^}]*border-bottom/.test(css));
+check('their actions stay visible', /\.watchlist-actions \{ display:flex/.test(css));
+
+// The gold/teal label classes stopped meaning anything when headings
+// were restyled from pills to plain type, and the rule spans are hidden
+// — both were markup implying colour-coding that no longer exists.
+check('no dead colour classes', !/class="label (gold|teal)"/.test(src));
+check('no hidden rule spans', !/class="rule"/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

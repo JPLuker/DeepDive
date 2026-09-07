@@ -370,6 +370,15 @@ once you're back online.
       a button, so this is the thing most likely to be wrong
 - [ ] On desktop, hovering a tile still reveals the actions as before
 
+## 11. Pins, history and list rows (2.8.33)
+
+- [ ] Pins & blocked, dive history and playlist cleanup show filled rows
+      rather than a bordered list
+- [ ] Their buttons are still visible — deliberately not hidden behind
+      an overflow the way tile actions were
+- [ ] Section headings on those pages still read as headings after the
+      colour classes were stripped
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

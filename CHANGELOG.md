@@ -4,6 +4,21 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.33
+- Pins, blocked artists, dive history and playlist cleanup now use
+  filled rows, matching track rows and settings rows. They were a
+  bordered list, which is the outlines-over-fills problem the rest of
+  the app moved away from.
+- Their actions stay visible rather than moving behind an overflow.
+  Unlike a tile — two buttons competing with an avatar and a name in a
+  230px grid cell — these are full-width rows where acting on the entry
+  is the whole point, and most carry a single button that hiding would
+  only add a tap to.
+- Removed the gold and teal label classes and the rule spans from every
+  heading. They stopped meaning anything when headings were restyled
+  from pills to plain type, and left markup implying colour-coding that
+  no longer exists.
+
 ## 2.8.32
 - Pin and remove now sit behind an overflow button on each tile rather
   than taking width on every row for actions used occasionally. On touch

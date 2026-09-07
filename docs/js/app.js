@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.32";
+export const BUILD = "2.8.33";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -2576,7 +2576,7 @@ function renderScrubResults(r) {
       <h1>Library scrub ${r.artists_scanned < r.artists_total ? "(cancelled)" : "complete"}</h1>
       <p class="muted">Scanned ${r.artists_scanned} of ${r.artists_total} artists · ${dups.length} duplicates found · ${news.length} new tracks</p>
       ${r.collapsed_count ? `<p class="crate-note">${r.collapsed_count} duplicate recording${r.collapsed_count === 1 ? "" : "s"} collapsed — the same track appeared on more than one release.</p>` : ""}
-      <div class="crate-header"><span class="label gold">New to you</span><span class="rule"></span></div>
+      <div class="crate-header"><span class="label">New to you</span></div>
       ${news.length ? `
         <div class="sort-row">
           <label for="new-sort">Sort by</label>
@@ -3295,7 +3295,7 @@ function renderHistory() {
       <p class="muted">What DeepDive has done, and how to take it back. Stored in this browser only.</p>
 
       ${undoable ? `
-        <div class="crate-header"><span class="label gold">Undo</span><span class="rule"></span></div>
+        <div class="crate-header"><span class="label">Undo</span></div>
         <div class="watchlist-row">
           <span class="watchlist-name">${esc(undoable.label)}</span>
           <div class="watchlist-actions">
@@ -3306,7 +3306,7 @@ function renderHistory() {
       ` : `<p class="empty-note">Nothing to undo.</p>`}
 
       ${created.length ? `
-        <div class="crate-header"><span class="label teal">Playlists created</span><span class="rule"></span></div>
+        <div class="crate-header"><span class="label">Playlists created</span></div>
         ${created.map((p) => `
           <div class="watchlist-row">
             <span class="watchlist-name">
@@ -3323,7 +3323,7 @@ function renderHistory() {
         <p class="nav-hint">Removing takes the playlist out of your Spotify library. Only playlists DeepDive created are listed — one it merely added to is yours, not ours to remove.</p>
       ` : ""}
 
-      <div class="crate-header"><span class="label teal">Dives</span><span class="rule"></span></div>
+      <div class="crate-header"><span class="label">Dives</span></div>
       ${dives.length ? dives.map((d) => `
         <div class="watchlist-row">
           <span class="watchlist-name">
@@ -3339,7 +3339,7 @@ function renderHistory() {
         </div>`).join("") : `<p class="empty-note">No dives yet.</p>`}
       ${dives.length ? `<div class="actions"><button class="btn btn-ghost btn-small" id="clear-dives">Clear dive history</button></div>` : ""}
 
-      <div class="crate-header"><span class="label gold">Your data</span><span class="rule"></span></div>
+      <div class="crate-header"><span class="label">Your data</span></div>
       <p class="nav-hint" style="margin-top:0;">Pins, blocked artists, dive history and settings. The library cache isn't included — it rebuilds itself from Spotify in one read, so carrying thousands of tracks around in a file would be a poor trade.</p>
       <div class="actions">
         <button class="btn btn-ghost btn-small" id="export-data">Export backup</button>
@@ -3440,7 +3440,7 @@ function renderWatchlist() {
       <h1>Pins &amp; blocked</h1>
       <p class="muted">Pins appear at the top of your suggestions on the home page. Blocked artists never appear at all. Both are stored in this browser only.</p>
 
-      <div class="crate-header"><span class="label gold">Pinned</span><span class="rule"></span></div>
+      <div class="crate-header"><span class="label">Pinned</span></div>
       ${pins.length ? pins.map((e) => `
         <div class="watchlist-row">
           <span class="watchlist-name">${e.image_url ? `<img src="${esc(e.image_url)}" alt="" class="pill-avatar">` : ""}${esc(e.name)}</span>
@@ -3451,7 +3451,7 @@ function renderWatchlist() {
         </div>`).join("") : `<p class="empty-note">Nothing pinned. Pin an artist from the search suggestions, or from the dropdown as you type.</p>`}
       ${pins.length ? `<div class="actions"><button class="btn btn-ghost btn-small" id="wipe-pins">Remove all pins</button></div>` : ""}
 
-      <div class="crate-header"><span class="label teal">Never suggest</span><span class="rule"></span></div>
+      <div class="crate-header"><span class="label">Never suggest</span></div>
       ${blocked.length ? blocked.map((b) => `
         <div class="watchlist-row">
           <span class="watchlist-name">${esc(b.name)}</span>

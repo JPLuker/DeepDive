@@ -91,7 +91,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.32
+## Shipped since — build 2.8.33
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -226,8 +226,13 @@ overflow button, one row open at a time.*
   sitting permanently beside every tile. They currently take width on
   every row for actions used occasionally.
 
-**Stopping point D**
-- Apply the same treatment to the Pins and History rows
+**Stopping point D** — *shipped in 2.8.33, but only half of it, and
+deliberately.* Those rows now use the filled-row vocabulary. Their
+actions were **not** moved behind an overflow: the tile problem was two
+buttons crowding an avatar and a name inside a 230px grid cell, and
+these are full-width rows where acting on the entry is the point. Most
+carry a single action, where an overflow is strictly more taps for
+nothing. Revisit only if the rows start carrying more actions.
 
 ---
 
