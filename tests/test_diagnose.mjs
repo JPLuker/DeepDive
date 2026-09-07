@@ -30,7 +30,11 @@ check('stale means recent, not forever', /STALE_LEARNING_MS = 15 \* 60 \* 1000/.
 for (const code of ['DD-OK','DD-FIXED','DD-QUOTA','DD-RATE','DD-AUTH','DD-FORBID','DD-NET','DD-UNKNOWN']) {
   check(`code ${code}`, src.includes(code));
 }
-check('quota outranks a bare 429', src.indexOf('QUOTA_EXCEEDED"') < src.indexOf('r.status === 429'));
+// Scoped to diagnose(): comparing first occurrences across the whole
+// file breaks the moment any unrelated code mentions 429 earlier,
+// which the API banner now does.
+const diagBody = src.slice(src.indexOf('async function diagnose('), src.indexOf('function diagnosisAdvice'));
+check('quota outranks a bare 429', diagBody.indexOf('QUOTA_EXCEEDED"') < diagBody.indexOf('r.status === 429'));
 check('every code has advice', /function diagnosisAdvice/.test(src));
 
 // Runs itself on failure — nobody should have to know to look in

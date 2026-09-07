@@ -140,16 +140,21 @@ export function artistsNotAddedRecently(tracks, { limit = 20, minTracks = 2 } = 
  * above, deduped, excluding anything already pinned, dismissed, or
  * shown in the listening half.
  */
-export function librarySuggestions(tracks, { exclude = new Set(), limit = 6 } = {}) {
+export function librarySuggestions(tracks, { exclude = new Set(), limit = 6, seed = 0 } = {}) {
   const picks = [];
   const seen = new Set(exclude);
 
+  // Three times what's shown, so a refresh has somewhere to go. Without
+  // a seed the top of each list is used, which keeps the row stable
+  // across renders; with one, a different handful comes from the same
+  // candidates rather than re-reading anything.
   const oneOffs = artistsWithOneTrack(tracks, { limit: limit * 3 });
   const stale = artistsNotAddedRecently(tracks, { limit: limit * 3 });
 
   // Interleave so the row isn't all one kind of prompt.
   const half = Math.ceil(limit / 2);
-  for (const list of [oneOffs.slice(0, half), stale.slice(0, limit)]) {
+  const take = (list, n) => (seed ? seededPick(list, n, seed) : list.slice(0, n));
+  for (const list of [take(oneOffs, half), take(stale, limit)]) {
     for (const a of list) {
       if (picks.length >= limit) break;
       const key = (a.name || "").trim().toLowerCase();

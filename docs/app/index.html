@@ -578,6 +578,32 @@
   .action-result-actions { display:flex; gap:8px; margin-top:20px; }
   .action-result-actions .btn { flex:1; justify-content:center; }
 
+  /* Raised when the suggestion row fails, because that row touches
+     Spotify on every load and is the first thing to go quiet. Without
+     it the row simply came back short and nothing said why. */
+  .api-banner {
+    margin:0 0 18px; padding:14px 16px;
+    border:1px solid var(--danger); border-radius:var(--radius);
+    background:color-mix(in srgb, var(--danger) 12%, transparent);
+  }
+  .api-banner-head { font-weight:700; font-size:14.5px; letter-spacing:-0.01em; }
+  .api-banner-detail { margin:6px 0 0; font-size:13px; color:var(--muted); line-height:1.5; }
+  .api-banner-actions { display:flex; align-items:center; gap:12px; margin-top:12px; }
+  .api-banner-code {
+    font-family:'IBM Plex Mono',monospace; font-size:11px;
+    letter-spacing:0.08em; color:var(--muted-soft); user-select:all;
+  }
+
+  /* Small icon buttons in a row heading — refresh, random. */
+  .row-icon {
+    background:none; border:none; cursor:pointer; padding:4px;
+    color:var(--muted-soft); display:flex; align-items:center; border-radius:8px;
+  }
+  .row-icon:hover { color:var(--ink); background:var(--tile); }
+  .row-icon svg { width:16px; height:16px; }
+  .row-head .row-icon:first-of-type { margin-left:auto; }
+  .row-head .row-more { margin-left:8px; }
+
   .diag-verdict { margin-top:14px; padding:14px 16px; border-radius:var(--radius); border:1px solid var(--line); }
   .diag-verdict.is-good { border-color:var(--teal); background:var(--teal-soft); }
   .diag-verdict.is-bad { border-color:var(--gold); background:var(--gold-soft); }

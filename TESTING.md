@@ -340,6 +340,25 @@ No quota needed.
       import, save Client ID
 - [ ] Advanced still collapsed by default
 
+## 9. Friction batch and API banner (2.8.31)
+
+- [ ] Search an artist on a phone — the keyboard should close as the
+      dive opens rather than sitting over it
+- [ ] Same when picking a name from the autofill list
+- [ ] The refresh icon in the Suggested heading gives a different set of
+      artists, and does so instantly — it costs no requests
+- [ ] The dice icon starts a dive on one of the artists shown
+- [ ] With no artists to pick from it says so rather than doing nothing
+
+**The banner** is hard to trigger deliberately. To force it: turn off
+wifi, load Home, and the suggestion row should fail into a red banner
+naming the problem with a code. "Check connection" should then clear it
+once you're back online.
+
+- [ ] Banner appears with an explanation and a code
+- [ ] "Check connection" clears it when things work again
+- [ ] It doesn't linger once a normal load succeeds
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

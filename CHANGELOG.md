@@ -4,6 +4,22 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.31
+- The keyboard now closes when you submit a search. On a phone it stayed
+  up over the dive screen that had just opened, covering the thing you
+  searched for.
+- Added a refresh control to the suggestion row. It draws a different
+  handful from a pool three times the size of the row, so it costs no
+  requests — the candidates were already gathered and thrown away.
+- Added a random dive: picks from the artists on screen, so it can't
+  offer something already blocked or filtered out.
+- Added an API trouble banner. The suggestion row touches Spotify on
+  every load and is the first thing to go quiet, so when it fails the
+  page now says what happened — with an error code, and a button that
+  runs the real diagnosis and clears the banner if things have
+  recovered. Previously the row just came back short and nothing
+  anywhere explained why.
+
 ## 2.8.30
 - The desktop layout is continuous rather than stepped. The measure was
   fixed at 880px, then 1080px above 1280px wide, and tile columns

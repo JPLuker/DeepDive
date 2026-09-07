@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.30";
+export const BUILD = "2.8.31";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -355,11 +355,13 @@ async function renderHome() {
   setActiveTab("home");
   root.innerHTML = `
     ${rateLimitBanner()}
+    <div id="api-banner">${apiBannerHtml()}</div>
     ${searchShellHtml()}
     <div id="suggestions-row"></div>
     <div id="home-mixes"></div>`;
 
   wireSearchBar();
+  wireApiBanner();
   loadSuggestions({ compact: true });
   // One row of cards, whatever a row holds at this width — the sampler
   // card takes the first slot.
@@ -376,6 +378,7 @@ async function renderDives() {
   setActiveTab("dives");
   root.innerHTML = `
     ${rateLimitBanner()}
+    <div id="api-banner">${apiBannerHtml()}</div>
     ${searchShellHtml()}
     <div id="suggestions-row"></div>
     <div class="set-group set-group-spaced">
@@ -385,6 +388,7 @@ async function renderDives() {
     </div>`;
 
   wireSearchBar();
+  wireApiBanner();
   loadSuggestions({ showAllPins: true });
   document.getElementById("go-scrub")?.addEventListener("click", () => renderScrubForm());
   document.getElementById("go-history")?.addEventListener("click", () => renderHistory());
@@ -1203,14 +1207,22 @@ function wireSearchBar() {
     openIntentModal(n || null, { force: true });
   });
 
-  const go = () => { const n = input.value.trim(); if (n) startSearch(n); };
+  // Dismiss the keyboard on submit. On a phone it otherwise stays up
+  // over the dive screen that just opened, covering the thing the
+  // search was for.
+  const go = () => {
+    const n = input.value.trim();
+    if (!n) return;
+    input.blur();
+    startSearch(n);
+  };
   goBtn.addEventListener("click", go);
   input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !list.classList.contains("open")) go(); });
 
   // autofill
   let timer = null, items = [], active = -1;
   const close = () => { list.classList.remove("open"); list.innerHTML = ""; items = []; active = -1; };
-  const choose = (it) => { input.value = it.name; close(); startSearch(it.name); };
+  const choose = (it) => { input.value = it.name; close(); input.blur(); startSearch(it.name); };
   input.addEventListener("input", () => {
     const q = input.value.trim();
     clearTimeout(timer);
@@ -1358,7 +1370,7 @@ async function buildSuggestionRow(el) {
       new Promise((resolve) => setTimeout(() => resolve([]), 2500)),
     ]);
     if (cached && cached.length) {
-      libraryPicks = insights.librarySuggestions(cached, { exclude, limit: 6 });
+      libraryPicks = insights.librarySuggestions(cached, { exclude, limit: 6, seed: _suggestSeed });
       // Artwork for anything already in the library, free of charge.
       cachedArt = insights.artworkFromCache(cached);
       _cachedArt = cachedArt;
@@ -1392,8 +1404,16 @@ async function buildSuggestionRow(el) {
       return !exclude.has(k) && !libraryPicks.some((l) => l.id === s2.id);
     });
     listeningPicks = insights.seededPick(listeningPicks, 6, seed);
-  } catch (e) { listeningFailed = true; /* library half still works */ }
+  } catch (e) {
+    listeningFailed = true; // library half still works
+    // The suggestion row is the app's canary: it touches Spotify on
+    // every load and is the first thing to go quiet when something is
+    // wrong. Rather than leaving a silently short row, raise a banner
+    // that says which problem it is.
+    raiseApiBanner(e);
+  }
 
+  if (!listeningFailed) clearApiBanner();
   const suggestions = [...listeningPicks, ...libraryPicks];
 
   // Borrow cached artwork before considering any network request. Most
@@ -1482,6 +1502,9 @@ function addPinToRow(name) {
 // would fire API calls again and visibly flash the row.
 let _row = null;
 let _suggestOpts = { compact: false, showAllPins: false };
+// Bumped by the refresh control so a re-draw picks a different set from
+// the same pool rather than returning the same faces.
+let _suggestSeed = 0;
 
 function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state = {}) {
   _row = { el, pins, suggestions, showAllPins, state };
@@ -1527,7 +1550,14 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     ${extraPins > 0 ? `<div style="text-align:center;margin-top:10px;"><button class="btn btn-ghost btn-small" id="show-more-pins">Show ${extraPins} more</button></div>` : ""}` : "";
 
   const suggHtml = suggestions.length ? `
-    <div class="row-head"><h2>Suggested</h2><span class="qual">for you</span>${compact ? `<button class="row-more" data-tab="dives">All dives</button>` : ""}</div>
+    <div class="row-head"><h2>Suggested</h2><span class="qual">for you</span>
+      <button class="row-icon" id="sugg-refresh" title="Show a different set" aria-label="Refresh suggestions">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+      </button>
+      <button class="row-icon" id="sugg-random" title="Dive one of these at random" aria-label="Random dive">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.4" fill="currentColor"/></svg>
+      </button>
+      ${compact ? `<button class="row-more" data-tab="dives">All dives</button>` : ""}</div>
     <div class="tile-grid">
       ${suggestions.map((sg) => tile(sg.name, sg.image_url, sg.reason,
         `<button class="tile-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" data-img-big="${esc(sg.image_url_large || "")}" title="Pin for later">+</button>
@@ -1625,6 +1655,22 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     _row.pins = _row.pins.filter((p) => p.id !== b.dataset.unpin);
     dropPill(b);
   }));
+
+  // Suggestions are drawn from a much larger pool than the row shows,
+  // so a refresh is a re-draw rather than a fetch — no requests spent.
+  document.getElementById("sugg-refresh")?.addEventListener("click", () => {
+    _suggestSeed = (Date.now() >>> 0) ^ Math.floor(Math.random() * 0xffffffff);
+    loadSuggestions(_suggestOpts);
+  });
+
+  // Picks from what's on screen, so it can't offer an artist the row
+  // has already ruled out as blocked or already-dived.
+  document.getElementById("sugg-random")?.addEventListener("click", () => {
+    const pool = suggestions.concat(pins);
+    if (!pool.length) return flash("Nothing to pick from yet.");
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    startSearch(pick.name);
+  });
 
   el.querySelectorAll("[data-block]").forEach((b) => b.addEventListener("click", (ev) => {
     ev.stopPropagation();
@@ -2647,6 +2693,65 @@ function rateLimitBanner() {
     fault in DeepDive.
     <button class="btn btn-ghost btn-small" id="rl-recheck" style="margin-top:10px;">Check again</button>
   </div>`;
+}
+
+// ---- api trouble banner ----
+//
+// Joseph's note: the end user has no idea why things aren't loading.
+// The suggestion row is the natural benchmark — it makes requests on
+// every load — so when it fails, say so at the top of the page rather
+// than quietly showing fewer artists.
+let _apiBanner = null;
+
+function raiseApiBanner(err) {
+  const info = explainError(err);
+  _apiBanner = {
+    headline: info.headline,
+    detail: info.detail,
+    code: err && err.quotaExhausted ? "DD-QUOTA"
+      : (err && err.status === 429) ? "DD-RATE"
+      : (err && err.status === 401) ? "DD-AUTH"
+      : (err && err.status === 0) ? "DD-NET" : null,
+  };
+  const slot = document.getElementById("api-banner");
+  if (slot) slot.innerHTML = apiBannerHtml();
+}
+
+function clearApiBanner() {
+  _apiBanner = null;
+  const slot = document.getElementById("api-banner");
+  if (slot) slot.innerHTML = "";
+}
+
+function apiBannerHtml() {
+  if (!_apiBanner) return "";
+  return `
+    <div class="api-banner">
+      <div class="api-banner-head">${esc(_apiBanner.headline)}</div>
+      <p class="api-banner-detail">${esc(_apiBanner.detail)}</p>
+      <div class="api-banner-actions">
+        <button class="btn btn-ghost btn-small" id="api-banner-check">Check connection</button>
+        ${_apiBanner.code ? `<span class="api-banner-code">${esc(_apiBanner.code)}</span>` : ""}
+      </div>
+    </div>`;
+}
+
+/** Wired after each render, since the banner is redrawn with the page. */
+function wireApiBanner() {
+  document.getElementById("api-banner-check")?.addEventListener("click", async (ev) => {
+    const btn = ev.currentTarget;
+    btn.disabled = true;
+    btn.textContent = "Checking…";
+    const d = await diagnose();
+    const slot = document.getElementById("api-banner");
+    if (!slot) return;
+    if (d.code === "DD-OK" || d.code === "DD-FIXED") {
+      clearApiBanner();
+      flash(d.repaired ? "Fixed — try that again." : "Spotify is responding again.");
+      return;
+    }
+    slot.innerHTML = renderDiagnosisBlock(d);
+  });
 }
 
 // ---- self-diagnosis ----

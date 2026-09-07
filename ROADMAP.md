@@ -84,7 +84,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.30
+## Shipped since — build 2.8.31
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -220,18 +220,21 @@ settings into the artist popup.*
 
 ---
 
-**Stopping point E — quota is invisible to the user** *(from Joseph's
-notes)*
+**Stopping point E — quota is invisible to the user** — *shipped in
+2.8.31. The suggestion row raises a banner when it fails, with an error
+code and a re-check that runs the real diagnosis.*
+
+**Original note:**
 - The end user has no idea why things aren't loading. A red banner at
   the top of Home explaining the situation.
 - The suggestion row is the natural benchmark: if it times out, the API
   is unavailable, so raise the banner from that rather than adding a
   separate probe.
 
-**Stopping point F — small friction** *(from Joseph's notes)*
-- Close the keyboard when an artist search is submitted
-- Refresh button on the suggestion row
-- Random dip / random dive
+**Stopping point F — small friction** — *shipped in 2.8.31: keyboard
+closes on submit, refresh control on the suggestion row, random dive.
+Random **dip** waits on dips existing, which is blocked on a definition
+of "popular".*
 
 ---
 
