@@ -4,6 +4,22 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.37
+- Blocking is now per feature. It was one list applied to dive
+  suggestions and the sampler pool but to no other mix — so a blocked
+  artist was barred from one kind of mix and left in all the rest, which
+  was an accident of where the filter happened to be written rather than
+  a decision.
+- Blocking from an artist tile means dives. Mixes are blocked separately
+  from Pins & blocked, where each blocked artist now has a Dives and a
+  Mixes checkbox. Turning both off removes the block entirely.
+- Mix cards honour the mix block, which they never did before — it's
+  applied to the source rather than taught to fifteen card builders.
+- Pinned artists can be blocked as well as unpinned. Their tiles only
+  offered unpin.
+- Existing blocks are read as blocking both, since that is what they
+  meant when they were written.
+
 ## 2.8.36
 - Fixed: revealing a tile's actions worked, but the overflow control
   stayed put on top of them. It is absolutely positioned over the right

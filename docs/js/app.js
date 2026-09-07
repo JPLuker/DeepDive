@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.36";
+export const BUILD = "2.8.37";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -443,7 +443,9 @@ async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml 
     // there. Same cached read, no extra cost.
     if (!_samplerPool.length) {
       try {
-        _samplerPool = insights.artistsBarelyExplored(cached, { maxTracks: 3, limit: 500 });
+        const mixBlocked = watchlist.blockedNameSet("mixes");
+        _samplerPool = insights.artistsBarelyExplored(cached, { maxTracks: 3, limit: 500 })
+          .filter((a) => !mixBlocked.has((a.name || "").trim().toLowerCase()));
       } catch (poolErr) { /* the other cards are still worth showing */ }
     }
     // A fresh seed each load, so a refresh brings different ideas. The
@@ -451,7 +453,17 @@ async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml 
     // should be able to come back to one you spotted — but playlists are
     // a browsing surface where repetition is the bigger risk.
     const seed = (Date.now() >>> 0) ^ Math.floor(Math.random() * 0xffffffff);
-    _allCards = insights.playlistCards(cached, { seed });
+    // Mix blocks apply to the cards too. They never did — the filter
+    // only existed on the suggestion row and the sampler pool, so a
+    // blocked artist was barred from one kind of mix and left in all
+    // the rest. Filtering the source is simpler than teaching fifteen
+    // card builders about it.
+    const mixBlocked = watchlist.blockedNameSet("mixes");
+    const forMixes = mixBlocked.size
+      ? cached.filter((t) => !(t.artists || []).some(
+          (a) => mixBlocked.has((a.name || "").trim().toLowerCase())))
+      : cached;
+    _allCards = insights.playlistCards(forMixes, { seed });
     if (!_allCards.length) { el.innerHTML = ""; return; }
     _cards = insights.seededPick(_allCards, CARDS_PER_LOAD, seed);
 
@@ -1320,7 +1332,7 @@ async function buildSuggestionRow(el) {
   // Two halves. The listening half needs API calls; the library half is
   // computed from the cache and costs nothing — so if Spotify is slow,
   // rate-limited, or the token is stale, the row still populates.
-  const blocked = watchlist.blockedNameSet();
+  const blocked = watchlist.blockedNameSet("dives");
   const pins = watchlist.pinned();
   const pinNames = new Set(pins.map((e) => (e.name || "").trim().toLowerCase()));
   const doneNames = new Set(watchlist.listDone().map((e) => (e.name || "").trim().toLowerCase()));
@@ -1377,9 +1389,14 @@ async function buildSuggestionRow(el) {
       // Sampler candidates come from the same read — no extra cost.
       // Keep the full pool rather than a trimmed twelve, so each run can
       // draw a different handful from it.
+      // The sampler is a mix, so it honours the mix block rather than
+      // the dive one. It used to filter on the dive block — so blocking
+      // an artist from suggestions silently barred them from samplers
+      // while leaving them in every other mix.
+      const mixBlocked = watchlist.blockedNameSet("mixes");
       _samplerPool = insights.artistsBarelyExplored(cached, {
         maxTracks: 3, limit: 500,
-      }).filter((a) => !blocked.has((a.name || "").trim().toLowerCase()));
+      }).filter((a) => !mixBlocked.has((a.name || "").trim().toLowerCase()));
     }
   } catch (e) { /* cache unavailable — listening half still works */ }
 
@@ -1549,7 +1566,8 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     <div class="row-head"><h2>Pinned</h2></div>
     <div class="tile-grid">
       ${shownPins.map((p) => tile(p.name, p.image_url, null,
-        `<button class="tile-btn danger" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`, true)).join("")}
+        `<button class="tile-btn" data-block="${esc(p.name)}" data-sid="${esc(p.spotify_id || "")}" title="Never suggest this artist">&minus;</button>
+         <button class="tile-btn danger" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`, true)).join("")}
     </div>
     ${extraPins > 0 ? `<div style="text-align:center;margin-top:10px;"><button class="btn btn-ghost btn-small" id="show-more-pins">Show ${extraPins} more</button></div>` : ""}` : "";
 
@@ -1679,8 +1697,12 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   el.querySelectorAll("[data-block]").forEach((b) => b.addEventListener("click", (ev) => {
     ev.stopPropagation();
     const name = b.dataset.block;
-    watchlist.block(name, b.dataset.sid || null);
-    flash(`${name} won't be suggested again.`);
+    // From a tile, the block means dives — that's the context you're in.
+    // Mixes are blocked separately from Pins & blocked, because not
+    // wanting to explore an artist isn't the same as not wanting to
+    // hear tracks you already liked.
+    watchlist.block(name, b.dataset.sid || null, ["dives"]);
+    flash(`${name} won't be suggested for dives.`);
     const key = name.trim().toLowerCase();
     _row.suggestions = _row.suggestions.filter((x) => (x.name || "").trim().toLowerCase() !== key);
     dropPill(b);
@@ -3467,14 +3489,19 @@ function renderWatchlist() {
         </div>`).join("") : `<p class="empty-note">Nothing pinned. Pin an artist from the search suggestions, or from the dropdown as you type.</p>`}
       ${pins.length ? `<div class="actions"><button class="btn btn-ghost btn-small" id="wipe-pins">Remove all pins</button></div>` : ""}
 
-      <div class="crate-header"><span class="label">Never suggest</span></div>
-      ${blocked.length ? blocked.map((b) => `
+      <div class="crate-header"><span class="label">Blocked</span></div>
+      <p class="nav-hint" style="margin-top:0;">Blocking is per feature. Not wanting to dive an artist isn't the same as not wanting them in a mix built from tracks you already liked.</p>
+      ${blocked.length ? blocked.map((b) => {
+        const sc = watchlist.blockScopes(b.name);
+        return `
         <div class="watchlist-row">
           <span class="watchlist-name">${esc(b.name)}</span>
           <div class="watchlist-actions">
+            <label class="block-scope"><input type="checkbox" data-scope="dives" data-nm="${esc(b.name)}"${sc.includes("dives") ? " checked" : ""}> Dives</label>
+            <label class="block-scope"><input type="checkbox" data-scope="mixes" data-nm="${esc(b.name)}"${sc.includes("mixes") ? " checked" : ""}> Mixes</label>
             <button class="btn btn-ghost btn-small" data-unblock="${esc(b.name)}">Allow again</button>
           </div>
-        </div>`).join("") : `<p class="empty-note">Nothing blocked. Use the &minus; button on any suggestion to stop it appearing.</p>`}
+        </div>`; }).join("") : `<p class="empty-note">Nothing blocked. Use the &minus; button on any artist tile to stop suggesting them.</p>`}
 
       <div class="actions"><button class="btn btn-ghost" data-home>Back to search</button></div>
     </div>`;
@@ -3485,6 +3512,14 @@ function renderWatchlist() {
         watchlist.unpin(b.dataset.wlRemove);
     renderWatchlist();
   }));
+  // Each scope is independent: turning both off removes the entry
+  // entirely, so there's no such thing as a block that blocks nothing.
+  root.querySelectorAll("[data-scope]").forEach((c) => c.addEventListener("change", () => {
+    watchlist.setBlockScope(c.dataset.nm, c.dataset.scope, c.checked);
+    const left = watchlist.blockScopes(c.dataset.nm);
+    if (!left.length) { flash(`${c.dataset.nm} is no longer blocked.`); renderWatchlist(); }
+  }));
+
   root.querySelectorAll("[data-unblock]").forEach((b) => b.addEventListener("click", () => {
     watchlist.unblock(b.dataset.unblock);
     renderWatchlist();

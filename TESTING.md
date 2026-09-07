@@ -386,6 +386,19 @@ once you're back online.
 - [ ] Section headings on those pages still read as headings after the
       colour classes were stripped
 
+## 12. Per-feature blocking (2.8.37)
+
+- [ ] A pinned artist's "⋯" now offers block as well as unpin
+- [ ] Blocking from a tile says "won't be suggested for dives"
+- [ ] Pins & blocked shows Dives and Mixes checkboxes per blocked artist
+- [ ] Unticking both removes the artist from the list entirely
+- [ ] An artist blocked for **dives only** still appears in mixes and
+      samplers — that's the point of the split
+- [ ] An artist blocked for **mixes** stops appearing in mix cards and
+      samplers but can still be suggested for a dive
+- [ ] Anyone blocked before this build stays blocked for both, since
+      that's what it meant at the time
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

@@ -130,13 +130,58 @@ export function listBlocked() {
   return loadBlocked();
 }
 
-export function block(name, spotifyId = null) {
+// Blocking is per feature. "Don't suggest them for a dive" and "keep
+// them out of my mixes" are different wishes: a mix is built from
+// tracks already liked, so not wanting to *explore* an artist says
+// nothing about not wanting to *hear* them.
+export const BLOCK_SCOPES = ["dives", "mixes"];
+
+function normalizeScopes(entry) {
+  // Entries written before scopes existed blocked suggestions and the
+  // sampler, so both is what they meant. Read them that way rather than
+  // quietly narrowing something already set.
+  if (!entry || !Array.isArray(entry.scopes)) return BLOCK_SCOPES.slice();
+  return entry.scopes.filter((sc) => BLOCK_SCOPES.includes(sc));
+}
+
+export function block(name, spotifyId = null, scopes = BLOCK_SCOPES) {
   name = (name || "").trim();
   if (!name) return;
   const list = loadBlocked();
-  if (list.some((b) => (b.name || "").trim().toLowerCase() === name.toLowerCase())) return;
-  list.push({ name, spotify_id: spotifyId, at: new Date().toISOString() });
+  const found = list.find((b) => (b.name || "").trim().toLowerCase() === name.toLowerCase());
+  if (found) {
+    // Blocking again widens rather than replaces — blocking from mixes
+    // shouldn't quietly unblock dives.
+    found.scopes = Array.from(new Set([...normalizeScopes(found), ...scopes]));
+  } else {
+    list.push({
+      name, spotify_id: spotifyId, at: new Date().toISOString(),
+      scopes: Array.from(new Set(scopes)),
+    });
+  }
   localStorage.setItem(BLOCK_KEY, JSON.stringify(list));
+}
+
+/** Turn one scope off, dropping the entry when nothing is left. */
+export function setBlockScope(name, scope, on) {
+  const target = (name || "").trim().toLowerCase();
+  const list = loadBlocked();
+  const entry = list.find((b) => (b.name || "").trim().toLowerCase() === target);
+  if (!entry) {
+    if (on) block(name, null, [scope]);
+    return;
+  }
+  const scopes = new Set(normalizeScopes(entry));
+  if (on) scopes.add(scope); else scopes.delete(scope);
+  entry.scopes = Array.from(scopes);
+  const next = entry.scopes.length ? list : list.filter((b) => b !== entry);
+  localStorage.setItem(BLOCK_KEY, JSON.stringify(next));
+}
+
+export function blockScopes(name) {
+  const target = (name || "").trim().toLowerCase();
+  const entry = loadBlocked().find((b) => (b.name || "").trim().toLowerCase() === target);
+  return entry ? normalizeScopes(entry) : [];
 }
 
 export function unblock(name) {
@@ -147,9 +192,21 @@ export function unblock(name) {
   );
 }
 
-/** Fast lookup set of blocked names, lowercased. */
-export function blockedNameSet() {
-  return new Set(loadBlocked().map((b) => (b.name || "").trim().toLowerCase()));
+/**
+ * Blocked names for one feature, lowercased.
+ *
+ * Callers must say which feature they are filtering. The old
+ * scope-less version was applied to dive suggestions and the sampler
+ * but not the other mixes, so a blocked artist was barred from one kind
+ * of mix and not the rest — which was an accident of where the filter
+ * happened to be written, not a decision.
+ */
+export function blockedNameSet(scope = "dives") {
+  return new Set(
+    loadBlocked()
+      .filter((b) => normalizeScopes(b).includes(scope))
+      .map((b) => (b.name || "").trim().toLowerCase())
+  );
 }
 
 // ---------------------------------------------------------------------
