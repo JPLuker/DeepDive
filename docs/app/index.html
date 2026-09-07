@@ -345,20 +345,22 @@
      and still clickable — so the invisible buttons sat exactly where
      the overflow control is and swallowed every tap, and the width was
      never actually reclaimed. */
-  .tile-actions {
-    display:flex; gap:4px; padding-right:8px;
-    opacity:0; pointer-events:none; transition:opacity .15s ease;
-  }
+  /* Out of the layout until revealed, at every width. opacity alone
+     left them clickable on top of the overflow control and never gave
+     back the width they were hidden to reclaim. */
+  .tile-actions { display:none; gap:4px; padding-right:8px; }
   .tile-more {
     position:absolute; right:6px; top:50%; transform:translateY(-50%);
     background:none; border:none; cursor:pointer; padding:6px;
-    color:var(--muted-soft); display:none; border-radius:8px; z-index:1;
+    color:var(--muted-soft); display:block; border-radius:8px; z-index:2;
   }
   .tile-more:hover { color:var(--ink); background:var(--tile-hover); }
   .tile-more svg { width:16px; height:16px; display:block; }
   .tile-wrap.show-actions .tile-more { color:var(--ink); }
-  .tile-wrap.show-actions .tile-actions { opacity:1; pointer-events:auto; }
-  .tile:hover .tile-actions, .tile-wrap:focus-within .tile-actions { opacity:1; pointer-events:auto; }
+  .tile-wrap.show-actions .tile-actions { display:flex; }
+  /* No hover reveal. It was a second behaviour that only existed above
+     the mobile breakpoint, where the overflow was hidden — so which one
+     you got depended on window width, and only one of them worked. */
   .tile-wrap { position:relative; display:flex; }
   .tile-wrap .tile { flex:1; }
   .tile-btn {
@@ -927,9 +929,6 @@
     .tile-grid { grid-template-columns:1fr; }
     /* No hover on touch, so the overflow button is how these are
        reached — showing them always is what took the width. */
-    .tile-actions { display:none; }
-    .tile-wrap.show-actions .tile-actions { display:flex; opacity:1; pointer-events:auto; }
-    .tile-more { display:block; }
     .tile-wrap.show-actions .tile { padding-right:0; }
     .card-row { grid-template-columns:repeat(2,1fr); gap:8px; }
     .pcard { min-height:92px; padding:12px; }

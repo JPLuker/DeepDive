@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.34";
+export const BUILD = "2.8.35";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1676,31 +1676,6 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     startSearch(pick.name);
   });
 
-  // Pin and remove sit behind an overflow rather than taking width on
-  // every row for something used occasionally. One open at a time —
-  // two rows of revealed buttons is the clutter this was meant to fix.
-  el.querySelectorAll("[data-more]").forEach((b) => b.addEventListener("click", (ev) => {
-    ev.stopPropagation();
-    const wrap = b.closest(".tile-wrap");
-    const open = wrap.classList.contains("show-actions");
-    el.querySelectorAll(".tile-wrap.show-actions").forEach((w) => {
-      w.classList.remove("show-actions");
-      w.querySelector("[data-more]")?.setAttribute("aria-expanded", "false");
-    });
-    if (!open) {
-      wrap.classList.add("show-actions");
-      b.setAttribute("aria-expanded", "true");
-    }
-  }));
-
-  // Anywhere else closes it, so a revealed row can't be left behind.
-  document.addEventListener("click", () => {
-    el.querySelectorAll(".tile-wrap.show-actions").forEach((w) => {
-      w.classList.remove("show-actions");
-      w.querySelector("[data-more]")?.setAttribute("aria-expanded", "false");
-    });
-  });
-
   el.querySelectorAll("[data-block]").forEach((b) => b.addEventListener("click", (ev) => {
     ev.stopPropagation();
     const name = b.dataset.block;
@@ -2723,6 +2698,47 @@ function rateLimitBanner() {
     <button class="btn btn-ghost btn-small" id="rl-recheck" style="margin-top:10px;">Check again</button>
   </div>`;
 }
+
+// ---- tile overflow ----
+//
+// Delegated from the app root once, rather than bound to each button
+// after every render. Pinning an artist repaints the pins alone, and
+// per-element listeners meant those fresh tiles came back with nothing
+// attached — the button was there and did nothing.
+//
+// The same control is used at every width now. It was hidden above the
+// mobile breakpoint, so on a desktop it was invisible and unclickable
+// while the hover reveal did the work instead; two behaviours, one of
+// which was broken, and no way to tell which you were looking at.
+(function initTileOverflow() {
+  const closeAll = (except) => {
+    document.querySelectorAll(".tile-wrap.show-actions").forEach((w) => {
+      if (w === except) return;
+      w.classList.remove("show-actions");
+      w.querySelector("[data-more]")?.setAttribute("aria-expanded", "false");
+    });
+  };
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-more]");
+    if (!btn) {
+      // A click anywhere else closes an open row, but not one landing on
+      // the revealed buttons themselves — that would swallow the action.
+      if (!e.target.closest(".tile-actions")) closeAll(null);
+      return;
+    }
+    // The tile behind this is also a button; without stopping here the
+    // overflow would start a dive.
+    e.preventDefault();
+    e.stopPropagation();
+    const wrap = btn.closest(".tile-wrap");
+    if (!wrap) return;
+    const open = wrap.classList.contains("show-actions");
+    closeAll(wrap);
+    wrap.classList.toggle("show-actions", !open);
+    btn.setAttribute("aria-expanded", String(!open));
+  });
+})();
 
 // ---- api trouble banner ----
 //

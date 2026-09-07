@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.8.34.** If the build in `js/app.js` is well
+**Last updated at build 2.8.35.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -190,6 +190,14 @@ whether stale state is covering for it.*
 that catches a handler still bound to markup that was deleted. It has
 caught two real bugs in a day. A slightly more verbose call site is
 worth keeping it able to see.
+
+**Bind interaction handlers by delegation, not per render.** Several
+screens repaint a section on its own — pinning an artist repaints the
+pins — and anything bound with `querySelectorAll(...).forEach(addEvent
+Listener)` after a full render comes back dead on those fresh nodes.
+The tile overflow failed exactly this way and was patched twice before
+the cause was found. Delegate from a stable parent once, as `initTabs`
+already does.
 
 **`opacity:0` is not hidden.** It leaves an element in the layout and
 still clickable. Tile actions hidden that way sat on top of the

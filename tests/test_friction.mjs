@@ -40,21 +40,33 @@ check('a successful load clears it too', /if \(!listeningFailed\) clearApiBanner
 check('banner appears on both suggestion pages', (src.match(/<div id="api-banner">/g) || []).length === 2);
 check('banner is styled as a problem', /\.api-banner \{[\s\S]{0,200}border:1px solid var\(--danger\)/.test(css));
 
-// Pin and remove are occasional actions that held width on every row —
-// permanently on touch, where there is no hover to hide behind.
+// Pin and remove sit behind an overflow control. This was rewritten
+// twice before it worked, and both failures were structural:
+//
+//   - `opacity:0` left the hidden buttons in the layout and clickable,
+//     directly on top of the control meant to reveal them
+//   - the control was only visible below the mobile breakpoint, with a
+//     hover reveal above it, so which behaviour you got depended on
+//     window width and only one of them worked
+//   - handlers were bound per render, so pinning an artist repainted
+//     the pins and returned tiles with nothing attached
+//
+// One control, one behaviour, delegated once from the document.
 check('overflow control exists', /class="tile-more" data-more/.test(src));
-check('actions hidden until revealed', /\.tile-wrap\.show-actions \.tile-actions \{ opacity:1; pointer-events:auto; \}/.test(css));
-// opacity alone left them clickable and still occupying width, so
-// the invisible buttons intercepted every tap meant for the
-// overflow and the space was never given back.
-check('hidden actions cannot be clicked', /\.tile-actions \{[\s\S]{0,140}pointer-events:none/.test(css));
-check('touch no longer shows them always', !/\.tile-actions \{ opacity:1; \}   \/\* no hover on touch \*\//.test(css));
-check('overflow is the way in on touch', /\.tile-more \{ display:block; \}/.test(css));
-check('one row open at a time', /el\.querySelectorAll\("\.tile-wrap\.show-actions"\)/.test(src));
-check('clicking elsewhere closes it', /document\.addEventListener\("click", \(\) => \{[\s\S]{0,180}show-actions/.test(src));
+check('visible at every width', /\.tile-more \{[\s\S]{0,200}display:block/.test(css));
+check('no hover reveal left', !/\.tile:hover \.tile-actions/.test(css));
+check('actions are out of the layout until revealed', /\.tile-actions \{ display:none;/.test(css));
+check('and return when revealed', /\.tile-wrap\.show-actions \.tile-actions \{ display:flex; \}/.test(css));
+check('handler is delegated, not per-render', /function initTileOverflow/.test(src));
+check('bound to the document once', /document\.addEventListener\("click", \(e\) => \{\s*\n\s*const btn = e\.target\.closest\("\[data-more\]"\)/.test(src));
+check('no per-element binding remains', !/querySelectorAll\("\[data-more\]"\)/.test(src));
+check('one row open at a time', /closeAll\(wrap\);/.test(src));
+check('clicking elsewhere closes it', /if \(!e\.target\.closest\("\.tile-actions"\)\) closeAll\(null\);/.test(src));
+// The tile behind the control is also a button.
+check('toggle does not start a dive', /e\.preventDefault\(\);\s*\n\s*e\.stopPropagation\(\);/.test(src));
+// A click on the revealed buttons must not be eaten by the closer.
+check('revealed actions stay clickable', /e\.target\.closest\("\.tile-actions"\)/.test(src));
 check('state is announced', /aria-expanded/.test(src));
-// The toggle must not also trigger the tile's own search.
-check('toggle does not start a dive', /ev\.stopPropagation\(\);\s*\n\s*const wrap = b\.closest\("\.tile-wrap"\)/.test(src));
 
 // Run settings already live in the artist popup — the intent modal has
 // held all seven since it was built, so that item needed marking done

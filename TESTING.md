@@ -371,7 +371,11 @@ once you're back online.
 - [ ] Tapping "⋯" actually responds. In 2.8.32 it didn't: the hidden
       buttons were still in the layout on top of it, eating the tap
 - [ ] With the actions hidden, the tile name has the full row width
-- [ ] On desktop, hovering a tile still reveals the actions as before
+- [ ] **Pin someone, then immediately unpin them** — this is the case
+      that was broken: pinning repaints the pins, and the fresh tile
+      used to come back with a dead button
+- [ ] The overflow works the same on desktop as on a phone; there is no
+      hover reveal any more
 
 ## 11. Pins, history and list rows (2.8.33)
 

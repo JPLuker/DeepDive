@@ -4,6 +4,19 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.35
+- Reworked the tile overflow rather than patching it a third time. Two
+  structural faults remained, either of which killed the button on its
+  own:
+  - It was only visible below the mobile breakpoint, with a hover reveal
+    above it. So the behaviour depended on window width, and the half
+    that was broken was the half most people saw.
+  - Handlers were bound per render. Pinning an artist repaints the pins
+    alone, and those fresh tiles came back with nothing attached — which
+    is exactly the case that failed.
+- One control at every width, no hover reveal, and the click handler is
+  delegated once from the document so no repaint can orphan it.
+
 ## 2.8.34
 - Fixed: the "…" button on tiles did nothing. The pin and remove buttons
   were hidden with `opacity:0`, which hides them visually while leaving

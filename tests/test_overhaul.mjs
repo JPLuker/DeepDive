@@ -24,7 +24,10 @@ check('artwork is 56px and flush', /\.tile-art \{ width:56px; height:56px/.test(
 check('fallback art is a gradient initial', /\.tile-art-fallback/.test(html) && /tile-art-fallback/.test(src));
 check('tiles used for suggestions', /class="tile-grid"/.test(src));
 check('pins marked by an edge, not an outline', /\.tile-wrap\.is-pin \.tile \{ box-shadow:inset 3px 0 0 var\(--accent\)/.test(html));
-check('actions revealed on hover', /\.tile:hover \.tile-actions/.test(html));
+// Superseded in 2.8.35: the hover reveal only existed above the
+// mobile breakpoint, where the overflow control was hidden, so the
+// behaviour depended on window width. One control now, everywhere.
+check('overflow control at every width', /\.tile-more \{[\s\S]{0,200}display:block/.test(html));
 
 // playlist cards
 check('cards are gradient-filled', /\.pcard::before \{[\s\S]{0,160}linear-gradient/.test(html));
@@ -45,7 +48,7 @@ check('card grid halves on phones', /\.card-row \{ grid-template-columns:repeat\
 // Superseded in 2.8.32/33: showing them always is what took the
 // width on every row, and in 2.8.34 keeping them in the layout
 // while invisible is what made the overflow unresponsive.
-check('actions leave the layout on touch', /\.tile-actions \{ display:none; \}/.test(html));
+check('actions leave the layout until revealed', /\.tile-actions \{ display:none;/.test(html));
 check('and come back when revealed', /\.tile-wrap\.show-actions \.tile-actions \{ display:flex/.test(html));
 
 // the app shell must carry the same CSS
