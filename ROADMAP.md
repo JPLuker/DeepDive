@@ -448,6 +448,38 @@ space.
 
 ---
 
+## Last.fm — decided, not built
+
+Joseph registered the application on 6 Sept; approval was instant. One
+key unlocks three features, so scope them together rather than building
+dips and reopening the integration twice:
+
+- **Dips** — `artist.getTopTracks` gives the popularity Spotify no
+  longer will, which is what dips have been blocked on.
+- **Similar artists** — `artist.getSimilar`, replacing the deprecated
+  Spotify endpoint.
+- **Genre and subgenre mixes** — `artist.getTopTags`. Tags are
+  user-applied and far more granular than Spotify's artist genres, but
+  messy: the same idea appears as "hip-hop", "hip hop" and "Hiphop",
+  and joke tags cluster on popular artists. Weight-filter and normalise.
+
+**Each user brings their own key.** Same model as the Spotify Client ID
+— a shipped key would be readable in a browser-only app, pooled across
+everyone, and revocable if any one person abused it.
+
+**Where it goes:** a field on the setup page, marked optional but
+recommended, explaining that it powers popularity and suggestion
+features. Everything Last.fm-backed must degrade rather than error when
+no key is present — dips and genre mixes simply don't appear.
+
+**Before building:** read the full documentation, including their rate
+limits and terms, and write a derived `LASTFM_SURFACE.md` the way
+`API_SURFACE.md` works for Spotify. Do not mirror their docs into the
+repo. Worth checking whether album- and track-level tags go further
+than artist tags alone.
+
+---
+
 ## Compliance — from the API guidance, 4 Sept
 
 - **Attribution is missing.** The Developer Terms require attributing
