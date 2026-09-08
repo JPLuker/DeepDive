@@ -4,6 +4,21 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.40
+- The artist search in Build your own is now the same component as the
+  dive search — same field, same dropdown, same keyboard handling. Only
+  the source differs: it filters the library already in hand rather than
+  asking Spotify, so it costs nothing and can't be rate-limited. There
+  should not be two artist searches in the app that look different.
+- Track count in Build your own uses the same choices as every other
+  mix, with "all" removed. An unbounded custom mix can be thousands of
+  tracks, and every hundred is a request when it's created.
+- Removed "As found" as an order. It meant "whatever order the generator
+  emitted", which isn't something anyone can reason about. Shuffle is
+  the default now. The sampler still uses its built order internally —
+  each artist led by a track you already liked — because shuffling
+  scatters the structure it was assembled around.
+
 ## 2.8.39
 - Fixed: the artist filter in Build your own was a dropdown holding
   every artist in the library, which is unusable on a phone and barely

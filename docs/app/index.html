@@ -409,6 +409,13 @@
   .pcard.is-custom { --h:265; }
   .pcard.is-custom .pcard-icon { opacity:1; }
 
+  /* The shared search inside a settings row: it carries its own pill,
+     so it shouldn't also inherit the page-level centring the dive
+     search uses. */
+  .cm-search { max-width:none; margin:0; }
+  .cm-search .search-pill-form { padding:4px 4px 4px 14px; }
+  .cm-search input { font-size:14.5px; }
+
   .cm-range { display:flex; align-items:center; gap:10px; }
   .cm-range .nav-input { flex:1; min-width:0; }
   .cm-dash { font-size:13px; color:var(--muted-soft); flex-shrink:0; }

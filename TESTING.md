@@ -408,11 +408,14 @@ once you're back online.
       you went deep on, Loose ends, Two names on the label, There on day
       one, Took your time, an artist retrospective, That one afternoon,
       Released in <year>, seasonal cards
-- [ ] **Build your own** — the artist field is a search; typing filters
-      to artists you actually have
-- [ ] Typing a name you don't have says so, and the other filters keep
-      working
-- [ ] A mix over 300 tracks warns what creating it will cost
+- [ ] **Build your own** — the artist field looks and behaves exactly
+      like the search on Home and Dives
+- [ ] Typing filters to artists you actually have; the ✕ clears it
+- [ ] Track count is a picker with the same options as other mixes, and
+      no "all"
+- [ ] Order defaults to Shuffled, and "As found" is gone from every
+      mix's order list
+- [ ] A sampler still groups each artist together rather than shuffling
 - [ ] There is no "Always create a new playlist" option; re-running a
       mix with the same name updates it rather than duplicating
 - [ ] The match count updates as you change filters

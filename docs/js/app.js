@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.39";
+export const BUILD = "2.8.40";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -685,7 +685,6 @@ async function runSampler(artists) {
 const PLAYLIST_LENGTHS = [10, 20, 30, 40, 50, 100, "all"];
 
 const PLAYLIST_ORDERS = [
-  { id: "found", label: "As found" },
   { id: "album", label: "Album order" },
   { id: "date-desc", label: "Newest first" },
   { id: "date-asc", label: "Oldest first" },
@@ -700,7 +699,7 @@ const PLAYLIST_ORDERS = [
  * sorting would give you an arbitrary subset in a tidy order, which is
  * not the same thing.
  */
-function applyPlaylistOptions(tracks, { order = "found", length = "all" } = {}) {
+function applyPlaylistOptions(tracks, { order = "shuffle", length = "all" } = {}) {
   let out = order === "shuffle"
     // Seeded per call so a shuffle is genuinely different each time,
     // unlike the daily-stable "Surprise me" card.
@@ -779,6 +778,10 @@ function downloadFile(filename, contents, mime) {
 }
 
 const CARD_LENGTHS = PLAYLIST_LENGTHS;
+// Same choices the other mixes offer, without "all" — an unbounded
+// custom mix can be thousands of tracks, and every hundred is a request
+// when it's created.
+const CUSTOM_LENGTHS = PLAYLIST_LENGTHS.filter((n) => n !== "all");
 
 /**
  * Sampler: a few top tracks from each of several artists. The first
@@ -969,12 +972,16 @@ async function renderCustomMix() {
       <div class="set-group-label">Who</div>
       <div class="set-row set-row-block">
         <div class="set-row-text"><div class="set-row-title">Artist</div>
-          <div class="set-row-detail">Start typing — ${artists.length} in your library.</div></div>
-        <input type="text" id="cm-artist" class="nav-input" list="cm-artist-list"
-               placeholder="Anyone" autocomplete="off" spellcheck="false">
-        <datalist id="cm-artist-list">
-          ${artists.map((a) => `<option value="${esc(a.name)}"></option>`).join("")}
-        </datalist>
+          <div class="set-row-detail">${artists.length} in your library. Leave blank for anyone.</div></div>
+        <div class="search-shell cm-search">
+          <div class="search-pill-form">
+            <input type="text" id="cm-artist" placeholder="Search an artist" autocomplete="off" spellcheck="false">
+            <button type="button" class="search-icon-btn" id="cm-artist-clear" aria-label="Clear artist">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="autofill-list" id="cm-artist-list"></div>
+        </div>
       </div>
       <div class="set-row">
         <div class="set-row-text"><div class="set-row-title">Collaborations only</div>
@@ -1001,7 +1008,7 @@ async function renderCustomMix() {
       <div class="set-row set-row-block">
         <div class="set-row-text"><div class="set-row-title">Order</div></div>
         <select id="cm-sort" class="sort-select">
-          <option value="random">Shuffled</option>
+          <option value="random" selected>Shuffled</option>
           <option value="oldest-release">Oldest release first</option>
           <option value="newest-release">Newest release first</option>
           <option value="oldest-added">Longest in your library</option>
@@ -1011,9 +1018,11 @@ async function renderCustomMix() {
         </select>
       </div>
       <div class="set-row set-row-block">
-        <div class="set-row-text"><div class="set-row-title">Cap</div>
-          <div class="set-row-detail">Leave empty for everything that matches. Nothing here reads from Spotify — the mix is built from your cached library.</div></div>
-        <input type="number" id="cm-limit" class="nav-input" placeholder="no limit" min="1">
+        <div class="set-row-text"><div class="set-row-title">How many tracks</div>
+          <div class="set-row-detail">The same choices the other mixes offer. Nothing here reads from Spotify — the mix is built from your cached library.</div></div>
+        <select id="cm-limit" class="sort-select">
+          ${CUSTOM_LENGTHS.map((n, i) => `<option value="${n}"${i === CUSTOM_LENGTHS.length - 1 ? " selected" : ""}>${n} tracks</option>`).join("")}
+        </select>
       </div>
     </div>
 
@@ -1025,12 +1034,13 @@ async function renderCustomMix() {
 
   const readFilters = () => {
     const num = (id) => { const v = parseInt(document.getElementById(id).value, 10); return Number.isNaN(v) ? 0 : v; };
-    // Typed name rather than a chosen option: a select holding several
-    // hundred artists is unusable on a phone and barely better on a
-    // desktop. Matched case-insensitively, and an unrecognised name
-    // simply means no artist filter rather than an empty mix.
+    // The shared artist search sets `chosenArtist` when a result is
+    // picked. A typed string that matches nothing leaves it null, and
+    // the rest of the filters still apply.
     const typed = document.getElementById("cm-artist").value.trim().toLowerCase();
-    const hit = typed ? artists.find((a) => a.name.trim().toLowerCase() === typed) : null;
+    const hit = chosenArtist && chosenArtist.name.trim().toLowerCase() === typed
+      ? chosenArtist
+      : (typed ? artists.find((a) => a.name.trim().toLowerCase() === typed) : null);
     return {
       decade: num("cm-decade"),
       releaseFrom: num("cm-from"),
@@ -1066,6 +1076,26 @@ async function renderCustomMix() {
          ${n > 300 ? `<br>Creating this would take about ${reqs} requests, one per hundred tracks. Building the list costs nothing; only creating the playlist talks to Spotify.` : ""}</p>`
       : `<p class="empty-note">Nothing matches that combination. Try loosening one of the filters.</p>`;
   };
+  // Same component as the dive search — the app should not have two
+  // artist searches that look different. Only the source differs: this
+  // one filters the library already in hand rather than asking Spotify,
+  // so it costs nothing and can't be rate-limited.
+  let chosenArtist = null;
+  wireArtistSearch({
+    inputId: "cm-artist",
+    listId: "cm-artist-list",
+    source: async (q) => {
+      const needle = q.toLowerCase();
+      return artists.filter((a) => a.name.toLowerCase().includes(needle)).slice(0, 6);
+    },
+    onChoose: (it) => { chosenArtist = it; update(); },
+  });
+  document.getElementById("cm-artist-clear").addEventListener("click", () => {
+    document.getElementById("cm-artist").value = "";
+    chosenArtist = null;
+    update();
+  });
+
   root.querySelectorAll("#custom-form select, #custom-form input").forEach((c) => {
     c.addEventListener("change", update);
     c.addEventListener("input", update);
@@ -1117,9 +1147,11 @@ function openCardModal(card) {
   const opts = simple
     // "found" preserves the order the sampler built: grouped by artist,
     // each led by a track already liked. Shuffling would scatter the
-    // anchors, which is the whole structure.
+    // anchors, which is the whole structure. It is no longer offered as
+    // a choice — "as found" means nothing to someone who didn't watch
+    // it being built — but it remains the right default here.
     ? { length: 20, order: "found" }
-    : { length: card.count <= 50 ? "all" : 50, order: "found" };
+    : { length: card.count <= 50 ? "all" : 50, order: "shuffle" };
 
   const tracksFor = () => applyPlaylistOptions(card.tracks, opts);
 
@@ -1409,63 +1441,56 @@ function readCustomOptions() {
   };
 }
 
-function wireSearchBar() {
-  const input = document.getElementById("artist-input");
-  const goBtn = document.getElementById("search-go-btn");
-  const list = document.getElementById("autofill-list");
-  const settingsBtn = document.getElementById("settings-toggle-btn");
+/**
+ * The one artist search.
+ *
+ * Every artist search in the app is this: same field, same dropdown,
+ * same keyboard handling. Only where the names come from and what
+ * happens on choosing one differ. Custom mixes had a `<select>` of
+ * several hundred artists, which was unusable and looked like a
+ * different feature entirely.
+ *
+ * @param source    async (query) => [{ id, name, image_url }]
+ * @param onChoose  called with the chosen item
+ * @param allowPin  show the pin button — only meaningful where the
+ *                  result is a real Spotify artist rather than a name
+ *                  already in the library
+ */
+function wireArtistSearch({ inputId, listId, source, onChoose, allowPin = false }) {
+  const input = document.getElementById(inputId);
+  const list = document.getElementById(listId);
+  if (!input || !list) return null;
 
-  // The options icon now opens the intent chooser directly. It's the way
-  // back in for anyone who ticked "Don't ask again" — without it, that
-  // choice would be permanent with no visible escape.
-  settingsBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const n = input.value.trim();
-    openIntentModal(n || null, { force: true });
-  });
-
-  // Dismiss the keyboard on submit. On a phone it otherwise stays up
-  // over the dive screen that just opened, covering the thing the
-  // search was for.
-  const go = () => {
-    const n = input.value.trim();
-    if (!n) return;
-    input.blur();
-    startSearch(n);
-  };
-  goBtn.addEventListener("click", go);
-  input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !list.classList.contains("open")) go(); });
-
-  // autofill
   let timer = null, items = [], active = -1;
   const close = () => { list.classList.remove("open"); list.innerHTML = ""; items = []; active = -1; };
-  const choose = (it) => { input.value = it.name; close(); input.blur(); startSearch(it.name); };
+  const choose = (it) => {
+    if (!it) return;
+    input.value = it.name;
+    close();
+    input.blur();
+    onChoose(it);
+  };
+
   input.addEventListener("input", () => {
     const q = input.value.trim();
     clearTimeout(timer);
     if (q.length < 2) return close();
     timer = setTimeout(async () => {
       try {
-        items = await client.searchArtists(q, 6);
-        if (!items.length) return close();
-        // Each result gets a pin button. Pinning from here is the whole
-        // point: you're already typing the artist's name, so "save for
-        // later" should be one button away rather than a separate page.
-        // It also stores the real Spotify artist and image rather than a
-        // typed string, which the old To-Dive page couldn't do.
+        items = await source(q);
+        if (!items || !items.length) return close();
         list.innerHTML = items.map((it, i) => `
           <div class="autofill-item" data-i="${i}">
             ${it.image_url ? `<img src="${esc(it.image_url)}" alt="">` : ""}
             <span class="autofill-name">${esc(it.name)}</span>
-            <button type="button" class="autofill-pin" data-pin-i="${i}" title="Pin for later" aria-label="Pin ${esc(it.name)} for later">
+            ${allowPin ? `<button type="button" class="autofill-pin" data-pin-i="${i}" title="Pin for later" aria-label="Pin ${esc(it.name)}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
+            </button>` : ""}
           </div>`).join("");
         list.classList.add("open");
         active = -1;
         list.querySelectorAll(".autofill-item").forEach((el) => {
           el.addEventListener("mousedown", (ev) => {
-            // Don't fire the search when the pin button was the target.
             if (ev.target.closest(".autofill-pin")) return;
             ev.preventDefault();
             choose(items[+el.dataset.i]);
@@ -1487,6 +1512,7 @@ function wireSearchBar() {
       } catch (e) { close(); }
     }, 250);
   });
+
   input.addEventListener("keydown", (e) => {
     if (!list.classList.contains("open")) return;
     const els = Array.from(list.querySelectorAll(".autofill-item"));
@@ -1495,7 +1521,45 @@ function wireSearchBar() {
     else if (e.key === "Enter" && active >= 0) { e.preventDefault(); choose(items[active]); }
     else if (e.key === "Escape") close();
   });
-  document.addEventListener("click", (e) => { if (!list.contains(e.target) && e.target !== input) close(); });
+  input.addEventListener("blur", () => setTimeout(close, 120));
+
+  return { close, isOpen: () => list.classList.contains("open") };
+}
+
+function wireSearchBar() {
+  const input = document.getElementById("artist-input");
+  const goBtn = document.getElementById("search-go-btn");
+  const list = document.getElementById("autofill-list");
+  const settingsBtn = document.getElementById("settings-toggle-btn");
+
+  // The options icon opens the intent chooser directly. It's the way
+  // back in for anyone who ticked "Don't ask again" — without it that
+  // choice would be permanent with no visible escape.
+  settingsBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const n = input.value.trim();
+    openIntentModal(n || null, { force: true });
+  });
+
+  // Dismiss the keyboard on submit. On a phone it otherwise stays up
+  // over the dive screen that just opened, covering the thing the
+  // search was for.
+  const go = () => {
+    const n = input.value.trim();
+    if (!n) return;
+    input.blur();
+    startSearch(n);
+  };
+  goBtn.addEventListener("click", go);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !list.classList.contains("open")) go(); });
+
+  wireArtistSearch({
+    inputId: "artist-input",
+    listId: "autofill-list",
+    source: (q) => client.searchArtists(q, 6),
+    onChoose: (it) => startSearch(it.name),
+    allowPin: true,
+  });
 }
 
 

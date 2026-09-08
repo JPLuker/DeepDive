@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.8.39.** If the build in `js/app.js` is well
+**Last updated at build 2.8.40.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -183,6 +183,12 @@ decay removed the accident and the original bug reappeared.
 
 *When something adaptive looks like it works, check whether it works or
 whether stale state is covering for it.*
+
+**One artist search, everywhere.** `wireArtistSearch` is the component;
+pass it a source and an onChoose. Any new place that searches artists
+uses it rather than growing its own field — the custom mix had a
+`<select>` of several hundred artists and then a datalist, and both
+looked like a different feature.
 
 **Keep element ids literal in markup.** Building them from arguments —
 `id="${id}"` inside a helper — hides every one from the

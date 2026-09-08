@@ -10,7 +10,9 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
 // On a phone the keyboard stayed up over the dive screen that had just
 // opened, covering the thing the search was for.
 check('keyboard dismissed on submit', /input\.blur\(\);\s*\n\s*startSearch\(n\)/.test(src));
-check('and when picking an autofill result', /close\(\); input\.blur\(\); startSearch\(it\.name\)/.test(src));
+// The choose path moved into the shared component, so both the dive
+// search and the custom-mix search dismiss the keyboard the same way.
+check('and when picking an autofill result', /const choose = \(it\) => \{[\s\S]{0,160}input\.blur\(\);\s*\n\s*onChoose\(it\);/.test(src));
 
 // Refresh draws a different handful from a pool three times the size of
 // the row, so it costs no requests.

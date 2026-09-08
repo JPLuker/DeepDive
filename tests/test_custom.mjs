@@ -78,8 +78,12 @@ check('custom card is styled', /\.pcard\.is-custom/.test(css));
 
 // A select holding several hundred artists is unusable on a phone and
 // barely better on a desktop.
-check('artist is a search, not a dropdown', /id="cm-artist" class="nav-input" list="cm-artist-list"/.test(src));
-check('backed by the real artist list', /<datalist id="cm-artist-list">/.test(src));
+// Now the same component as the dive search, rather than a datalist
+// of its own. Two artist searches that look different was the
+// problem; the source differs, the interface shouldn't.
+check('artist uses the shared search', /inputId: "cm-artist",\s*\n\s*listId: "cm-artist-list"/.test(src));
+check('sourced from the library, not the API', /artists\.filter\(\(a\) => a\.name\.toLowerCase\(\)\.includes\(needle\)\)/.test(src));
+check('and shares one implementation', /function wireArtistSearch/.test(src));
 check('matched by name, case-insensitively', /artists\.find\(\(a\) => a\.name\.trim\(\)\.toLowerCase\(\) === typed\)/.test(src));
 check('an unrecognised name is explained', /No artist called/.test(src));
 check('count updates while typing', /c\.addEventListener\("input", update\)/.test(src));
@@ -95,6 +99,22 @@ check('the cap says it reads nothing', /Nothing here reads from Spotify/.test(sr
 check('force-new control is gone', !/card-force-new/.test(src));
 check('and its block with it', !/card-reuse-block/.test(src));
 check('throwaway mixes still create their own', /\{ forceNew: simple \}/.test(src));
+
+// Length uses the same choices as every other mix, minus "all" — an
+// unbounded custom mix can be thousands of tracks, and every hundred is
+// a request when it's created.
+check('length reuses the standard choices', /const CUSTOM_LENGTHS = PLAYLIST_LENGTHS\.filter\(\(n\) => n !== "all"\)/.test(src));
+check('and is a picker, not a free number', /<select id="cm-limit"/.test(src));
+check('no unbounded option', !/id="cm-limit"[\s\S]{0,300}>all</.test(src));
+
+// "As found" meant "whatever order the generator emitted", which is not
+// something anyone can reason about.
+check('as found is not offered', !/\{ id: "found", label: "As found" \}/.test(src));
+check('shuffle is the default for mixes', /order: "shuffle" \}/.test(src));
+// It survives where it is structural: the sampler groups each artist
+// behind a track already liked, and shuffling scatters the anchors.
+check('sampler still keeps its built order', /\? \{ length: 20, order: "found" \}/.test(src));
+check('custom defaults to shuffled', /<option value="random" selected>Shuffled<\/option>/.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
