@@ -249,8 +249,8 @@ code and a re-check that runs the real diagnosis.*
 
 **Stopping point F — small friction** — *shipped in 2.8.31: keyboard
 closes on submit, refresh control on the suggestion row, random dive.
-Random **dip** waits on dips existing, which is blocked on a definition
-of "popular".*
+Random **dip** waits on dips existing, which is no longer blocked — see
+the Last.fm section.*
 
 ---
 
