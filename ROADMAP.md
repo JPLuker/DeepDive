@@ -356,6 +356,16 @@ actionable — stays on screen behind it. It should surface in the middle
 of the screen and close the results page behind it. Joseph's call:
 next update, not now.
 
+**"All" is still offered on the standard mix dialog.** 2.8.40 removed it
+from Build your own via `CUSTOM_LENGTHS`, but the card modal uses
+`PLAYLIST_LENGTHS` directly and still shows "All 1438". That is the
+case that actually matters — a generated card can hold far more than a
+hand-built mix, and every hundred tracks is a request at creation. Drop
+it from the shared list rather than filtering in two places, and check
+nothing depends on "all" as a default. The sampler passes
+`length: "all"` internally for its twenty-track cap, so read that path
+before changing the constant.
+
 **Duplicate song in a sampler** — a censored version of a track already
 in the mix. *Still open — the only bug from Joseph's notes not yet
 addressed.* The exclusion filters catch censored versions on a dive;
