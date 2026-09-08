@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.37";
+export const BUILD = "2.8.38";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -417,7 +417,10 @@ let _allCards = [];
 
 // Shown per load. Small enough to scan, with a much larger pool behind
 // it so refreshing is worth doing.
-const CARDS_PER_LOAD = 6;
+// Ten, because the generated set is now 40-odd and six was a thin
+// glimpse of it. These are the "random picks" below the two things you
+// build yourself.
+const CARDS_PER_LOAD = 10;
 
 /**
  * @param into     Element id to render into; Mixes owns "playlist-cards",
@@ -495,6 +498,14 @@ function renderCardRow(el) {
   // from artists you've barely heard — and it used to sit below the
   // suggestion row as a full-width strip of its own, which made it look
   // like a different kind of thing entirely.
+  // Custom sits beside the sampler at the head of the row: both are
+  // things you start rather than recipes already decided.
+  const customCard = `
+    <button class="pcard is-custom" data-custom>
+      <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></span>
+      <span class="pcard-title">Build your own</span>
+      <span class="pcard-sub">pick an era, a length, an artist — any combination</span>
+    </button>`;
   const samplerCard = _samplerPool.length >= 2 ? `
     <button class="pcard is-sampler" data-sampler>
       <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg></span>
@@ -504,6 +515,7 @@ function renderCardRow(el) {
   el.innerHTML = `
     ${head}
     <div class="card-row">
+      ${customCard}
       ${samplerCard}
       ${shown.map((c, i) => `
         <button class="pcard" data-card="${esc(c.id)}" style="--h:${(200 + i * 47) % 360};">
@@ -513,6 +525,7 @@ function renderCardRow(el) {
         </button>`).join("")}
     </div>`;
   el.querySelector("[data-sampler]")?.addEventListener("click", () => openSampler(samplerSourceArtists()));
+  el.querySelector("[data-custom]")?.addEventListener("click", () => renderCustomMix());
   el.querySelectorAll("[data-card]").forEach((b) =>
     b.addEventListener("click", () => openCardModal((_allCards.length ? _allCards : _cards).find((c) => c.id === b.dataset.card))));
 }
@@ -884,6 +897,177 @@ async function buildSampler(artists, perArtist, onProgress) {
   return out;
 }
 
+
+/**
+ * Build your own mix.
+ *
+ * The generated cards are fixed recipes. This is the same filtering
+ * with the controls exposed, so combinations nobody wrote a card for —
+ * one artist in one decade under three minutes — are reachable without
+ * waiting for a card that happens to ask that question.
+ */
+async function renderCustomMix() {
+  setTitle("DeepDive · Build a mix");
+  setActiveTab("mixes");
+  root.innerHTML = `
+    <div class="row-head"><h2>Build your own</h2></div>
+    <p class="nav-hint" style="margin-top:0;">Everything comes from tracks already in your library. Nothing is created until you confirm it.</p>
+    <div id="custom-form"><p class="nav-hint">Reading your library…</p></div>`;
+
+  let cached = [];
+  try {
+    cached = await libraryCache.peek();
+  } catch (e) { /* handled below */ }
+  if (!cached || !cached.length) {
+    document.getElementById("custom-form").innerHTML =
+      `<p class="empty-note">Your library hasn't been read yet. Open Home once and it'll cache in the background.</p>`;
+    return;
+  }
+
+  // Only offer years and artists that exist, so no combination can come
+  // back empty for a reason the form didn't show.
+  const years = [...new Set(cached.map((t) => (t.added_at || "").slice(0, 4)).filter(Boolean))].sort().reverse();
+  const relYears = cached.map((t) => parseInt(((t.album && t.album.release_date) || "").slice(0, 4), 10)).filter((n) => n);
+  const minRel = Math.min(...relYears), maxRel = Math.max(...relYears);
+  const decades = [...new Set(relYears.map((y) => Math.floor(y / 10) * 10))].sort((a, b) => b - a);
+  const artists = [...new Map(cached.flatMap((t) => (t.artists || []).map((a) => [a.id, a.name]))).entries()]
+    .map(([id, name]) => ({ id, name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  document.getElementById("custom-form").innerHTML = `
+    <div class="set-group">
+      <div class="set-group-label">When it came out</div>
+      <div class="set-row set-row-block">
+        <div class="set-row-text"><div class="set-row-title">Decade</div></div>
+        <select id="cm-decade" class="sort-select">
+          <option value="">Any</option>
+          ${decades.map((d) => `<option value="${d}">${d}s</option>`).join("")}
+        </select>
+      </div>
+      <div class="set-row set-row-block">
+        <div class="set-row-text"><div class="set-row-title">Or a range of years</div></div>
+        <div class="cm-range">
+          <input type="number" id="cm-from" class="nav-input" placeholder="${minRel}" min="${minRel}" max="${maxRel}">
+          <span class="cm-dash">to</span>
+          <input type="number" id="cm-to" class="nav-input" placeholder="${maxRel}" min="${minRel}" max="${maxRel}">
+        </div>
+      </div>
+    </div>
+
+    <div class="set-group">
+      <div class="set-group-label">When you liked it</div>
+      <div class="set-row set-row-block">
+        <div class="set-row-text"><div class="set-row-title">Year added</div></div>
+        <select id="cm-added" class="sort-select">
+          <option value="">Any</option>
+          ${years.map((y) => `<option value="${y}">${y}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+
+    <div class="set-group">
+      <div class="set-group-label">Who</div>
+      <div class="set-row set-row-block">
+        <div class="set-row-text"><div class="set-row-title">Artist</div></div>
+        <select id="cm-artist" class="sort-select">
+          <option value="">Anyone</option>
+          ${artists.map((a) => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="set-row">
+        <div class="set-row-text"><div class="set-row-title">Collaborations only</div>
+          <div class="set-row-detail">Tracks credited to more than one artist.</div></div>
+        <div class="set-row-control"><label class="set-switch"><input type="checkbox" id="cm-collabs"><span class="switch-track"><span class="switch-thumb"></span></span></label></div>
+      </div>
+      <div class="set-row">
+        <div class="set-row-text"><div class="set-row-title">One track per artist</div>
+          <div class="set-row-detail">A tour rather than a deep dive.</div></div>
+        <div class="set-row-control"><label class="set-switch"><input type="checkbox" id="cm-oneeach"><span class="switch-track"><span class="switch-thumb"></span></span></label></div>
+      </div>
+    </div>
+
+    <div class="set-group">
+      <div class="set-group-label">How long</div>
+      <div class="set-row set-row-block">
+        <div class="set-row-text"><div class="set-row-title">Track length, in seconds</div></div>
+        <div class="cm-range">
+          <input type="number" id="cm-min" class="nav-input" placeholder="any" min="0">
+          <span class="cm-dash">to</span>
+          <input type="number" id="cm-max" class="nav-input" placeholder="any" min="0">
+        </div>
+      </div>
+      <div class="set-row set-row-block">
+        <div class="set-row-text"><div class="set-row-title">Order</div></div>
+        <select id="cm-sort" class="sort-select">
+          <option value="random">Shuffled</option>
+          <option value="oldest-release">Oldest release first</option>
+          <option value="newest-release">Newest release first</option>
+          <option value="oldest-added">Longest in your library</option>
+          <option value="newest-added">Most recently liked</option>
+          <option value="shortest">Shortest first</option>
+          <option value="longest">Longest first</option>
+        </select>
+      </div>
+      <div class="set-row set-row-block">
+        <div class="set-row-text"><div class="set-row-title">Cap</div>
+          <div class="set-row-detail">Leave empty for everything that matches.</div></div>
+        <input type="number" id="cm-limit" class="nav-input" placeholder="no limit" min="1">
+      </div>
+    </div>
+
+    <div class="custom-preview" id="cm-preview"></div>
+    <div class="actions">
+      <button class="btn btn-primary" id="cm-build">Preview mix</button>
+      <button class="btn btn-ghost" data-tab="mixes">Back to mixes</button>
+    </div>`;
+
+  const readFilters = () => {
+    const num = (id) => { const v = parseInt(document.getElementById(id).value, 10); return Number.isNaN(v) ? 0 : v; };
+    const artistSel = document.getElementById("cm-artist");
+    return {
+      decade: num("cm-decade"),
+      releaseFrom: num("cm-from"),
+      releaseTo: num("cm-to"),
+      addedYear: num("cm-added"),
+      artistId: artistSel.value || null,
+      artistName: artistSel.value ? artistSel.options[artistSel.selectedIndex].text : null,
+      minSeconds: num("cm-min"),
+      maxSeconds: num("cm-max"),
+      collabsOnly: document.getElementById("cm-collabs").checked,
+      oneEachArtist: document.getElementById("cm-oneeach").checked,
+      limit: num("cm-limit"),
+      sort: document.getElementById("cm-sort").value,
+    };
+  };
+
+  // Live count, so an over-narrow combination is obvious before you
+  // commit to it rather than after.
+  const update = () => {
+    const f = readFilters();
+    const n = insights.customMix(cached, f, Date.now()).length;
+    document.getElementById("cm-preview").innerHTML = n
+      ? `<p class="nav-hint"><strong>${n}</strong> track${n === 1 ? "" : "s"} match — ${esc(insights.describeCustom(f))}.</p>`
+      : `<p class="empty-note">Nothing matches that combination. Try loosening one of the filters.</p>`;
+  };
+  root.querySelectorAll("#custom-form select, #custom-form input").forEach((c) =>
+    c.addEventListener("change", update));
+  update();
+
+  document.getElementById("cm-build").addEventListener("click", () => {
+    const f = readFilters();
+    const tracks = insights.customMix(cached, f, Date.now());
+    if (!tracks.length) return flash("Nothing matches that combination.");
+    openCardModal({
+      id: "custom",
+      title: "Your mix",
+      subtitle: insights.describeCustom(f),
+      simple: true,
+      name: `DeepDive · ${insights.describeCustom(f)}`,
+      count: tracks.length,
+      tracks,
+    });
+  });
+}
 
 function openCardModal(card) {
   if (!card) return;

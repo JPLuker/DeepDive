@@ -319,9 +319,396 @@ export function playlistCards(tracks, { maxYears = 6, maxDecades = 5, seed = 0 }
   push(shortsCard(tracks));
   push(firstFiftyCard(tracks));
   push(forgottenCard(tracks));
+  push(lateNightCard(tracks));
+  push(oneEachArtistCard(tracks, seed));
+  push(deepAlbumsCard(tracks));
+  push(looseTracksCard(tracks));
+  push(middleLengthCard(tracks));
+  push(collabsCard(tracks));
+  push(soloCard(tracks));
+  push(dayOneCard(tracks));
+  push(slowBurnCard(tracks));
+  push(retrospectiveCard(tracks, seed));
+  push(bigDayCard(tracks));
   cards.push(...yearCards(tracks).slice(0, maxYears));
   cards.push(...decadeCards(tracks).slice(0, maxDecades));
+  cards.push(...releaseYearCards(tracks).slice(0, maxYears));
+  cards.push(...seasonCards(tracks));
   return cards;
+}
+
+// Date accessors used by the generators below. The cache stores
+// `added_at` as an ISO string and the release date on the album, which
+// may be a year, a year-month, or a full date depending on the release.
+function addedDate(t) {
+  const raw = t && t.added_at;
+  if (!raw) return null;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function releaseDate(t) {
+  const raw = (t && t.album && t.album.release_date) || "";
+  if (!raw) return null;
+  // A bare year parses as a UTC instant, which is fine for comparisons
+  // measured in years but would be wrong to present as a day.
+  const d = new Date(raw.length === 4 ? `${raw}-01-01` : raw);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function releaseYear(t) {
+  const y = parseInt(((t && t.album && t.album.release_date) || "").slice(0, 4), 10);
+  return Number.isNaN(y) ? null : y;
+}
+
+// ---------------------------------------------------------------------
+// Custom mixes
+//
+// The generated cards are fixed recipes. This is the same machinery
+// with the filters exposed, so anything the cache knows about can be
+// combined — decade and length, one artist and an era, liked-in-a-year
+// and under three minutes — rather than waiting for a card that happens
+// to ask the right question.
+// ---------------------------------------------------------------------
+
+export const CUSTOM_SORTS = ["random", "oldest-release", "newest-release", "oldest-added", "newest-added", "shortest", "longest"];
+
+/**
+ * @param filters.decade        e.g. 1990 for the nineties
+ * @param filters.releaseFrom   inclusive release year
+ * @param filters.releaseTo     inclusive release year
+ * @param filters.addedYear     year the track was liked
+ * @param filters.artistId      restrict to one artist
+ * @param filters.minSeconds    length floor
+ * @param filters.maxSeconds    length ceiling
+ * @param filters.collabsOnly   only multi-artist credits
+ * @param filters.oneEachArtist at most one track per artist
+ * @param filters.limit         cap the result
+ * @param filters.sort          one of CUSTOM_SORTS
+ */
+export function customMix(tracks, filters = {}, seed = 0) {
+  const f = filters || {};
+  let out = (tracks || []).filter(Boolean);
+
+  if (f.decade) {
+    out = out.filter((t) => {
+      const y = releaseYear(t);
+      return y && y >= f.decade && y < f.decade + 10;
+    });
+  }
+  if (f.releaseFrom) out = out.filter((t) => { const y = releaseYear(t); return y && y >= f.releaseFrom; });
+  if (f.releaseTo) out = out.filter((t) => { const y = releaseYear(t); return y && y <= f.releaseTo; });
+  if (f.addedYear) out = out.filter((t) => (t.added_at || "").slice(0, 4) === String(f.addedYear));
+  if (f.artistId) out = out.filter((t) => (t.artists || []).some((a) => a.id === f.artistId));
+  if (f.minSeconds) out = out.filter((t) => (t.duration_ms || 0) >= f.minSeconds * 1000);
+  if (f.maxSeconds) out = out.filter((t) => (t.duration_ms || 0) > 0 && (t.duration_ms || 0) <= f.maxSeconds * 1000);
+  if (f.collabsOnly) out = out.filter((t) => (t.artists || []).length > 1);
+
+  // Applied after filtering, so "one each" means one each of whatever
+  // survived rather than one each of the whole library.
+  if (f.oneEachArtist) {
+    const seen = new Set();
+    out = out.filter((t) => {
+      const a = (t.artists || [])[0];
+      const k = a && a.id;
+      if (!k || seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }
+
+  switch (f.sort) {
+    case "oldest-release": out.sort((a, b) => (releaseYear(a) || 0) - (releaseYear(b) || 0)); break;
+    case "newest-release": out.sort((a, b) => (releaseYear(b) || 0) - (releaseYear(a) || 0)); break;
+    case "oldest-added": out.sort((a, b) => (a.added_at || "").localeCompare(b.added_at || "")); break;
+    case "newest-added": out.sort((a, b) => (b.added_at || "").localeCompare(a.added_at || "")); break;
+    case "shortest": out.sort((a, b) => (a.duration_ms || 0) - (b.duration_ms || 0)); break;
+    case "longest": out.sort((a, b) => (b.duration_ms || 0) - (a.duration_ms || 0)); break;
+    default: out = seededPick(out, out.length, seed || 1); break;
+  }
+
+  if (f.limit && out.length > f.limit) out = out.slice(0, f.limit);
+  return out;
+}
+
+/** A short sentence describing what a custom mix asked for. */
+export function describeCustom(f = {}) {
+  const bits = [];
+  if (f.artistName) bits.push(f.artistName);
+  if (f.decade) bits.push(`the ${String(f.decade).slice(2)}s`);
+  else if (f.releaseFrom || f.releaseTo) bits.push(`released ${f.releaseFrom || "any"}–${f.releaseTo || "now"}`);
+  if (f.addedYear) bits.push(`liked in ${f.addedYear}`);
+  if (f.minSeconds && f.maxSeconds) bits.push(`${f.minSeconds}–${f.maxSeconds} seconds`);
+  else if (f.maxSeconds) bits.push(`under ${Math.round(f.maxSeconds / 60)} minutes`);
+  else if (f.minSeconds) bits.push(`over ${Math.round(f.minSeconds / 60)} minutes`);
+  if (f.collabsOnly) bits.push("collaborations");
+  if (f.oneEachArtist) bits.push("one per artist");
+  return bits.length ? bits.join(", ") : "everything in your library";
+}
+
+// ---------------------------------------------------------------------
+// More generators
+//
+// The set was fifteen, most of them about *when* a track was liked or
+// released. These add the other axes the cache already knows about:
+// length, artist shape, album shape, and the calendar of your own
+// listening. Each returns null when it hasn't enough to be worth
+// showing, so a thin library simply sees fewer cards rather than a row
+// of near-empty ones.
+// ---------------------------------------------------------------------
+
+/** Everything from a single year of *release*, not of liking. */
+function releaseYearCards(tracks) {
+  const by = new Map();
+  for (const t of tracks) {
+    const y = releaseYear(t);
+    if (!y) continue;
+    if (!by.has(y)) by.set(y, []);
+    by.get(y).push(t);
+  }
+  const out = [];
+  for (const [y, list] of [...by.entries()].sort((a, b) => b[0] - a[0])) {
+    if (list.length < MIN_CARD_TRACKS) continue;
+    out.push({
+      id: `released-${y}`,
+      title: `Released in ${y}`,
+      subtitle: "whenever you got to it",
+      count: list.length,
+      tracks: list,
+    });
+  }
+  return out;
+}
+
+/** Tracks liked in the same season, across every year. */
+function seasonCards(tracks) {
+  const seasons = [
+    ["winter", "Winter", [12, 1, 2]],
+    ["spring", "Spring", [3, 4, 5]],
+    ["summer", "Summer", [6, 7, 8]],
+    ["autumn", "Autumn", [9, 10, 11]],
+  ];
+  const out = [];
+  for (const [id, label, months] of seasons) {
+    const list = tracks.filter((t) => {
+      const d = addedDate(t);
+      return d && months.includes(d.getUTCMonth() + 1);
+    });
+    if (list.length < MIN_CARD_TRACKS) continue;
+    out.push({
+      id: `season-${id}`,
+      title: `${label} finds`,
+      subtitle: `everything you added in ${label.toLowerCase()}, any year`,
+      count: list.length,
+      tracks: list,
+    });
+  }
+  return out;
+}
+
+/** Liked at night — by the hour you saved them, not the hour you played. */
+function lateNightCard(tracks) {
+  const list = tracks.filter((t) => {
+    const d = addedDate(t);
+    if (!d) return false;
+    const h = d.getUTCHours();
+    return h >= 23 || h < 5;
+  });
+  if (list.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "late-night",
+    title: "Small hours",
+    subtitle: "saved between eleven and five",
+    count: list.length,
+    tracks: list,
+  };
+}
+
+/** Artists you've liked a lot of, one track each — a tour of your core. */
+function oneEachArtistCard(tracks, seed) {
+  const heavy = [...byArtist(tracks).values()].filter((a) => a.count >= 4);
+  if (heavy.length < MIN_CARD_TRACKS) return null;
+  const picked = [];
+  for (const a of heavy) {
+    const theirs = tracks.filter((t) => (t.artists || []).some((x) => x.id === a.id));
+    if (theirs.length) picked.push(seededPick(theirs, 1, seed + a.id.length)[0]);
+  }
+  if (picked.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "one-each-artist",
+    title: "One each",
+    subtitle: "a single track from every artist you've collected",
+    count: picked.length,
+    tracks: picked,
+  };
+}
+
+/** Albums you've liked most of, rather than a track from. */
+function deepAlbumsCard(tracks) {
+  const by = new Map();
+  for (const t of tracks) {
+    const al = t.album;
+    if (!al || !al.id) continue;
+    if (!by.has(al.id)) by.set(al.id, []);
+    by.get(al.id).push(t);
+  }
+  const deep = [];
+  for (const list of by.values()) if (list.length >= 5) deep.push(...list);
+  if (deep.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "deep-albums",
+    title: "Albums you went deep on",
+    subtitle: "five or more tracks from one record",
+    count: deep.length,
+    tracks: deep,
+  };
+}
+
+/** Singles and one-offs: tracks from releases you own one song from. */
+function looseTracksCard(tracks) {
+  const by = new Map();
+  for (const t of tracks) {
+    const al = t.album;
+    if (!al || !al.id) continue;
+    if (!by.has(al.id)) by.set(al.id, []);
+    by.get(al.id).push(t);
+  }
+  const loose = [];
+  for (const list of by.values()) if (list.length === 1) loose.push(list[0]);
+  if (loose.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "loose-tracks",
+    title: "Loose ends",
+    subtitle: "one track and nothing else from that release",
+    count: loose.length,
+    tracks: loose,
+  };
+}
+
+/** Middle-length tracks — neither an epic nor a sprint. */
+function middleLengthCard(tracks) {
+  const mid = tracks.filter((t) => {
+    const d = t.duration_ms || 0;
+    return d >= 180 * 1000 && d <= 240 * 1000;
+  });
+  if (mid.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "three-minute",
+    title: "The three-minute rule",
+    subtitle: "classic single length",
+    count: mid.length,
+    tracks: mid,
+  };
+}
+
+/** Collaborations — anything credited to more than one artist. */
+function collabsCard(tracks) {
+  const list = tracks.filter((t) => (t.artists || []).length > 1);
+  if (list.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "collabs",
+    title: "Two names on the label",
+    subtitle: "everything with a featured artist",
+    count: list.length,
+    tracks: list,
+  };
+}
+
+/** Solo credits only — the opposite of the above. */
+function soloCard(tracks) {
+  const list = tracks.filter((t) => (t.artists || []).length === 1);
+  if (list.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "solo",
+    title: "One name only",
+    subtitle: "no features, no guests",
+    count: list.length,
+    tracks: list,
+  };
+}
+
+/** Liked the same week it came out. */
+function dayOneCard(tracks) {
+  const list = tracks.filter((t) => {
+    const added = addedDate(t);
+    const rel = releaseDate(t);
+    if (!added || !rel) return false;
+    const days = (added - rel) / 86400000;
+    return days >= 0 && days <= 7;
+  });
+  if (list.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "day-one",
+    title: "There on day one",
+    subtitle: "liked within a week of release",
+    count: list.length,
+    tracks: list,
+  };
+}
+
+/** The gap between release and liking, at its widest. */
+function slowBurnCard(tracks) {
+  const scored = tracks
+    .map((t) => {
+      const added = addedDate(t);
+      const rel = releaseDate(t);
+      if (!added || !rel) return null;
+      return { t, gap: (added - rel) / 86400000 };
+    })
+    .filter((x) => x && x.gap > 365 * 10)
+    .sort((a, b) => b.gap - a.gap)
+    .map((x) => x.t);
+  if (scored.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "slow-burn",
+    title: "Took your time",
+    subtitle: "found more than a decade after release",
+    count: scored.length,
+    tracks: scored,
+  };
+}
+
+/** A run from one artist, in album order — a mini retrospective. */
+function retrospectiveCard(tracks, seed) {
+  const heavy = [...byArtist(tracks).values()].filter((a) => a.count >= 8);
+  if (!heavy.length) return null;
+  const pick = seededPick(heavy, 1, seed + 7)[0];
+  const theirs = tracks
+    .filter((t) => (t.artists || []).some((x) => x.id === pick.id))
+    .sort((a, b) => String(releaseDate(a) || "").localeCompare(String(releaseDate(b) || "")));
+  if (theirs.length < MIN_CARD_TRACKS) return null;
+  return {
+    id: "retrospective",
+    title: `${pick.name}, in order`,
+    subtitle: "their tracks you own, oldest first",
+    count: theirs.length,
+    tracks: theirs,
+  };
+}
+
+/** Everything added on the busiest single day you ever had. */
+function bigDayCard(tracks) {
+  const by = new Map();
+  for (const t of tracks) {
+    const d = addedDate(t);
+    if (!d) continue;
+    const key = d.toISOString().slice(0, 10);
+    if (!by.has(key)) by.set(key, []);
+    by.get(key).push(t);
+  }
+  let best = null;
+  for (const [day, list] of by.entries()) {
+    if (!best || list.length > best.list.length) best = { day, list };
+  }
+  if (!best || best.list.length < MIN_CARD_TRACKS) return null;
+  const when = new Date(best.day).toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" });
+  return {
+    id: "big-day",
+    title: "That one afternoon",
+    subtitle: `everything you added on ${when}`,
+    count: best.list.length,
+    tracks: best.list,
+  };
 }
 
 // ---------------------------------------------------------------------

@@ -4,6 +4,24 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.38
+- Many more mix types. The set was fifteen recipes plus year and decade
+  cards, almost all of them about *when* a track was liked or released.
+  Added the other axes the cache already knows about: small hours, one
+  each, albums you went deep on, loose ends, the three-minute rule, two
+  names on the label, one name only, there on day one, took your time,
+  an artist retrospective in release order, that one afternoon, cards by
+  year of release, and one per season. A library like Joseph's now
+  generates around forty rather than twenty-four.
+- Added **Build your own**, beside the sampler at the head of the row.
+  Era, year range, year liked, artist, collaborations, one-per-artist,
+  length bounds, ordering and a cap — combined however you like, so a
+  mix nobody wrote a card for is still reachable.
+- The builder only offers years and artists that exist in your library,
+  and shows a live count as you narrow, so an over-tight combination is
+  obvious before you commit rather than after.
+- Random picks below those two went from six to ten.
+
 ## 2.8.37
 - Blocking is now per feature. It was one list applied to dive
   suggestions and the sampler pool but to no other mix — so a blocked

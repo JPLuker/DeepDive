@@ -50,7 +50,10 @@ const b=playlistCards(lib,{seed:2}).find(c=>c.id.startsWith('spotlight-'));
 check('spotlight varies by seed', a && b && (a.id!==b.id || true));
 
 // --- rotation in the UI ---
-check('six shown per load', /const CARDS_PER_LOAD = 6;/.test(src));
+// Raised to ten in 2.8.38: the generated set went from 24 to 43, and
+// six was a thin glimpse of it. These are the random picks sitting
+// below the two cards you build yourself.
+check('ten shown per load', /const CARDS_PER_LOAD = 10;/.test(src));
 check('subset drawn from the pool', /_cards = insights\.seededPick\(_allCards, CARDS_PER_LOAD, seed\)/.test(src));
 check('seed changes per load', /Date\.now\(\) >>> 0\) \^ Math\.floor\(Math\.random/.test(src));
 check('modal looks up the full pool', /_allCards\.length \? _allCards : _cards/.test(src));

@@ -404,6 +404,15 @@
   /* The sampler leads the row and isn't built from a library rule like
      the others, so it reads as its own thing without leaving the grid. */
   .pcard.is-sampler { --h:210; }
+  /* Build-your-own leads the row with the sampler: both are things you
+     start, rather than recipes already decided. */
+  .pcard.is-custom { --h:265; }
+  .pcard.is-custom .pcard-icon { opacity:1; }
+
+  .cm-range { display:flex; align-items:center; gap:10px; }
+  .cm-range .nav-input { flex:1; min-width:0; }
+  .cm-dash { font-size:13px; color:var(--muted-soft); flex-shrink:0; }
+  .custom-preview { margin:18px 0 4px; }
   .pcard.is-sampler .pcard-icon { opacity:1; }
 
   .pcard-icon { opacity:0.85; margin-bottom:auto; }

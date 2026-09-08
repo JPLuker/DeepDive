@@ -399,6 +399,22 @@ once you're back online.
 - [ ] Anyone blocked before this build stays blocked for both, since
       that's what it meant at the time
 
+## 13. Expanded mixes and Build your own (2.8.38)
+
+- [ ] Mixes shows ten cards, with **Build your own** and **Sampler**
+      leading the row
+- [ ] Refreshing the page brings a different ten — there are ~40 now
+- [ ] New types appear over a few loads: Small hours, One each, Albums
+      you went deep on, Loose ends, Two names on the label, There on day
+      one, Took your time, an artist retrospective, That one afternoon,
+      Released in <year>, seasonal cards
+- [ ] **Build your own** — the artist list holds only artists you have,
+      and the year lists only years you have
+- [ ] The match count updates as you change filters
+- [ ] A deliberately impossible combination says so rather than building
+      an empty mix
+- [ ] Preview mix opens the usual dialog, and creating it works
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

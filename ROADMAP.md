@@ -91,7 +91,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.37
+## Shipped since — build 2.8.38
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -260,7 +260,9 @@ of "popular".*
 
 **Stopping point A — more sources**
 - Card types beyond the current fifteen
-- Combined filters (decade + length, artist + era)
+- ~~Combined filters (decade + length, artist + era)~~ — *shipped in
+  2.8.38 as Build your own, which exposes the filtering directly rather
+  than adding a card per combination.*
 
 **Stopping point B — cleanup tooling**
 - Playlist cleanup in Settings: find and mass-remove DeepDive-created
