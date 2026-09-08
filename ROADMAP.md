@@ -286,6 +286,11 @@ page first. Same discipline as the setlist.fm check, and just as cheap.
 
 ## Session 5 — Presentation
 
+**Tagline: "Hear it all."** Joseph's, decided 6 Sept. Use it on the
+marketing page, and consider it for the app shell and the manifest
+description too so they don't say three different things.
+
+
 **Stopping point A — marketing page overhaul**
 - The treatment the app got: artwork-led, tiles, gradient cards, with
   stats.fm as the reference
