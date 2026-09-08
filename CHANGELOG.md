@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.39
+- Fixed: the artist filter in Build your own was a dropdown holding
+  every artist in the library, which is unusable on a phone and barely
+  better on a desktop. It's a type-to-search field now, and an
+  unrecognised name says so rather than silently matching nothing.
+- The match count updates as you type rather than only when a field
+  loses focus.
+- Made the cost explicit: building a mix reads nothing from Spotify —
+  it runs against your cached library. Only creating the playlist makes
+  requests, at one per hundred tracks, and large mixes now say so.
+- Removed "Always create a new playlist". Reusing a playlist of the same
+  name is the behaviour rather than an option, so re-running a mix
+  updates it instead of leaving duplicates behind.
+
 ## 2.8.38
 - Many more mix types. The set was fifteen recipes plus year and decade
   cards, almost all of them about *when* a track was liked or released.

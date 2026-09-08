@@ -76,5 +76,25 @@ check('empty result is explained', /Nothing matches that combination/.test(src))
 check('ten random picks below', /const CARDS_PER_LOAD = 10;/.test(src));
 check('custom card is styled', /\.pcard\.is-custom/.test(css));
 
+// A select holding several hundred artists is unusable on a phone and
+// barely better on a desktop.
+check('artist is a search, not a dropdown', /id="cm-artist" class="nav-input" list="cm-artist-list"/.test(src));
+check('backed by the real artist list', /<datalist id="cm-artist-list">/.test(src));
+check('matched by name, case-insensitively', /artists\.find\(\(a\) => a\.name\.trim\(\)\.toLowerCase\(\) === typed\)/.test(src));
+check('an unrecognised name is explained', /No artist called/.test(src));
+check('count updates while typing', /c\.addEventListener\("input", update\)/.test(src));
+
+// The cap looked like it might fetch. It doesn't: filtering runs
+// against the cached library and makes no requests at all. Only
+// creating the playlist talks to Spotify, at one request per hundred.
+check('cost is stated for large mixes', /one per hundred tracks/.test(src));
+check('and only above a threshold', /n > 300 \?/.test(src));
+check('the cap says it reads nothing', /Nothing here reads from Spotify/.test(src));
+
+// Reuse by name is the behaviour now, not an option.
+check('force-new control is gone', !/card-force-new/.test(src));
+check('and its block with it', !/card-reuse-block/.test(src));
+check('throwaway mixes still create their own', /\{ forceNew: simple \}/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

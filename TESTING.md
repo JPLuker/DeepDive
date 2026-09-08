@@ -408,8 +408,13 @@ once you're back online.
       you went deep on, Loose ends, Two names on the label, There on day
       one, Took your time, an artist retrospective, That one afternoon,
       Released in <year>, seasonal cards
-- [ ] **Build your own** — the artist list holds only artists you have,
-      and the year lists only years you have
+- [ ] **Build your own** — the artist field is a search; typing filters
+      to artists you actually have
+- [ ] Typing a name you don't have says so, and the other filters keep
+      working
+- [ ] A mix over 300 tracks warns what creating it will cost
+- [ ] There is no "Always create a new playlist" option; re-running a
+      mix with the same name updates it rather than duplicating
 - [ ] The match count updates as you change filters
 - [ ] A deliberately impossible combination says so rather than building
       an empty mix

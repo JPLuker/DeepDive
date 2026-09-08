@@ -22,7 +22,7 @@ import * as demo from "./demo.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.38";
+export const BUILD = "2.8.39";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -968,11 +968,13 @@ async function renderCustomMix() {
     <div class="set-group">
       <div class="set-group-label">Who</div>
       <div class="set-row set-row-block">
-        <div class="set-row-text"><div class="set-row-title">Artist</div></div>
-        <select id="cm-artist" class="sort-select">
-          <option value="">Anyone</option>
-          ${artists.map((a) => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join("")}
-        </select>
+        <div class="set-row-text"><div class="set-row-title">Artist</div>
+          <div class="set-row-detail">Start typing — ${artists.length} in your library.</div></div>
+        <input type="text" id="cm-artist" class="nav-input" list="cm-artist-list"
+               placeholder="Anyone" autocomplete="off" spellcheck="false">
+        <datalist id="cm-artist-list">
+          ${artists.map((a) => `<option value="${esc(a.name)}"></option>`).join("")}
+        </datalist>
       </div>
       <div class="set-row">
         <div class="set-row-text"><div class="set-row-title">Collaborations only</div>
@@ -1010,7 +1012,7 @@ async function renderCustomMix() {
       </div>
       <div class="set-row set-row-block">
         <div class="set-row-text"><div class="set-row-title">Cap</div>
-          <div class="set-row-detail">Leave empty for everything that matches.</div></div>
+          <div class="set-row-detail">Leave empty for everything that matches. Nothing here reads from Spotify — the mix is built from your cached library.</div></div>
         <input type="number" id="cm-limit" class="nav-input" placeholder="no limit" min="1">
       </div>
     </div>
@@ -1023,14 +1025,20 @@ async function renderCustomMix() {
 
   const readFilters = () => {
     const num = (id) => { const v = parseInt(document.getElementById(id).value, 10); return Number.isNaN(v) ? 0 : v; };
-    const artistSel = document.getElementById("cm-artist");
+    // Typed name rather than a chosen option: a select holding several
+    // hundred artists is unusable on a phone and barely better on a
+    // desktop. Matched case-insensitively, and an unrecognised name
+    // simply means no artist filter rather than an empty mix.
+    const typed = document.getElementById("cm-artist").value.trim().toLowerCase();
+    const hit = typed ? artists.find((a) => a.name.trim().toLowerCase() === typed) : null;
     return {
       decade: num("cm-decade"),
       releaseFrom: num("cm-from"),
       releaseTo: num("cm-to"),
       addedYear: num("cm-added"),
-      artistId: artistSel.value || null,
-      artistName: artistSel.value ? artistSel.options[artistSel.selectedIndex].text : null,
+      artistId: hit ? hit.id : null,
+      artistName: hit ? hit.name : null,
+      artistTyped: typed,
       minSeconds: num("cm-min"),
       maxSeconds: num("cm-max"),
       collabsOnly: document.getElementById("cm-collabs").checked,
@@ -1045,12 +1053,23 @@ async function renderCustomMix() {
   const update = () => {
     const f = readFilters();
     const n = insights.customMix(cached, f, Date.now()).length;
-    document.getElementById("cm-preview").innerHTML = n
-      ? `<p class="nav-hint"><strong>${n}</strong> track${n === 1 ? "" : "s"} match — ${esc(insights.describeCustom(f))}.</p>`
+    // Filtering is free — it runs against the cached library and makes
+    // no requests. Creating the playlist is what costs, at one request
+    // per hundred tracks, so say that rather than leaving the cap
+    // looking like it might fetch something.
+    const typedMiss = f.artistTyped && !f.artistId;
+    const reqs = Math.ceil(n / 100);
+    document.getElementById("cm-preview").innerHTML = typedMiss
+      ? `<p class="empty-note">No artist called “${esc(document.getElementById("cm-artist").value.trim())}” in your library — the rest of the filters still apply.</p>`
+      : n
+      ? `<p class="nav-hint"><strong>${n}</strong> track${n === 1 ? "" : "s"} match — ${esc(insights.describeCustom(f))}.
+         ${n > 300 ? `<br>Creating this would take about ${reqs} requests, one per hundred tracks. Building the list costs nothing; only creating the playlist talks to Spotify.` : ""}</p>`
       : `<p class="empty-note">Nothing matches that combination. Try loosening one of the filters.</p>`;
   };
-  root.querySelectorAll("#custom-form select, #custom-form input").forEach((c) =>
-    c.addEventListener("change", update));
+  root.querySelectorAll("#custom-form select, #custom-form input").forEach((c) => {
+    c.addEventListener("change", update);
+    c.addEventListener("input", update);
+  });
   update();
 
   document.getElementById("cm-build").addEventListener("click", () => {
@@ -1121,9 +1140,7 @@ function openCardModal(card) {
   };
   paint();
 
-  const reuseBlock = document.getElementById("card-reuse-block");
   const exportBtnEl = document.getElementById("card-export");
-  if (reuseBlock) reuseBlock.classList.toggle("hidden", simple);
   if (exportBtnEl) exportBtnEl.classList.toggle("hidden", simple);
 
   modal.classList.remove("hidden");
@@ -1173,7 +1190,11 @@ function openCardModal(card) {
         (nameInput.value || "").trim() || `DeepDive · ${card.title}`,
         `${card.subtitle}, built by DeepDive.`,
         list.map((t) => t.id),
-        { forceNew: simple || !!document.getElementById("card-force-new")?.checked }
+        // Reuse by name is the behaviour: running the same mix again
+        // updates the playlist rather than leaving a pile of duplicates.
+        // A throwaway mix built from ad-hoc filters has no earlier
+        // playlist to reuse, so it creates one either way.
+        { forceNew: simple }
       );
       msg.innerHTML = `Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}. <a href="${esc(res.url)}" data-spotify style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
       msg.classList.remove("hidden", "error");
