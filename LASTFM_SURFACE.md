@@ -32,6 +32,29 @@ to respect. That difference matters: a Spotify quota runs out and only
 time refills it, whereas here slowing down is always a sufficient
 answer.
 
+## Caching is required
+
+Their terms, clause 4.4: *"You will implement suitable caching in
+accordance with the HTTP headers sent with web service responses... You
+agree to cache similar artist and any chart data (top tracks, top
+artists, top albums) for a minimum of one week."*
+
+**This is the opposite of Spotify's rule**, which forbids retaining
+content beyond immediate use. Carrying the Spotify assumption across is
+exactly the mistake that shipped in 2.8.42–2.8.46: tags and similarity
+lived in memory only and were re-fetched on every page load.
+
+We cache to the same persistent store as the library, for 30 days —
+comfortably past their one-week floor, and appropriate since tags and
+similarity barely move.
+
+They also ask that applications avoid hitting the API on page load,
+which the on-demand button design already satisfies.
+
+**One thing we cannot do:** they ask for an identifying `User-Agent`.
+Browsers forbid setting it from JavaScript, so this is unavoidable for
+a browser-only app.
+
 ## Errors, which are not where you expect
 
 Last.fm answers with **HTTP 200 and an error code in the body** as

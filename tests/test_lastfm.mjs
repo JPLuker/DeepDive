@@ -140,5 +140,22 @@ check('recommendations lead the page', src.indexOf('id="rec-section"') < src.ind
 check('library row renamed', /<h2>From your library<\/h2>/.test(src));
 check('and the page keeps a title', /<div class="row-head"><h2>Mixes<\/h2><\/div>/.test(src));
 
+// Caching is required, not optional. Last.fm's terms, clause 4.4:
+// "You agree to cache similar artist and any chart data (top tracks,
+// top artists, top albums) for a minimum of one week." That is the
+// opposite of Spotify's rule, and assuming Spotify's applied here is
+// what left this data in memory only, re-fetched on every reload.
+check('cache exists', /export function attachStore/.test(lfm));
+check('and is persistent, not per-session', /_store\.set\(CACHE_KEY, _cache\)/.test(lfm));
+check('minimum retention is a week', /CACHE_MIN_MS = 7 \* 24 \* 60 \* 60 \* 1000/.test(lfm));
+check('actual retention meets it', /CACHE_TTL_MS = 30 \* 24 \* 60 \* 60 \* 1000/.test(lfm));
+check('all three endpoints read through it', (lfm.match(/return cached\("/g) || []).length === 3);
+check('the store is attached at startup', /lastfm\.attachStore\(bestStore\(\)\)/.test(src));
+// The session maps are empty on reload even when the cache is warm.
+check('session maps rehydrate', /async function hydrateFromCache/.test(src));
+check('rehydrating makes no requests', /if \(await lastfm\.isCached\(bucket, a\.name\)\)/.test(src));
+check('genres rehydrate before deciding', /hydrateFromCache\("tags"/.test(src));
+check('recommendations too', /hydrateFromCache\("similar"/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -23,13 +23,17 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.46";
+export const BUILD = "2.8.47";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
 // fetch changes on later searches. Persisted in IndexedDB. See
 // library-cache.js for the correctness (checksum) design.
 const libraryCache = new LibraryCache(client, bestStore());
+// Last.fm's terms require caching similar-artist and chart data for at
+// least a week, so it shares the same persistent store rather than
+// living in memory and being re-fetched on every reload.
+lastfm.attachStore(bestStore());
 
 // Last catalogue read, for diagnostics. Whether credit filtering
 // engaged was previously invisible, which is how it stayed broken.
@@ -3112,6 +3116,10 @@ async function renderGenreSection() {
   }
 
   const artists = insights.artistsByWeight(cached);
+  // Rehydrate from the persistent cache before deciding there is
+  // nothing to show: the data survives a reload even though the map
+  // doesn't.
+  await hydrateFromCache("tags", artists, _genreTags, lastfm.topTags);
   const cards = insights.genreCards(cached, _genreTags);
 
   if (!cards.length) {
@@ -3207,6 +3215,27 @@ function wireReadLibrary(el, onDone) {
   });
 }
 
+/**
+ * Fill an in-memory map from the persistent Last.fm cache.
+ *
+ * The maps are per-session; the cache is not. Without this a reload
+ * showed the "find my genres" prompt again with the answers already on
+ * disk — and pressing it would have re-fetched nothing, since the
+ * client reads through the cache, but the user would never know that.
+ *
+ * Only reads what is already cached: `isCached` gates it, so this
+ * never makes a request.
+ */
+async function hydrateFromCache(bucket, artists, map, fetcher) {
+  for (const a of artists) {
+    const key = (a.name || "").trim().toLowerCase();
+    if (map.has(key)) continue;
+    try {
+      if (await lastfm.isCached(bucket, a.name)) map.set(key, await fetcher(a.name));
+    } catch (e) { /* a cold entry is not an error */ }
+  }
+}
+
 // Similar artists, cached for the session alongside the tags. Same
 // shape and the same cost — one request per seed artist.
 let _similarBySeed = new Map();
@@ -3227,6 +3256,8 @@ async function renderRecommendations() {
   try { cached = await libraryCache.peek(); } catch (e) { cached = []; }
   if (!cached || !cached.length) { el.innerHTML = ""; return; }
 
+  const seedArtists = insights.artistsByWeight(cached).slice(0, 12);
+  await hydrateFromCache("similar", seedArtists, _similarBySeed, lastfm.similarArtists);
   const cards = insights.recommendationCards(cached, _similarBySeed);
   if (!cards.length) {
     // Seeded from the artists you own most of — those are the ones

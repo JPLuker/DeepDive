@@ -4,6 +4,18 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.47
+- Fixed: Last.fm data was fetched again on every page load. Tags and
+  similar artists lived in memory only, so opening the app spent sixty
+  or more requests re-learning what it already knew.
+- Their terms actually **require** caching — clause 4.4 asks for similar
+  artist and chart data to be held for at least a week. That's the
+  opposite of Spotify's rule, and carrying the Spotify assumption across
+  is what caused this. Now cached to the same persistent store as the
+  library for 30 days.
+- The session's maps rehydrate from that cache on load, so a reload no
+  longer offers to find genres it has already found.
+
 ## 2.8.46
 - Added **Recommended** at the top of Mixes, the second feature on the
   Last.fm key. Similar artists on their own give you names you can't

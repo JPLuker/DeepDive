@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.8.46.** If the build in `js/app.js` is well
+**Last updated at build 2.8.47.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -204,6 +204,12 @@ Listener)` after a full render comes back dead on those fresh nodes.
 The tile overflow failed exactly this way and was patched twice before
 the cause was found. Delegate from a stable parent once, as `initTabs`
 already does.
+
+**Two sources, two opposite caching rules.** Spotify's terms forbid
+retaining content beyond immediate use. Last.fm's terms *require*
+caching similar-artist and chart data for at least a week. Don't carry
+one assumption to the other — doing exactly that is why Last.fm data
+was re-fetched on every page load for five builds.
 
 **The library cache is only filled deliberately.** `peek()` reads it;
 `getLikedTracks()` fills it, and until 2.8.45 only a dive or Settings →

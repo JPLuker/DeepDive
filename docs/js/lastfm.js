@@ -101,8 +101,89 @@ async function call(method, params = {}) {
   return body;
 }
 
+// ---------------------------------------------------------------------
+// Caching
+//
+// Not an optimisation — a requirement. Last.fm's API terms, clause 4.4:
+// "You agree to cache similar artist and any chart data (top tracks,
+// top artists, top albums) for a minimum of one week."
+//
+// That is the exact opposite of Spotify's terms, which forbid retaining
+// content beyond immediate use. Two sources, two rules, and assuming
+// the Spotify rule applied here is what left this data in memory only,
+// re-fetched on every reload.
+//
+// A week is the floor, not the target. Tags and similarity barely move,
+// so thirty days is well within the spirit of it and spares the user
+// several hundred requests a month.
+// ---------------------------------------------------------------------
+
+export const CACHE_MIN_MS = 7 * 24 * 60 * 60 * 1000;
+const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const CACHE_KEY = "deepdive_lastfm_cache";
+
+let _store = null;
+let _cache = null; // { [method]: { [artist]: { at, data } } }
+
+/** Called once at startup with the same store the library cache uses. */
+export function attachStore(store) {
+  _store = store;
+}
+
+async function loadCache() {
+  if (_cache) return _cache;
+  _cache = { tags: {}, similar: {}, toptracks: {} };
+  if (!_store) return _cache;
+  try {
+    const saved = await _store.get(CACHE_KEY);
+    if (saved && typeof saved === "object") _cache = { ...(_cache), ...saved };
+  } catch (e) { /* a cold cache is not an error */ }
+  return _cache;
+}
+
+async function saveCache() {
+  if (!_store || !_cache) return;
+  try { await _store.set(CACHE_KEY, _cache); } catch (e) {}
+}
+
+function fresh(entry) {
+  return entry && (Date.now() - entry.at) < CACHE_TTL_MS;
+}
+
+/** Read-through: cached if fresh, fetched and stored if not. */
+async function cached(bucket, artist, fetcher) {
+  const key = (artist || "").trim().toLowerCase();
+  const c = await loadCache();
+  if (!c[bucket]) c[bucket] = {};
+  if (fresh(c[bucket][key])) return c[bucket][key].data;
+  const data = await fetcher();
+  c[bucket][key] = { at: Date.now(), data };
+  await saveCache();
+  return data;
+}
+
+/** How much is already known, for telling the user what a run will cost. */
+export async function cachedCount(bucket) {
+  const c = await loadCache();
+  return Object.values(c[bucket] || {}).filter(fresh).length;
+}
+
+export async function isCached(bucket, artist) {
+  const c = await loadCache();
+  return fresh((c[bucket] || {})[(artist || "").trim().toLowerCase()]);
+}
+
+export async function clearCache() {
+  _cache = { tags: {}, similar: {}, toptracks: {} };
+  await saveCache();
+}
+
 /** An artist's most-played tracks, ordered by listeners. */
 export async function topTracks(artist, limit = 50) {
+  return cached("toptracks", artist, () => fetchTopTracks(artist, limit));
+}
+
+async function fetchTopTracks(artist, limit) {
   const body = await call("artist.getTopTracks", { artist, limit, autocorrect: 1 });
   const raw = (body && body.toptracks && body.toptracks.track) || [];
   const list = Array.isArray(raw) ? raw : [raw];
@@ -117,6 +198,10 @@ export async function topTracks(artist, limit = 50) {
 
 /** Artists Last.fm considers similar, with a 0–1 match score. */
 export async function similarArtists(artist, limit = 20) {
+  return cached("similar", artist, () => fetchSimilar(artist, limit));
+}
+
+async function fetchSimilar(artist, limit) {
   const body = await call("artist.getSimilar", { artist, limit, autocorrect: 1 });
   const raw = (body && body.similarartists && body.similarartists.artist) || [];
   const list = Array.isArray(raw) ? raw : [raw];
@@ -132,6 +217,10 @@ export async function similarArtists(artist, limit = 20) {
  * removes most of it.
  */
 export async function topTags(artist, limit = 20) {
+  return cached("tags", artist, () => fetchTopTags(artist, limit));
+}
+
+async function fetchTopTags(artist, limit) {
   const body = await call("artist.getTopTags", { artist, limit, autocorrect: 1 });
   const raw = (body && body.toptags && body.toptags.tag) || [];
   const list = Array.isArray(raw) ? raw : [raw];
