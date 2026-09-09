@@ -72,5 +72,14 @@ check('settings opens straight to the options', /adjust\.classList\.toggle\("hid
 check('and hides the choices', /\.intent-choices"\)\?\.classList\.toggle\("hidden", !forArtist\)/.test(src));
 check('the artist is the heading', /titleEl\.textContent = artistName/.test(src));
 
+// "Don't ask again" made sense when this dialog only chose how deep a
+// dive went. Once it chose *what to do*, skipping it removed Dip from
+// the app entirely for anyone who had ever ticked the box — which is
+// exactly what happened: no popup, no dip, no way to reach it.
+check('the choice cannot be skipped', !/function intentSkipped/.test(src));
+check('the checkbox is gone', !/id="intent-remember"/.test(shell));
+check('an old stored skip is cleared', /localStorage\.removeItem\(INTENT_SKIP_KEY\)/.test(src));
+check('tapping an artist always opens the dialog', !/if \(!force && intentSkipped\(\)/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

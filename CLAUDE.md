@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.8.50.** If the build in `js/app.js` is well
+**Last updated at build 2.8.51.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -204,6 +204,13 @@ Listener)` after a full render comes back dead on those fresh nodes.
 The tile overflow failed exactly this way and was patched twice before
 the cause was found. Delegate from a stable parent once, as `initTabs`
 already does.
+
+**A skip that predates a feature will hide it.** "Don't ask again" was
+added when the artist dialog only chose how deep a dive went. When Dip
+became the other half of that dialog, anyone who had ticked the box got
+no popup and no dip — the feature simply did not exist for them. When a
+dialog gains a new purpose, re-examine every way there is of not
+seeing it.
 
 **Two sources, two opposite caching rules.** Spotify's terms forbid
 retaining content beyond immediate use. Last.fm's terms *require*

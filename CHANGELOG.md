@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.51
+- Fixed: tapping an artist showed no popup for anyone who had ever
+  ticked "Don't ask again" — which meant Dip did not exist for them,
+  since the popup is the only route to it.
+- Removed that option. It made sense when the dialog only chose how deep
+  a dive went, so skipping it meant accepting a default. Now it chooses
+  what to do, and a skipped choice is a missing feature. Any previously
+  stored preference is cleared.
+
 ## 2.8.50
 - Tapping an artist now offers **Dip** and **Dive** as the two things
   the dialog is about, each saying what it does. They were buttons in a

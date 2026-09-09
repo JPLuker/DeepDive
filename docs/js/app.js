@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.50";
+export const BUILD = "2.8.51";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1344,9 +1344,6 @@ const INTENT_CUSTOM_KEY = "deepdive_intent_custom";
 function savedIntentId() {
   try { return localStorage.getItem(INTENT_KEY) || "standard"; } catch (e) { return "standard"; }
 }
-function intentSkipped() {
-  try { return localStorage.getItem(INTENT_SKIP_KEY) === "1"; } catch (e) { return false; }
-}
 function savedCustomOpts() {
   try { return JSON.parse(localStorage.getItem(INTENT_CUSTOM_KEY) || "{}"); } catch (e) { return {}; }
 }
@@ -1366,11 +1363,14 @@ function optionsForIntent(id, customOpts) {
 let _pendingArtist = null;
 
 function openIntentModal(artistName, { force = false } = {}) {
-  // If they've opted out of being asked, go straight to the search —
-  // unless this was opened deliberately from the options icon.
-  if (!force && intentSkipped() && artistName) {
-    return runSearchWithOptions(artistName, optionsForIntent(savedIntentId()));
-  }
+  // "Don't ask again" used to make sense: this dialog only chose how
+  // deep a dive went, so skipping it meant accepting a default. Now it
+  // chooses *what to do* — dip or dive — and skipping it removed Dip
+  // from the app entirely, with no other route to it.
+  //
+  // A choice you can't skip is the right trade here: it is one tap, and
+  // the alternative is a feature that silently doesn't exist for anyone
+  // who ever ticked the box.
 
   _pendingArtist = artistName;
   const modal = document.getElementById("intent-modal");
@@ -1440,8 +1440,6 @@ function openIntentModal(artistName, { force = false } = {}) {
     if (warn && selected === "custom") warn.classList.toggle("hidden", !appearsBox.checked);
   });
 
-  const remember = document.getElementById("intent-remember");
-  if (remember) remember.checked = intentSkipped();
 
   modal.classList.remove("hidden");
 
@@ -1451,7 +1449,9 @@ function openIntentModal(artistName, { force = false } = {}) {
     try {
       localStorage.setItem(INTENT_KEY, selected);
       localStorage.setItem(INTENT_CUSTOM_KEY, JSON.stringify(customOpts));
-      localStorage.setItem(INTENT_SKIP_KEY, remember && remember.checked ? "1" : "0");
+      // Clear any skip stored before 2.8.51, or anyone who ticked the
+      // old box would keep bypassing the choice they now need.
+      localStorage.removeItem(INTENT_SKIP_KEY);
     } catch (e) {}
     close();
     if (_pendingArtist) {
