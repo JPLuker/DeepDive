@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.42";
+export const BUILD = "2.8.43";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -453,7 +453,13 @@ async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml 
       libraryCache.peek(),
       new Promise((resolve) => setTimeout(() => resolve([]), 2500)),
     ]);
-    if (!cached || !cached.length) { el.innerHTML = ""; return; }
+    if (!cached || !cached.length) {
+      // Mixes are built entirely from the cached library, so with no
+      // cache there is nothing to build from — which is a state worth
+      // naming rather than showing a blank page.
+      el.innerHTML = `<p class="empty-note">Your library hasn't been read yet. Open Home and it'll cache in the background, then come back.</p>`;
+      return;
+    }
     // The sampler is a card now, so its pool has to exist wherever
     // cards are drawn. It was only built while loading suggestions,
     // which Mixes doesn't do — so the card would never have appeared
@@ -481,13 +487,18 @@ async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml 
           (a) => mixBlocked.has((a.name || "").trim().toLowerCase())))
       : cached;
     _allCards = insights.playlistCards(forMixes, { seed });
-    if (!_allCards.length) { el.innerHTML = ""; return; }
+    if (!_allCards.length) {
+      el.innerHTML = `<p class="empty-note">Nothing to build a mix from yet — that usually means the cached library is very small.</p>`;
+      return;
+    }
     _cards = insights.seededPick(_allCards, CARDS_PER_LOAD, seed);
 
     renderCardRow(el);
   } catch (e) {
-    el.innerHTML = "";
+    // An empty page with a console line nobody opens is indistinguishable
+    // from "you have no mixes". Say what happened on screen.
     console.error("[DeepDive] playlist cards failed:", e);
+    el.innerHTML = `<p class="empty-note">Couldn't build your mixes: ${esc(e.message || String(e))}</p>`;
   }
 }
 

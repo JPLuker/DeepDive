@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.43
+- Fixed: an empty Mixes page said nothing. Three separate paths cleared
+  the page and returned — no cached library, no cards generated, or an
+  exception — so all three looked identical to simply having no mixes,
+  and the only explanation went to a console nobody has open. Each now
+  says which it is.
+
 ## 2.8.42
 - Added genre mixes, the first feature built on Last.fm. Tags are far
   finer-grained than Spotify's artist genres — shoegaze, midwest emo,

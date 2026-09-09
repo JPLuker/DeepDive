@@ -116,5 +116,13 @@ check('shuffle is the default for mixes', /order: "shuffle" \}/.test(src));
 check('sampler still keeps its built order', /\? \{ length: 20, order: "found" \}/.test(src));
 check('custom defaults to shuffled', /<option value="random" selected>Shuffled<\/option>/.test(src));
 
+// An empty Mixes page said nothing at all: three separate paths set
+// innerHTML to "" and returned, so "no cache", "no cards" and "it threw"
+// were indistinguishable from each other and from having no mixes.
+check('no cache is explained', /Your library hasn't been read yet/.test(src));
+check('no cards is explained', /Nothing to build a mix from yet/.test(src));
+check('a failure is shown, not just logged', /Couldn't build your mixes:/.test(src));
+check('no silent empty returns left', !/\{ el\.innerHTML = ""; return; \}/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
