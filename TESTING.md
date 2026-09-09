@@ -442,6 +442,25 @@ Needs a Last.fm key in Settings. Spotify quota is not involved.
 - [ ] A deliberately wrong key says the key was rejected rather than
       grinding through every artist
 
+## 15. Dips, recommendations, genres (2.8.42–2.8.49)
+
+All three need a Last.fm key in Settings.
+
+- [ ] **Dip** appears beside Dive in the artist popup, and running one
+      produces an hour-ish mix with the best-known tracks first
+- [ ] A deluxe edition doesn't put the same song in twice
+- [ ] With the Last.fm key removed, a dip still builds — just ordered by
+      catalogue rather than popularity
+- [ ] **Recommended** leads the Mixes page and the cards open like any
+      other mix
+- [ ] **Genres** look like genres, with no duplicates under different
+      spellings
+- [ ] **Reload the app** — genres and recommendations should already be
+      there rather than offering to find them again. That's the cache
+      their terms require
+- [ ] Leaving it a month should re-fetch; there's no way to test that
+      quickly short of clearing site data
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

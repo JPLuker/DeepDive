@@ -91,7 +91,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.48
+## Shipped since — build 2.8.49
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -454,8 +454,8 @@ Joseph registered the application on 6 Sept; approval was instant. One
 key unlocks three features, so scope them together rather than building
 dips and reopening the integration twice:
 
-- **Dips** — `artist.getTopTracks` gives the popularity Spotify no
-  longer will, which is what dips have been blocked on.
+- ~~**Dips**~~ — *shipped in 2.8.49. Same catalogue read as a dive,
+  ordered by Last.fm's top tracks, filled to an hour by duration.*
 - ~~**Similar artists**~~ — *shipped in 2.8.46 as Recommended mixes.
   Crossed with the library rather than presented as bare names, since a
   recommendation you can't play is a shopping list.*

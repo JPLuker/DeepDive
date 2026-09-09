@@ -505,6 +505,59 @@ function pickCanonical(tracks) {
 }
 
 /**
+ * A dip: an artist's best hour.
+ *
+ * Last.fm knows which of an artist's tracks people actually play;
+ * Spotify no longer says. So the ordering comes from there and the
+ * tracks come from the catalogue we've just read — matched on
+ * normalised title, since the two services spell things differently
+ * ("Song - Remastered 2011" against "Song").
+ *
+ * Filled to a duration rather than a track count. An hour of an artist
+ * is a meaningful thing to ask for; twenty tracks is not, because
+ * twenty tracks of one artist might be fifty minutes or two hours.
+ *
+ * Anything Last.fm doesn't rank falls to the end in catalogue order, so
+ * an artist it has never heard of still produces a mix rather than
+ * nothing.
+ */
+export function buildDip(catalogTracks, topTracks, { targetMs = 60 * 60 * 1000 } = {}) {
+  const rank = new Map();
+  (topTracks || []).forEach((t, i) => {
+    const key = normalizeTitle(t.name || "");
+    if (key && !rank.has(key)) rank.set(key, i);
+  });
+
+  const seen = new Set();
+  const scored = [];
+  for (const t of catalogTracks || []) {
+    if (!t || !t.id) continue;
+    const key = normalizeTitle(t.name || "");
+    // The same recording can appear on several releases; a dip should
+    // not contain a song twice because it was on a deluxe edition.
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const r = rank.has(key) ? rank.get(key) : Number.MAX_SAFE_INTEGER;
+    scored.push({ track: t, rank: r });
+  }
+
+  scored.sort((a, b) => a.rank - b.rank);
+
+  const out = [];
+  let total = 0;
+  for (const { track } of scored) {
+    const d = track.duration_ms || 0;
+    // Stop once adding the next track would overshoot more than it
+    // helps — an hour and four minutes is fine, an hour and nine is not.
+    if (total && total + d > targetMs + 4 * 60 * 1000) continue;
+    out.push(track);
+    total += d;
+    if (total >= targetMs) break;
+  }
+  return { tracks: out, totalMs: total, ranked: rank.size };
+}
+
+/**
  * Collapses tracks that are the same recording on different releases.
  *
  * @returns { tracks, collapsedCount, groups }

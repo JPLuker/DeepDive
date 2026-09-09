@@ -4,6 +4,23 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.49
+- Added **dips** — an artist's best hour. A dip runs the same catalogue
+  read and duplicate check as a dive, then keeps only the tracks worth
+  keeping, ordered by what people actually play.
+- Dip sits beside Dive at the bottom of the artist popup and takes the
+  same options.
+- Ordered by Last.fm's top tracks, matched on normalised titles because
+  the two services spell the same recording differently. Filled to a
+  duration rather than a track count: an hour of an artist is a
+  meaningful thing to ask for, whereas twenty tracks might be fifty
+  minutes or two hours.
+- Costs one extra request on top of the dive it already ran. Without a
+  Last.fm key it still builds, ordered by catalogue instead — and says
+  so if Last.fm can't be reached.
+- A recording appearing on several releases only appears once, so a
+  deluxe edition doesn't put the same song in twice.
+
 ## 2.8.48
 - Mixes opens straight into Recommended. The page title and description
   are gone: Dives has neither, the tab already says where you are, and

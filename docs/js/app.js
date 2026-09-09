@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.48";
+export const BUILD = "2.8.49";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1434,7 +1434,7 @@ function openIntentModal(artistName, { force = false } = {}) {
   modal.classList.remove("hidden");
 
   const close = () => modal.classList.add("hidden");
-  const confirm = () => {
+  const confirm = ({ dip = false } = {}) => {
     const customOpts = readCustomOptions();
     try {
       localStorage.setItem(INTENT_KEY, selected);
@@ -1445,7 +1445,7 @@ function openIntentModal(artistName, { force = false } = {}) {
     if (_pendingArtist) {
       const artist = _pendingArtist;
       _pendingArtist = null;
-      runSearchWithOptions(artist, optionsForIntent(selected, customOpts));
+      runSearchWithOptions(artist, { ...optionsForIntent(selected, customOpts), dip });
     }
   };
 
@@ -1455,6 +1455,16 @@ function openIntentModal(artistName, { force = false } = {}) {
   const freshGo = goEl.cloneNode(true); goEl.replaceWith(freshGo);
   const freshCancel = cancelEl.cloneNode(true); cancelEl.replaceWith(freshCancel);
   freshGo.addEventListener("click", confirm);
+
+  // A dip is a dive that stops early and keeps only the best hour, so
+  // it takes the same options and the same route in — the difference is
+  // what comes out, not how it is asked for.
+  const dipEl = document.getElementById("intent-dip");
+  if (dipEl) {
+    const freshDip = dipEl.cloneNode(true);
+    dipEl.replaceWith(freshDip);
+    freshDip.addEventListener("click", () => confirm({ dip: true }));
+  }
   freshCancel.addEventListener("click", () => { _pendingArtist = null; close(); });
   modal.addEventListener("click", (e) => { if (e.target === modal) { _pendingArtist = null; close(); } });
   document.addEventListener("keydown", function onKey(e) {
@@ -2123,7 +2133,11 @@ async function runSearchWithOptions(artistName, opts) {
       newTracks: (result.new_tracks || []).length,
       alreadyLiked: result.already_liked_count || 0,
     });
-    renderResults(result);
+    if (opts && opts.dip) {
+      await presentDip(result);
+    } else {
+      renderResults(result);
+    }
     // If this artist was pinned, the pin has served its purpose. Ask
     // rather than assume — but ask at the moment it's obvious, which is
     // the moment the dive finishes, not later on a list page.
@@ -2630,6 +2644,47 @@ function attachHeroFade() {
   };
   window.addEventListener("scroll", onScroll, { passive: true });
   apply();
+}
+
+/**
+ * A dip's result: the artist's best hour, ready to save.
+ *
+ * The dive has already read the catalogue and found what you own, so a
+ * dip costs one extra request — Last.fm for the popularity ordering.
+ * Without a key it still works, just ordered by the catalogue rather
+ * than by what people actually play.
+ */
+async function presentDip(result) {
+  const artistName = (result.artist && result.artist.name) || "";
+  const pool = (result.catalog_tracks && result.catalog_tracks.length)
+    ? result.catalog_tracks
+    : [...(result.duplicate_candidates || []).map((d) => d.track), ...(result.new_tracks || [])];
+
+  let top = [];
+  try {
+    if (lastfm.hasKey()) top = await lastfm.topTracks(artistName, 50);
+  } catch (e) {
+    // An ordering we couldn't fetch is not a reason to lose the mix.
+    flash("Couldn't reach Last.fm — ordering by catalogue instead.");
+  }
+
+  const dip = matching.buildDip(pool, top);
+  if (!dip.tracks.length) {
+    renderProgressError(`Couldn't build a dip for ${artistName} — no tracks came back.`);
+    return;
+  }
+  const mins = Math.round(dip.totalMs / 60000);
+  openCardModal({
+    id: `dip-${(result.artist && result.artist.id) || artistName}`,
+    title: `${artistName}, in an hour`,
+    subtitle: top.length
+      ? `${dip.tracks.length} tracks, about ${mins} minutes, most played first`
+      : `${dip.tracks.length} tracks, about ${mins} minutes`,
+    simple: true,
+    name: `DeepDive · ${artistName} in an hour`,
+    count: dip.tracks.length,
+    tracks: dip.tracks,
+  });
 }
 
 function renderResults(r) {

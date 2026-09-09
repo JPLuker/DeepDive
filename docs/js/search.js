@@ -211,6 +211,10 @@ export async function runSearch(client, artistName, opts = {}) {
     collapsed_count: collapsed.collapsedCount,
     collapsed_groups: collapsed.groups,
     already_liked_count: phase1.already_liked.length,
+    // The whole catalogue, for callers that want to re-rank it rather
+    // than take the already-liked / new split. A dip orders it by
+    // popularity; nothing else uses it, so it costs only the reference.
+    catalog_tracks: catalogTracks,
     excluded_count: phase1.excluded_count,
     exclude_live: excludeLive,
     exclude_censored: excludeCensored,
