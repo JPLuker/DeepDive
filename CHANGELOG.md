@@ -4,6 +4,11 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.44
+- The Genres section had the same silent-empty problem as the mixes row
+  and also swallowed the error from reading the cache. Both now say
+  which case they're in.
+
 ## 2.8.43
 - Fixed: an empty Mixes page said nothing. Three separate paths cleared
   the page and returned — no cached library, no cards generated, or an

@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.43";
+export const BUILD = "2.8.44";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3077,8 +3077,17 @@ async function renderGenreSection() {
   }
 
   let cached = [];
-  try { cached = await libraryCache.peek(); } catch (e) { cached = []; }
-  if (!cached || !cached.length) { el.innerHTML = ""; return; }
+  let cacheErr = null;
+  try { cached = await libraryCache.peek(); } catch (e) { cacheErr = e; }
+  if (!cached || !cached.length) {
+    // Same rule as the mixes row: an empty section should say which
+    // empty it is. Written moments after criticising the identical
+    // pattern elsewhere in this file.
+    el.innerHTML = `<p class="empty-note">${esc(cacheErr
+      ? `Couldn't read your cached library: ${cacheErr.message || cacheErr}`
+      : "Genres need your library cached first. Open Home, then come back.")}</p>`;
+    return;
+  }
 
   const artists = insights.artistsByWeight(cached);
   const cards = insights.genreCards(cached, _genreTags);
