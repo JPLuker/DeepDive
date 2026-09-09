@@ -122,7 +122,12 @@ check('custom defaults to shuffled', /<option value="random" selected>Shuffled<\
 check('no cache is explained', /Your library hasn't been read yet/.test(src));
 check('no cards is explained', /Nothing to build a mix from yet/.test(src));
 check('a failure is shown, not just logged', /Couldn't build your mixes:/.test(src));
-check('no silent empty returns left', !/\{ el\.innerHTML = ""; return; \}/.test(src));
+// Scoped to the card loader. Recommendations returns silently when
+// there's no key or no cache on purpose: the Genres section and the
+// library row on the same page already explain both, and saying it
+// three times is noise rather than clarity.
+const loader = src.slice(src.indexOf('async function loadPlaylistCards'), src.indexOf('function renderCardRow'));
+check('no silent empty returns in the loader', !/\{ el\.innerHTML = ""; return; \}/.test(loader));
 
 // The real cause of the empty Mixes page: nothing filled the library
 // cache except running a dive or Settings > Refresh library. Anyone who

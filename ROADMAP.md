@@ -91,7 +91,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.45
+## Shipped since — build 2.8.46
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -456,8 +456,9 @@ dips and reopening the integration twice:
 
 - **Dips** — `artist.getTopTracks` gives the popularity Spotify no
   longer will, which is what dips have been blocked on.
-- **Similar artists** — `artist.getSimilar`, replacing the deprecated
-  Spotify endpoint.
+- ~~**Similar artists**~~ — *shipped in 2.8.46 as Recommended mixes.
+  Crossed with the library rather than presented as bare names, since a
+  recommendation you can't play is a shopping list.*
 - ~~**Genre and subgenre mixes**~~ — *shipped in 2.8.42. Weight floor of
   25, minimum eight tracks, alias list for the spellings normalisation
   can't collapse, and shelving tags like "seen live" dropped. Fetched on

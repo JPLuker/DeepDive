@@ -51,7 +51,7 @@ check('all cards rendered, none hidden', !/CARDS_VISIBLE/.test(app) && !/More id
 check('mixes shows the lot', /const shown = limit \? _cards\.slice\(0, limit\) : _cards;/.test(app));
 // The button is built by sectionHead from arguments, so the rendered
 // string never appears in source — check the call instead.
-check('home preview links onward', /sectionHead\("Mixes", "from your library", "mixes", "All mixes"\)/.test(app));
+check('home preview links onward', /sectionHead\("Mixes", "made from what you've saved", "mixes", "All mixes"\)/.test(app));
 // The limit is computed from viewport width now: three cards is a full
 // row on a phone and a half-empty one on a four-across desktop grid.
 check('and shows only a taste', /loadPlaylistCards\(\{ into: "home-mixes", limit: perRow/.test(app));

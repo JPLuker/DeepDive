@@ -834,6 +834,58 @@ function surpriseCard(tracks) {
 }
 
 /**
+ * "If you like X" mixes.
+ *
+ * Last.fm knows which artists resemble each other. On its own that
+ * gives you names you can't play — a recommendation for an artist
+ * whose music you don't own is a shopping list, not a mix.
+ *
+ * So the recommendation is the intersection: artists Last.fm says
+ * resemble one you play constantly, that you already own and have
+ * barely touched. That's a mix you can press play on, made of music
+ * you'd forgotten you had.
+ *
+ * @param similarByArtist Map of lowercased seed artist -> [{name, match}]
+ */
+export function recommendationCards(tracks, similarByArtist, { minTracks = 6, limit = 6, maxPerSeed = 40 } = {}) {
+  if (!similarByArtist || !similarByArtist.size) return [];
+  const owned = byArtist(tracks);
+  const ownedByName = new Map();
+  for (const a of owned.values()) ownedByName.set((a.name || "").trim().toLowerCase(), a);
+
+  const cards = [];
+  for (const [seed, similar] of similarByArtist.entries()) {
+    const seedEntry = ownedByName.get(seed);
+    if (!seedEntry) continue;
+    const picked = [];
+    const seen = new Set();
+    for (const sim of similar) {
+      const key = (sim.name || "").trim().toLowerCase();
+      // Excluding the seed itself: a mix of the artist you already
+      // play constantly isn't a recommendation.
+      if (key === seed || seen.has(key)) continue;
+      const match = ownedByName.get(key);
+      if (!match) continue;
+      seen.add(key);
+      for (const t of tracks) {
+        if ((t.artists || []).some((a) => a.id === match.id)) picked.push(t);
+      }
+      if (picked.length >= maxPerSeed) break;
+    }
+    if (picked.length < minTracks) continue;
+    cards.push({
+      id: `rec-${seedEntry.id}`,
+      title: `If you like ${seedEntry.name}`,
+      subtitle: `${seen.size} similar artist${seen.size === 1 ? "" : "s"} you already own`,
+      count: picked.length,
+      tracks: picked,
+      isRecommendation: true,
+    });
+  }
+  return cards.sort((a, b) => b.count - a.count).slice(0, limit);
+}
+
+/**
  * Artists ranked by how much of them you own.
  *
  * Genre tagging costs one request per artist, so the order matters: an

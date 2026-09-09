@@ -104,5 +104,41 @@ check('one artist failing does not stop the rest', /_genreTags\.set\(key, \[\]\)
 check('no key is explained, not errored', /needs Last\.fm<\/span>/.test(src));
 check('and points at settings', /data-tab="settings">Add a key/.test(src));
 
+// Recommendations: similar artists crossed with what you own.
+import { recommendationCards } from '../docs/js/insights.js';
+const recTracks = [];
+for (let i = 0; i < 40; i++) {
+  recTracks.push({
+    id: 'r' + i, name: 'S' + i,
+    artists: [{ id: 'a' + (i % 4), name: 'Artist ' + (i % 4) }],
+    album: { id: 'al', release_date: '2010-01-01', images: [] },
+    added_at: '2020-01-01T00:00:00Z',
+  });
+}
+const sim = new Map([['artist 0', [
+  { name: 'Artist 1', match: 0.9 },
+  { name: 'Nobody I Own', match: 0.8 },
+  { name: 'Artist 2', match: 0.7 },
+]]]);
+const recs = recommendationCards(recTracks, sim, { minTracks: 6 });
+
+check('recommendations become mixes', recs.length === 1);
+// Similar artists alone are names you cannot play; the recommendation
+// is the intersection with what you already own.
+check('only artists you own are used', recs[0].subtitle.startsWith('2 similar'));
+check('the seed itself is excluded', !recs[0].tracks.some((t) => t.artists[0].name === 'Artist 0'));
+check('named after what explains it', /^If you like /.test(recs[0].title));
+check('no similarity data means no cards', recommendationCards(recTracks, new Map()).length === 0);
+check('too few tracks is not a mix', recommendationCards(recTracks, sim, { minTracks: 999 }).length === 0);
+
+// Same cost model as tags: one request per seed, on a button.
+check('recommendations are fetched on demand', /id="rec-go"/.test(src));
+check('cost is stated', /\$\{seeds\.length\} requests, about/.test(src));
+check('a rejected key stops it', /Last\.fm rejected the key/.test(src));
+check('recommendations lead the page', src.indexOf('id="rec-section"') < src.indexOf('id="playlist-cards"'));
+// Genres are mixes too, so the original row had to be renamed.
+check('library row renamed', /<h2>From your library<\/h2>/.test(src));
+check('and the page keeps a title', /<div class="row-head"><h2>Mixes<\/h2><\/div>/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.45";
+export const BUILD = "2.8.46";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -378,7 +378,7 @@ async function renderHome() {
   // One row of cards, whatever a row holds at this width — the sampler
   // card takes the first slot.
   const perRow = columnsAtWidth();
-  loadPlaylistCards({ into: "home-mixes", limit: perRow, headHtml: sectionHead("Mixes", "from your library", "mixes", "All mixes") });
+  loadPlaylistCards({ into: "home-mixes", limit: perRow, headHtml: sectionHead("Mixes", "made from what you've saved", "mixes", "All mixes") });
 }
 
 /**
@@ -413,11 +413,14 @@ async function renderMixes() {
   setActiveTab("mixes");
   root.innerHTML = `
     ${rateLimitBanner()}
-    <p class="nav-hint">Built from what DeepDive already knows about your library. Nothing is created until you confirm it.</p>
+    <div class="row-head"><h2>Mixes</h2></div>
+    <p class="nav-hint" style="margin-top:0;">Built from what DeepDive already knows about your library. Nothing is created until you confirm it.</p>
+    <div id="rec-section"></div>
     <div id="playlist-cards"></div>
     <div id="genre-section"></div>`;
 
   loadPlaylistCards();
+  renderRecommendations();
   renderGenreSection();
 }
 
@@ -520,8 +523,10 @@ function renderCardRow(el) {
   // rest, so its preview doesn't read as the whole set.
   const limit = el._cardLimit || 0;
   const shown = limit ? _cards.slice(0, limit) : _cards;
+  // "Mixes" is the page. Genres are mixes too, so this row needed to
+  // say what it actually is: patterns found in the library itself.
   const head = el._cardHead
-    || `<div class="row-head"><h2>Mixes</h2><span class="qual">from your library</span></div>`;
+    || `<div class="row-head"><h2>From your library</h2><span class="qual">patterns in what you've saved</span></div>`;
   // The sampler leads. It is a mix like the rest — a few tracks each
   // from artists you've barely heard — and it used to sit below the
   // suggestion row as a full-width strip of its own, which made it look
@@ -3200,6 +3205,77 @@ function wireReadLibrary(el, onDone) {
       flash(`Couldn't read your library: ${e.message || e}`, true);
     }
   });
+}
+
+// Similar artists, cached for the session alongside the tags. Same
+// shape and the same cost — one request per seed artist.
+let _similarBySeed = new Map();
+
+/**
+ * Recommendations lead the Mixes page.
+ *
+ * Last.fm's similar-artist data on its own produces names you can't
+ * play. Crossed with your own library it produces the opposite: music
+ * you already own, next to the artist that explains why you'd want it.
+ */
+async function renderRecommendations() {
+  const el = document.getElementById("rec-section");
+  if (!el) return;
+  if (!lastfm.hasKey()) { el.innerHTML = ""; return; }
+
+  let cached = [];
+  try { cached = await libraryCache.peek(); } catch (e) { cached = []; }
+  if (!cached || !cached.length) { el.innerHTML = ""; return; }
+
+  const cards = insights.recommendationCards(cached, _similarBySeed);
+  if (!cards.length) {
+    // Seeded from the artists you own most of — those are the ones
+    // whose neighbours you're most likely to want.
+    const seeds = insights.artistsByWeight(cached).slice(0, 12);
+    if (!seeds.length) { el.innerHTML = ""; return; }
+    const secs = Math.ceil((seeds.length * 250) / 1000);
+    el.innerHTML = `
+      <div class="crate-header"><span class="label">Recommended</span></div>
+      <p class="nav-hint" style="margin-top:0;">DeepDive can ask Last.fm which artists resemble the ones you play most, then build mixes from the ones you already own but rarely reach for. ${seeds.length} requests, about ${secs} seconds.</p>
+      <div class="actions"><button class="btn btn-ghost btn-small" id="rec-go">Find recommendations</button></div>
+      <div id="rec-progress"></div>`;
+    document.getElementById("rec-go").addEventListener("click", async (ev) => {
+      const btn = ev.currentTarget;
+      btn.disabled = true;
+      let done = 0;
+      for (const a of seeds) {
+        const key = a.name.trim().toLowerCase();
+        btn.textContent = `Asking Last.fm… ${++done} of ${seeds.length}`;
+        if (_similarBySeed.has(key)) continue;
+        try {
+          _similarBySeed.set(key, await lastfm.similarArtists(a.name, 30));
+        } catch (e) {
+          if (e && e.suspended) {
+            document.getElementById("rec-progress").innerHTML =
+              `<p class="empty-note">Last.fm rejected the key. Check it in Settings.</p>`;
+            return;
+          }
+          _similarBySeed.set(key, []);
+        }
+      }
+      renderRecommendations();
+    });
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="row-head"><h2>Recommended</h2><span class="qual">similar to what you play most</span></div>
+    <div class="card-row" id="rec-cards"></div>`;
+  const row = document.getElementById("rec-cards");
+  row.innerHTML = cards.map((c, i) => `
+    <button class="pcard" data-rec-card="${esc(c.id)}" style="--h:${(150 + i * 41) % 360};">
+      <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3"/><path d="M12 18v3"/><path d="M5 12H2"/><path d="M22 12h-3"/><circle cx="12" cy="12" r="5"/></svg></span>
+      <span class="pcard-title">${esc(c.title)}</span>
+      <span class="pcard-sub">${esc(c.subtitle)}</span>
+    </button>`).join("");
+  row.querySelectorAll("[data-rec-card]").forEach((btn) =>
+    btn.addEventListener("click", () =>
+      openCardModal(cards.find((c) => c.id === btn.dataset.recCard))));
 }
 
 // ---- genre tags ----

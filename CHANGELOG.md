@@ -4,6 +4,21 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.46
+- Added **Recommended** at the top of Mixes, the second feature on the
+  Last.fm key. Similar artists on their own give you names you can't
+  play, so the recommendation is the intersection: artists Last.fm says
+  resemble the ones you play most, that you already own and rarely
+  reach for. "If you like Norah Jones" is a mix you can press play on.
+- Fetched on demand like genres — twelve requests, a few seconds, on a
+  button rather than in the background.
+- Renamed the original card row to **From your library**. Genres and
+  recommendations are mixes too, so calling one of the three "Mixes"
+  had stopped meaning anything.
+- The Mixes page has a title again. It lost one in 2.8.25 when a
+  duplicate heading was removed, and has opened with a bare sentence
+  ever since.
+
 ## 2.8.45
 - Fixed the actual cause of an empty Mixes page: **nothing ever filled
   the library cache** except running a dive or using Settings → Refresh

@@ -60,7 +60,10 @@ check('empty sampler pool is handled', /_samplerPool\.length >= 2/.test(src));
 check('one sampler pool, not two', (src.match(/let _samplerPool/g) || []).length === 1);
 
 // "Playlists" is the old name for this.
-check('mixes is the user-facing name', /<h2>Mixes<\/h2>/.test(src));
+// Mixes is the page. Genres and recommendations are mixes too, so the
+// library-derived row had to say what it actually is.
+check('mixes is the page name', /<div class="row-head"><h2>Mixes<\/h2><\/div>/.test(src));
+check('library row is named for its contents', /<h2>From your library<\/h2>/.test(src));
 
 // "More ways to dive" was three identical pills with one warning
 // floating above all of them, so the most expensive action in the app
