@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.49";
+export const BUILD = "2.8.50";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1377,13 +1377,25 @@ function openIntentModal(artistName, { force = false } = {}) {
   const list = document.getElementById("intent-list");
   const sub = document.getElementById("intent-artist");
   const custom = document.getElementById("intent-custom");
-  const goBtn = document.getElementById("intent-go");
   if (!modal || !list) return;
 
+  const adjust = document.getElementById("intent-adjust");
+  const gear = document.getElementById("intent-gear");
+  const dipBtn = document.getElementById("intent-dip");
+
+  // The heading says what you're choosing about; the subtitle says who.
+  const titleEl = document.getElementById("intent-title");
+  if (titleEl) titleEl.textContent = artistName || "How should DeepDive search?";
   sub.textContent = artistName
-    ? `Diving into ${artistName}. You can change this any time.`
-    : "Pick a default. You can change this any time.";
-  goBtn.textContent = artistName ? "Dive" : "Save";
+    ? "Dip for the highlights, dive for everything."
+    : "Pick what a dive does by default. You can change it any time.";
+
+  // Opening the modal from Settings has no artist to act on, so the
+  // choices make no sense there — it's the options that are wanted.
+  const forArtist = !!artistName;
+  document.querySelector(".intent-choices")?.classList.toggle("hidden", !forArtist);
+  if (adjust) adjust.classList.toggle("hidden", forArtist);
+  if (gear) gear.setAttribute("aria-expanded", String(!forArtist));
 
   let selected = savedIntentId();
 
@@ -1454,7 +1466,19 @@ function openIntentModal(artistName, { force = false } = {}) {
   const cancelEl = document.getElementById("intent-cancel");
   const freshGo = goEl.cloneNode(true); goEl.replaceWith(freshGo);
   const freshCancel = cancelEl.cloneNode(true); cancelEl.replaceWith(freshCancel);
-  freshGo.addEventListener("click", confirm);
+  freshGo.addEventListener("click", () => confirm());
+
+  if (gear) {
+    const freshGear = gear.cloneNode(true);
+    gear.replaceWith(freshGear);
+    freshGear.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const el = document.getElementById("intent-adjust");
+      const open = !el.classList.contains("hidden");
+      el.classList.toggle("hidden", open);
+      freshGear.setAttribute("aria-expanded", String(!open));
+    });
+  }
 
   // A dip is a dive that stops early and keeps only the best hour, so
   // it takes the same options and the same route in — the difference is

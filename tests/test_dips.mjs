@@ -54,5 +54,23 @@ check('works without a key', /if \(lastfm\.hasKey\(\)\) top = await lastfm\.topT
 check('and says so if Last.fm is unreachable', /ordering by catalogue instead/.test(src));
 check('an empty dip is explained', /Couldn't build a dip for/.test(src));
 
+// Dip and Dive are the dialog, not buttons in a footer under a page of
+// options — which is what made Dip read as a setting rather than a
+// choice you were being offered.
+check('choices lead the dialog', /<div class="intent-choices">/.test(shell));
+check('dip is a choice, not a footer button', /<button class="intent-choice" id="intent-dip">/.test(shell));
+check('dive is the primary one', /<button class="intent-choice is-primary" id="intent-go">/.test(shell));
+check('each says what it does', /their best hour, most played first/.test(shell) && /their whole catalogue against your library/.test(shell));
+// The gear adjusts what a dive reads, so it belongs against Dive.
+check('gear sits with dive', /<div class="intent-choice-pair">[\s\S]{0,400}id="intent-gear"/.test(shell));
+check('options are behind it', /<div class="intent-adjust hidden" id="intent-adjust">/.test(shell));
+check('gear toggles them', /el\.classList\.toggle\("hidden", open\)/.test(src));
+check('and announces its state', /setAttribute\("aria-expanded", String\(!open\)\)/.test(src));
+// Opened from Settings there is no artist, so the choices make no sense
+// and the options are the whole point.
+check('settings opens straight to the options', /adjust\.classList\.toggle\("hidden", forArtist\)/.test(src));
+check('and hides the choices', /\.intent-choices"\)\?\.classList\.toggle\("hidden", !forArtist\)/.test(src));
+check('the artist is the heading', /titleEl\.textContent = artistName/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

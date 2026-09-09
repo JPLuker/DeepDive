@@ -504,6 +504,35 @@
   .modal h2 { margin:0 0 4px; font-size:20px; }
   .modal .modal-sub { font-size:13.5px; color:var(--muted); margin:0 0 18px; }
 
+  /* The two things you can do, side by side, as the first thing in the
+     dialog. They were buttons in a footer below a page of options,
+     which made Dip read as a setting rather than a choice. */
+  .intent-choices { display:flex; flex-direction:column; gap:10px; margin:16px 0 4px; }
+  .intent-choice {
+    display:flex; flex-direction:column; gap:3px; text-align:left;
+    background:var(--tile); border:none; border-radius:var(--radius);
+    padding:14px 16px; cursor:pointer; font-family:inherit; color:var(--ink);
+    width:100%; transition:background .15s ease;
+  }
+  .intent-choice:hover { background:var(--tile-hover); }
+  .intent-choice.is-primary { background:var(--accent-gradient); color:#fff; }
+  .intent-choice.is-primary .intent-choice-sub { color:rgba(255,255,255,0.82); }
+  .intent-choice-title { font-size:16px; font-weight:700; letter-spacing:-0.015em; }
+  .intent-choice-sub { font-size:12.5px; color:var(--muted); line-height:1.4; }
+  /* The gear belongs to Dive — it adjusts what a dive reads, not what a
+     dip is — so it sits against it rather than floating in the header. */
+  .intent-choice-pair { display:flex; gap:8px; align-items:stretch; }
+  .intent-choice-pair .intent-choice { flex:1; }
+  .intent-gear {
+    flex:0 0 auto; width:52px; border:none; border-radius:var(--radius);
+    background:var(--tile); color:var(--muted); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .intent-gear:hover { background:var(--tile-hover); color:var(--ink); }
+  .intent-gear[aria-expanded="true"] { background:var(--tile-hover); color:var(--ink); }
+  .intent-gear svg { width:19px; height:19px; }
+  .intent-adjust { margin-top:14px; }
+
   .intent-list { display:flex; flex-direction:column; gap:9px; }
   .intent-opt { display:flex; gap:12px; align-items:flex-start; padding:13px 15px; border:1.5px solid var(--line); border-radius:var(--radius); cursor:pointer; background:transparent; text-align:left; width:100%; font-family:inherit; color:var(--ink); }
   .intent-opt:hover { border-color:var(--ink); }
@@ -1028,9 +1057,30 @@
   <div class="modal-backdrop hidden" id="intent-modal">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="intent-title">
       <h2 id="intent-title">What are you after?</h2>
-      <p class="modal-sub" id="intent-artist">Choose how deep to go — you can change this any time.</p>
-      <div class="intent-list" id="intent-list"></div>
-      <div class="intent-custom hidden" id="intent-custom">
+      <p class="modal-sub" id="intent-artist"></p>
+
+      <!-- The two things you can do, as the two things you can see.
+           They used to be buttons in a footer under a page of options,
+           which made Dip look like a setting rather than a choice. -->
+      <div class="intent-choices">
+        <button class="intent-choice" id="intent-dip">
+          <span class="intent-choice-title">Dip</span>
+          <span class="intent-choice-sub">their best hour, most played first</span>
+        </button>
+        <div class="intent-choice-pair">
+          <button class="intent-choice is-primary" id="intent-go">
+            <span class="intent-choice-title">Dive</span>
+            <span class="intent-choice-sub">their whole catalogue against your library</span>
+          </button>
+          <button class="intent-gear" id="intent-gear" aria-label="Adjust the dive" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.31.4.55.71.66H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="intent-adjust hidden" id="intent-adjust">
+        <div class="intent-list" id="intent-list"></div>
+        <div class="intent-custom hidden" id="intent-custom">
         <div class="settings-panel-title">Fine-tune</div>
         <div class="filter-options">
           <label class="checkbox-option"><input type="checkbox" id="opt-live"> Exclude live recordings</label>
@@ -1040,6 +1090,7 @@
           <label class="checkbox-option"><input type="checkbox" id="opt-remaster"> Count remasters as duplicates</label>
           <label class="checkbox-option"><input type="checkbox" id="opt-compilations"> Include compilations &amp; greatest hits</label>
           <label class="checkbox-option"><input type="checkbox" id="opt-appears-on"> Include releases they only guest on</label>
+        </div>
         </div>
       </div>
       <div class="intent-warning hidden" id="intent-warning">
@@ -1053,8 +1104,6 @@
         <label class="modal-remember"><input type="checkbox" id="intent-remember"> Don't ask again</label>
         <span class="spacer"></span>
         <button class="btn btn-ghost" id="intent-cancel">Cancel</button>
-        <button class="btn btn-ghost" id="intent-dip">Dip</button>
-        <button class="btn btn-primary" id="intent-go">Dive</button>
       </div>
     </div>
   </div>

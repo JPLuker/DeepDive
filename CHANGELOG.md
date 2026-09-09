@@ -4,6 +4,16 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.50
+- Tapping an artist now offers **Dip** and **Dive** as the two things
+  the dialog is about, each saying what it does. They were buttons in a
+  footer beneath a page of options, which made Dip look like a setting
+  rather than a choice.
+- The search options moved behind a gear against Dive, since they adjust
+  what a dive reads and have nothing to do with a dip.
+- Opened from the search bar's options icon there's no artist to act on,
+  so it goes straight to the options and hides the choices.
+
 ## 2.8.49
 - Added **dips** — an artist's best hour. A dip runs the same catalogue
   read and duplicate check as a dive, then keeps only the tracks worth

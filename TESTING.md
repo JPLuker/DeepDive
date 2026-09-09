@@ -446,8 +446,13 @@ Needs a Last.fm key in Settings. Spotify quota is not involved.
 
 All three need a Last.fm key in Settings.
 
-- [ ] **Dip** appears beside Dive in the artist popup, and running one
-      produces an hour-ish mix with the best-known tracks first
+- [ ] Tapping an artist offers **Dip** and **Dive** as two clear
+      choices, each explaining itself
+- [ ] The gear beside Dive opens the search options; they're hidden
+      until then
+- [ ] The search bar's options icon still opens straight to the options,
+      with no artist chosen
+- [ ] Running a dip produces an hour-ish mix, best-known tracks first
 - [ ] A deluxe edition doesn't put the same song in twice
 - [ ] With the Last.fm key removed, a dip still builds — just ordered by
       catalogue rather than popularity
