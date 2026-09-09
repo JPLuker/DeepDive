@@ -138,7 +138,10 @@ check('a rejected key stops it', /Last\.fm rejected the key/.test(src));
 check('recommendations lead the page', src.indexOf('id="rec-section"') < src.indexOf('id="playlist-cards"'));
 // Genres are mixes too, so the original row had to be renamed.
 check('library row renamed', /<h2>From your library<\/h2>/.test(src));
-check('and the page keeps a title', /<div class="row-head"><h2>Mixes<\/h2><\/div>/.test(src));
+// The page has no title or description: Dives doesn't either, the tab
+// already says where you are, and each section's own heading said it
+// better than the paragraph above them did.
+check('mixes opens straight into recommendations', /<div id="rec-section"><\/div>/.test(src));
 
 // Caching is required, not optional. Last.fm's terms, clause 4.4:
 // "You agree to cache similar artist and any chart data (top tracks,

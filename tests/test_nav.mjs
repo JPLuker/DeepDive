@@ -62,7 +62,10 @@ check('one sampler pool, not two', (src.match(/let _samplerPool/g) || []).length
 // "Playlists" is the old name for this.
 // Mixes is the page. Genres and recommendations are mixes too, so the
 // library-derived row had to say what it actually is.
-check('mixes is the page name', /<div class="row-head"><h2>Mixes<\/h2><\/div>/.test(src));
+// No page title — recommendations lead, matching Dives.
+const mixesFn = src.slice(src.indexOf('async function renderMixes'), src.indexOf('async function loadPlaylistCards'));
+check('mixes has no title of its own', !/<h2>Mixes<\/h2>/.test(mixesFn));
+check('recommendations come first', mixesFn.indexOf('rec-section') < mixesFn.indexOf('playlist-cards'));
 check('library row is named for its contents', /<h2>From your library<\/h2>/.test(src));
 
 // "More ways to dive" was three identical pills with one warning

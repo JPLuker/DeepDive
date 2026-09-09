@@ -4,6 +4,12 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.48
+- Mixes opens straight into Recommended. The page title and description
+  are gone: Dives has neither, the tab already says where you are, and
+  each section's own heading said it better than the paragraph above
+  them did.
+
 ## 2.8.47
 - Fixed: Last.fm data was fetched again on every page load. Tags and
   similar artists lived in memory only, so opening the app spent sixty

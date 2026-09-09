@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.47";
+export const BUILD = "2.8.48";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -417,8 +417,6 @@ async function renderMixes() {
   setActiveTab("mixes");
   root.innerHTML = `
     ${rateLimitBanner()}
-    <div class="row-head"><h2>Mixes</h2></div>
-    <p class="nav-hint" style="margin-top:0;">Built from what DeepDive already knows about your library. Nothing is created until you confirm it.</p>
     <div id="rec-section"></div>
     <div id="playlist-cards"></div>
     <div id="genre-section"></div>`;
