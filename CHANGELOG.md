@@ -4,6 +4,25 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.42
+- Added genre mixes, the first feature built on Last.fm. Tags are far
+  finer-grained than Spotify's artist genres — shoegaze, midwest emo,
+  riot grrrl rather than "rock" — and DeepDive now builds a mix from
+  each one it finds enough tracks for.
+- Tagging costs one request per artist, so it never happens in the
+  background. Mixes shows what it would cost in requests and seconds,
+  you press a button, you watch it, and you can stop at any point and
+  keep what's been found.
+- Artists are looked up heaviest-first. One you own thirty tracks by
+  will carry a genre mix alone; one you own a single track by mostly
+  won't, so the first fifty requests produce nearly all the useful
+  mixes. A "do the rest" option covers the tail.
+- A tag needs a weight of 25 or more and eight tracks behind it before
+  it becomes a mix, which keeps out both one-person jokes and genres
+  you own too little of.
+- Without a key the section explains what it would do and points at
+  Settings, rather than erroring or hiding.
+
 ## 2.8.41
 - Added Last.fm support, the groundwork for genre mixes, dips and
   artist similarity — all data Spotify has removed or deprecated.

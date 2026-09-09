@@ -834,6 +834,64 @@ function surpriseCard(tracks) {
 }
 
 /**
+ * Artists ranked by how much of them you own.
+ *
+ * Genre tagging costs one request per artist, so the order matters: an
+ * artist you have thirty tracks by will carry a genre mix on their own,
+ * one you have a single track by mostly won't. Fetching in this order
+ * means the first fifty requests produce nearly all the useful mixes.
+ */
+export function artistsByWeight(tracks) {
+  return [...byArtist(tracks).values()]
+    .filter((a) => a.id && a.name)
+    .sort((a, b) => b.count - a.count)
+    .map((a) => ({ id: a.id, name: a.name, count: a.count }));
+}
+
+/**
+ * Genre mixes from tags already fetched.
+ *
+ * @param tagsByArtist Map of lowercased artist name -> [{name, weight}]
+ * @param minWeight    Last.fm's 0-100 count. A defining tag scores high;
+ *                     one person's joke scores low.
+ * @param minTracks    A genre with four tracks isn't a mix.
+ */
+export function genreCards(tracks, tagsByArtist, { minWeight = 25, minTracks = 8, limit = 14 } = {}) {
+  if (!tagsByArtist || !tagsByArtist.size) return [];
+  const byTag = new Map();
+  for (const t of tracks || []) {
+    const seen = new Set();
+    for (const a of t.artists || []) {
+      const tags = tagsByArtist.get((a.name || "").trim().toLowerCase());
+      if (!tags) continue;
+      for (const tag of tags) {
+        if (tag.weight < minWeight || seen.has(tag.name)) continue;
+        // A track credited to two artists sharing a tag counts once.
+        seen.add(tag.name);
+        if (!byTag.has(tag.name)) byTag.set(tag.name, []);
+        byTag.get(tag.name).push(t);
+      }
+    }
+  }
+  return [...byTag.entries()]
+    .filter(([, list]) => list.length >= minTracks)
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, limit)
+    .map(([tag, list]) => ({
+      id: `genre-${tag.replace(/\s+/g, "-")}`,
+      title: titleCase(tag),
+      subtitle: `${list.length} tracks tagged ${tag}`,
+      count: list.length,
+      tracks: list,
+      isGenre: true,
+    }));
+}
+
+function titleCase(s) {
+  return (s || "").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
  * Artists you've barely explored — a few liked songs and no more. These
  * are the ones worth sampling: an artist you play constantly needs no
  * introduction, whereas one you've liked twice and never followed up on

@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.41";
+export const BUILD = "2.8.42";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -414,9 +414,11 @@ async function renderMixes() {
   root.innerHTML = `
     ${rateLimitBanner()}
     <p class="nav-hint">Built from what DeepDive already knows about your library. Nothing is created until you confirm it.</p>
-    <div id="playlist-cards"></div>`;
+    <div id="playlist-cards"></div>
+    <div id="genre-section"></div>`;
 
   loadPlaylistCards();
+  renderGenreSection();
 }
 
 // ---- playlist suggestion cards (2.3) ----
@@ -3042,6 +3044,145 @@ function rateLimitBanner() {
     btn.setAttribute("aria-expanded", String(!open));
   });
 })();
+
+/**
+ * Genres, which need Last.fm and therefore need saying out loud.
+ *
+ * Three states: no key, key but nothing fetched, and fetched. The
+ * middle one states the cost in requests and seconds before spending
+ * any of it — this is the only place in the app that asks permission
+ * to make a few hundred requests, and it should look like it.
+ */
+async function renderGenreSection() {
+  const el = document.getElementById("genre-section");
+  if (!el) return;
+
+  if (!lastfm.hasKey()) {
+    el.innerHTML = `
+      <div class="crate-header"><span class="label">Genres</span><span class="qual">needs Last.fm</span></div>
+      <p class="nav-hint" style="margin-top:0;">Spotify doesn't say what a track sounds like beyond a broad artist genre. Last.fm does, in far more detail — shoegaze, midwest emo, riot grrrl rather than "rock". Add a free API key in Settings and DeepDive can build mixes from it.</p>
+      <div class="actions"><button class="btn btn-ghost btn-small" data-tab="settings">Add a key</button></div>`;
+    return;
+  }
+
+  let cached = [];
+  try { cached = await libraryCache.peek(); } catch (e) { cached = []; }
+  if (!cached || !cached.length) { el.innerHTML = ""; return; }
+
+  const artists = insights.artistsByWeight(cached);
+  const cards = insights.genreCards(cached, _genreTags);
+
+  if (!cards.length) {
+    const n = Math.min(artists.length, 60);
+    const secs = Math.ceil((n * 250) / 1000);
+    el.innerHTML = `
+      <div class="crate-header"><span class="label">Genres</span></div>
+      <p class="nav-hint" style="margin-top:0;">DeepDive can ask Last.fm what your artists actually sound like, then build mixes from it. That's one request per artist — <strong>${n}</strong> of them, about <strong>${secs} seconds</strong>, starting with the artists you own the most of. You can stop at any point and keep what's been found.</p>
+      <div class="actions">
+        <button class="btn btn-ghost btn-small" id="genre-go">Find my genres</button>
+        ${artists.length > n ? `<button class="btn btn-ghost btn-small" id="genre-go-all">All ${artists.length} artists</button>` : ""}
+      </div>
+      <div id="genre-progress"></div>`;
+
+    const run = async (list) => {
+      const prog = document.getElementById("genre-progress");
+      document.getElementById("genre-go").disabled = true;
+      document.getElementById("genre-go-all")?.remove();
+      prog.innerHTML = `<p class="nav-hint">Asking Last.fm… <button class="btn btn-ghost btn-small" id="genre-stop">Stop</button></p>`;
+      document.getElementById("genre-stop").addEventListener("click", cancelGenreFetch);
+      try {
+        await fetchGenreTags(list, (done, total) => {
+          const p = prog.querySelector(".nav-hint");
+          if (p) p.firstChild.textContent = `Asking Last.fm… ${done} of ${total}. `;
+        });
+      } catch (e) {
+        prog.innerHTML = `<p class="empty-note">${esc(e.suspended
+          ? "Last.fm rejected the key. Check it in Settings."
+          : `Last.fm couldn't be reached: ${e.message || e}`)}</p>`;
+        return;
+      }
+      renderGenreSection();
+    };
+    document.getElementById("genre-go").addEventListener("click", () => run(artists.slice(0, n)));
+    document.getElementById("genre-go-all")?.addEventListener("click", () => run(artists));
+    return;
+  }
+
+  const untagged = artists.filter((a) => !_genreTags.has(a.name.trim().toLowerCase())).length;
+  el.innerHTML = `
+    <div class="row-head"><h2>Genres</h2><span class="qual">from Last.fm</span></div>
+    <div class="card-row" id="genre-cards"></div>
+    ${untagged ? `<p class="nav-hint">${untagged} artist${untagged === 1 ? "" : "s"} not looked up yet.
+      <button class="btn btn-ghost btn-small" id="genre-more">Do the rest</button></p>` : ""}`;
+
+  // Same card markup as the mixes row — a genre mix is a mix. The hue
+  // offset keeps them visually distinct from the row above without
+  // being a different kind of object.
+  const row = document.getElementById("genre-cards");
+  row.innerHTML = cards.map((c, i) => `
+    <button class="pcard" data-genre-card="${esc(c.id)}" style="--h:${(20 + i * 53) % 360};">
+      <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+      <span class="pcard-title">${esc(c.title)}</span>
+      <span class="pcard-sub">${esc(c.subtitle)}</span>
+    </button>`).join("");
+  row.querySelectorAll("[data-genre-card]").forEach((btn) =>
+    btn.addEventListener("click", () =>
+      openCardModal(cards.find((c) => c.id === btn.dataset.genreCard))));
+
+  document.getElementById("genre-more")?.addEventListener("click", async () => {
+    const rest = artists.filter((a) => !_genreTags.has(a.name.trim().toLowerCase()));
+    await fetchGenreTags(rest);
+    renderGenreSection();
+  });
+}
+
+// ---- genre tags ----
+//
+// One request per artist, so this is never done quietly in the
+// background. Every confusion this project has had about slowness came
+// from work happening invisibly — you press a button, you watch it, you
+// can stop it.
+//
+// Artists are fetched heaviest-first: one you own thirty tracks by will
+// carry a genre mix alone, one you own a single track by mostly won't,
+// so the first fifty requests produce nearly all the useful mixes.
+let _genreTags = new Map();   // lowercased artist name -> [{name, weight}]
+let _genreFetching = false;
+let _genreCancel = false;
+
+function genreState() {
+  return { tagged: _genreTags.size, fetching: _genreFetching };
+}
+
+async function fetchGenreTags(artists, onProgress) {
+  _genreFetching = true;
+  _genreCancel = false;
+  let done = 0, failed = 0;
+  try {
+    for (const a of artists) {
+      if (_genreCancel) break;
+      const key = (a.name || "").trim().toLowerCase();
+      if (!_genreTags.has(key)) {
+        try {
+          _genreTags.set(key, await lastfm.topTags(a.name, 15));
+        } catch (e) {
+          // A suspended or invalid key will fail for every artist, so
+          // stop rather than working through hundreds to learn it once.
+          if (e && e.suspended) throw e;
+          failed++;
+          _genreTags.set(key, []);
+        }
+      }
+      done++;
+      if (onProgress) onProgress(done, artists.length, failed);
+    }
+  } finally {
+    _genreFetching = false;
+  }
+  return { done, failed, cancelled: _genreCancel };
+}
+
+function cancelGenreFetch() { _genreCancel = true; }
 
 // ---- api trouble banner ----
 //

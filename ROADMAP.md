@@ -91,7 +91,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.41
+## Shipped since — build 2.8.42
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -458,10 +458,10 @@ dips and reopening the integration twice:
   longer will, which is what dips have been blocked on.
 - **Similar artists** — `artist.getSimilar`, replacing the deprecated
   Spotify endpoint.
-- **Genre and subgenre mixes** — `artist.getTopTags`. Tags are
-  user-applied and far more granular than Spotify's artist genres, but
-  messy: the same idea appears as "hip-hop", "hip hop" and "Hiphop",
-  and joke tags cluster on popular artists. Weight-filter and normalise.
+- ~~**Genre and subgenre mixes**~~ — *shipped in 2.8.42. Weight floor of
+  25, minimum eight tracks, alias list for the spellings normalisation
+  can't collapse, and shelving tags like "seen live" dropped. Fetched on
+  demand with visible progress, heaviest artists first.*
 
 **Each user brings their own key.** Same model as the Spotify Client ID
 — a shipped key would be readable in a browser-only app, pooled across

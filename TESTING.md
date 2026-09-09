@@ -423,6 +423,25 @@ once you're back online.
       an empty mix
 - [ ] Preview mix opens the usual dialog, and creating it works
 
+## 14. Genre mixes (2.8.42)
+
+Needs a Last.fm key in Settings. Spotify quota is not involved.
+
+- [ ] With no key, Mixes shows a Genres section explaining what it
+      would do, with a button through to Settings — no error
+- [ ] With a key, it offers to look up your top 60 artists and says how
+      long that takes
+- [ ] Progress counts up, and **Stop** actually stops it
+- [ ] Stopping keeps what was already found rather than discarding it
+- [ ] Genre cards appear and open like any other mix
+- [ ] The genres look like real genres — if you see "Seen Live",
+      "Favourites" or a decade, the tag filtering has a gap
+- [ ] No two cards are the same genre spelled differently
+      ("Hip Hop" and "Hiphop" both appearing means normalisation missed)
+- [ ] "Do the rest" picks up the remaining artists
+- [ ] A deliberately wrong key says the key was rejected rather than
+      grinding through every artist
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

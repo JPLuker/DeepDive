@@ -59,5 +59,50 @@ check('so are decades', normalizeTag('90s') === '' && normalizeTag('1980s') === 
 check('weights are kept for filtering', /weight: parseInt\(t\.count, 10\)/.test(lfm));
 check('labels are presentable', tagLabel('midwest emo') === 'Midwest Emo');
 
+// Genre mixes: the first feature built on the key.
+import { genreCards, artistsByWeight } from '../docs/js/insights.js';
+
+const tracks = [];
+for (let i = 0; i < 60; i++) {
+  tracks.push({
+    id: 't' + i, name: 'S' + i,
+    artists: [{ id: 'a' + (i % 4), name: 'Artist ' + (i % 4) }],
+    album: { id: 'al', release_date: '2000-01-01', images: [] },
+    added_at: '2020-01-01T00:00:00Z',
+  });
+}
+const tagMap = new Map([
+  ['artist 0', [{ name: 'shoegaze', weight: 100 }, { name: 'noise pop', weight: 40 }]],
+  ['artist 1', [{ name: 'shoegaze', weight: 80 }]],
+  ['artist 2', [{ name: 'midwest emo', weight: 90 }]],
+  ['artist 3', [{ name: 'shoegaze', weight: 10 }]],
+]);
+const gc = genreCards(tracks, tagMap, { minWeight: 25, minTracks: 8 });
+
+check('genres become cards', gc.length > 0);
+check('cards carry their tracks', gc.every((c) => c.tracks.length === c.count));
+// The 0-100 weight is what separates a defining tag from a joke.
+check('low-weight tags are ignored', !gc.some((c) => c.tracks.some((t) => t.artists[0].name === 'Artist 3')));
+check('a genre too small to be a mix is dropped', genreCards(tracks, tagMap, { minTracks: 999 }).length === 0);
+check('no tags means no cards, not an error', genreCards(tracks, new Map()).length === 0);
+check('biggest genre leads', gc[0].count >= gc[gc.length - 1].count);
+
+// One request per artist, so the order decides how quickly it becomes
+// useful: an artist you own thirty tracks by carries a mix alone.
+const ranked = artistsByWeight(tracks);
+check('artists are ranked by how much you own', ranked[0].count >= ranked[ranked.length - 1].count);
+
+// The fetch is never silent — every slowness confusion in this project
+// came from work happening invisibly.
+check('fetch is cancellable', /function cancelGenreFetch/.test(src));
+check('progress is reported', /if \(onProgress\) onProgress\(done, artists\.length, failed\)/.test(src));
+check('cost is stated before spending it', /one request per artist/.test(src));
+// A bad key fails identically for every artist, so stop on the first.
+check('a rejected key stops the run', /if \(e && e\.suspended\) throw e;/.test(src));
+check('one artist failing does not stop the rest', /_genreTags\.set\(key, \[\]\);/.test(src));
+// Without a key the section explains rather than breaking.
+check('no key is explained, not errored', /needs Last\.fm<\/span>/.test(src));
+check('and points at settings', /data-tab="settings">Add a key/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
