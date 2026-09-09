@@ -4,6 +4,19 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.45
+- Fixed the actual cause of an empty Mixes page: **nothing ever filled
+  the library cache** except running a dive or using Settings → Refresh
+  library. Anyone who opened Mixes first was told to "open Home and
+  it'll cache in the background", which Home does not do — a loop with
+  no way out.
+- Mixes and Genres now offer a "Read my library" button where you're
+  standing, with progress on the button itself.
+- Home says something too. Half the suggestions come from the library,
+  so without a cache the row was quietly thinner with nothing
+  explaining it — the state was already being passed to that renderer
+  and never read.
+
 ## 2.8.44
 - The Genres section had the same silent-empty problem as the mixes row
   and also swallowed the error from reading the cache. Both now say

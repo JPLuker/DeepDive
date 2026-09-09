@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.8.44.** If the build in `js/app.js` is well
+**Last updated at build 2.8.45.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -204,6 +204,12 @@ Listener)` after a full render comes back dead on those fresh nodes.
 The tile overflow failed exactly this way and was patched twice before
 the cause was found. Delegate from a stable parent once, as `initTabs`
 already does.
+
+**The library cache is only filled deliberately.** `peek()` reads it;
+`getLikedTracks()` fills it, and until 2.8.45 only a dive or Settings →
+Refresh library ever called that. Anything built on the cache must
+handle it being absent and offer a way to fill it, not tell the user to
+go somewhere that does nothing.
 
 **`opacity:0` is not hidden.** It leaves an element in the layout and
 still clickable. Tile actions hidden that way sat on top of the

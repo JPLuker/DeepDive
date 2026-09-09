@@ -124,5 +124,19 @@ check('no cards is explained', /Nothing to build a mix from yet/.test(src));
 check('a failure is shown, not just logged', /Couldn't build your mixes:/.test(src));
 check('no silent empty returns left', !/\{ el\.innerHTML = ""; return; \}/.test(src));
 
+// The real cause of the empty Mixes page: nothing filled the library
+// cache except running a dive or Settings > Refresh library. Anyone who
+// opened Mixes first was told to "open Home and it'll cache in the
+// background" — which Home does not do. A loop with no exit.
+check('cache can be filled from where you are', /function wireReadLibrary/.test(src));
+check('it actually reads the library', /libraryCache\.getLikedTracks\(\{\s*\n\s*onProgress/.test(src));
+check('with progress on the button', /Reading… \$\{done\} of \$\{total\}/.test(src));
+check('mixes offers it', /data-read-library>Read my library/.test(src));
+check('genres offer it', (src.match(/data-read-library/g) || []).length >= 3);
+check('the wrong advice is gone', !/Open Home and it'll cache in the background/.test(src));
+// hasCache was passed to the suggestion row and never read, so Home
+// showed a thinner row and said nothing.
+check('home explains its thinner row', /state\.hasCache === false && suggestions\.length/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

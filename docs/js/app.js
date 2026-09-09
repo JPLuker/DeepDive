@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.44";
+export const BUILD = "2.8.45";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -457,7 +457,10 @@ async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml 
       // Mixes are built entirely from the cached library, so with no
       // cache there is nothing to build from — which is a state worth
       // naming rather than showing a blank page.
-      el.innerHTML = `<p class="empty-note">Your library hasn't been read yet. Open Home and it'll cache in the background, then come back.</p>`;
+      el.innerHTML = `
+        <p class="empty-note">Mixes are built from your Liked Songs, and they haven't been read yet.</p>
+        <div class="actions"><button class="btn btn-primary btn-small" data-read-library>Read my library</button></div>`;
+      wireReadLibrary(el, () => loadPlaylistCards({ into, limit, headHtml }));
       return;
     }
     // The sampler is a card now, so its pool has to exist wherever
@@ -1882,6 +1885,16 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
 
   // Never leave the row silently blank — an empty area with no
   // explanation reads as broken. Say which half was unavailable.
+  // Half the suggestions come from the library, so without a cache the
+  // row is quietly thinner and nothing says why. `hasCache` was already
+  // being passed here and never read.
+  let cacheHtml = "";
+  if (state.hasCache === false && suggestions.length) {
+    cacheHtml = `
+      <p class="nav-hint">Some suggestions come from your Liked Songs, which haven't been read yet.
+        <button class="btn btn-ghost btn-small" data-read-library>Read my library</button></p>`;
+  }
+
   let emptyHtml = "";
   if (!suggestions.length) {
     if (state.pending) {
@@ -1917,7 +1930,8 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     pinsSection.innerHTML = pinsHtml;
   } else {
     pinsSection.innerHTML = pinsHtml;
-    suggSection.innerHTML = suggHtml + emptyHtml;
+    suggSection.innerHTML = suggHtml + emptyHtml + cacheHtml;
+    wireReadLibrary(suggSection, () => loadSuggestions(_suggestOpts));
   }
 
 
@@ -3083,9 +3097,12 @@ async function renderGenreSection() {
     // Same rule as the mixes row: an empty section should say which
     // empty it is. Written moments after criticising the identical
     // pattern elsewhere in this file.
-    el.innerHTML = `<p class="empty-note">${esc(cacheErr
-      ? `Couldn't read your cached library: ${cacheErr.message || cacheErr}`
-      : "Genres need your library cached first. Open Home, then come back.")}</p>`;
+    el.innerHTML = cacheErr
+      ? `<p class="empty-note">Couldn't read your cached library: ${esc(cacheErr.message || String(cacheErr))}</p>`
+      : `<div class="crate-header"><span class="label">Genres</span></div>
+         <p class="nav-hint" style="margin-top:0;">Genres are worked out from your Liked Songs, which haven't been read yet.</p>
+         <div class="actions"><button class="btn btn-ghost btn-small" data-read-library>Read my library</button></div>`;
+    wireReadLibrary(el, renderGenreSection);
     return;
   }
 
@@ -3153,6 +3170,35 @@ async function renderGenreSection() {
     const rest = artists.filter((a) => !_genreTags.has(a.name.trim().toLowerCase()));
     await fetchGenreTags(rest);
     renderGenreSection();
+  });
+}
+
+/**
+ * Fill the library cache from wherever the user happens to be standing.
+ *
+ * Nothing filled it except running a dive or Settings > Refresh
+ * library, so anyone who opened Mixes first was told to "open Home and
+ * it'll cache in the background" — which Home does not do. That is a
+ * loop with no exit, and it is what an empty Mixes page actually meant.
+ */
+function wireReadLibrary(el, onDone) {
+  el.querySelector("[data-read-library]")?.addEventListener("click", async (ev) => {
+    const btn = ev.currentTarget;
+    btn.disabled = true;
+    btn.textContent = "Reading…";
+    try {
+      const tracks = await libraryCache.getLikedTracks({
+        onProgress: (done, total) => {
+          btn.textContent = total ? `Reading… ${done} of ${total}` : `Reading… ${done}`;
+        },
+      });
+      flash(`${tracks.length} liked songs read.`);
+      onDone();
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = "Try again";
+      flash(`Couldn't read your library: ${e.message || e}`, true);
+    }
   });
 }
 
