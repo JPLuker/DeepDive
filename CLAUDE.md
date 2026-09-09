@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.8.40.** If the build in `js/app.js` is well
+**Last updated at build 2.8.41.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -300,6 +300,11 @@ full-bleed dive at that size looks right on a phone — this was doubted,
 "fixed" with a blurred backdrop in 2.7.0, and reverted in 2.7.1. If one
 entry point looks correct and another does not, the size is not the
 variable; find what differs between the two paths instead.
+
+`LASTFM_SURFACE.md` covers the optional second source. Last.fm has no
+quota, only a rate — slowing down is always a sufficient answer there,
+unlike Spotify. Its errors arrive in the response body as often as in
+the status code, so check both.
 
 `API_SURFACE.md` is the audit of what we call, what we must not call,
 and where we're out of line with the Developer Terms. Check it before

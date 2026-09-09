@@ -4,6 +4,25 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.41
+- Added Last.fm support, the groundwork for genre mixes, dips and
+  artist similarity — all data Spotify has removed or deprecated.
+- Each user supplies their own API key. Free and instant from
+  last.fm/api. A key shipped in the build would be readable by anyone
+  opening devtools, pooled across every user, and revocable because of
+  one person, so it follows the same model as the Spotify Client ID.
+- Entered on the setup screen, marked optional, and changeable in
+  Settings. Without a key nothing breaks — the features built on it
+  simply don't appear.
+- Requests are paced at 250ms, inside Last.fm's five-per-second limit,
+  and both their HTTP status codes and their in-body error codes are
+  checked, since they use either.
+- Tags are normalised before use: "hip-hop", "hip hop" and "HipHop"
+  collapse to one genre, and tags describing the listener rather than
+  the music — "seen live", "favourites", decade tags — are dropped.
+- Added `LASTFM_SURFACE.md`: what we call, what it costs, and why the
+  rest of their API is out of scope.
+
 ## 2.8.40
 - The artist search in Build your own is now the same component as the
   dive search — same field, same dropdown, same keyboard handling. Only

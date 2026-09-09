@@ -18,11 +18,12 @@ import * as matching from "./matching.js";
 import { bestStore } from "./storage.js";
 import * as history from "./history.js";
 import * as demo from "./demo.js";
+import * as lastfm from "./lastfm.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.40";
+export const BUILD = "2.8.41";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -230,6 +231,14 @@ function renderSetup() {
         <label class="mono" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Client ID</label>
         <input type="text" id="client-id-input" placeholder="e.g. 0287b6335f0b4a4bae283bb94bfc2f05" value="${esc(currentId)}" style="margin-top:6px;">
       </div>
+      <div class="crate-header"><span class="label">Last.fm</span><span class="qual">optional</span></div>
+      <p class="muted" style="margin-top:0;">Recommended. Spotify no longer exposes how popular a track is, which artists are similar, or anything beyond a broad genre — Last.fm does. With a key, DeepDive can build genre and subgenre mixes and an artist's best hour. Without one, those features simply don't appear; everything else works exactly the same.</p>
+      <p class="crate-note">Getting one takes about a minute and is approved instantly: create an app at <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener" style="color:var(--accent);">last.fm/api/account/create</a> and copy the API key. You only need the key, not the shared secret.</p>
+      <div style="margin-top:14px;">
+        <label class="nav-field-label" for="lastfm-key-input">Last.fm API key</label>
+        <input type="text" id="lastfm-key-input" class="nav-input" placeholder="optional" value="${esc(lastfm.getKey())}" autocomplete="off" spellcheck="false">
+      </div>
+
       <div class="actions">
         <button class="btn btn-primary" id="save-creds-btn">Save & continue</button>
       </div>
@@ -238,6 +247,9 @@ function renderSetup() {
     const id = document.getElementById("client-id-input").value.trim();
     if (!id) { flash("Enter your Client ID first.", true); return; }
     auth.setClientId(id);
+    // Optional, so an empty field is a valid answer rather than an
+    // error — saving nothing here simply leaves those features off.
+    lastfm.setKey(document.getElementById("lastfm-key-input").value);
     flash("Saved.");
     renderConnect();
   });
@@ -3420,6 +3432,19 @@ function renderSettings() {
       </div>
 
       <div class="set-group">
+        <div class="set-group-label">Last.fm</div>
+        <p class="set-note">Optional but recommended. Powers genre and subgenre mixes and an artist's best hour — things Spotify no longer exposes. Leave it empty and those features simply don't appear.</p>
+        <div class="set-row set-row-block">
+          <div class="set-row-text">
+            <div class="set-row-title">API key</div>
+            <div class="set-row-detail">Free and instant from last.fm/api/account/create. The key only — not the shared secret.</div>
+          </div>
+          <input type="text" id="set-lastfm-key" class="nav-input" placeholder="not set" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="set-row-actions"><button class="btn btn-ghost btn-small" id="set-save-lastfm">Save key</button></div>
+      </div>
+
+      <div class="set-group">
         <div class="set-group-label">Credentials</div>
         <div class="set-row set-row-block">
           <div class="set-row-text">
@@ -3459,6 +3484,15 @@ function renderSettings() {
   if (uriEl) uriEl.textContent = auth.redirectUri();
   const idInput = document.getElementById("set-client-id");
   if (idInput) idInput.value = auth.getClientId();
+  const lfmInput = document.getElementById("set-lastfm-key");
+  if (lfmInput) lfmInput.value = lastfm.getKey();
+  document.getElementById("set-save-lastfm")?.addEventListener("click", () => {
+    const v = lfmInput.value.trim();
+    lastfm.setKey(v);
+    // Clearing it is a legitimate action, not a failed save.
+    flash(v ? "Last.fm key saved." : "Last.fm key removed.");
+  });
+
   document.getElementById("set-save-id")?.addEventListener("click", () => {
     const v = (idInput.value || "").trim();
     if (!v) { say("Enter your Client ID first.", true); return; }
