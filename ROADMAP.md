@@ -215,8 +215,9 @@ settings into the artist popup.*
 - Credit Joseph's LinkedIn and GitHub at the bottom of it
 - ~~The artist popup becomes where the dive settings live~~ — *already
   true: the intent chooser has held all seven run settings since it was
-  built. Still outstanding is the second half — dip and dive as the two
-  actions at the bottom of it — which waits on dips existing.*
+  built. The second half is done too: dips shipped in 2.8.49, and 2.8.50
+  rebuilt the popup around Dip and Dive as the two choices, with the run
+  settings behind a gear against Dive.*
 
 **Stopping point C — tile actions** — *shipped in 2.8.32: behind an
 overflow button, one row open at a time.*
