@@ -4,6 +4,10 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.58
+- Leisure Hour leads the device row; the second panel shows a VIAL dive
+  rather than repeating the Mixes screen that already appears above it.
+
 ## 2.8.57
 - The landing page shows three different screens — Home, a dive, and
   Mixes — instead of the same dive photograph three times. Two of them
