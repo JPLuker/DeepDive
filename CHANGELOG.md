@@ -4,6 +4,18 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.57
+- The landing page shows three different screens — Home, a dive, and
+  Mixes — instead of the same dive photograph three times. Two of them
+  are the app's own interface rather than an artist.
+- Added a wordmark and an "Open the app" link at the top. The page had
+  neither, so a first-time visitor arrived with nothing telling them
+  what they'd found.
+- The results section no longer quotes the numbers off its screenshot.
+  One person's library isn't the product's claim; the image is an
+  example of the screen, nothing more. Same for the figures band.
+- The footer credits Joseph with GitHub, LinkedIn and Buy Me a Coffee.
+
 ## 2.8.56
 - Landing page rebuilt on stats.fm's structure: a text-led hero with
   three device screens beneath it, a figures band, a plain feature

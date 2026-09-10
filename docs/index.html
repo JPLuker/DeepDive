@@ -503,6 +503,18 @@
   .closing .btn-primary { background:#fff; color:#0b0b0f; }
   .closing-note { font-size:13px; margin:16px 0 0 !important; }
 
+  /* The page had no wordmark at all: a first-time visitor arrived with
+     nothing telling them what this is. */
+  .topline {
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; padding:6px 0 10px;
+  }
+  .topline-cta {
+    font-size:14px; font-weight:600; color:var(--ink); text-decoration:none;
+    border:1px solid var(--line); border-radius:999px; padding:8px 16px;
+  }
+  .topline-cta:hover { border-color:var(--accent); color:var(--accent); }
+
   .foot { margin:64px 0 0; padding:36px 0 8px; border-top:1px solid var(--line); }
   .foot-cols { display:grid; grid-template-columns:1fr; gap:26px; margin-bottom:30px; }
   .foot-cols h4 { font-size:13px; margin:0 0 10px; color:var(--muted-soft); font-weight:600; }
@@ -729,6 +741,11 @@
          and not to us, so they appear only inside device frames as
          examples of the app running — which is how stats.fm shows
          album artwork too. -->
+    <div class="topline">
+      <span class="wordmark"><img src="assets/dd-logo.png" alt="" class="wordmark-icon">DeepDive</span>
+      <a class="topline-cta" href="app/">Open the app</a>
+    </div>
+
     <header class="lead">
       <h1 class="lead-title">Hear it all.</h1>
       <p class="lead-sub">You liked the album version. You missed the single. DeepDive reads an artist's whole catalogue against your Spotify library and finds the recordings you already love but never saved.</p>
@@ -739,15 +756,15 @@
       <p class="lead-note">Free, no account, nothing installed. Runs entirely in your browser.</p>
 
       <div class="devices" aria-hidden="true">
-        <figure class="device device-l"><img src="img/shots/dive-vial.jpg" alt="" width="640" height="1204" loading="eager"></figure>
-        <figure class="device device-c"><img src="img/shots/dive-maciann.jpg" alt="" width="640" height="1228" fetchpriority="high"></figure>
-        <figure class="device device-r"><img src="img/shots/dive-leisure-hour.jpg" alt="" width="640" height="1231" loading="eager"></figure>
+        <figure class="device device-l"><img src="img/shots/app-home.jpg" alt="" width="640" height="1229" loading="eager"></figure>
+        <figure class="device device-c"><img src="img/shots/app-dive.jpg" alt="" width="640" height="1240" fetchpriority="high"></figure>
+        <figure class="device device-r"><img src="img/shots/app-mixes.jpg" alt="" width="640" height="1236" loading="eager"></figure>
       </div>
     </header>
 
     <section class="figures">
-      <div class="figure"><span class="figure-n">61</span><span class="figure-l">tracks read in one dive</span></div>
-      <div class="figure"><span class="figure-n">58</span><span class="figure-l">of them new to that library</span></div>
+      <div class="figure"><span class="figure-n">every</span><span class="figure-l">release an artist has put out</span></div>
+      <div class="figure"><span class="figure-n">3</span><span class="figure-l">sources: Spotify, Last.fm, your library</span></div>
       <div class="figure"><span class="figure-n">40+</span><span class="figure-l">ways to cut what you've saved</span></div>
       <div class="figure"><span class="figure-n">0</span><span class="figure-l">of it leaves your browser</span></div>
     </section>
@@ -777,12 +794,12 @@
 
     <section class="panel">
       <div class="panel-words">
-        <h2>Three you had. Fifty-eight you didn't.</h2>
-        <p>Every dive ends the same way: what you already own under another name, and everything by them you've genuinely never heard.</p>
+        <h2>What you had, and what you missed</h2>
+        <p>Every dive ends the same way: the recordings you already own under another name, and everything by that artist you've genuinely never heard, separated and counted.</p>
         <p>Nothing is written to Spotify until you choose it. Untick anything, reorder it, cap the length, then build the playlist.</p>
       </div>
       <figure class="device device-still">
-        <img src="img/shots/results-modern-baseball.jpg" alt="A finished dive on Modern Baseball: 58 tracks new to the listener, 3 already in their library" width="640" height="1091" loading="lazy">
+        <img src="img/shots/app-results.jpg" alt="A finished dive, showing which tracks are new and which are already in the library" width="640" height="1091" loading="lazy">
       </figure>
     </section>
 
@@ -793,7 +810,7 @@
         <p>You bring your own Spotify credentials, so nothing is pooled with anyone else's, and you can revoke access at any time from Spotify.</p>
       </div>
       <figure class="device device-still">
-        <img src="img/shots/dive-vial.jpg" alt="A dive in progress, showing the artist and a progress bar" width="640" height="1204" loading="lazy">
+        <img src="img/shots/app-mixes.jpg" alt="The Mixes screen, showing recommendations and mixes built from the listener's own library" width="640" height="1236" loading="lazy">
       </figure>
     </section>
 
@@ -818,9 +835,10 @@
           <a href="https://www.last.fm/api/account/create">Last.fm API key</a>
         </div>
         <div>
-          <h4>Made by</h4>
-          <a href="https://github.com/JPLuker">Joseph Luker</a>
+          <h4>Made by Joseph Luker</h4>
+          <a href="https://github.com/JPLuker">GitHub</a>
           <a href="https://www.linkedin.com/in/josephluker">LinkedIn</a>
+          <a href="https://buymeacoffee.com/OSJoseph">Buy me a coffee</a>
         </div>
       </div>
 
@@ -831,7 +849,7 @@
         photography — remains the property of its respective owners.
       </p>
       <p class="landing-legal">
-        Artists pictured: Maciann, VIAL, Leisure Hour, Modern Baseball. Their
+        Artists pictured: Houseghost, and the artists shown in the app's own screens. Their
         photographs appear here only as examples of the app in use and imply
         no endorsement.
       </p>

@@ -28,8 +28,9 @@ actively mislead.
 
 ## Artist photography — provisional
 
-The landing page shows photographs of Maciann and Modern Baseball,
-taken from screenshots of real dives.
+The landing page shows one artist photograph — Houseghost, in the dive
+screen — plus the artist thumbnails that appear inside the app's own
+Home and Mixes screens.
 
 **Joseph's position, 7 Sept:** acceptable as examples for now, nothing
 beyond that, and he will email the artists for permission.
@@ -139,7 +140,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.56
+## Shipped since — build 2.8.57
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:

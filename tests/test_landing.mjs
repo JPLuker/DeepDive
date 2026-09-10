@@ -19,6 +19,11 @@ check('tagline is the headline', /<h1 class="lead-title">Hear it all\.<\/h1>/.te
 check('hero is text-led', /<header class="lead">/.test(html));
 check('devices sit beneath it', html.indexOf('lead-title') < html.indexOf('class="devices"'));
 check('three screens, middle forward', /device-l/.test(html) && /device-c/.test(html) && /device-r/.test(html));
+// Three different screens, not the same dive photograph three times.
+check('the screens are actually different', new Set([...html.matchAll(/device-[lcr]"><img src="([^"]+)"/g)].map((m) => m[1])).size === 3);
+check('two of them are UI, not a photograph', /app-home\.jpg/.test(html) && /app-mixes\.jpg/.test(html));
+// The page never said what it was.
+check('the page identifies itself', /<div class="topline">[\s\S]{0,200}wordmark/.test(html));
 check('feature list, not cards', /<ul class="listing-items">/.test(html));
 check('alternating panels', /panel panel-flip/.test(html));
 check('closing panel', /<section class="closing">/.test(html));
@@ -46,14 +51,22 @@ check('the preview image is not an artist photo', !/og:image[^>]*img\/shots/.tes
 check('spotify is credited', /affiliated with Spotify AB/.test(html));
 check('last.fm is credited', /Last\.fm/.test(html));
 check('photography ownership is stated', /remains the property of its respective owners/.test(html));
-check('every pictured artist is named', ['Maciann', 'VIAL', 'Leisure Hour', 'Modern Baseball']
-  .every((a) => html.includes(a)));
+check('pictured artists are acknowledged', /Artists pictured:/.test(html));
 check('and endorsement is disclaimed', /imply\s+no endorsement/.test(html));
+
+// Joseph's credit, with the three links he asked for.
+check('github is linked', /github\.com\/JPLuker"/.test(html));
+check('linkedin is linked', /linkedin\.com\/in\//.test(html));
+check('and buy me a coffee', /buymeacoffee\.com/.test(html));
 
 // Figures: stats.fm counts a platform, DeepDive has none, so these are
 // what one real dive produced and what it costs you in privacy.
 check('figures are shown', /<section class="figures">/.test(html));
-check('they describe a real dive', /tracks read in one dive/.test(html));
+// The figures used to quote one library's numbers off a screenshot,
+// which turns one person's result into the product's claim.
+const figures = html.slice(html.indexOf('<section class="figures">'), html.indexOf('</section>', html.indexOf('<section class="figures">')));
+check('figures make no borrowed claims', !/\b58\b|\b61\b/.test(figures));
+check('and describe the app instead', /release an artist has put out/.test(html));
 check('and the privacy figure is a zero', /of it leaves your browser/.test(html));
 
 // Every referenced screenshot must exist and be small enough to load.
