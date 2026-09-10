@@ -64,6 +64,32 @@ artwork. Screenshots from it are ours outright.
 
 ---
 
+## Next build — the Multi-Dip song count is unreadable
+
+Joseph, 8 Sept: *"what is this auto thing with numbers under it?"*
+
+The per-artist song count on each bill row reads as a bare "Auto"
+followed by a list of numbers with no unit. Two things went wrong:
+
+- **The label lost its word.** The options used to say "4 songs"; the
+  word was dropped when More and Less were added because the row got
+  crowded. What's left doesn't say songs, or per-artist, or that Auto
+  means "share of the night".
+- **Three controls is too many for that row.** More, Less, a number
+  picker and a remove button, on a screen whose job is "add some
+  bands". The song count is the rarest of the three and takes equal
+  space.
+
+**Preferred fix:** move the exact count behind the row — a tap on the
+artist, or a small chevron — so the default is name, More, Less,
+remove. Joseph asked for More and Less *because* the exact-number
+version was too much ceremony, and the ceremony was then left sitting
+next to it.
+
+Failing that, at minimum: label it, and say what Auto means.
+
+---
+
 ## Before 2.9 ships
 
 **Rewrite every readable string.** Joseph's rule, 7 Sept: before any
