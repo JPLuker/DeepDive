@@ -568,14 +568,21 @@ than artist tags alone.
 
 ## Session 6 — 3.0 · Concert prep
 
-⚠️ **Prerequisite — setlist.fm CORS check.** Still never run. If
-setlist.fm doesn't send permissive CORS headers, a browser-only app
-can't call them at all and the whole 3.x design needs rethinking.
+⚠️ **Prerequisite — setlist.fm CORS check.** The only thing left, and
+the riskiest unknown in 3.x. A test page is deployed at
+`jpluker.github.io/DeepDive/cors-check.html` — paste the key, press the
+button. It must be run from that origin, not from a local file, since
+a file has origin `null` and servers treat it differently.
 
-⚠️ **Prerequisite — setlist.fm API key.** Approval is not instant, and
-nothing else in this list depends on it, so the application should be
-in flight well before 3.0 starts rather than discovered as a wait at
-the beginning of it.
+Searching didn't settle it: every setlist.fm wrapper found is
+server-side Node, which hints browser use isn't normal but proves
+nothing. If the preflight is rejected, a browser-only app cannot call
+setlist.fm at all, and 3.1 onwards needs either a proxy — which means
+running a server, contradicting the entire architecture — or a
+different source for setlists.
+
+~~**Prerequisite — setlist.fm API key.**~~ *Obtained 7 Sept. Approval
+was instant, contrary to the note here.*
 
 Then 3.0 foundation (top-tracks, no extra keys), 3.1 real setlists,
 3.2 edge cases, 3.3 library-aware layer, 3.4 Last.fm ranking, and

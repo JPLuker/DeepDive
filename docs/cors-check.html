@@ -1,0 +1,84 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>setlist.fm CORS check</title>
+<style>
+  body { margin:0; padding:24px; background:#0b0b0f; color:#e8e8ea;
+         font:15px/1.55 system-ui, sans-serif; max-width:760px; }
+  h1 { font-size:20px; margin:0 0 6px; }
+  p  { color:#9a9aa2; margin:0 0 18px; }
+  input { width:100%; padding:12px 14px; font-size:15px; border-radius:8px;
+          border:1px solid #2a2a33; background:#16181d; color:#e8e8ea; box-sizing:border-box; }
+  button { margin-top:12px; padding:12px 20px; font-size:15px; font-weight:600;
+           border:none; border-radius:999px; background:#0b54ff; color:#fff; cursor:pointer; }
+  pre { margin-top:20px; padding:16px; background:#16181d; border-radius:10px;
+        white-space:pre-wrap; word-break:break-word; font-size:13px; line-height:1.5; }
+  .ok   { color:#4ade80; }
+  .bad  { color:#f87171; }
+  .note { font-size:13px; color:#6f6f78; }
+</style>
+
+<h1>setlist.fm CORS check</h1>
+<p>
+  This decides whether DeepDive can reach setlist.fm at all. A browser-only
+  app can't call an API that doesn't send CORS headers, and every concert
+  feature after 3.0 depends on the answer.
+</p>
+<p class="note">
+  Open this from <strong>jpluker.github.io</strong>, not from a file on disk —
+  a local file has the origin <code>null</code>, which servers treat
+  differently, so a local result would tell you nothing.
+</p>
+
+<input id="key" type="text" placeholder="Paste your setlist.fm API key" autocomplete="off" spellcheck="false">
+<button id="go">Run the check</button>
+<pre id="out">Waiting.</pre>
+
+<script>
+const out = document.getElementById("out");
+const say = (html) => { out.innerHTML = html; };
+
+document.getElementById("go").addEventListener("click", async () => {
+  const key = document.getElementById("key").value.trim();
+  if (!key) { say("Paste your API key first."); return; }
+
+  // Radiohead's MBID — a stable, always-present artist, so a failure is
+  // never about the query.
+  const url = "https://api.setlist.fm/rest/1.0/artist/a74b1b7f-71a5-4011-9441-d0b5e4122711/setlists?p=1";
+  say("Asking setlist.fm from origin <b>" + location.origin + "</b>…");
+
+  const started = performance.now();
+  try {
+    // x-api-key and Accept both make this a "non-simple" request, so the
+    // browser sends a preflight OPTIONS first. That preflight is what
+    // usually fails, and it fails before the server ever sees the key.
+    const res = await fetch(url, {
+      headers: { "x-api-key": key, "Accept": "application/json" },
+    });
+    const ms = Math.round(performance.now() - started);
+    let body = "";
+    try { body = (await res.text()).slice(0, 400); } catch (e) { body = "(unreadable)"; }
+
+    if (res.ok) {
+      say('<span class="ok">CORS is fine.</span> setlist.fm answered in ' + ms + 'ms with status ' +
+          res.status + '.\n\nA browser-only DeepDive can call this directly. 3.1 onwards is unblocked.\n\n' +
+          'First 400 characters:\n' + body.replace(/</g, "&lt;"));
+    } else {
+      say('<span class="bad">Reached the server, but it refused.</span> Status ' + res.status +
+          ' after ' + ms + 'ms.\n\nThe request got through, so CORS itself is not the problem — ' +
+          'this is more likely the key, the header name, or rate limiting.\n\n' +
+          body.replace(/</g, "&lt;"));
+    }
+  } catch (e) {
+    const ms = Math.round(performance.now() - started);
+    say('<span class="bad">Blocked.</span> Failed after ' + ms + 'ms with: ' + e.message +
+        '\n\nA TypeError this fast almost always means the preflight was rejected — ' +
+        'the browser refused before setlist.fm saw the key.\n\n' +
+        'Check the browser console for the exact CORS message; the page itself is not allowed to see it.\n\n' +
+        'If that is what happened, a browser-only app cannot call setlist.fm, and 3.1 onwards needs ' +
+        'either a proxy (which means running a server, contradicting the whole architecture) or a ' +
+        'different source for setlists.');
+  }
+});
+</script>
