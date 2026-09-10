@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.60
+- Swapped in the correctly cropped results screenshot, and corrected
+  the height declared for it — a stale one reserves the wrong space and
+  the page jumps as the image loads.
+- Added a check that every declared image dimension matches the actual
+  file, since each screenshot swap is a chance to leave one behind.
+
 ## 2.8.59
 - The results panel now shows a Houseghost dive, which has all three
   outcomes on screen — already yours, yours under a different release,

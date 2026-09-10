@@ -90,5 +90,27 @@ for (const ch of css) {
 check('stylesheet balances', depth === 0 && stray === 0);
 
 
+// Declared dimensions must match the files. A stale height reserves
+// the wrong space and the page jumps as each image loads — and every
+// screenshot swap is a chance to leave one behind.
+const { execSync } = await import('child_process');
+for (const m of html.matchAll(/img\/shots\/([a-z-]+\.jpg)" alt="[^"]*" width="(\d+)" height="(\d+)"/g)) {
+  const [, file, w, h] = m;
+  const path = new URL('../docs/img/shots/' + file, import.meta.url);
+  // Read the JPEG's SOF marker rather than adding an image dependency.
+  const buf = readFileSync(path);
+  let i = 2, dims = null;
+  while (i < buf.length - 9) {
+    if (buf[i] !== 0xff) { i++; continue; }
+    const marker = buf[i + 1];
+    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
+      dims = { h: buf.readUInt16BE(i + 5), w: buf.readUInt16BE(i + 7) };
+      break;
+    }
+    i += 2 + buf.readUInt16BE(i + 2);
+  }
+  check(`${file} dimensions are declared correctly`, dims && dims.w === +w && dims.h === +h);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
