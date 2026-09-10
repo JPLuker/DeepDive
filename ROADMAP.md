@@ -26,6 +26,17 @@ actively mislead.
 
 ---
 
+## Before 2.9 ships
+
+**A full pass through `TESTING.md` is required.** Joseph's call, 7 Sept.
+Most of it is believed to work from daily use, but nothing there has
+been deliberately worked through, and every significant bug this project
+has had was found by a screenshot rather than by the suite. Source-text
+assertions cannot see an overlapping element, a dialog that never opens,
+or an API returning something the documentation didn't describe.
+
+This is a gate on the release, not a suggestion.
+
 ## Versioning, going forward
 
 **2.9 is Joseph's to call, not something to infer from a finished

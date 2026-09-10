@@ -1,4 +1,31 @@
-# What still needs testing
+# Testing notes
+
+> ## ⛔ Full pass required before 2.9
+>
+> Joseph's call, 7 Sept: most of this is believed to work from daily
+> use, and the sections below were written as each build shipped rather
+> than as a plan. **Nothing is to be released as 2.9 until a deliberate
+> pass has been made through this file.**
+>
+> Not because the app looks broken — it doesn't — but because every
+> significant bug this project has had was found by a screenshot rather
+> than a test. The empty Mixes page, the dead overflow button, the
+> missing artist popup, the catalogue filter that never fired: all of
+> them passed a green suite. The assertions read source text, so they
+> cannot see an overlapping element, a wrong colour, a dialog that never
+> opens, or a request that returns something other than what the
+> documentation describes.
+>
+> The highest-value sections, in order:
+>
+> 1. **Per-feature blocking** — if scoping is wrong it is wrong silently
+> 2. **Last.fm features** — three of them shipped in one day and none
+>    has been checked against a real response
+> 3. **Catalogue accuracy** — the oldest unverified work, and the one
+>    that can produce wrong results rather than a wrong-looking screen
+> 4. **Dive photos and the slideshow** — untouched since the first
+>    session
+
 
 Everything from **2.6.6 to 2.8.0** shipped without a run against a real
 Spotify account, because the quota locked partway through. This is the

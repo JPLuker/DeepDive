@@ -205,6 +205,13 @@ The tile overflow failed exactly this way and was patched twice before
 the cause was found. Delegate from a stable parent once, as `initTabs`
 already does.
 
+**A green suite is not a working app.** The assertions read source
+text. They cannot see an element sitting on top of another, a dialog
+that never opens, a stylesheet truncated by a stray brace, or a
+response shaped differently from the documentation. Every serious bug
+here was found by Joseph looking at a screen. Before 2.9, work through
+`TESTING.md` deliberately rather than trusting the count.
+
 **A skip that predates a feature will hide it.** "Don't ask again" was
 added when the artist dialog only chose how deep a dive went. When Dip
 became the other half of that dialog, anyone who had ticked the box got
