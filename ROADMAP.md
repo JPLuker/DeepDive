@@ -574,10 +574,16 @@ the riskiest unknown in 3.x. A test page is deployed at
 button. It must be run from that origin, not from a local file, since
 a file has origin `null` and servers treat it differently.
 
-**Run 7 Sept on Brave: blocked after 357ms with `Failed to fetch`** —
-the shape of a rejected preflight. Not confirmed, because Brave's
-Shields produce an identical failure for reasons unrelated to the
-server. Re-run on Chrome or Firefox before designing around it.
+**Answered 7 Sept: setlist.fm cannot be called from a browser.**
+Blocked on Brave (357ms) and Chrome (259ms) from the real origin —
+two engines, same rejected preflight, so it is the API and not the
+browser.
+
+3.1 onwards therefore needs a decision Joseph has to make: a serverless
+proxy (works, but is a server), a Capacitor wrapper (fixes only the
+packaged app), or dropping real setlists and building on top tracks and
+Last.fm ranking, which already works. `SETLISTFM_SURFACE.md` weighs all
+three. **3.0 is unaffected** — it was always top-tracks only.
 
 `SETLISTFM_SURFACE.md` records the rest of what the docs say, including
 a second problem worth knowing early: artists there are identified by

@@ -9,22 +9,42 @@ bottom of this file.
 
 ---
 
-## The blocker: CORS
+## The blocker: CORS — confirmed
 
-A browser-only app cannot call an API that refuses cross-origin
-requests. The check at `/DeepDive/cors-check.html`, run from the real
-origin on **Brave**, failed after 357ms with `Failed to fetch` — the
-shape of a rejected preflight, where the browser refuses before
-setlist.fm ever sees the key.
+**setlist.fm cannot be called from a browser.** Tested 7 Sept from the
+real origin, on Brave (357ms) and Chrome (259ms): both fail with
+`Failed to fetch` before the request reaches the server. Two engines,
+same result, so this is the API refusing cross-origin requests rather
+than anything browser-specific.
 
-**Not yet confirmed.** Brave's Shields block cross-site requests
-aggressively enough to produce an identical failure that has nothing to
-do with the server. Re-run on Chrome or Firefox, or with Shields down,
-before treating this as settled.
+The failure is a rejected preflight. `x-api-key` makes the request
+non-simple, so the browser sends `OPTIONS` first and setlist.fm doesn't
+answer it. The key is never seen; a different key changes nothing.
 
-If it holds, the options are a serverless proxy — which means running a
-server and contradicting the architecture — or dropping real setlists
-and deriving a likely set from top tracks instead.
+**A browser-only DeepDive cannot use setlist.fm.** That is settled, and
+3.1 onwards has to answer it. Options, honestly weighed:
+
+**A proxy.** A serverless function — Cloudflare Worker, free tier,
+about twenty lines — holding the key and forwarding requests. It works
+and needs no maintenance. It is also a server, which is the one thing
+this project has refused for two years. Worth noting it would be more
+secure than what already ships: the Spotify and Last.fm keys are handed
+to every user, whereas this one would stay server-side. It also means
+one shared key and therefore a shared rate limit, and something Joseph
+has to keep running.
+
+**Capacitor.** The PWA plan already contemplates wrapping for the Play
+Store. Native HTTP requests aren't subject to CORS at all, so a wrapped
+Android build could call setlist.fm directly. That fixes it only for
+the packaged app, leaving the web version without the feature — a split
+in what DeepDive is, which may be worse than not having it.
+
+**Drop real setlists.** Build 3.x on top tracks and Last.fm ranking,
+which is already working and cached. Weaker — no encore structure, no
+tour-specific set — but architecturally honest and available today.
+
+**3.0 is unaffected either way**, since it was always specified as
+top-tracks with no extra keys.
 
 ## The other problem: artists are MusicBrainz, not Spotify
 
