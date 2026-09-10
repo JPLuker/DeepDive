@@ -64,6 +64,37 @@ artwork. Screenshots from it are ours outright.
 
 ---
 
+## Next build — check permissions before the work, not after
+
+Joseph, 8 Sept: a Multi-Dip ran to completion — several catalogue
+reads, minutes of quota — and only then said DD-SCOPE, reconnect
+required.
+
+**The check is in the wrong place.** `maybeSetCover` tests the scope at
+upload time, which is the last thing that happens. Everything expensive
+has already been spent by then, and reconnecting sends you through
+Spotify's consent screen, which loses the built playlist's context.
+
+**What it should do instead:**
+
+- Check granted scopes **once on load** and surface anything missing as
+  a persistent banner, the way the API trouble banner works. A missing
+  permission is a standing condition, not an event at the end of a job.
+- Before starting anything expensive — a dive, a Multi-Dip, a genre
+  fetch — confirm the permissions that job will need. Checking is free
+  and instant; finding out afterwards costs the whole run.
+- Offer the reconnect **before** the work rather than after, so nothing
+  is lost by taking it.
+
+**The general shape, worth remembering beyond this case:** a
+precondition that can be tested for nothing should never be discovered
+as a failure at the end. This is the same error as the rate-limit
+deadlock in 2.8.7, where the app blocked the requests that would have
+cleared its own pause — a state that was knowable up front, checked
+too late.
+
+---
+
 ## Next build — the Multi-Dip song count is unreadable
 
 Joseph, 8 Sept: *"what is this auto thing with numbers under it?"*

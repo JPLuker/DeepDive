@@ -244,6 +244,13 @@ caching similar-artist and chart data for at least a week. Don't carry
 one assumption to the other — doing exactly that is why Last.fm data
 was re-fetched on every page load for five builds.
 
+**Check preconditions before the work, not after it.** Cover upload
+tests for its scope at upload time, so a Multi-Dip spent several
+catalogue reads and minutes of quota before reporting that a reconnect
+was needed. Anything knowable for free at the start — granted scopes, a
+present key, a warm cache — belongs at the start. Same error as the
+rate-limit deadlock: a knowable state, checked too late to help.
+
 **The library cache is only filled deliberately.** `peek()` reads it;
 `getLikedTracks()` fills it, and until 2.8.45 only a dive or Settings →
 Refresh library ever called that. Anything built on the cache must
