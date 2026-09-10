@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.56
+- Landing page rebuilt on stats.fm's structure: a text-led hero with
+  three device screens beneath it, a figures band, a plain feature
+  list, two alternating panels, a closing panel, and a real footer with
+  columns. Their green becomes DeepDive's blue — the structure is
+  borrowed, the identity isn't.
+- **No artist photograph is used as page imagery.** They appear only
+  inside device frames, as examples of the app running, which is how
+  stats.fm shows album artwork too.
+- Fixed: the link preview image was an artist photo, which is a
+  headline use by any reasonable reading. It's the app icon now.
+- Every pictured artist is named in the footer, with the endorsement
+  disclaimer.
+
 ## 2.8.55
 - The landing page now credits Spotify and Last.fm, states that album
   artwork and artist photography belong to their respective owners,

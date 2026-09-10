@@ -51,6 +51,12 @@ content belongs to its owners, names the artists pictured, and
 disclaims endorsement. None of that existed before; it is the minimum,
 not a substitute for asking.
 
+**Where photographs may appear:** inside device frames on the landing
+page, as examples of the app running. Nowhere else — not as page
+imagery, not as the link-preview image, not in a store listing or a
+social post. The link preview used one until 2.8.56, which is a
+headline use by any reasonable reading.
+
 **If permission doesn't come:** demo mode was built to stage every
 screen without real data and uses gradient placeholders instead of
 artwork. Screenshots from it are ours outright.
@@ -133,7 +139,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.55
+## Shipped since — build 2.8.56
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:

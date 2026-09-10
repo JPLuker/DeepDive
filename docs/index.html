@@ -18,7 +18,7 @@
 <meta property="og:description" content="Reads an artist's whole catalogue against your Spotify library and finds the recordings you already love but never saved.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://jpluker.github.io/DeepDive/">
-<meta property="og:image" content="https://jpluker.github.io/DeepDive/img/shots/dive-maciann.jpg">
+<meta property="og:image" content="https://jpluker.github.io/DeepDive/assets/icon-512.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <script>
@@ -410,102 +410,105 @@
   .landing-cta { margin:26px 0 10px; }
   .landing-note { font-size:12.5px; color:var(--muted-soft); margin:0; }
 
-  /* ---- hero ----
-     A dive gives the artist the whole screen and lays the words over
-     the bottom of the photograph. The page does the same, so the first
-     thing anyone sees is the thing the product is actually like. */
-  .hero { margin:0 0 8px; }
-  .hero-frame {
-    position:relative; border-radius:24px; overflow:hidden;
-    min-height:min(78vh, 640px); display:flex; align-items:flex-end;
-    background:#0a0a0a;
-  }
-  .hero-photo {
-    position:absolute; inset:0; width:100%; height:100%;
-    object-fit:cover; object-position:50% 28%;
-  }
-  /* Dark enough at the base for text, clear at the top so the
-     photograph is still a photograph. */
-  .hero-scrim {
-    position:absolute; inset:0;
-    background:linear-gradient(180deg,
-      rgba(8,8,10,0.15) 0%,
-      rgba(8,8,10,0.55) 52%,
-      rgba(8,8,10,0.94) 100%);
-  }
-  .hero-copy { position:relative; padding:36px 24px 34px; max-width:640px; }
-  .hero-tagline {
+  /* ---- landing ----
+     After stats.fm: a text-led hero with the devices beneath it, a
+     figures band, a plain feature list, alternating panels, a closing
+     panel, then a real footer. Their green becomes DeepDive's blue —
+     borrowing the structure, not the identity.
+
+     No artist photograph is used as page imagery. They appear only
+     inside device frames, as examples of the app running. */
+  .lead { padding:12px 0 0; text-align:center; }
+  .lead-title {
     font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
-    font-size:clamp(46px, 12vw, 104px); line-height:0.88;
-    letter-spacing:-0.02em; margin:0; color:#fff;
+    font-size:clamp(50px, 13vw, 112px); line-height:0.9;
+    letter-spacing:-0.025em; margin:0;
   }
-  .hero-lede {
-    font-size:16.5px; line-height:1.55; margin:16px 0 24px;
-    color:rgba(255,255,255,0.78); max-width:44ch;
+  .lead-sub {
+    font-size:17px; line-height:1.55; color:var(--muted);
+    max-width:52ch; margin:20px auto 0;
   }
-  .landing-cta { display:flex; flex-wrap:wrap; align-items:center; gap:14px; }
-  .hero-note { font-size:13px; color:rgba(255,255,255,0.6); }
+  .lead-cta {
+    display:flex; flex-wrap:wrap; gap:14px;
+    justify-content:center; align-items:center; margin:28px 0 0;
+  }
+  .lead-link { color:var(--accent); font-weight:600; font-size:14.5px; text-decoration:none; }
+  .lead-link:hover { text-decoration:underline; }
+  .lead-note { font-size:13px; color:var(--muted-soft); margin:16px 0 0; }
 
-  @media (min-width: 900px) {
-    .hero-frame { min-height:min(82vh, 760px); }
-    .hero-copy { padding:56px 48px 52px; }
+  /* Devices: three screens, the middle one forward. stats.fm overlaps
+     theirs and lets the outer two fall behind; the same arrangement
+     reads as one product rather than three pictures. */
+  .devices {
+    display:flex; justify-content:center; align-items:flex-end;
+    margin:44px 0 0; padding-bottom:8px;
   }
+  .device { margin:0; }
+  .device img {
+    display:block; width:100%; height:auto;
+    border-radius:14px; border:1px solid rgba(255,255,255,0.08);
+  }
+  .device-l, .device-r { width:min(30vw, 210px); }
+  .device-c { width:min(38vw, 260px); z-index:2; }
+  .device-l { transform:translateX(14%) scale(0.92); opacity:0.55; }
+  .device-r { transform:translateX(-14%) scale(0.92); opacity:0.55; }
+  .device-c img { box-shadow:0 26px 60px rgba(0,0,0,0.55); }
 
-  /* Figures, in the manner of stats.fm's counter band — but theirs
-     counts a platform and DeepDive has none, so these are what a
-     single dive produces and what the app costs you in privacy. The
-     last one is a zero on purpose. */
   .figures {
     display:grid; grid-template-columns:repeat(2,1fr); gap:26px 20px;
-    margin:64px 0 8px; padding:32px 0;
+    margin:56px 0 0; padding:32px 0;
     border-top:1px solid var(--line); border-bottom:1px solid var(--line);
   }
   .figure-n {
     display:block; font-family:'Martius','Inter',sans-serif;
     font-size:clamp(30px,7vw,44px); line-height:1; letter-spacing:-0.01em;
   }
-  .figure-l {
-    display:block; margin-top:8px; font-size:13px;
-    color:var(--muted); line-height:1.45; max-width:22ch;
-  }
-  @media (min-width: 760px) { .figures { grid-template-columns:repeat(4,1fr); gap:32px; } }
+  .figure-l { display:block; margin-top:8px; font-size:13px; color:var(--muted); line-height:1.45; max-width:22ch; }
 
-  /* Four statements, not four cards. Boxing each in its own rounded
-     rectangle with a matching icon is the SaaS default and adds a
-     border for every idea; a two-column text block reads faster. */
-  .does {
-    display:grid; grid-template-columns:1fr; gap:34px;
-    margin:76px 0; padding-top:8px;
-  }
-  .does-item h3 {
+  .listing { margin:72px 0 0; }
+  .listing-title, .panel-words h2, .closing h2 {
     font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
-    font-size:20px; letter-spacing:-0.01em; margin:0 0 10px;
+    font-size:clamp(26px,5vw,38px); line-height:1.02;
+    letter-spacing:-0.015em; margin:0 0 14px;
   }
-  .does-item p { margin:0; color:var(--muted); line-height:1.62; max-width:54ch; }
-  @media (min-width: 760px) {
-    .does { grid-template-columns:1fr 1fr; gap:44px 56px; }
+  .listing-intro { color:var(--muted); line-height:1.6; max-width:58ch; margin:0 0 34px; }
+  .listing-items { list-style:none; margin:0; padding:0; display:grid; gap:28px; }
+  .listing-items h3 { font-size:17px; margin:0 0 7px; letter-spacing:-0.01em; }
+  .listing-items p { margin:0; color:var(--muted); line-height:1.6; max-width:56ch; }
+  @media (min-width:760px) { .listing-items { grid-template-columns:1fr 1fr; gap:34px 48px; } }
+
+  /* Alternating panels on a raised surface, as stats.fm does. */
+  .panel {
+    display:grid; grid-template-columns:1fr; gap:26px;
+    align-items:center; margin:28px 0 0; padding:32px 24px;
+    background:var(--surface); border-radius:var(--radius-lg);
+  }
+  .panel:first-of-type { margin-top:72px; }
+  .panel-words p { color:var(--muted); line-height:1.62; max-width:52ch; margin:0 0 12px; }
+  .device-still { width:min(240px, 62vw); justify-self:center; }
+  .device-still img { box-shadow:0 18px 44px rgba(0,0,0,0.45); }
+  @media (min-width:820px) {
+    .panel { grid-template-columns:minmax(0,1fr) 280px; gap:48px; padding:48px; }
+    .panel-flip .panel-words { order:2; }
+    .panel-flip .device-still { order:1; }
   }
 
-  /* One screenshot beside the argument it makes. */
-  .showcase {
-    display:grid; grid-template-columns:1fr; gap:28px;
-    align-items:center; margin:72px 0;
+  .closing {
+    text-align:center; margin:56px 0 0; padding:48px 24px;
+    background:var(--accent-gradient); border-radius:var(--radius-lg);
+    color:#fff;
   }
-  .showcase-shot {
-    width:min(300px, 70vw); height:auto; justify-self:center;
-    border-radius:20px; box-shadow:0 20px 50px rgba(0,0,0,0.45);
-  }
-  .showcase-words h2 {
-    font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
-    font-size:clamp(28px, 5vw, 40px); line-height:1.02;
-    letter-spacing:-0.015em; margin:0 0 16px;
-  }
-  .showcase-words p { color:var(--muted); line-height:1.6; max-width:52ch; margin:0 0 14px; }
-  @media (min-width: 900px) {
-    .showcase { grid-template-columns:340px minmax(0,1fr); gap:56px; }
-    .showcase-shot { justify-self:start; }
-  }
+  .closing h2 { color:#fff; }
+  .closing p { color:rgba(255,255,255,0.85); margin:0 0 22px; }
+  .closing .btn-primary { background:#fff; color:#0b0b0f; }
+  .closing-note { font-size:13px; margin:16px 0 0 !important; }
 
+  .foot { margin:64px 0 0; padding:36px 0 8px; border-top:1px solid var(--line); }
+  .foot-cols { display:grid; grid-template-columns:1fr; gap:26px; margin-bottom:30px; }
+  .foot-cols h4 { font-size:13px; margin:0 0 10px; color:var(--muted-soft); font-weight:600; }
+  .foot-cols a { display:block; font-size:14px; color:var(--ink); text-decoration:none; padding:4px 0; }
+  .foot-cols a:hover { color:var(--accent); }
+  @media (min-width:640px) { .foot-cols { grid-template-columns:repeat(3,1fr); gap:32px; } }
 
   .landing-legal {
     font-size:12px; line-height:1.6; color:var(--muted-soft);
@@ -717,92 +720,109 @@
 </head>
 <body>
   <div class="wrap landing">
-    <!-- The page opens the way a dive does: the artist fills the
-         screen, the words sit over the bottom of the photograph, and
-         nothing competes with the picture. Borrowing the product's own
-         most distinctive screen as the page's design language, rather
-         than the fanned-phones arrangement every app marketing page
-         uses. -->
-    <header class="hero">
-      <div class="hero-frame">
-        <img src="img/shots/hero-maciann.jpg" alt="" class="hero-photo" fetchpriority="high" width="1400" height="1933">
-        <div class="hero-scrim"></div>
-        <div class="hero-copy">
-          <h1 class="hero-tagline">Hear it all.</h1>
-          <p class="hero-lede">You liked the album version. You missed the single. DeepDive reads an artist's whole catalogue against your library and finds the recordings you already love but never saved.</p>
-          <div class="landing-cta">
-            <a class="btn btn-primary" href="app/">Open DeepDive</a>
-            <span class="hero-note">Free. Runs in your browser. Two minutes to set up.</span>
-          </div>
-        </div>
+    <!-- Structure follows stats.fm: a text-led hero, devices below it,
+         a feature list, a figures band, alternating panels, a closing
+         panel, then a real footer.
+         
+         One deliberate departure: no artist photograph is used as page
+         imagery. The photographs belong to the artists, not to Spotify
+         and not to us, so they appear only inside device frames as
+         examples of the app running — which is how stats.fm shows
+         album artwork too. -->
+    <header class="lead">
+      <h1 class="lead-title">Hear it all.</h1>
+      <p class="lead-sub">You liked the album version. You missed the single. DeepDive reads an artist's whole catalogue against your Spotify library and finds the recordings you already love but never saved.</p>
+      <div class="lead-cta">
+        <a class="btn btn-primary" href="app/">Open DeepDive</a>
+        <a class="lead-link" href="#how">How it works</a>
+      </div>
+      <p class="lead-note">Free, no account, nothing installed. Runs entirely in your browser.</p>
+
+      <div class="devices" aria-hidden="true">
+        <figure class="device device-l"><img src="img/shots/dive-vial.jpg" alt="" width="640" height="1204" loading="eager"></figure>
+        <figure class="device device-c"><img src="img/shots/dive-maciann.jpg" alt="" width="640" height="1228" fetchpriority="high"></figure>
+        <figure class="device device-r"><img src="img/shots/dive-leisure-hour.jpg" alt="" width="640" height="1231" loading="eager"></figure>
       </div>
     </header>
 
-    <!-- What a dive actually gives you. The numbers on this screen are
-         the whole argument: three you already had, fifty-eight you
-         didn't. No feature list makes that point as quickly. -->
-    <section class="showcase">
-      <img src="img/shots/results-modern-baseball.jpg" alt="A finished dive on Modern Baseball, showing 58 tracks new to the listener and 3 already in their library" class="showcase-shot" loading="lazy" width="760" height="1296">
-      <div class="showcase-words">
-        <h2>Three you had. Fifty-eight you didn't.</h2>
-        <p>A dive reads every release an artist has put out — albums, singles, EPs, the compilations they appear on if you ask for them — and sorts it against your library track by track.</p>
-        <p>What comes back is a list you can act on: the recordings you already own under another name, and everything by them you've genuinely never heard. Nothing is saved to Spotify until you say so.</p>
-      </div>
-    </section>
-
-    <!-- A figures band, following stats.fm's. Theirs counts their
-         platform: users, streams, tracks. DeepDive has no platform and
-         no users to count — it runs on your machine — so counting
-         anything global would be a borrowed gesture with nothing
-         behind it. These are the numbers a dive actually produces. -->
     <section class="figures">
-      <div class="figure">
-        <span class="figure-n">61</span>
-        <span class="figure-l">tracks read for Modern Baseball</span>
-      </div>
-      <div class="figure">
-        <span class="figure-n">58</span>
-        <span class="figure-l">of them new to that library</span>
-      </div>
-      <div class="figure">
-        <span class="figure-n">40+</span>
-        <span class="figure-l">ways to cut what you've saved</span>
-      </div>
-      <div class="figure">
-        <span class="figure-n">0</span>
-        <span class="figure-l">of it leaves your browser</span>
-      </div>
+      <div class="figure"><span class="figure-n">61</span><span class="figure-l">tracks read in one dive</span></div>
+      <div class="figure"><span class="figure-n">58</span><span class="figure-l">of them new to that library</span></div>
+      <div class="figure"><span class="figure-n">40+</span><span class="figure-l">ways to cut what you've saved</span></div>
+      <div class="figure"><span class="figure-n">0</span><span class="figure-l">of it leaves your browser</span></div>
     </section>
 
-    <!-- Four things it does, each stated as the situation it resolves
-         rather than as a feature. No icons: a small line drawing above
-         each heading is decoration, and these are already short. -->
-    <section class="does">
-      <div class="does-item">
-        <h3>The single you never saved</h3>
-        <p>You liked a song off an album years ago. The same recording came out again on an EP, and Spotify never mentioned it. DeepDive matches on the recording itself, not the title, so a reissue under a different name still counts as the one you already love.</p>
-      </div>
-      <div class="does-item">
-        <h3>An hour of anyone</h3>
-        <p>A dip takes one artist and gives you their best hour, most-played first. Where a dive is thorough, a dip is the version you actually put on.</p>
-      </div>
-      <div class="does-item">
-        <h3>Mixes out of your own library</h3>
-        <p>Forty-odd ways of cutting what you've already saved: a year, a decade, the songs under two-thirty, the artists you own one track by. Or build your own from any combination.</p>
-      </div>
-      <div class="does-item">
-        <h3>Genres Spotify won't tell you</h3>
-        <p>Not "rock". Shoegaze, midwest emo, riot grrrl — worked out from what your artists are actually tagged as, then turned into mixes of music you already own.</p>
-      </div>
+    <section class="listing" id="how">
+      <h2 class="listing-title">What it does</h2>
+      <p class="listing-intro">Point it at an artist and it reads everything they've released — albums, singles, EPs, the compilations they turn up on if you ask — then sorts all of it against your library, track by track.</p>
+      <ul class="listing-items">
+        <li>
+          <h3>Finds the recording, not the title</h3>
+          <p>A song reissued on an EP under a different name is the same recording. DeepDive matches on that, so the version you already love still counts as yours.</p>
+        </li>
+        <li>
+          <h3>An hour of anyone</h3>
+          <p>A dip takes one artist and gives you their best hour, most-played first. Where a dive is thorough, a dip is the one you actually put on.</p>
+        </li>
+        <li>
+          <h3>Mixes out of your own library</h3>
+          <p>Forty-odd ways of cutting what you've saved — a year, a decade, songs under two-thirty, artists you own one track by — or build your own from any combination.</p>
+        </li>
+        <li>
+          <h3>Genres Spotify won't tell you</h3>
+          <p>Not "rock". Shoegaze, midwest emo, riot grrrl, worked out from what your artists are actually tagged as, then turned into mixes of music you already have.</p>
+        </li>
+      </ul>
     </section>
 
+    <section class="panel">
+      <div class="panel-words">
+        <h2>Three you had. Fifty-eight you didn't.</h2>
+        <p>Every dive ends the same way: what you already own under another name, and everything by them you've genuinely never heard.</p>
+        <p>Nothing is written to Spotify until you choose it. Untick anything, reorder it, cap the length, then build the playlist.</p>
+      </div>
+      <figure class="device device-still">
+        <img src="img/shots/results-modern-baseball.jpg" alt="A finished dive on Modern Baseball: 58 tracks new to the listener, 3 already in their library" width="640" height="1091" loading="lazy">
+      </figure>
+    </section>
 
-    <div class="landing-foot">
-      <p class="landing-note">Spotify requires every app to have its own credentials, so you'll create a free one on their developer dashboard. It's a form, and you only do it once.</p>
+    <section class="panel panel-flip">
+      <div class="panel-words">
+        <h2>It runs on your machine</h2>
+        <p>There is no DeepDive server. Your library is read by your browser, matched by your browser, and stored on your device — which is why the figure above is a zero rather than a promise.</p>
+        <p>You bring your own Spotify credentials, so nothing is pooled with anyone else's, and you can revoke access at any time from Spotify.</p>
+      </div>
+      <figure class="device device-still">
+        <img src="img/shots/dive-vial.jpg" alt="A dive in progress, showing the artist and a progress bar" width="640" height="1204" loading="lazy">
+      </figure>
+    </section>
+
+    <section class="closing">
+      <h2>Start with one artist</h2>
+      <p>Pick someone you think you know well. That's usually where the surprise is.</p>
       <a class="btn btn-primary" href="app/">Open DeepDive</a>
-      <p class="landing-note" style="margin-top:18px;">
-        <a href="https://github.com/JPLuker/DeepDive" style="color:var(--muted);">Source on GitHub</a>
-      </p>
+      <p class="closing-note">Two minutes to set up. Nothing to install.</p>
+    </section>
+
+    <footer class="foot">
+      <div class="foot-cols">
+        <div>
+          <h4>DeepDive</h4>
+          <a href="app/">Open the app</a>
+          <a href="https://github.com/JPLuker/DeepDive">Source on GitHub</a>
+        </div>
+        <div>
+          <h4>Getting started</h4>
+          <a href="app/">Set up in two minutes</a>
+          <a href="https://developer.spotify.com/dashboard">Spotify developer dashboard</a>
+          <a href="https://www.last.fm/api/account/create">Last.fm API key</a>
+        </div>
+        <div>
+          <h4>Made by</h4>
+          <a href="https://github.com/JPLuker">Joseph Luker</a>
+          <a href="https://www.linkedin.com/in/josephluker">LinkedIn</a>
+        </div>
+      </div>
 
       <p class="landing-legal">
         Music metadata and artwork are provided by Spotify. DeepDive is not
@@ -811,10 +831,12 @@
         photography — remains the property of its respective owners.
       </p>
       <p class="landing-legal">
-        Artists pictured: Maciann, Modern Baseball. Their photographs appear
-        here only as examples of the app in use and imply no endorsement.
+        Artists pictured: Maciann, VIAL, Leisure Hour, Modern Baseball. Their
+        photographs appear here only as examples of the app in use and imply
+        no endorsement.
       </p>
-    </div>
+      <p class="landing-legal">&copy; 2026 Joseph Luker.</p>
+    </footer>
   </div>
 </body>
 </html>
