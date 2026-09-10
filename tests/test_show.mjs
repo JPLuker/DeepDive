@@ -26,9 +26,18 @@ const show = buildShow(bill, { totalMs: 3 * 60 * 60 * 1000 });
 check('every artist gets a set', show.sets.length === 3);
 // The point of the weighting: an opener given equal time is not what
 // anyone means by getting ready for a show.
-check('the headliner gets the most', show.sets[2].totalMs > show.sets[0].totalMs);
-check('and the bill rises toward them', show.sets[0].totalMs < show.sets[1].totalMs && show.sets[1].totalMs < show.sets[2].totalMs);
-check('the headliner is marked', show.sets[2].headliner && !show.sets[0].headliner);
+// Weight comes from a tag now, not from position: getting the billing
+// order right was compulsory before the feature would behave, and
+// reordering names with an arrow is a chore for something most people
+// would shrug at. Equal unless you say otherwise.
+check('untagged artists share evenly', Math.abs(show.sets[0].totalMs - show.sets[2].totalMs) < 5 * 60000);
+const tagged = buildShow([
+  { ...bill[0], emphasis: 'less' }, bill[1], { ...bill[2], emphasis: 'more' },
+], { totalMs: 3 * 3600000 });
+check('more gets more', tagged.sets[2].totalMs > tagged.sets[1].totalMs);
+check('less gets less', tagged.sets[0].totalMs < tagged.sets[1].totalMs);
+check('and the night is still the length asked for', Math.abs(tagged.totalMs - 3 * 3600000) < 12 * 60000);
+check('the tag is reported back', tagged.sets[2].emphasis === 'more' && !show.sets[0].emphasis);
 // A dip is shuffled; a night isn't.
 check('openers come first', show.tracks[0].name.startsWith('o'));
 check('the headliner closes', show.tracks[show.tracks.length - 1].name.startsWith('h'));
@@ -43,15 +52,18 @@ check('artists with no catalogue are skipped', buildShow([{ artist: { name: 'X' 
 // Wiring
 check('there is a way in from Dives', /id="go-show"/.test(src));
 check('and a screen', /async function renderShow/.test(src));
-check('billing order is editable', /data-show-up/.test(src));
+check('tags are togglable', /data-show-emph/.test(src));
+// Nothing compulsory: pressing an active tag clears it.
+check('and clear when pressed again', /a\.emphasis === b\.dataset\.emph \? null : b\.dataset\.emph/.test(src));
+check('the reorder arrows are gone', !/data-show-up/.test(src));
 // The bill reused .watchlist-row, which is built for a name and one
 // button — not a name, a position, an order control, a marker and a
 // button. The name and the controls overlapped.
 check('the bill has its own row markup', /class="bill-row"/.test(src));
 check('and no longer borrows the watchlist row', !/_showBill\.map\(\(a, i\) => `\s*\n\s*<div class="watchlist-row">/.test(src));
 check('the name truncates instead of pushing controls off', /\.bill-name \{[\s\S]{0,200}text-overflow:ellipsis/.test(shell));
-check('position is shown', /class="bill-pos"/.test(src));
-check('the headliner is marked', /class="bill-tag"/.test(src));
+check('tags reach the builder', /emphasis: a\.emphasis \|\| null/.test(src));
+check('tags are visible on the row', /class="bill-tag-btn/.test(src));
 // The gear opens dive options. On Multi-Dip there is no dive about to
 // happen, so it did nothing at all.
 check('the shell can omit the options gear', /function searchShellHtml\(\{ options = true \} = \{\}\)/.test(src));
@@ -140,7 +152,7 @@ check('and is marked as pinned', withPin.sets[0].pinned && !withPin.sets[1].pinn
 // Pinning one person must not quietly rob the night of its length.
 check('the night stays the length asked for', Math.abs(withPin.totalMs - 3 * 3600000) < 12 * 60000);
 check('the freed time goes to the others', withPin.sets[2].tracks.length > auto.sets[2].tracks.length);
-check('billing order still holds among the unpinned', withPin.sets[2].totalMs > withPin.sets[1].totalMs);
+check('unpinned artists still share what is left', withPin.sets[1].totalMs > 0 && withPin.sets[2].totalMs > 0);
 check('pinning everyone still builds', buildShow([pin('A', 3), pin('B', 3)], { totalMs: 3600000 }).tracks.length === 6);
 
 check('the control is on each bill row', /data-show-songs/.test(src));

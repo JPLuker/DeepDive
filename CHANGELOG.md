@@ -4,6 +4,26 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.7
+- Playlist covers are no longer optional. The permission is part of the
+  standard set, so new connections just get it. Anyone connected before
+  it was added sees **DD-SCOPE** once with what to do about it, rather
+  than covers quietly never appearing.
+- Finding genres and finding recommendations now take over the screen
+  the way a dive does. Both spend a few hundred requests over a minute
+  or two, and running that behind a line of small text looked broken.
+- Fixed: the options icon did nothing on "If you like…", same as it did
+  nothing on Multi-Dip. Gone from both.
+- Added a search to the genre list, which runs to dozens once the broad
+  tags stop hiding the rest.
+- Multi-Dip weights by tag rather than by position: everyone shares the
+  night evenly unless you tag someone **More** or **Less**. Getting the
+  billing order right used to be compulsory before the feature would
+  behave. Pressing an active tag clears it.
+- The landing page called the recommendations panel "Music you own and
+  forgot", which describes a different feature from the one in the
+  screenshot beside it.
+
 ## 2.9.6
 - Added playlist cover art, built from the album images of the songs
   inside the playlist. Off by default; turn it on in Settings.

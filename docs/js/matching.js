@@ -625,9 +625,16 @@ export function buildShow(entries, { totalMs = 3 * 60 * 60 * 1000, familiar = "m
   }
 
   const auto = live.filter((e) => !pinned.has(e));
-  // Weights rise toward the headliner. With one artist this is just a
-  // dip; with four it's roughly 1 : 1.4 : 1.9 : 2.6.
-  const weights = auto.map((e) => Math.pow(1.35, live.indexOf(e)));
+  // Weight comes from a tag, not from position.
+  //
+  // It used to rise toward the last name on the list, which meant
+  // getting the billing order right was compulsory before the feature
+  // would behave — and reordering four names with an arrow button is a
+  // chore for something most people would shrug at. Everyone is equal
+  // unless you say otherwise: tag the one you're there for as "more",
+  // the one you barely know as "less".
+  const WEIGHT = { more: 2, less: 0.5 };
+  const weights = auto.map((e) => WEIGHT[e.emphasis] || 1);
   const sum = weights.reduce((a, b) => a + b, 0) || 1;
   const remaining = Math.max(0, totalMs - pinnedMs);
 
@@ -635,7 +642,7 @@ export function buildShow(entries, { totalMs = 3 * 60 * 60 * 1000, familiar = "m
     const hit = pinned.get(entry);
     if (hit) {
       return {
-        artist: entry.artist, headliner: entry === live[live.length - 1],
+        artist: entry.artist, emphasis: entry.emphasis || null,
         tracks: hit.tracks, totalMs: hit.ms, pinned: true,
       };
     }
@@ -644,7 +651,7 @@ export function buildShow(entries, { totalMs = 3 * 60 * 60 * 1000, familiar = "m
       targetMs: share, familiar, likedIds: entry.likedIds || null,
     });
     return {
-      artist: entry.artist, headliner: entry === live[live.length - 1],
+      artist: entry.artist, emphasis: entry.emphasis || null,
       tracks: dip.tracks, totalMs: dip.totalMs, pinned: false,
     };
   });

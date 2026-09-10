@@ -450,6 +450,14 @@
      It reused .watchlist-row, which is built for a name and a button —
      not a name, a position, an order control, a marker and a button.
      The name and the buttons ended up on top of each other. */
+  .genre-filter { margin:0 0 12px; }
+  .genre-filter input {
+    width:100%; box-sizing:border-box; padding:11px 14px;
+    font-family:inherit; font-size:14.5px;
+    border-radius:999px; border:1px solid var(--line);
+    background:var(--tile); color:var(--ink);
+  }
+
   .bill-row {
     display:flex; align-items:center; gap:10px;
     background:var(--tile); border-radius:var(--radius-tile);
@@ -473,6 +481,16 @@
     padding:3px 8px; border-radius:999px;
   }
   .bill-actions { flex:0 0 auto; display:flex; align-items:center; gap:6px; }
+  .bill-tag-btn {
+    font-family:inherit; font-size:12.5px; font-weight:600;
+    padding:6px 11px; border-radius:999px; cursor:pointer;
+    border:1px solid var(--line); background:none; color:var(--muted);
+  }
+  .bill-tag-btn:hover { color:var(--ink); border-color:var(--ink); }
+  .bill-tag-btn.on {
+    background:var(--accent-gradient); border-color:transparent; color:#fff;
+  }
+
   .bill-songs {
     font-family:inherit; font-size:13px; padding:6px 8px;
     border-radius:999px; border:1px solid var(--line);

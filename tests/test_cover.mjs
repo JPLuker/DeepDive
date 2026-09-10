@@ -43,15 +43,21 @@ check('it sends a raw body', /rawBody: body/.test(sp));
 check('the request builder handles that', /headers\["Content-Type"\] = contentType/.test(sp));
 check('and it is checked before sending', /over Spotify's 256KB limit/.test(sp));
 
-// Scope handling: nobody reconnects unless they want this.
-check('extra scopes can be requested', /beginLogin\(\{ extraScopes = "" \} = \{\}\)/.test(au));
+// The permission is part of the standard set now, so new connections
+// get it and covers just work. Anyone connected before it was added
+// doesn't have it — and that is fixable, but only if they're told.
+check('extra scopes can still be requested', /beginLogin\(\{ extraScopes = "" \} = \{\}\)/.test(au));
 check('the granted scope is recorded', /rememberGranted\(data\.scope\)/.test(au));
 check('and can be checked', /export function hasScope/.test(au));
-check('the scope is not in the default set', !/ugc-image-upload/.test(au.slice(au.indexOf('const SCOPE ='), au.indexOf('const AUTH_URL'))));
-check('it is asked for when switched on', /beginLogin\(\{ extraScopes: auth\.UPLOAD_SCOPE \}\)/.test(src));
+check('upload is in the default scope', /ugc-image-upload/.test(au.slice(au.indexOf('const SCOPE ='), au.indexOf('const AUTH_URL'))));
+check('covers are not an opt-in setting', !/set-cover-art/.test(src));
 
 // Covers are decoration; nothing here may break a successful build.
-check('a missing scope skips silently', /if \(!coverArtOn\(\) \|\| !auth\.hasScope\(auth\.UPLOAD_SCOPE\)\) return;/.test(src));
+// Quietly missing covers would leave someone with no idea why, and no
+// way to fix something that is fixable.
+check('a missing permission is reported with a code', /DD-SCOPE/.test(src));
+check('and says what to do about it', /Reconnect in Settings/.test(src));
+check('but only once a session', /if \(_reconnectNagged\) return;/.test(src));
 check('failure never surfaces as an error', /console\.warn\("\[DeepDive\] cover art failed:"/.test(src));
 // Replacing a cover someone already set would be worse than not having one.
 check('an existing playlist keeps its cover', /if \(!res \|\| !res\.id \|\| res\.reused\) return;/.test(src));

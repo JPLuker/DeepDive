@@ -530,6 +530,8 @@ All three need a Last.fm key in Settings.
       expensive feature in the app, tested only against synthetic
       catalogues. Start here, and start with two artists rather than a
       festival bill
+- [ ] Artists share the night evenly until tagged; **More** and **Less**
+      shift the balance, and pressing an active tag clears it
 - [ ] Pin one artist to a few songs — they get exactly that many, and
       the others expand to keep the night its stated length
 
@@ -549,8 +551,9 @@ All three need a Last.fm key in Settings.
 
 ## 19. Cover art (2.9.6)
 
-- [ ] Settings → Playlist covers → Make covers. Switching it on should
-      send you through Spotify's consent screen once
+- [ ] Covers are automatic now. If your connection predates the
+      permission you'll see **DD-SCOPE** once — reconnect in Settings
+      and it should work after that
 - [ ] After that, a **newly created** playlist gets a cover built from
       its album art
 - [ ] A playlist that already existed and was updated keeps its

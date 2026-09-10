@@ -116,7 +116,7 @@ for (const m of html.matchAll(/img\/shots\/([a-z-]+\.jpg)" alt="[^"]*" width="(\
 // the features that were on screen in the device row and never in the
 // copy.
 check('recommendations are advertised', /If you like Oliver Tree/.test(html));
-check('with their own panel', /Music you own and forgot/.test(html));
+check('with their own panel', /If you like them, you'll like these/.test(html));
 check('the duplicate check is mentioned', /quietly liked twice/.test(html));
 
 // The hero claimed "no account, nothing installed". A Spotify Client ID

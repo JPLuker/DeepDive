@@ -22,7 +22,7 @@
 const SCOPE = (
   "user-library-read user-library-modify playlist-read-private " +
   "playlist-modify-private playlist-modify-public user-top-read " +
-  "user-read-recently-played"
+  "user-read-recently-played ugc-image-upload"
 );
 
 const AUTH_URL = "https://accounts.spotify.com/authorize";

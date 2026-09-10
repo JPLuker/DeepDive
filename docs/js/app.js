@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.6";
+export const BUILD = "2.9.7";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3260,8 +3260,10 @@ async function renderGenreSection() {
   // page promises subgenres, and the broad tags — rock, pop, alternative
   // — always outrank them by track count. Shoegaze is the point of this
   // feature and it sits well below "rock".
-  const allGenres = insights.genreCards(cached, _genreTags, { limit: 200 });
-  const cards = _genresExpanded ? allGenres : allGenres.slice(0, 14);
+  const everyGenre = insights.genreCards(cached, _genreTags, { limit: 400 });
+  const q = _genreQuery.trim().toLowerCase();
+  const allGenres = q ? everyGenre.filter((c) => c.title.toLowerCase().includes(q)) : everyGenre;
+  const cards = (_genresExpanded || q) ? allGenres : allGenres.slice(0, 14);
 
   if (!cards.length) {
     const n = Math.min(artists.length, 60);
@@ -3277,24 +3279,30 @@ async function renderGenreSection() {
       <div id="genre-progress"></div>`;
 
     const run = async (list) => {
-      const prog = document.getElementById("genre-progress");
-      document.getElementById("genre-go").disabled = true;
-      document.getElementById("genre-go-all")?.remove();
-      prog.innerHTML = `<p class="nav-hint">Asking Last.fm… <button class="btn btn-ghost btn-small" id="genre-stop">Stop</button></p>`;
-      document.getElementById("genre-stop").addEventListener("click", cancelGenreFetch);
+      // The same full screen a dive gets. This is the same shape of
+      // work — hundreds of requests over a minute or two — and running
+      // it behind a line of small text made it look stuck.
+      showDiveScreen(`Finding your genres…`, cancelGenreFetch);
+      setDiveHeading("Finding your genres");
       try {
         await fetchGenreTags(list, (done, total) => {
-          const p = prog.querySelector(".nav-hint");
-          if (p) p.firstChild.textContent = `Asking Last.fm… ${done} of ${total}. `;
+          updateDiveScreen(
+            Math.round((done / total) * 100),
+            `Asking Last.fm about ${total} artists… ${done} done`
+          );
         });
       } catch (e) {
-        prog.innerHTML = `<p class="empty-note">${esc(e.suspended
-          ? "Last.fm rejected the key. Check it in Settings."
-          : `Last.fm couldn't be reached: ${e.message || e}`)}</p>`;
+        hideDiveScreen();
+        document.getElementById("genre-progress").innerHTML =
+          `<p class="empty-note">${esc(e.suspended
+            ? "Last.fm rejected the key. Check it in Settings."
+            : `Last.fm couldn't be reached: ${e.message || e}`)}</p>`;
         return;
       }
+      hideDiveScreen();
       renderGenreSection();
     };
+
     document.getElementById("genre-go").addEventListener("click", () => run(artists.slice(0, n)));
     document.getElementById("genre-go-all")?.addEventListener("click", () => run(artists));
     return;
@@ -3304,6 +3312,10 @@ async function renderGenreSection() {
   const more = allGenres.length - cards.length;
   el.innerHTML = `
     <div class="row-head"><h2>Genres</h2><span class="qual">from Last.fm</span></div>
+    ${allGenres.length > 8 ? `
+      <div class="genre-filter">
+        <input type="text" id="genre-search" placeholder="Search ${allGenres.length} genres" autocomplete="off" spellcheck="false" value="${esc(_genreQuery)}">
+      </div>` : ""}
     <div class="card-row" id="genre-cards"></div>
     <div class="actions">
       ${more > 0 ? `<button class="btn btn-ghost btn-small" id="genre-expand">Show all ${allGenres.length} genres</button>` : ""}
@@ -3324,6 +3336,18 @@ async function renderGenreSection() {
   row.querySelectorAll("[data-genre-card]").forEach((btn) =>
     btn.addEventListener("click", () =>
       openCardModal(cards.find((c) => c.id === btn.dataset.genreCard))));
+
+  const gs = document.getElementById("genre-search");
+  if (gs) {
+    gs.addEventListener("input", () => {
+      _genreQuery = gs.value;
+      renderGenreSection();
+      // Re-rendering replaces the field, so put the cursor back where
+      // it was rather than dropping focus on every keystroke.
+      const again = document.getElementById("genre-search");
+      if (again) { again.focus(); again.setSelectionRange(again.value.length, again.value.length); }
+    });
+  }
 
   document.getElementById("genre-expand")?.addEventListener("click", () => {
     _genresExpanded = true;
@@ -3401,7 +3425,7 @@ async function renderAskSimilar() {
   root.innerHTML = `
     <div class="row-head"><h2>If you like&hellip;</h2></div>
     <p class="nav-hint" style="margin-top:0;">Name an artist and DeepDive will ask Last.fm who resembles them, then build a mix from the ones in your library. You don't have to own the artist you name.</p>
-    ${searchShellHtml()}
+    ${searchShellHtml({ options: false })}
     <div id="ask-result"></div>
     <div class="actions"><button class="btn btn-ghost" data-tab="mixes">Back to mixes</button></div>`;
 
@@ -3503,18 +3527,23 @@ async function renderRecommendations() {
       <p class="nav-hint" style="margin-top:0;">DeepDive can ask Last.fm which artists resemble the ones you play most, then build mixes from the ones you already own but rarely reach for. ${seeds.length} requests, about ${secs} seconds.</p>
       <div class="actions"><button class="btn btn-ghost btn-small" id="rec-go">Find recommendations</button></div>
       <div id="rec-progress"></div>`;
-    document.getElementById("rec-go").addEventListener("click", async (ev) => {
-      const btn = ev.currentTarget;
-      btn.disabled = true;
+    document.getElementById("rec-go").addEventListener("click", async () => {
+      let cancelled = false;
+      showDiveScreen("Finding recommendations…", () => { cancelled = true; });
+      setDiveHeading("Finding recommendations");
       let done = 0;
       for (const a of seeds) {
+        if (cancelled) break;
         const key = a.name.trim().toLowerCase();
-        btn.textContent = `Asking Last.fm… ${++done} of ${seeds.length}`;
+        updateDiveScreen(Math.round((done / seeds.length) * 100),
+          `Asking Last.fm who sounds like ${a.name}…`);
+        done++;
         if (_similarBySeed.has(key)) continue;
         try {
           _similarBySeed.set(key, await lastfm.similarArtists(a.name, 30));
         } catch (e) {
           if (e && e.suspended) {
+            hideDiveScreen();
             document.getElementById("rec-progress").innerHTML =
               `<p class="empty-note">Last.fm rejected the key. Check it in Settings.</p>`;
             return;
@@ -3522,6 +3551,7 @@ async function renderRecommendations() {
           _similarBySeed.set(key, []);
         }
       }
+      hideDiveScreen();
       renderRecommendations();
     });
     return;
@@ -3587,7 +3617,15 @@ function familiarSelect(idAttr, value) {
  */
 async function maybeSetCover(res, tracks, title) {
   if (!res || !res.id || res.reused) return;      // don't overwrite an existing cover
-  if (!coverArtOn() || !auth.hasScope(auth.UPLOAD_SCOPE)) return;
+
+  // The permission is part of the standard set now, so anyone connected
+  // before it was added simply doesn't have it. Say so with a code
+  // rather than leaving covers quietly absent — a missing permission is
+  // fixable, and only if the person knows about it.
+  if (!auth.hasScope(auth.UPLOAD_SCOPE)) {
+    flashReconnect();
+    return;
+  }
   try {
     const data = await cover.buildCover(cover.albumImages(tracks, 4), { title });
     if (data) await client.setPlaylistCover(res.id, data);
@@ -3596,12 +3634,12 @@ async function maybeSetCover(res, tracks, title) {
   }
 }
 
-const COVER_KEY = "deepdive_cover_art";
-function coverArtOn() {
-  try { return localStorage.getItem(COVER_KEY) === "1"; } catch (e) { return false; }
-}
-function setCoverArtOn(v) {
-  try { localStorage.setItem(COVER_KEY, v ? "1" : "0"); } catch (e) {}
+/** Shown once per session: nagging on every playlist would be worse. */
+let _reconnectNagged = false;
+function flashReconnect() {
+  if (_reconnectNagged) return;
+  _reconnectNagged = true;
+  flash("DD-SCOPE — playlist covers need a permission your connection predates. Reconnect in Settings.", true);
 }
 
 // ---- concert prep ----
@@ -3620,24 +3658,22 @@ async function renderShow() {
   setActiveTab("dives");
   const rows = _showBill.map((a, i) => `
     <div class="bill-row">
-      <span class="bill-pos">${i + 1}</span>
       <span class="bill-name">${esc(a.name)}</span>
-      ${i === _showBill.length - 1 && _showBill.length > 1
-        ? `<span class="bill-tag">headlining</span>` : ""}
       <span class="bill-actions">
+        <button class="bill-tag-btn${a.emphasis === "less" ? " on" : ""}" data-show-emph="${i}" data-emph="less">Less</button>
+        <button class="bill-tag-btn${a.emphasis === "more" ? " on" : ""}" data-show-emph="${i}" data-emph="more">More</button>
         <select class="bill-songs" data-show-songs="${i}" aria-label="Songs for ${esc(a.name)}">
           <option value=""${a.songs ? "" : " selected"}>Auto</option>
           ${[2, 3, 4, 5, 6, 8, 10, 15, 20].map((n) =>
-            `<option value="${n}"${a.songs === n ? " selected" : ""}>${n} songs</option>`).join("")}
+            `<option value="${n}"${a.songs === n ? " selected" : ""}>${n}</option>`).join("")}
         </select>
-        ${i > 0 ? `<button class="bill-btn" data-show-up="${i}" aria-label="Move ${esc(a.name)} earlier on the bill">&uarr;</button>` : ""}
         <button class="bill-btn" data-show-rm="${i}" aria-label="Remove ${esc(a.name)}">&times;</button>
       </span>
     </div>`).join("");
 
   root.innerHTML = `
     <div class="row-head"><h2>Multi-Dip</h2></div>
-    <p class="nav-hint" style="margin-top:0;">Add everyone on the bill, openers first. DeepDive gives each of them a share of the night — the headliner gets the most — and puts it in the order you'll hear it. Set an exact number of songs for anyone you want to pin.</p>
+    <p class="nav-hint" style="margin-top:0;">Add everyone playing. They share the night evenly unless you say otherwise — tag the one you're really there for as More, and anyone you barely know as Less. Or pin someone to an exact number of songs.</p>
     ${searchShellHtml({ options: false })}
     <div id="show-bill">${rows || `<p class="empty-note">Nobody added yet.</p>`}</div>
     <div id="show-saved"></div>
@@ -3676,6 +3712,14 @@ async function renderShow() {
 
   // Kept on the bill rather than in state elsewhere, so reordering
   // carries the choice with the artist it belongs to.
+  // Tapping a tag that's already on turns it off, so neutral is always
+  // one press away and nothing is compulsory.
+  root.querySelectorAll("[data-show-emph]").forEach((b) => b.addEventListener("click", () => {
+    const a = _showBill[+b.dataset.showEmph];
+    a.emphasis = a.emphasis === b.dataset.emph ? null : b.dataset.emph;
+    renderShow();
+  }));
+
   root.querySelectorAll("[data-show-songs]").forEach((sel) => sel.addEventListener("change", () => {
     const n = parseInt(sel.value, 10);
     _showBill[+sel.dataset.showSongs].songs = Number.isFinite(n) ? n : null;
@@ -3683,13 +3727,6 @@ async function renderShow() {
 
   root.querySelectorAll("[data-show-rm]").forEach((b) => b.addEventListener("click", () => {
     _showBill.splice(+b.dataset.showRm, 1);
-    renderShow();
-  }));
-  // Billing order is the whole point, so it has to be editable — a
-  // search result arrives in the order you happened to type it.
-  root.querySelectorAll("[data-show-up]").forEach((b) => b.addEventListener("click", () => {
-    const i = +b.dataset.showUp;
-    [_showBill[i - 1], _showBill[i]] = [_showBill[i], _showBill[i - 1]];
     renderShow();
   }));
 
@@ -3749,6 +3786,7 @@ async function buildShowNow() {
         topTracks: top,
         likedIds: res.already_liked_ids || [],
         songs: a.songs || null,
+        emphasis: a.emphasis || null,
       });
     } catch (e) {
       // One artist failing shouldn't lose the others already read.
@@ -3794,6 +3832,7 @@ async function buildShowNow() {
 let _genreTags = new Map();   // lowercased artist name -> [{name, weight}]
 let _genreFetching = false;
 let _genresExpanded = false;
+let _genreQuery = "";
 let _genreCancel = false;
 
 function genreState() {
@@ -4219,18 +4258,6 @@ function renderSettings() {
       </div>
 
       <div class="set-group">
-        <div class="set-group-label">Playlist covers</div>
-        <p class="set-note">DeepDive can make a cover for each playlist it creates, from the album art of the songs inside it. Spotify needs an extra permission for this, so turning it on means reconnecting once — which is why it isn't asked for up front.</p>
-        ${settingRow({
-          title: "Make covers",
-          detail: auth.hasScope(auth.UPLOAD_SCOPE)
-            ? "Permission granted."
-            : "Needs one reconnect to grant permission.",
-          control: setSwitch('id="set-cover-art"', coverArtOn()),
-        })}
-      </div>
-
-      <div class="set-group">
         <div class="set-group-label">Last.fm</div>
         <p class="set-note">Optional but recommended. Powers genre and subgenre mixes and an artist's best hour — things Spotify no longer exposes. Leave it empty and those features simply don't appear.</p>
         <div class="set-row set-row-block">
@@ -4283,17 +4310,6 @@ function renderSettings() {
   if (uriEl) uriEl.textContent = auth.redirectUri();
   const idInput = document.getElementById("set-client-id");
   if (idInput) idInput.value = auth.getClientId();
-  const coverToggle = document.getElementById("set-cover-art");
-  if (coverToggle) coverToggle.addEventListener("change", async () => {
-    if (!coverToggle.checked) { setCoverArtOn(false); flash("Covers off."); return; }
-    if (auth.hasScope(auth.UPLOAD_SCOPE)) { setCoverArtOn(true); flash("Covers on."); return; }
-    // Turning it on is the moment to ask for the permission — the only
-    // moment anyone has a reason to grant it.
-    setCoverArtOn(true);
-    flash("Reconnecting to grant permission…");
-    await auth.beginLogin({ extraScopes: auth.UPLOAD_SCOPE });
-  });
-
   const lfmInput = document.getElementById("set-lastfm-key");
   if (lfmInput) lfmInput.value = lastfm.getKey();
   document.getElementById("set-save-lastfm")?.addEventListener("click", () => {
