@@ -4,6 +4,12 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.59
+- The results panel now shows a Houseghost dive, which has all three
+  outcomes on screen — already yours, yours under a different release,
+  and new. The previous screenshot only showed two, so the copy could
+  finally name the middle case the app exists for.
+
 ## 2.8.58
 - Leisure Hour leads the device row; the second panel shows a VIAL dive
   rather than repeating the Mixes screen that already appears above it.

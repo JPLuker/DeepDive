@@ -28,8 +28,8 @@ actively mislead.
 
 ## Artist photography — provisional
 
-The landing page shows two artist photographs — Leisure Hour in the
-device row and VIAL in the second panel — plus the artist thumbnails
+The landing page shows three artist photographs — Leisure Hour in the
+device row, VIAL in the second panel, Houseghost in the results panel — plus the thumbnails
 that appear inside the app's own Home and Mixes screens.
 
 **Joseph's position, 7 Sept:** acceptable as examples for now, nothing
@@ -140,7 +140,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.58
+## Shipped since — build 2.8.59
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
