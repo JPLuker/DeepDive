@@ -921,6 +921,47 @@ export function similarOwnedMix(tracks, similar, seedName, { maxTracks = 60 } = 
 }
 
 /**
+ * One mix from everything the similar-artist data points at.
+ *
+ * The per-seed cards each answer "if you like X". This answers the
+ * broader question they imply: across all of them, what am I neglecting?
+ * Only artists you own few tracks by, so it can't just return your
+ * favourites back to you.
+ */
+export function neglectedNeighboursCard(tracks, similarByArtist, { maxOwnedTracks = 3, minTracks = 8 } = {}) {
+  if (!similarByArtist || !similarByArtist.size) return null;
+  const owned = new Map();
+  for (const a of byArtist(tracks).values()) owned.set((a.name || "").trim().toLowerCase(), a);
+
+  const seeds = new Set(similarByArtist.keys());
+  const picked = [];
+  const seen = new Set();
+  for (const similar of similarByArtist.values()) {
+    for (const sim of similar) {
+      const key = (sim.name || "").trim().toLowerCase();
+      if (seen.has(key) || seeds.has(key)) continue;
+      const hit = owned.get(key);
+      // The whole point is what you've barely touched, so an artist you
+      // already play a lot of is the wrong answer here.
+      if (!hit || hit.count > maxOwnedTracks) continue;
+      seen.add(key);
+      for (const t of tracks) {
+        if ((t.artists || []).some((a) => a.id === hit.id)) picked.push(t);
+      }
+    }
+  }
+  if (picked.length < minTracks) return null;
+  return {
+    id: "rec-neglected",
+    title: "Worth another listen",
+    subtitle: `${seen.size} artists you own a little of and rarely play`,
+    count: picked.length,
+    tracks: picked,
+    isRecommendation: true,
+  };
+}
+
+/**
  * Artists ranked by how much of them you own.
  *
  * Genre tagging costs one request per artist, so the order matters: an

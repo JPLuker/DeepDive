@@ -168,6 +168,23 @@ export async function cachedCount(bucket) {
   return Object.values(c[bucket] || {}).filter(fresh).length;
 }
 
+/**
+ * Everything already known for one bucket, as a Map.
+ *
+ * The alternative was asking `isCached` per artist and re-reading each
+ * one — sixteen hundred round trips through the cache to rebuild a map
+ * the cache already is. One read is both faster and impossible to get
+ * subtly wrong.
+ */
+export async function allCached(bucket) {
+  const c = await loadCache();
+  const out = new Map();
+  for (const [name, entry] of Object.entries(c[bucket] || {})) {
+    if (fresh(entry)) out.set(name, entry.data);
+  }
+  return out;
+}
+
 export async function isCached(bucket, artist) {
   const c = await loadCache();
   return fresh((c[bucket] || {})[(artist || "").trim().toLowerCase()]);

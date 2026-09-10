@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.62";
+export const BUILD = "2.8.63";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3196,8 +3196,13 @@ async function renderGenreSection() {
   // Rehydrate from the persistent cache before deciding there is
   // nothing to show: the data survives a reload even though the map
   // doesn't.
-  await hydrateFromCache("tags", artists, _genreTags, lastfm.topTags);
-  const cards = insights.genreCards(cached, _genreTags);
+  const knownTags = await hydrateFromCache("tags", _genreTags);
+  // A "show everything" list as well as the top fourteen: the landing
+  // page promises subgenres, and the broad tags — rock, pop, alternative
+  // — always outrank them by track count. Shoegaze is the point of this
+  // feature and it sits well below "rock".
+  const allGenres = insights.genreCards(cached, _genreTags, { limit: 200 });
+  const cards = _genresExpanded ? allGenres : allGenres.slice(0, 14);
 
   if (!cards.length) {
     const n = Math.min(artists.length, 60);
@@ -3205,6 +3210,7 @@ async function renderGenreSection() {
     el.innerHTML = `
       <div class="crate-header"><span class="label">Genres</span></div>
       <p class="nav-hint" style="margin-top:0;">DeepDive can ask Last.fm what your artists actually sound like, then build mixes from it. That's one request per artist — <strong>${n}</strong> of them, about <strong>${secs} seconds</strong>, starting with the artists you own the most of. You can stop at any point and keep what's been found.</p>
+      ${knownTags ? `<p class="crate-note">${knownTags} artist${knownTags === 1 ? "" : "s"} already looked up and remembered — those cost nothing to reuse.</p>` : ""}
       <div class="actions">
         <button class="btn btn-ghost btn-small" id="genre-go">Find my genres</button>
         ${artists.length > n ? `<button class="btn btn-ghost btn-small" id="genre-go-all">All ${artists.length} artists</button>` : ""}
@@ -3236,11 +3242,15 @@ async function renderGenreSection() {
   }
 
   const untagged = artists.filter((a) => !_genreTags.has(a.name.trim().toLowerCase())).length;
+  const more = allGenres.length - cards.length;
   el.innerHTML = `
     <div class="row-head"><h2>Genres</h2><span class="qual">from Last.fm</span></div>
     <div class="card-row" id="genre-cards"></div>
-    ${untagged ? `<p class="nav-hint">${untagged} artist${untagged === 1 ? "" : "s"} not looked up yet.
-      <button class="btn btn-ghost btn-small" id="genre-more">Do the rest</button></p>` : ""}`;
+    <div class="actions">
+      ${more > 0 ? `<button class="btn btn-ghost btn-small" id="genre-expand">Show all ${allGenres.length} genres</button>` : ""}
+      ${_genresExpanded && allGenres.length > 14 ? `<button class="btn btn-ghost btn-small" id="genre-collapse">Show fewer</button>` : ""}
+      ${untagged ? `<button class="btn btn-ghost btn-small" id="genre-more">Look up ${untagged} more artist${untagged === 1 ? "" : "s"}</button>` : ""}
+    </div>`;
 
   // Same card markup as the mixes row — a genre mix is a mix. The hue
   // offset keeps them visually distinct from the row above without
@@ -3256,6 +3266,14 @@ async function renderGenreSection() {
     btn.addEventListener("click", () =>
       openCardModal(cards.find((c) => c.id === btn.dataset.genreCard))));
 
+  document.getElementById("genre-expand")?.addEventListener("click", () => {
+    _genresExpanded = true;
+    renderGenreSection();
+  });
+  document.getElementById("genre-collapse")?.addEventListener("click", () => {
+    _genresExpanded = false;
+    renderGenreSection();
+  });
   document.getElementById("genre-more")?.addEventListener("click", async () => {
     const rest = artists.filter((a) => !_genreTags.has(a.name.trim().toLowerCase()));
     await fetchGenreTags(rest);
@@ -3303,14 +3321,10 @@ function wireReadLibrary(el, onDone) {
  * Only reads what is already cached: `isCached` gates it, so this
  * never makes a request.
  */
-async function hydrateFromCache(bucket, artists, map, fetcher) {
-  for (const a of artists) {
-    const key = (a.name || "").trim().toLowerCase();
-    if (map.has(key)) continue;
-    try {
-      if (await lastfm.isCached(bucket, a.name)) map.set(key, await fetcher(a.name));
-    } catch (e) { /* a cold entry is not an error */ }
-  }
+async function hydrateFromCache(bucket, map) {
+  const known = await lastfm.allCached(bucket);
+  for (const [name, data] of known) if (!map.has(name)) map.set(name, data);
+  return known.size;
 }
 
 /**
@@ -3413,8 +3427,12 @@ async function renderRecommendations() {
   if (!cached || !cached.length) { el.innerHTML = ""; return; }
 
   const seedArtists = insights.artistsByWeight(cached).slice(0, 12);
-  await hydrateFromCache("similar", seedArtists, _similarBySeed, lastfm.similarArtists);
+  await hydrateFromCache("similar", _similarBySeed);
   const cards = insights.recommendationCards(cached, _similarBySeed);
+  // One broader mix alongside the per-artist ones, which also evens the
+  // grid — seven cards plus the ask card left a gap.
+  const neglected = insights.neglectedNeighboursCard(cached, _similarBySeed);
+  if (neglected) cards.push(neglected);
   if (!cards.length) {
     // Seeded from the artists you own most of — those are the ones
     // whose neighbours you're most likely to want.
@@ -3487,6 +3505,7 @@ async function renderRecommendations() {
 // so the first fifty requests produce nearly all the useful mixes.
 let _genreTags = new Map();   // lowercased artist name -> [{name, weight}]
 let _genreFetching = false;
+let _genresExpanded = false;
 let _genreCancel = false;
 
 function genreState() {

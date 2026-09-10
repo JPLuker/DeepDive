@@ -156,7 +156,13 @@ check('all three endpoints read through it', (lfm.match(/return cached\("/g) || 
 check('the store is attached at startup', /lastfm\.attachStore\(bestStore\(\)\)/.test(src));
 // The session maps are empty on reload even when the cache is warm.
 check('session maps rehydrate', /async function hydrateFromCache/.test(src));
-check('rehydrating makes no requests', /if \(await lastfm\.isCached\(bucket, a\.name\)\)/.test(src));
+// One cache read rather than an isCached check per artist. With 1,500
+// artists that was 1,500 round trips to rebuild a map the cache
+// already is — and it was re-prompting on reload despite the data
+// being there.
+check('rehydrating makes no requests', /const known = await lastfm\.allCached\(bucket\);/.test(src));
+check('the whole bucket is read at once', /export async function allCached/.test(lfm));
+check('and only fresh entries count', /if \(fresh\(entry\)\) out\.set\(name, entry\.data\)/.test(lfm));
 check('genres rehydrate before deciding', /hydrateFromCache\("tags"/.test(src));
 check('recommendations too', /hydrateFromCache\("similar"/.test(src));
 
@@ -190,6 +196,28 @@ check('any artist can be named', /source: \(q\) => client\.searchArtists\(q, 6\)
 // Being specific about why an empty result is empty.
 check('owning too few is explained', /you own too few of them to build a mix/.test(src));
 check('an unknown artist is explained', /doesn't know who sounds like/.test(src));
+
+// A broader mix alongside the per-artist ones. They each answer "if you
+// like X"; this answers the question they imply — across all of them,
+// what am I neglecting?
+import { neglectedNeighboursCard } from '../docs/js/insights.js';
+const negTracks = [];
+for (let i = 0; i < 30; i++) negTracks.push({ id: 'h' + i, name: 'S' + i, artists: [{ id: 'a0', name: 'Artist 0' }], album: { id: 'al' }, added_at: '2020-01-01T00:00:00Z' });
+for (const n of [1, 2, 3]) for (let i = 0; i < 3; i++) negTracks.push({ id: 'x' + n + i, name: 'T' + i, artists: [{ id: 'a' + n, name: 'Artist ' + n }], album: { id: 'al' }, added_at: '2020-01-01T00:00:00Z' });
+const negSim = new Map([['artist 0', [{ name: 'Artist 1' }, { name: 'Artist 2' }, { name: 'Artist 3' }]]]);
+const neg = neglectedNeighboursCard(negTracks, negSim);
+
+check('a broader recommendation exists', !!neg);
+// Returning your favourites back to you is not a recommendation.
+check('heavily played artists are excluded', !neg.tracks.some((t) => t.artists[0].id === 'a0'));
+check('it needs enough to be a mix', !neglectedNeighboursCard(negTracks, negSim, { minTracks: 999 }));
+check('and is wired in', /insights\.neglectedNeighboursCard\(cached, _similarBySeed\)/.test(src));
+
+// Genres: the broad tags always outrank the subgenres the landing page
+// promises, so the list has to be expandable.
+check('all genres are reachable', /id="genre-expand"/.test(src));
+check('and collapsible again', /id="genre-collapse"/.test(src));
+check('the prompt says what is already cached', /already looked up and remembered/.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

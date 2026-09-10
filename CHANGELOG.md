@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.63
+- Genres should no longer ask to be found again after a reload. The
+  rehydration checked the cache once per artist — sixteen hundred round
+  trips to rebuild a map the cache already is — and now reads the whole
+  thing in one go. If it still prompts, the panel says how many artists
+  it already knows, which will say where the problem is.
+- Added "Show all genres". The broad tags — rock, pop, alternative —
+  always outrank subgenres by track count, so shoegaze and midwest emo
+  sat below fourteen coarser ones on a page that advertises exactly
+  those.
+- Added "Worth another listen" to Recommended: one mix drawn from every
+  similar artist you own a little of and rarely play. The per-artist
+  cards each answer "if you like X"; this answers what they imply.
+
 ## 2.8.62
 - Added **"If you like…"** to the Recommended row: name any artist and
   DeepDive builds a mix from the ones in your library that resemble
