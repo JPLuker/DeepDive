@@ -574,9 +574,15 @@ the riskiest unknown in 3.x. A test page is deployed at
 button. It must be run from that origin, not from a local file, since
 a file has origin `null` and servers treat it differently.
 
-Searching didn't settle it: every setlist.fm wrapper found is
-server-side Node, which hints browser use isn't normal but proves
-nothing. If the preflight is rejected, a browser-only app cannot call
+**Run 7 Sept on Brave: blocked after 357ms with `Failed to fetch`** —
+the shape of a rejected preflight. Not confirmed, because Brave's
+Shields produce an identical failure for reasons unrelated to the
+server. Re-run on Chrome or Firefox before designing around it.
+
+`SETLISTFM_SURFACE.md` records the rest of what the docs say, including
+a second problem worth knowing early: artists there are identified by
+MusicBrainz MBIDs, which Spotify doesn't expose, so the join has to go
+through a name search. If the preflight is rejected, a browser-only app cannot call
 setlist.fm at all, and 3.1 onwards needs either a proxy — which means
 running a server, contradicting the entire architecture — or a
 different source for setlists.
