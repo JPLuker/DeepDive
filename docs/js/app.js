@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.61";
+export const BUILD = "2.8.62";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3313,6 +3313,85 @@ async function hydrateFromCache(bucket, artists, map, fetcher) {
   }
 }
 
+/**
+ * "If you like…" for any artist.
+ *
+ * The generated recommendations seed from the twelve artists you play
+ * most, which means the seed is always something you already love. This
+ * lets you ask about anyone — including an artist you own nothing by,
+ * which is the more interesting direction: what in *my* library sounds
+ * like this thing I've just heard?
+ */
+async function renderAskSimilar() {
+  setTitle("DeepDive · If you like…");
+  setActiveTab("mixes");
+  root.innerHTML = `
+    <div class="row-head"><h2>If you like&hellip;</h2></div>
+    <p class="nav-hint" style="margin-top:0;">Name an artist and DeepDive will ask Last.fm who resembles them, then build a mix from the ones in your library. You don't have to own the artist you name.</p>
+    ${searchShellHtml()}
+    <div id="ask-result"></div>
+    <div class="actions"><button class="btn btn-ghost" data-tab="mixes">Back to mixes</button></div>`;
+
+  const out = document.getElementById("ask-result");
+
+  wireArtistSearch({
+    inputId: "artist-input",
+    listId: "autofill-list",
+    // Spotify's search rather than the library, so any artist can be
+    // named — that is the whole point of this screen.
+    source: (q) => client.searchArtists(q, 6),
+    onChoose: (it) => build(it.name),
+  });
+  document.getElementById("search-go-btn")?.addEventListener("click", () => {
+    const n = document.getElementById("artist-input").value.trim();
+    if (n) build(n);
+  });
+
+  async function build(name) {
+    out.innerHTML = `<p class="nav-hint">Asking Last.fm who sounds like ${esc(name)}…</p>`;
+    let cached = [];
+    try { cached = await libraryCache.peek(); } catch (e) { cached = []; }
+    if (!cached.length) {
+      out.innerHTML = `<p class="empty-note">Your library hasn't been read yet.</p>
+        <div class="actions"><button class="btn btn-primary btn-small" data-read-library>Read my library</button></div>`;
+      wireReadLibrary(out, () => build(name));
+      return;
+    }
+
+    let similar = [];
+    try {
+      similar = await lastfm.similarArtists(name, 40);
+    } catch (e) {
+      out.innerHTML = `<p class="empty-note">${esc(e.suspended
+        ? "Last.fm rejected the key — check it in Settings."
+        : `Couldn't reach Last.fm: ${e.message || e}`)}</p>`;
+      return;
+    }
+    if (!similar.length) {
+      out.innerHTML = `<p class="empty-note">Last.fm doesn't know who sounds like ${esc(name)}. Try a better-known spelling.</p>`;
+      return;
+    }
+
+    const mix = insights.similarOwnedMix(cached, similar, name);
+    if (mix.tracks.length < 5) {
+      // Being specific about why: the artist was found, the neighbours
+      // were found, you just don't own them.
+      out.innerHTML = `<p class="empty-note">Last.fm found ${similar.length} artists like ${esc(name)}, but you own too few of them to build a mix${mix.artists.length ? ` — just ${esc(mix.artists.join(", "))}` : ""}.</p>`;
+      return;
+    }
+
+    out.innerHTML = `<p class="nav-hint">${mix.tracks.length} tracks from ${mix.artists.length} artists you own: ${esc(mix.artists.slice(0, 6).join(", "))}${mix.artists.length > 6 ? "…" : ""}</p>`;
+    openCardModal({
+      id: `ask-${name.toLowerCase().replace(/\s+/g, "-")}`,
+      title: `If you like ${name}`,
+      subtitle: `${mix.artists.length} similar artist${mix.artists.length === 1 ? "" : "s"} you already own`,
+      name: `DeepDive · If you like ${name}`,
+      count: mix.tracks.length,
+      tracks: mix.tracks,
+    });
+  }
+}
+
 // Similar artists, cached for the session alongside the tags. Same
 // shape and the same cost — one request per seed artist.
 let _similarBySeed = new Map();
@@ -3375,7 +3454,16 @@ async function renderRecommendations() {
     <div class="row-head"><h2>Recommended</h2><span class="qual">similar to what you play most</span></div>
     <div class="card-row" id="rec-cards"></div>`;
   const row = document.getElementById("rec-cards");
-  row.innerHTML = cards.map((c, i) => `
+  // Ask about anyone, not just the twelve DeepDive picked. Leads the
+  // row for the same reason Build your own leads Mixes: it's the one
+  // you start rather than one already decided.
+  const askCard = `
+    <button class="pcard is-custom" data-rec-ask>
+      <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <span class="pcard-title">If you like&hellip;</span>
+      <span class="pcard-sub">name any artist, even one you don't own</span>
+    </button>`;
+  row.innerHTML = askCard + cards.map((c, i) => `
     <button class="pcard" data-rec-card="${esc(c.id)}" style="--h:${(150 + i * 41) % 360};">
       <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3"/><path d="M12 18v3"/><path d="M5 12H2"/><path d="M22 12h-3"/><circle cx="12" cy="12" r="5"/></svg></span>
       <span class="pcard-title">${esc(c.title)}</span>
@@ -3384,6 +3472,7 @@ async function renderRecommendations() {
   row.querySelectorAll("[data-rec-card]").forEach((btn) =>
     btn.addEventListener("click", () =>
       openCardModal(cards.find((c) => c.id === btn.dataset.recCard))));
+  row.querySelector("[data-rec-ask]")?.addEventListener("click", () => renderAskSimilar());
 }
 
 // ---- genre tags ----

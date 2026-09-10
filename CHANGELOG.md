@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.62
+- Added **"If you like…"** to the Recommended row: name any artist and
+  DeepDive builds a mix from the ones in your library that resemble
+  them. You don't have to own the artist you name — asking "if you like
+  Radiohead" while owning no Radiohead is the more interesting
+  direction, since what matters is what comes out.
+- Replaced the landing page screenshot with one taken after the Order
+  layout fix.
+
 ## 2.8.61
 - Fixed: in the mix dialog, "Order" sat inline beside the last track-count
   pill instead of starting its own row. The container carried

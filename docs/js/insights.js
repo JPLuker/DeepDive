@@ -886,6 +886,41 @@ export function recommendationCards(tracks, similarByArtist, { minTracks = 6, li
 }
 
 /**
+ * A mix of artists similar to a named one, drawn from what you own.
+ *
+ * `recommendationCards` seeds from artists you already play most, so
+ * the seed is necessarily one you own. This doesn't require that: you
+ * can ask "if you like Radiohead" while owning no Radiohead at all,
+ * and still get the artists in your library that resemble them. That
+ * is arguably the more useful direction — the point is what comes out,
+ * not what went in.
+ */
+export function similarOwnedMix(tracks, similar, seedName, { maxTracks = 60 } = {}) {
+  const owned = new Map();
+  for (const a of byArtist(tracks).values()) owned.set((a.name || "").trim().toLowerCase(), a);
+
+  const seedKey = (seedName || "").trim().toLowerCase();
+  const picked = [];
+  const matched = [];
+  const seen = new Set();
+  for (const sim of similar || []) {
+    const key = (sim.name || "").trim().toLowerCase();
+    // Excluding the seed: a mix of the artist you asked about isn't a
+    // recommendation, it's a dive.
+    if (key === seedKey || seen.has(key)) continue;
+    const hit = owned.get(key);
+    if (!hit) continue;
+    seen.add(key);
+    matched.push(hit.name);
+    for (const t of tracks) {
+      if ((t.artists || []).some((a) => a.id === hit.id)) picked.push(t);
+    }
+    if (picked.length >= maxTracks) break;
+  }
+  return { tracks: picked, artists: matched };
+}
+
+/**
  * Artists ranked by how much of them you own.
  *
  * Genre tagging costs one request per artist, so the order matters: an

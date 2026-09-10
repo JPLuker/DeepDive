@@ -493,6 +493,18 @@ All three need a Last.fm key in Settings.
 - [ ] Leaving it a month should re-fetch; there's no way to test that
       quickly short of clearing site data
 
+## 16. "If you like…" (2.8.62)
+
+- [ ] The first card in Recommended is "If you like…" and opens a
+      search
+- [ ] Naming an artist you own plenty of neighbours for builds a mix
+- [ ] Naming an artist you own **nothing** by still works — that's the
+      point
+- [ ] Naming someone obscure enough that you own none of their
+      neighbours says so, and names any it did find
+- [ ] A nonsense name says Last.fm doesn't know them rather than
+      failing silently
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

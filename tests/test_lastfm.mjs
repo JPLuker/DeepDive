@@ -160,5 +160,36 @@ check('rehydrating makes no requests', /if \(await lastfm\.isCached\(bucket, a\.
 check('genres rehydrate before deciding', /hydrateFromCache\("tags"/.test(src));
 check('recommendations too', /hydrateFromCache\("similar"/.test(src));
 
+// "If you like…" for any artist. The generated recommendations seed
+// from the twelve you play most, so the seed is always something you
+// already love. This asks the more interesting question: what in my
+// library sounds like the thing I just heard?
+import { similarOwnedMix } from '../docs/js/insights.js';
+const askTracks = [];
+for (let i = 0; i < 30; i++) {
+  askTracks.push({
+    id: 'k' + i, name: 'S' + i,
+    artists: [{ id: 'a' + (i % 3), name: 'Artist ' + (i % 3) }],
+    album: { id: 'al' }, added_at: '2020-01-01T00:00:00Z',
+  });
+}
+const askSim = [{ name: 'Artist 1' }, { name: 'Nobody I Own' }, { name: 'Artist 2' }];
+const asked = similarOwnedMix(askTracks, askSim, 'Radiohead');
+
+check('a seed you do not own still works', asked.tracks.length > 0);
+check('only artists you own contribute', asked.artists.every((a) => a.startsWith('Artist')));
+check('the seed itself is excluded', !similarOwnedMix(askTracks, [{ name: 'Artist 0' }], 'Artist 0').tracks.length);
+check('no similar artists means no mix', similarOwnedMix(askTracks, [], 'Anyone').tracks.length === 0);
+
+check('the ask card leads the row', /data-rec-ask/.test(src));
+check('and opens its own screen', /async function renderAskSimilar/.test(src));
+check('it uses the shared artist search', /inputId: "artist-input",[\s\S]{0,200}renderAskSimilar|renderAskSimilar[\s\S]{0,900}wireArtistSearch/.test(src));
+// Spotify's search, not the library, or you could only name artists you
+// already own — which defeats the point.
+check('any artist can be named', /source: \(q\) => client\.searchArtists\(q, 6\),[\s\S]{0,120}onChoose: \(it\) => build\(it\.name\)/.test(src));
+// Being specific about why an empty result is empty.
+check('owning too few is explained', /you own too few of them to build a mix/.test(src));
+check('an unknown artist is explained', /doesn't know who sounds like/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
