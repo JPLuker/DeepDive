@@ -559,9 +559,11 @@ All three need a Last.fm key in Settings.
 
 ## 19. Cover art (2.9.6)
 
-- [ ] Covers are automatic now. If your connection predates the
-      permission you'll see **DD-SCOPE** once — reconnect in Settings
-      and it should work after that
+- [ ] If your connection predates the permission, **DD-SCOPE** appears
+      as a banner when you open the app — not after a job has run
+- [ ] Reconnect from the banner, then create a playlist — it gets a
+      cover
+- [ ] "Not now" hides it for the session and it returns next time
 - [ ] After that, a **newly created** playlist gets a cover built from
       its album art
 - [ ] A playlist that already existed and was updated keeps its

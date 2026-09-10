@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.10
+- The missing cover permission is now reported when you open the app,
+  not at the end of a job. It appeared after a Multi-Dip had already
+  spent several catalogue reads — telling you about a fixable problem
+  at the one moment it's expensive to fix.
+- It's a banner on Home, Dives and Mixes with a Reconnect button, and
+  it can be put off for the session. It comes back next time, because
+  the covers stay missing until it's dealt with.
+
 ## 2.9.9
 - Fixed: a Multi-Dip could be named after the wrong artist. The name
   took whoever was last on the list and called them the headliner —

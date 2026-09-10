@@ -56,8 +56,15 @@ check('covers are not an opt-in setting', !/set-cover-art/.test(src));
 // Quietly missing covers would leave someone with no idea why, and no
 // way to fix something that is fixable.
 check('a missing permission is reported with a code', /DD-SCOPE/.test(src));
-check('and says what to do about it', /Reconnect in Settings/.test(src));
-check('but only once a session', /if \(_reconnectNagged\) return;/.test(src));
+check('and says what to do about it', /Reconnect to get playlist covers/.test(src));
+check('the check happens at load, not at upload', /function scopeBanner\(\)/.test(src));
+check('shown on every main screen', (src.match(/\$\{scopeBanner\(\)\}/g) || []).length === 3);
+check('with a reconnect that acts', /id="scope-reconnect"/.test(src) && /await auth\.beginLogin\(\)/.test(src));
+// No record of granted scopes means the connection predates the
+// recording, which is exactly the case that lacks the permission.
+check('an unrecorded scope set still warns', !/if \(!auth\.grantedScopes\(\)\) return "";/.test(src));
+check('nothing is said to someone not connected', /if \(!auth\.isLoggedIn\(\)\) return "";/.test(src));
+check('and it can be put off for the session', /id="scope-dismiss"/.test(src));
 check('failure never surfaces as an error', /console\.warn\("\[DeepDive\] cover art failed:"/.test(src));
 // Replacing a cover someone already set would be worse than not having one.
 check('an existing playlist keeps its cover', /if \(!res \|\| !res\.id \|\| res\.reused\) return;/.test(src));

@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.9";
+export const BUILD = "2.9.10";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -378,6 +378,7 @@ async function renderHome() {
   setActiveTab("home");
   root.innerHTML = `
     ${rateLimitBanner()}
+    ${scopeBanner()}
     <div id="api-banner">${apiBannerHtml()}</div>
     ${searchShellHtml()}
     <div id="suggestions-row"></div>
@@ -385,6 +386,7 @@ async function renderHome() {
 
   wireSearchBar();
   wireApiBanner();
+  wireScopeBanner();
   loadSuggestions({ compact: true });
   // One row of cards, whatever a row holds at this width — the sampler
   // card takes the first slot.
@@ -401,6 +403,7 @@ async function renderDives() {
   setActiveTab("dives");
   root.innerHTML = `
     ${rateLimitBanner()}
+    ${scopeBanner()}
     <div id="api-banner">${apiBannerHtml()}</div>
     ${searchShellHtml()}
     <div id="suggestions-row"></div>
@@ -413,6 +416,7 @@ async function renderDives() {
 
   wireSearchBar();
   wireApiBanner();
+  wireScopeBanner();
   loadSuggestions({ showAllPins: true });
   document.getElementById("go-scrub")?.addEventListener("click", () => renderScrubForm());
   document.getElementById("go-show")?.addEventListener("click", () => renderShow());
@@ -426,10 +430,12 @@ async function renderMixes() {
   setActiveTab("mixes");
   root.innerHTML = `
     ${rateLimitBanner()}
+    ${scopeBanner()}
     <div id="rec-section"></div>
     <div id="playlist-cards"></div>
     <div id="genre-section"></div>`;
 
+  wireScopeBanner();
   loadPlaylistCards();
   renderRecommendations();
   renderGenreSection();
@@ -3162,6 +3168,50 @@ function blockedByRateLimit() {
 }
 
 /** A standing notice while the pause is in effect. */
+/**
+ * A permission the connection predates.
+ *
+ * Uploading a playlist cover needs `ugc-image-upload`, which joined the
+ * standard scope set after some people had already connected. Their
+ * covers silently never appeared — and worse, the only place that
+ * noticed was the upload itself, at the end of a job that had already
+ * spent several catalogue reads.
+ *
+ * A missing permission is a standing condition, not an event. It costs
+ * nothing to know at load, so it is said at load.
+ */
+function scopeBanner() {
+  if (!auth.isLoggedIn()) return "";
+  if (auth.hasScope(auth.UPLOAD_SCOPE)) return "";
+  if (_scopeBannerDismissed) return "";
+  return `
+    <div class="api-banner" id="scope-banner">
+      <div class="api-banner-head">Reconnect to get playlist covers</div>
+      <p class="api-banner-detail">DeepDive makes a cover for each playlist it creates, from the album art inside it. That needs a Spotify permission added after you connected, so it has to be granted once. Everything else works either way.</p>
+      <div class="api-banner-actions">
+        <button class="btn btn-ghost btn-small" id="scope-reconnect">Reconnect</button>
+        <button class="btn btn-ghost btn-small" id="scope-dismiss">Not now</button>
+        <span class="api-banner-code">DD-SCOPE</span>
+      </div>
+    </div>`;
+}
+
+let _scopeBannerDismissed = false;
+
+/** Wired after each render, since the banner is redrawn with the page. */
+function wireScopeBanner() {
+  document.getElementById("scope-reconnect")?.addEventListener("click", async () => {
+    flash("Reconnecting…");
+    await auth.beginLogin();
+  });
+  document.getElementById("scope-dismiss")?.addEventListener("click", () => {
+    // For this session only. It comes back next time, because the
+    // covers stay missing until it's dealt with.
+    _scopeBannerDismissed = true;
+    document.getElementById("scope-banner")?.remove();
+  });
+}
+
 function rateLimitBanner() {
   const until = limitedUntil();
   if (!until) return "";
@@ -3618,14 +3668,7 @@ function familiarSelect(idAttr, value) {
 async function maybeSetCover(res, tracks, title) {
   if (!res || !res.id || res.reused) return;      // don't overwrite an existing cover
 
-  // The permission is part of the standard set now, so anyone connected
-  // before it was added simply doesn't have it. Say so with a code
-  // rather than leaving covers quietly absent — a missing permission is
-  // fixable, and only if the person knows about it.
-  if (!auth.hasScope(auth.UPLOAD_SCOPE)) {
-    flashReconnect();
-    return;
-  }
+  if (!auth.hasScope(auth.UPLOAD_SCOPE)) return;
   try {
     const data = await cover.buildCover(cover.albumImages(tracks, 4), { title });
     if (data) await client.setPlaylistCover(res.id, data);
@@ -3634,13 +3677,6 @@ async function maybeSetCover(res, tracks, title) {
   }
 }
 
-/** Shown once per session: nagging on every playlist would be worse. */
-let _reconnectNagged = false;
-function flashReconnect() {
-  if (_reconnectNagged) return;
-  _reconnectNagged = true;
-  flash("DD-SCOPE — playlist covers need a permission your connection predates. Reconnect in Settings.", true);
-}
 
 // ---- concert prep ----
 //
