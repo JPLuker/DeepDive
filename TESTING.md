@@ -538,6 +538,10 @@ All three need a Last.fm key in Settings.
 - [ ] Search an artist — the popup offers **Multi-Dip** as well as Dip
       and Dive, and choosing it opens the screen with that artist
       already on the bill
+- [ ] From that popup, add a second artist and build — **both** must
+      appear. Starting from the popup used to lose that artist entirely,
+      and the night was built from whoever was left
+- [ ] Anyone left out is named under the result rather than vanishing
 - [ ] Dives → Multi-Dip opens the same screen empty
 - [ ] Adding artists builds a bill; the last one is marked as headlining
 - [ ] The arrows reorder the bill and the headliner marker follows
