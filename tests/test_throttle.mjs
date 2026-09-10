@@ -71,14 +71,18 @@ const rl = (retryAfter='0') => ({status:429,headers:{get:(k)=>k==='Retry-After'?
   check('bad UI callback does not break retry', r.ok===1);
 }
 
-// The throttle persisting was right; persisting forever was not.
-// setMinimumPacing only ever raises, so one wide dive or one bad
-// afternoon of 429s permanently slowed every later dive — and
-// resetPacing(), written for exactly this, was never called from
-// anywhere.
-check('learned pacing decays', /THROTTLE_DECAY_MS/.test(sp));
-check('decay is time-stamped', /deepdive_throttle_at/.test(sp));
-check('stale pacing is cleared on load', /localStorage\.removeItem\("deepdive_throttle_ms"\);\s*\n\s*localStorage\.removeItem\("deepdive_throttle_at"\);/.test(sp));
+// Pacing is per session as of 2.8.52. Persisting it was defensible in
+// principle — a reload resetting to full speed earns another 429 — but
+// the cost was worse than the problem: one wide dive left every later
+// dive crawling with nothing failing and nothing on screen saying why.
+// A decay and a reset button were both treatments for a symptom.
+//
+// Within a run it still climbs on every 429, which is the part that
+// works: self-limiting, evidence-driven, and gone when the run is.
+check('pacing does not persist', !/localStorage\.setItem\("deepdive_throttle_ms"/.test(sp));
+check('old stored pacing is cleared', /localStorage\.removeItem\("deepdive_throttle_ms"\)/.test(sp));
+check('it still backs off within a run', /_throttleMs \+ THROTTLE_STEP_MS/.test(sp));
+check('and starts each session fresh', /this\._throttleMs = 0;/.test(sp));
 check('there is a manual way back', /set-reset-pacing/.test(app) && /client\.resetPacing\(\)/.test(app));
 
 

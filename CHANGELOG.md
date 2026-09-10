@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.52
+- Pacing no longer persists between sessions. It still slows down after
+  each rate limit *within* a run, which is the part that works — but a
+  bad afternoon no longer leaves every later dive crawling with nothing
+  failing and nothing explaining it. Anything stored by an earlier build
+  is cleared on load.
+
 ## 2.8.51
 - Fixed: tapping an artist showed no popup for anyone who had ever
   ticked "Don't ask again" — which meant Dip did not exist for them,

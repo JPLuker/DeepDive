@@ -167,27 +167,27 @@ export class SpotifyClient {
     this.log = { counts: {}, total: 0, lastError: null, started: Date.now() };
     // Adaptive pacing state. Starts at zero so ordinary searches are
     // unaffected; only a real 429 slows things down.
-    // Restore any pacing learned earlier. Without this, a page reload
-    // resets to full speed and immediately earns another 429 — the
-    // penalty outlives the tab, so the caution should too.
+    // Pacing is per session, deliberately.
+    //
+    // It used to persist. The reasoning was sound — a reload resetting
+    // to full speed earns another 429 immediately — but the cost turned
+    // out to be worse than the problem. One wide dive, or one bad
+    // afternoon, left every later dive crawling with nothing failing
+    // and nothing on screen explaining it. Diagnosing that took most of
+    // a session, twice, and the fixes (a decay, then a reset button)
+    // were both treatments for a symptom.
+    //
+    // Within a run the throttle still climbs on every 429, which is the
+    // part that actually works: it is self-limiting, it responds to
+    // real evidence, and it disappears when the run does. A fresh
+    // session starting fast and slowing down if it must is a better
+    // trade than invisible state that only ever accumulates.
     this._throttleMs = 0;
     try {
-      const saved = parseInt(localStorage.getItem("deepdive_throttle_ms") || "0", 10);
-      const at = parseInt(localStorage.getItem("deepdive_throttle_at") || "0", 10);
-      // Decay it. The throttle persisting was right — the penalty
-      // outlives the tab — but it persisted *forever*, and
-      // setMinimumPacing only ever raises. One wide "everything they've
-      // touched" dive, or one bad afternoon of 429s, permanently slowed
-      // every later dive, including standard ones that spend it on one
-      // request per release. resetPacing() was written for this and was
-      // never called from anywhere, so there was no way back.
-      const ageMs = at ? Date.now() - at : Infinity;
-      if (saved > 0 && ageMs < THROTTLE_DECAY_MS) {
-        this._throttleMs = Math.min(saved, THROTTLE_MAX_MS);
-      } else if (saved > 0) {
-        localStorage.removeItem("deepdive_throttle_ms");
-        localStorage.removeItem("deepdive_throttle_at");
-      }
+      // Clear anything stored by an earlier build, or it would keep
+      // slowing sessions that no longer have any way to see it.
+      localStorage.removeItem("deepdive_throttle_ms");
+      localStorage.removeItem("deepdive_throttle_at");
     } catch (e) {}
     this._runMs = 0;
     this._lastRequestAt = 0;
@@ -204,13 +204,14 @@ export class SpotifyClient {
     if (since < wait) await sleep(wait - since);
   }
 
-  /** Called on every 429: slow down for the rest of this run. */
+  /**
+   * Called on every 429: slow down for the rest of this run.
+   *
+   * Not written to storage. It used to be, and the accumulated value
+   * outlived every explanation of itself.
+   */
   _backOff() {
     this._throttleMs = Math.min(this._throttleMs + THROTTLE_STEP_MS, THROTTLE_MAX_MS);
-    try {
-      localStorage.setItem("deepdive_throttle_ms", String(this._throttleMs));
-      localStorage.setItem("deepdive_throttle_at", String(Date.now()));
-    } catch (e) {}
   }
 
   /**

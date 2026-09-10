@@ -272,18 +272,18 @@ could not settle:
 
 Confirmed already: catalogue accuracy, sampler cancel, playlist cleanup.
 
-- [ ] **Confirmation dialog** — like or build something. The result
+- [x] **Confirmation dialog** — like or build something. The result
       should appear centred over the screen with an "Open playlist"
       button, and dismissing it should return home rather than leaving
       the results list you just acted on. *Needs quota.*
-- [ ] **Censored duplicates** — run a sampler and check no song appears
+- [x] **Censored duplicates** — run a sampler and check no song appears
       twice with one version bleeped. Hard to force; worth watching for
       over a few runs rather than testing directly.
-- [ ] **Spotify links** — "Open playlist" and the Open buttons in
+- [x] **Spotify links** — "Open playlist" and the Open buttons in
       playlist cleanup should reach the web player every time, including
       where the desktop app isn't installed. Previously these could do
       nothing at all.
-- [ ] **Catalogue instrumentation** — after a dive, Settings → Advanced →
+- [x] **Catalogue instrumentation** — after a dive, Settings → Advanced →
       Technical details shows "Last catalogue read". Sanity-check it
       against what you saw: releases counted, how many weren't the
       artist's own, tracks dropped as uncredited.
@@ -292,24 +292,24 @@ Confirmed already: catalogue accuracy, sampler cancel, playlist cleanup.
 
 No quota needed for most of this — it's structure.
 
-- [ ] Four destinations in the nav: Home, Dives, Mixes, Settings. On
+- [x] Four destinations in the nav: Home, Dives, Mixes, Settings. On
       desktop they're in the top bar; on mobile, the bottom bar
 - [ ] The current one is highlighted, and stays highlighted after
       navigating
-- [ ] **Home** — search field, a short row of pins and suggestions, and
+- [x] **Home** — search field, a short row of pins and suggestions, and
       a row of mixes. "All dives" and "All mixes" links go where they say
 - [ ] **Drag the window slowly from narrow to full width.** Columns
       should be added one at a time as room appears, with no jump and no
       row left half empty at any point. This is the thing that was
       wrong: fixed counts meant every width between the breakpoints was
       either cramped or sparse
-- [ ] **Dives** — search, every pin, full suggestions, and three rows
+- [x] **Dives** — search, every pin, full suggestions, and three rows
       under "More ways to dive". Each row should say what it does, with
       the scan carrying its own cost warning rather than one hint
       floating above all three
 - [ ] All three rows must actually open something — the whole row is the
       target, not just the chevron
-- [ ] **Mixes** — one heading, not two, and the sampler is the first
+- [x] **Mixes** — one heading, not two, and the sampler is the first
       card in the grid
 - [ ] **Sampler from Mixes** — go straight to Mixes without visiting
       Home or Dives first. The sampler card should still be there and
@@ -324,15 +324,15 @@ No quota needed for most of this — it's structure.
 
 No quota needed.
 
-- [ ] Grouped rows on filled surfaces — a label, a line explaining it,
+- [x] Grouped rows on filled surfaces — a label, a line explaining it,
       and the control on the right — rather than headings above loose
       buttons
 - [ ] Theme picker and Client ID field each get their own line rather
       than being squeezed beside a label
 - [ ] Scan, pins and history are **gone** from Settings — Dives owns
       them. Check they still work there
-- [ ] Footer credits you. GitHub goes to your **profile**, not the repo
-- [ ] The support-link switch actually slides when toggled, and the
+- [x] Footer credits you. GitHub goes to your **profile**, not the repo
+- [x] The support-link switch actually slides when toggled, and the
       coffee cup appears and disappears from the top bar to match
 - [ ] **Every control still works**, since the page was rewritten again:
       refresh library, find playlists, disconnect, theme, support-link
@@ -361,29 +361,29 @@ once you're back online.
 
 ## 10. Tile actions (2.8.32)
 
-- [ ] On a phone, pin and remove no longer sit on every tile. A "⋯"
+- [x] On a phone, pin and remove no longer sit on every tile. A "⋯"
       button appears instead
-- [ ] Tapping it reveals that tile's actions; tapping another tile's
+- [x] Tapping it reveals that tile's actions; tapping another tile's
       button closes the first
-- [ ] Tapping anywhere else closes it
-- [ ] Tapping "⋯" does **not** start a dive — the tile behind it is also
+- [x] Tapping anywhere else closes it
+- [x] Tapping "⋯" does **not** start a dive — the tile behind it is also
       a button, so this is the thing most likely to be wrong
-- [ ] Tapping "⋯" actually responds. In 2.8.32 it didn't: the hidden
+- [x] Tapping "⋯" actually responds. In 2.8.32 it didn't: the hidden
       buttons were still in the layout on top of it, eating the tap
-- [ ] With the actions hidden, the tile name has the full row width
-- [ ] **Pin someone, then immediately unpin them** — this is the case
+- [x] With the actions hidden, the tile name has the full row width
+- [x] **Pin someone, then immediately unpin them** — this is the case
       that was broken: pinning repaints the pins, and the fresh tile
       used to come back with a dead button
-- [ ] The overflow works the same on desktop as on a phone; there is no
+- [x] The overflow works the same on desktop as on a phone; there is no
       hover reveal any more
 
 ## 11. Pins, history and list rows (2.8.33)
 
-- [ ] Pins & blocked, dive history and playlist cleanup show filled rows
+- [x] Pins & blocked, dive history and playlist cleanup show filled rows
       rather than a bordered list
-- [ ] Their buttons are still visible — deliberately not hidden behind
+- [x] Their buttons are still visible — deliberately not hidden behind
       an overflow the way tile actions were
-- [ ] Section headings on those pages still read as headings after the
+- [x] Section headings on those pages still read as headings after the
       colour classes were stripped
 
 ## 12. Per-feature blocking (2.8.37)
@@ -401,14 +401,14 @@ once you're back online.
 
 ## 13. Expanded mixes and Build your own (2.8.38)
 
-- [ ] Mixes shows ten cards, with **Build your own** and **Sampler**
+- [x] Mixes shows ten cards, with **Build your own** and **Sampler**
       leading the row
 - [ ] Refreshing the page brings a different ten — there are ~40 now
 - [ ] New types appear over a few loads: Small hours, One each, Albums
       you went deep on, Loose ends, Two names on the label, There on day
       one, Took your time, an artist retrospective, That one afternoon,
       Released in <year>, seasonal cards
-- [ ] **Build your own** — the artist field looks and behaves exactly
+- [x] **Build your own** — the artist field looks and behaves exactly
       like the search on Home and Dives
 - [ ] Typing filters to artists you actually have; the ✕ clears it
 - [ ] Track count is a picker with the same options as other mixes, and
