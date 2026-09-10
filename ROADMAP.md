@@ -147,7 +147,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 3.0.0
+## Shipped since — build 2.9.0
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -566,10 +566,14 @@ than artist tags alone.
 
 ---
 
-## 3.0 — shipped 7 Sept
+## Concert prep — shipped in 2.9.0, 7 Sept
 
-Joseph's call: 2.9 became 3.0, with concert prep landing alongside the
-rework rather than after it.
+**3.0 is the final release, not this one.** Concert prep landed early,
+alongside the rework, rather than being held back for its own version.
+
+I took 3.0 for this build after reading "3.0 was the new 2.9 target" as
+permission. It meant the opposite: 3.0 is what everything is working
+towards. Rolled back the same session.
 
 **setlist.fm is dropped.** Confirmed unreachable from a browser on two
 engines. The alternatives were a server — refused throughout this
@@ -578,7 +582,7 @@ build, which would split what DeepDive is. Real setlists would only
 have improved song *selection*; the weighting, the running order and
 the library knowledge are what make the feature worth having.
 
-**Still to build on top of it**, from the original 3.x plan:
+**Still to build before 3.0**, from the original 3.x plan:
 
 - The **library-aware layer** (was 3.3): what you already know versus
   what you'd be standing through cold. Arguably the most DeepDive-ish

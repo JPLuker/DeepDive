@@ -4,9 +4,10 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
-## 3.0.0 — Concert prep
+## 2.9.0 — The rework, finished, with concert prep
 
-Joseph's call: 2.9 becomes 3.0, and concert prep lands with it.
+Joseph's call. 3.0 stays reserved as the final release; this is the
+rework landing, with concert prep alongside it.
 
 - **Concert prep.** Add everyone on the bill, openers first, say how
   long the night is, and DeepDive builds the whole evening in the order

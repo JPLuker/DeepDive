@@ -24,14 +24,14 @@ check('install tolerates a missing asset', /Promise\.allSettled/.test(sw));
 check('navigation has an offline fallback', /request\.mode === "navigate"/.test(sw));
 
 // version
-// The guard existed because 2.9 was claimed twice without authorisation.
-// It has now been earned: Joseph called 3.0 explicitly on 7 Sept, with
-// concert prep, which is what the number was always reserved for.
+// The guard exists because 2.9 was claimed twice without authorisation,
+// and then 3.0 once — that last one from misreading "3.0 is the new 2.9
+// target" as permission to take the number rather than as a statement
+// about what the target is.
 //
-// Still not pinned to an exact version, or every bump fails this. The
-// intent is that the major only moves when the identity does — 4.x is
-// the dashboard and must not arrive by accident either.
-check('build is 3.x, as authorised', /export const BUILD = "3\.\d+\./.test(src));
+// 2.9 is now authorised. 3.0 stays reserved for the final release, so
+// the major must still not move on its own.
+check('build is 2.9.x, as authorised', /export const BUILD = "2\.9\./.test(src));
 check('and concert prep shipped with it', /async function renderShow/.test(src));
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

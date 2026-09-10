@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 3.0.0.** If the build in `js/app.js` is well
+**Last updated at build 2.9.0.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -63,7 +63,11 @@ rejected.
 
 ## Working with Joseph
 
-**Version numbers are Joseph's call.** 2.9 marks the finished rework
+**Version numbers are Joseph's call.** Claimed 2.9 twice, then 3.0 once
+— that last from reading "3.0 was the new 2.9 target" as permission to
+take the number, when it meant 3.0 is what the work is aiming at. When
+a message mentions a version, it is far more likely to be about the
+plan than a licence to bump. Ask. 2.9 marks the finished rework
 and has been claimed early twice — the second time by deciding a
 session's completion amounted to it. Finishing a session is not
 finishing the rework. Bump patches and let him say when.
