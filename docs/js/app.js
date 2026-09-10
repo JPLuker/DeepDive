@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.3";
+export const BUILD = "2.9.4";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -308,7 +308,7 @@ function columnsAtWidth() {
  * specifically to dive.
  */
 /**
- * @param options  Show the dive-options gear. Multidip has its own
+ * @param options  Show the dive-options gear. Multi-Dip has its own
  *                 settings on the page, so the gear there would open a
  *                 dialog about a dive that isn't about to happen —
  *                 which is why it appeared to do nothing.
@@ -405,7 +405,7 @@ async function renderDives() {
     <div id="suggestions-row"></div>
     <div class="set-group set-group-spaced">
       ${navRow('id="go-scrub"', "Full library scan", "Crawls every artist you've liked. Thorough, and slow — one request per release.")}
-      ${navRow('id="go-show"', "Multidip", "Everyone on the bill, weighted by billing and ordered like the night runs.")}
+      ${navRow('id="go-show"', "Multi-Dip", "Everyone on the bill, weighted by billing and ordered like the night runs.")}
       ${navRow('id="go-history"', "Dive history", "What you've dived, what DeepDive built, and how to undo it.")}
       ${navRow('id="go-pins"', "Pins &amp; blocked", "Artists you've pinned, and ones you've told DeepDive to stop suggesting.")}
     </div>`;
@@ -1503,7 +1503,7 @@ function openIntentModal(artistName, { force = false } = {}) {
   // A dip is a dive that stops early and keeps only the best hour, so
   // it takes the same options and the same route in — the difference is
   // what comes out, not how it is asked for.
-  // Multidip starts from whoever you just searched, since that's almost
+  // Multi-Dip starts from whoever you just searched, since that's almost
   // always someone on the bill — usually the one you're going for.
   const multiEl = document.getElementById("intent-multi");
   if (multiEl) {
@@ -3587,7 +3587,7 @@ function familiarSelect(idAttr, value) {
 let _showBill = [];
 
 async function renderShow() {
-  setTitle("DeepDive · Multidip");
+  setTitle("DeepDive · Multi-Dip");
   setActiveTab("dives");
   const rows = _showBill.map((a, i) => `
     <div class="bill-row">
@@ -3602,7 +3602,7 @@ async function renderShow() {
     </div>`).join("");
 
   root.innerHTML = `
-    <div class="row-head"><h2>Multidip</h2></div>
+    <div class="row-head"><h2>Multi-Dip</h2></div>
     <p class="nav-hint" style="margin-top:0;">Add everyone on the bill, openers first. DeepDive gives each of them a share of the night — the headliner gets the most — and puts it in the order you'll hear it.</p>
     ${searchShellHtml({ options: false })}
     <div id="show-bill">${rows || `<p class="empty-note">Nobody added yet.</p>`}</div>

@@ -52,7 +52,7 @@ check('and no longer borrows the watchlist row', !/_showBill\.map\(\(a, i\) => `
 check('the name truncates instead of pushing controls off', /\.bill-name \{[\s\S]{0,200}text-overflow:ellipsis/.test(shell));
 check('position is shown', /class="bill-pos"/.test(src));
 check('the headliner is marked', /class="bill-tag"/.test(src));
-// The gear opens dive options. On Multidip there is no dive about to
+// The gear opens dive options. On Multi-Dip there is no dive about to
 // happen, so it did nothing at all.
 check('the shell can omit the options gear', /function searchShellHtml\(\{ options = true \} = \{\}\)/.test(src));
 check('multidip omits it', /searchShellHtml\(\{ options: false \}\)/.test(src));
@@ -119,9 +119,11 @@ check('and says what it does', /several artists, one night/.test(shell));
 check('it seeds the bill with the searched artist', /_showBill\.push\(\{ id: artist, name: artist \}\)/.test(src));
 check('without duplicating someone already on it', /!_showBill\.some\(\(a\) => \(a\.name \|\| ""\)\.toLowerCase\(\) === artist\.toLowerCase\(\)\)/.test(src));
 // One name for one feature: it was "Concert prep" on Dives and would
-// have been "Multidip" in the popup.
+// have been "Multi-Dip" in the popup.
 check('one name everywhere', !/Concert prep/.test(src));
-check('and that name is Multidip', /<h2>Multidip<\/h2>/.test(src) && /"Multidip", "Everyone on the bill/.test(src));
+check('and that name is Multi-Dip', /<h2>Multi-Dip<\/h2>/.test(src) && /"Multi-Dip", "Everyone on the bill/.test(src));
+// One spelling, or the app and its docs drift apart.
+check('no unhyphenated spelling remains', !/Multidip/.test(src) && !/Multidip/.test(shell));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

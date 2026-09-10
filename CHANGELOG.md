@@ -4,24 +4,27 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.4
+- Multidip is spelled **Multi-Dip**.
+
 ## 2.9.3
-- Fixed the Multidip bill. It was reusing the row built for pins and
+- Fixed the Multi-Dip bill. It was reusing the row built for pins and
   history — a name and one button — where it needed a name, a position,
   an order control, a headliner marker and a remove button. The name
   and the controls ended up on top of each other. It has its own row
   now, and a long artist name truncates rather than pushing the buttons
   off the edge.
-- The options gear did nothing on Multidip, because it opens settings
+- The options gear did nothing on Multi-Dip, because it opens settings
   for a dive and there's no dive about to happen. It's gone from that
   screen; the settings that matter there are already on the page.
 - Each artist shows their position on the bill, so the running order is
   readable rather than implied.
 
 ## 2.9.2
-- **Multidip** is offered in the artist popup alongside Dip and Dive,
+- **Multi-Dip** is offered in the artist popup alongside Dip and Dive,
   and starts with whoever you just searched already on the bill.
 - It was called Concert prep on the Dives page and would have been
-  Multidip in the popup. One name now: Multidip.
+  Multi-Dip in the popup. One name now: Multi-Dip.
 
 ## 2.9.1
 - **Songs you already own** is now a setting on dips and concert prep,
@@ -42,7 +45,7 @@
 Joseph's call. 3.0 stays reserved as the final release; this is the
 rework landing, with concert prep alongside it.
 
-- **Multidip.** Add everyone on the bill, openers first, say how
+- **Multi-Dip.** Add everyone on the bill, openers first, say how
   long the night is, and DeepDive builds the whole evening in the order
   you'll hear it. Each artist gets a share weighted by billing — the
   headliner gets the most, the opener enough to recognise a few songs.

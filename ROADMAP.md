@@ -147,7 +147,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.3
+## Shipped since — build 2.9.4
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -566,7 +566,7 @@ than artist tags alone.
 
 ---
 
-## Multidip — shipped in 2.9.0, 7 Sept
+## Multi-Dip — shipped in 2.9.0, 7 Sept
 
 **3.0 is the final release, not this one.** Concert prep landed early,
 alongside the rework, rather than being held back for its own version.

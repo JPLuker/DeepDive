@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.3.** If the build in `js/app.js` is well
+**Last updated at build 2.9.4.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -188,7 +188,7 @@ decay removed the accident and the original bug reappeared.
 *When something adaptive looks like it works, check whether it works or
 whether stale state is covering for it.*
 
-**Reusing a row shape costs more than writing one.** The Multidip bill
+**Reusing a row shape costs more than writing one.** The Multi-Dip bill
 borrowed `.watchlist-row`, which is built for a name and a single
 button. With a position, an order control, a marker and a remove button
 the name and the controls overlapped. A shared component is right when
