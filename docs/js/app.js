@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.10";
+export const BUILD = "2.9.11";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -704,6 +704,9 @@ async function runSampler(artists) {
   const card = {
     id: "sampler",
     title: "Sampler",
+    // Twenty was always a sampler decision — a few tracks each from a
+    // dozen artists — not a property of every built mix.
+    defaultLength: 20,
     subtitle: `a few tracks each from ${artists.length} artists you've barely heard`,
     count: tracks.length,
     tracks,
@@ -1194,13 +1197,16 @@ function openCardModal(card) {
   // length, order and a reuse toggle for a throwaway mix was friction
   // for no gain.
   const simple = !!card.simple;
+  // `simple` was doing three jobs: create a new playlist rather than
+  // reusing one, keep the order the card was built in, and cap the
+  // result at twenty tracks. Only the first two are true of every
+  // caller. The cap belonged to the sampler alone, and applying it to a
+  // Multi-Dip turned a three-hour bill into the first twenty tracks —
+  // which, in openers-first order, were all one artist.
+  //
+  // A card that has already decided its own length says so.
   const opts = simple
-    // "found" preserves the order the sampler built: grouped by artist,
-    // each led by a track already liked. Shuffling would scatter the
-    // anchors, which is the whole structure. It is no longer offered as
-    // a choice — "as found" means nothing to someone who didn't watch
-    // it being built — but it remains the right default here.
-    ? { length: 20, order: "found" }
+    ? { length: card.defaultLength || "all", order: card.defaultOrder || "found" }
     : { length: card.count <= 50 ? "all" : 50, order: "shuffle" };
 
   const tracksFor = () => applyPlaylistOptions(card.tracks, opts);

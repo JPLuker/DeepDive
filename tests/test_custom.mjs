@@ -113,7 +113,10 @@ check('as found is not offered', !/\{ id: "found", label: "As found" \}/.test(sr
 check('shuffle is the default for mixes', /order: "shuffle" \}/.test(src));
 // It survives where it is structural: the sampler groups each artist
 // behind a track already liked, and shuffling scatters the anchors.
-check('sampler still keeps its built order', /\? \{ length: 20, order: "found" \}/.test(src));
+check('sampler still keeps its built order', /length: card\.defaultLength \|\| "all"/.test(src));
+// Only the sampler is capped now — a mix that decided its own length
+// must not be silently trimmed to twenty.
+check('only the sampler caps', (src.match(/defaultLength: 20/g) || []).length === 1);
 check('custom defaults to shuffled', /<option value="random" selected>Shuffled<\/option>/.test(src));
 
 // An empty Mixes page said nothing at all: three separate paths set

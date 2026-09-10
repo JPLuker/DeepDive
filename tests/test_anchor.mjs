@@ -35,7 +35,12 @@ check('artist kept when nothing familiar returns', none.length===3);
 check('short result sets are safe', build([{id:'t1'}],['t1'],3).length===1);
 
 // wiring
-check('order preserved, not shuffled', /\{ length: 20, order: "found" \}/.test(src));
+// The cap and the ordering were one literal. The cap belonged to the
+// sampler alone; applying it to a Multi-Dip cut a three-hour bill to
+// the first twenty tracks, which in openers-first order were all one
+// artist.
+check('order preserved, not shuffled', /order: card\.defaultOrder \|\| "found"/.test(src));
+check('and the sampler keeps its twenty', /defaultLength: 20/.test(src));
 check('no longer interleaved', !/interleaveByArtist\(tracks\)/.test(src));
 check('splits liked from unliked', /const known = tracks\.filter\(\(t\) => liked\.has\(t\.id\)\)/.test(src));
 check('falls back when nothing familiar', /if \(known\.length\) forArtist\.push\(known\[0\]\)/.test(src));

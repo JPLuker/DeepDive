@@ -182,5 +182,15 @@ check('no leftover position-based naming', !/names\[names\.length - 1\]/.test(sr
 // guess.
 check('the breakdown reports tracks per artist', /\$\{s\.tracks\.length\} tracks\//.test(src));
 
+// A Multi-Dip came out as twenty Norah Jones tracks. `simple: true`
+// was doing three jobs — create a new playlist, keep the built order,
+// and cap at twenty — and the cap was a sampler decision that had no
+// business applying to a three-hour bill. In openers-first order the
+// first twenty tracks were all one artist.
+check('the cap is not applied to every card', !/\{ length: 20, order: "found" \}/.test(src));
+check('cards say their own length', /length: card\.defaultLength \|\| "all"/.test(src));
+check('and only the sampler asks for twenty', (src.match(/defaultLength: 20/g) || []).length === 1);
+check('a show does not set one, so it keeps every track', !/id: "show"[\s\S]{0,400}defaultLength/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

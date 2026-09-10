@@ -4,6 +4,16 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.11
+- Fixed: a Multi-Dip produced twenty tracks by the first artist and
+  nobody else. Every built mix was being capped at twenty tracks — a
+  decision that belonged to the sampler, where a few songs each from a
+  dozen artists is the point. Applied to a three-hour bill in
+  openers-first order, the first twenty tracks were all one artist.
+- The same cap was silently trimming Build your own and dips. A mix
+  that has decided its own length keeps it now; only the sampler asks
+  for twenty.
+
 ## 2.9.10
 - The missing cover permission is now reported when you open the app,
   not at the end of a job. It appeared after a Multi-Dip had already

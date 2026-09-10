@@ -546,6 +546,10 @@ All three need a Last.fm key in Settings.
       named after everyone, and only a **More** tag produces
       "X and support"
 - [ ] The summary lists tracks per artist, so you can see the split
+- [ ] The **playlist actually contains everyone** — it used to hold the
+      first twenty tracks only, which were all one artist
+- [ ] Build your own honours the count you picked, and a sampler is
+      still twenty
 - [ ] Dives → Multi-Dip opens the same screen empty
 - [ ] Adding artists builds a bill; the last one is marked as headlining
 - [ ] The arrows reorder the bill and the headliner marker follows
