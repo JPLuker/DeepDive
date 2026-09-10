@@ -12,7 +12,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DeepDive">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
-<title>DeepDive</title>
+<title>DeepDive — Hear it all.</title>
+<meta name="description" content="Hear it all. DeepDive reads an artist's whole catalogue against your Spotify library and finds the recordings you already love but never saved.">
+<meta property="og:title" content="DeepDive — Hear it all.">
+<meta property="og:description" content="Reads an artist's whole catalogue against your Spotify library and finds the recordings you already love but never saved.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jpluker.github.io/DeepDive/">
+<meta property="og:image" content="https://jpluker.github.io/DeepDive/img/shots/dive-maciann.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <script>
   /* Runs before the page paints so there is never a flash of the light
@@ -405,6 +412,74 @@
   .landing-cta { margin:26px 0 10px; }
   .landing-note { font-size:12.5px; color:var(--muted-soft); margin:0; }
 
+  /* ---- hero ----
+     The photographs carry this, not the type. A dive fills the screen
+     with the artist, and that is the thing worth showing first. */
+  .hero {
+    display:grid; grid-template-columns:1fr; gap:40px;
+    align-items:center; padding:8px 0 24px;
+  }
+  .hero-tagline {
+    font-family:'Martius','Inter',sans-serif;
+    font-size:clamp(52px, 11vw, 96px);
+    line-height:0.92; letter-spacing:-0.02em;
+    margin:18px 0 0; text-transform:uppercase;
+  }
+  .hero-lede {
+    font-size:17px; line-height:1.55; color:var(--muted);
+    max-width:46ch; margin:18px 0 26px;
+  }
+
+  .hero-shots { position:relative; height:420px; }
+  .hero-shots .shot {
+    position:absolute; top:0; height:100%; width:auto;
+    border-radius:22px; display:block;
+    box-shadow:0 24px 60px rgba(0,0,0,0.5);
+  }
+  /* Fanned, with the sharpest photograph in front. The two behind are
+     dimmed so the stack reads as depth rather than as three things
+     competing. */
+  .shot-front { left:0; z-index:3; }
+  .shot-mid   { left:112px; z-index:2; filter:brightness(0.7); }
+  .shot-back  { left:224px; z-index:1; filter:brightness(0.45); }
+
+  @media (min-width: 900px) {
+    .hero {
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      gap:56px; padding:24px 0 56px;
+    }
+    .hero-shots { height:560px; }
+    .shot-mid { left:150px; }
+    .shot-back { left:300px; }
+  }
+  /* Below 560px the fan would run off the screen, so it becomes a
+     single phone rather than a cropped stack. */
+  @media (max-width: 560px) {
+    .hero-shots { height:360px; display:flex; justify-content:center; }
+    .hero-shots .shot { position:static; }
+    .shot-mid, .shot-back { display:none; }
+  }
+
+  /* One screenshot beside the argument it makes. */
+  .showcase {
+    display:grid; grid-template-columns:1fr; gap:28px;
+    align-items:center; margin:72px 0;
+  }
+  .showcase-shot {
+    width:min(300px, 70vw); height:auto; justify-self:center;
+    border-radius:20px; box-shadow:0 20px 50px rgba(0,0,0,0.45);
+  }
+  .showcase-words h2 {
+    font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
+    font-size:clamp(28px, 5vw, 40px); line-height:1.02;
+    letter-spacing:-0.015em; margin:0 0 16px;
+  }
+  .showcase-words p { color:var(--muted); line-height:1.6; max-width:52ch; margin:0 0 14px; }
+  @media (min-width: 900px) {
+    .showcase { grid-template-columns:340px minmax(0,1fr); gap:56px; }
+    .showcase-shot { justify-self:start; }
+  }
+
   .landing-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:44px 0 34px; }
   .landing-card { border:1.5px solid var(--line); border-radius:var(--radius-lg); padding:20px; background:var(--paper); }
   .landing-icon { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:var(--radius); background:var(--surface); color:var(--accent); margin-bottom:12px; }
@@ -618,15 +693,41 @@
 </head>
 <body>
   <div class="wrap landing">
-    <div style="text-align:center;">
-      <span class="wordmark-hero"><img src="assets/dd-logo.png" alt="" class="wordmark-hero-icon">DeepDive</span>
-      <p class="landing-lede">You've liked the album version. You missed the single.</p>
-      <p class="landing-sub">DeepDive reconciles an artist's catalogue against your Spotify library &mdash; finding the recordings you already love hiding under a different release, and everything by them you've never heard at all.</p>
-      <div class="landing-cta">
-        <a class="btn btn-primary" href="app/">Open DeepDive</a>
+    <header class="hero">
+      <div class="hero-words">
+        <span class="wordmark-hero"><img src="assets/dd-logo.png" alt="" class="wordmark-hero-icon">DeepDive</span>
+        <h1 class="hero-tagline">Hear it all.</h1>
+        <p class="hero-lede">You liked the album version. You missed the single. DeepDive reads an artist's whole catalogue against your Spotify library and finds the recordings you already love but never saved.</p>
+        <div class="landing-cta">
+          <a class="btn btn-primary" href="app/">Open DeepDive</a>
+        </div>
+        <p class="landing-note">Free, and it runs entirely in your browser. About two minutes to set up.</p>
       </div>
-      <p class="landing-note">Free. Runs entirely in your browser. Takes about two minutes to set up.</p>
-    </div>
+
+      <!-- The screenshots are the hero. A dive is a full-bleed artist
+           photograph with a quiet progress bar over it, which is the
+           least utility-like thing about this utility and the reason
+           anyone remembers it. Three of them, fanned, bleeding off the
+           right edge — the photographs do the work a headline would
+           otherwise have to. -->
+      <div class="hero-shots" aria-hidden="true">
+        <img src="img/shots/dive-vial.jpg" alt="" class="shot shot-back" loading="eager" width="760" height="1430">
+        <img src="img/shots/dive-leisure-hour.jpg" alt="" class="shot shot-mid" loading="eager" width="760" height="1462">
+        <img src="img/shots/dive-maciann.jpg" alt="" class="shot shot-front" loading="eager" width="760" height="1458">
+      </div>
+    </header>
+
+    <!-- What a dive actually gives you. The numbers on this screen are
+         the whole argument: three you already had, fifty-eight you
+         didn't. No feature list makes that point as quickly. -->
+    <section class="showcase">
+      <img src="img/shots/results-modern-baseball.jpg" alt="A finished dive on Modern Baseball, showing 58 tracks new to the listener and 3 already in their library" class="showcase-shot" loading="lazy" width="760" height="1296">
+      <div class="showcase-words">
+        <h2>Three you had. Fifty-eight you didn't.</h2>
+        <p>A dive reads every release an artist has put out — albums, singles, EPs, the compilations they appear on if you ask for them — and sorts it against your library track by track.</p>
+        <p>What comes back is a list you can act on: the recordings you already own under another name, and everything by them you've genuinely never heard. Nothing is saved to Spotify until you say so.</p>
+      </div>
+    </section>
 
     <div class="landing-grid">
       <div class="landing-card">

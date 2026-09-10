@@ -102,7 +102,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.52
+## Shipped since — build 2.8.53
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -303,7 +303,13 @@ marketing page, and consider it for the app shell and the manifest
 description too so they don't say three different things.
 
 
-**Stopping point A — marketing page overhaul**
+**Stopping point A — marketing page overhaul** — *started in 2.8.53:
+hero rebuilt around real screenshots, tagline applied to the page
+title, link preview and manifest. Still to do: the feature cards below
+the fold still read as a generic three-up, and there are no shots of
+Mixes, genres or a dip.*
+
+**Original note:**
 - The treatment the app got: artwork-led, tiles, gradient cards, with
   stats.fm as the reference
 

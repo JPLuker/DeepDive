@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.53
+- Rebuilt the landing page around the app itself. The hero is three
+  dive screens fanned out — a dive fills the screen with the artist,
+  which is the least utility-like thing about this utility and the
+  reason anyone remembers it. **"Hear it all."** is the headline.
+- Added a section showing a finished dive: three tracks already owned,
+  fifty-eight new. The numbers make the argument faster than a feature
+  list.
+- The tagline now appears consistently in the page title, the link
+  preview and the app manifest. There was no description anywhere
+  before, so search results and shared links had nothing to show.
+- Screenshots compressed from 5.6 MB to 355 KB, sized to avoid reflow,
+  with the below-fold one loading lazily.
+
 ## 2.8.52
 - Pacing no longer persists between sessions. It still slows down after
   each rate limit *within* a run, which is the part that works — but a

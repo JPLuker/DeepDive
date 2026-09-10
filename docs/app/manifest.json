@@ -1,7 +1,7 @@
 {
   "name": "DeepDive",
   "short_name": "DeepDive",
-  "description": "Reconcile an artist's catalogue against your Spotify library.",
+  "description": "Hear it all. DeepDive reads an artist's whole catalogue against your Spotify library and finds the recordings you already love but never saved.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
