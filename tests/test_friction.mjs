@@ -100,5 +100,16 @@ check('their actions stay visible', /\.watchlist-actions \{ display:flex/.test(c
 check('no dead colour classes', !/class="label (gold|teal)"/.test(src));
 check('no hidden rule spans', !/class="rule"/.test(src));
 
+// Switching tabs re-read top artists and recently-played every time:
+// two Spotify requests to rebuild an answer that moves over days, and
+// the row visibly reshuffled while you were looking at it.
+check('the listening half is held for the session', /let _listeningCache = null;/.test(src));
+check('and reused when the seed matches', /if \(_listeningCache && _listeningCache\.seed === seed\)/.test(src));
+check('the seed itself survives a tab switch', /sessionStorage\.getItem\("deepdive_sugg_seed"\)/.test(src));
+// A deliberate refresh must still go back to Spotify, or the control
+// would silently do nothing.
+check('refresh clears it', /_listeningCache = null;\s*\n\s*loadSuggestions\(_suggestOpts\)/.test(src));
+check('exclusions still apply to cached picks', /_listeningCache\.picks\.filter/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

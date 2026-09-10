@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.64
+- Suggestions no longer reload every time you switch tabs. Your top
+  artists and recently-played were re-read on each visit to Home or
+  Dives — two Spotify requests to rebuild an answer that moves over
+  days, and the row reshuffled while you were looking at it. Held for
+  the session now; the refresh control still goes back to Spotify.
+
 ## 2.8.63
 - Genres should no longer ask to be found again after a reload. The
   rehydration checked the cache once per artist — sixteen hundred round

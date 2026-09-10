@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.63";
+export const BUILD = "2.8.64";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1741,7 +1741,17 @@ async function buildSuggestionRow(el) {
   // --- listening half (API) ---
   let listeningPicks = [];
   let listeningFailed = false;
-  try {
+  // Your top artists and recently-played move over days, not seconds,
+  // so re-reading them on every tab switch spends two requests to
+  // rebuild the same answer — and reshuffles the row while you're
+  // looking at it. Held for the session unless the refresh control asks
+  // for a different draw.
+  if (_listeningCache && _listeningCache.seed === seed) {
+    listeningPicks = _listeningCache.picks.filter((s2) => {
+      const k = (s2.name || "").trim().toLowerCase();
+      return !exclude.has(k) && !libraryPicks.some((l) => l.id === s2.id);
+    });
+  } else try {
     // Also bounded. If Spotify is rate-limited these retry with backoff
     // for minutes; the row should appear regardless.
     const [top, recent] = await Promise.race([
@@ -1759,6 +1769,7 @@ async function buildSuggestionRow(el) {
       return !exclude.has(k) && !libraryPicks.some((l) => l.id === s2.id);
     });
     listeningPicks = insights.seededPick(listeningPicks, 6, seed);
+    _listeningCache = { seed, picks: listeningPicks };
   } catch (e) {
     listeningFailed = true; // library half still works
     // The suggestion row is the app's canary: it touches Spotify on
@@ -1860,6 +1871,9 @@ let _suggestOpts = { compact: false, showAllPins: false };
 // Bumped by the refresh control so a re-draw picks a different set from
 // the same pool rather than returning the same faces.
 let _suggestSeed = 0;
+// The listening half of the suggestion row, held for the session. It
+// costs two Spotify requests and the answer barely moves.
+let _listeningCache = null;
 
 function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state = {}) {
   _row = { el, pins, suggestions, showAllPins, state };
@@ -2031,6 +2045,9 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   // so a refresh is a re-draw rather than a fetch — no requests spent.
   document.getElementById("sugg-refresh")?.addEventListener("click", () => {
     _suggestSeed = (Date.now() >>> 0) ^ Math.floor(Math.random() * 0xffffffff);
+    // A deliberate refresh should go back to Spotify; a tab switch
+    // should not.
+    _listeningCache = null;
     loadSuggestions(_suggestOpts);
   });
 

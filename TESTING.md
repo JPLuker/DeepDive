@@ -493,6 +493,17 @@ All three need a Last.fm key in Settings.
 - [ ] Leaving it a month should re-fetch; there's no way to test that
       quickly short of clearing site data
 
+## 17. Suggestions and genres (2.8.63–2.8.64)
+
+- [ ] Switch between Home, Dives and Mixes repeatedly — the Suggested
+      row should stay put rather than reshuffling each time
+- [ ] The refresh icon should still bring a different set
+- [ ] **Reload the app, open Mixes** — genres should already be there.
+      If it still asks, note whether the panel says how many artists it
+      already knows; that number says where the fault is
+- [ ] "Show all genres" reveals the subgenres buried under rock and pop
+- [ ] "Worth another listen" appears in Recommended
+
 ## 16. "If you like…" (2.8.62)
 
 - [ ] The first card in Recommended is "If you like…" and opens a
