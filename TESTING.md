@@ -542,6 +542,10 @@ All three need a Last.fm key in Settings.
       appear. Starting from the popup used to lose that artist entirely,
       and the night was built from whoever was left
 - [ ] Anyone left out is named under the result rather than vanishing
+- [ ] The playlist name matches what's in it — an untagged bill is
+      named after everyone, and only a **More** tag produces
+      "X and support"
+- [ ] The summary lists tracks per artist, so you can see the split
 - [ ] Dives → Multi-Dip opens the same screen empty
 - [ ] Adding artists builds a bill; the last one is marked as headlining
 - [ ] The arrows reorder the bill and the headliner marker follows

@@ -4,6 +4,17 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.9
+- Fixed: a Multi-Dip could be named after the wrong artist. The name
+  took whoever was last on the list and called them the headliner —
+  correct when position set the weighting, wrong since 2.9.7 replaced
+  position with More and Less tags. A bill could come out as "Frank
+  Sinatra and support" while containing mostly Norah Jones.
+- There's only a headliner if you tag one. An untagged bill is named
+  after everyone on it, since that's what it is.
+- The summary now says how many tracks each artist contributed, so a
+  name that doesn't match the contents is visible rather than a guess.
+
 ## 2.9.8
 - Fixed: a Multi-Dip started from an artist's popup lost that artist.
   The popup has a name, not a resolved artist, and storing the name as

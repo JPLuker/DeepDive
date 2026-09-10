@@ -169,5 +169,18 @@ check('the control is on each bill row', /data-show-songs/.test(src));
 check('the choice rides with the artist', /_showBill\[\+sel\.dataset\.showSongs\]\.songs/.test(src));
 check('and reaches the builder', /songs: a\.songs \|\| null/.test(src));
 
+// Naming took the last name on the list and called them the headliner.
+// That was right when position set the weighting; tags replaced
+// position in 2.9.7 and this was left behind, so a bill could be named
+// "Frank Sinatra and support" while containing mostly Norah Jones.
+check('a headliner only exists if one is tagged', /const lead = billed\.find\(\(x\) => x\.emphasis === "more"\) \|\| null;/.test(src));
+check('an untagged bill is named as equals', /billed\.map\(\(x\) => x\.artist\.name\)\.join\(" · "\)/.test(src));
+check('"and support" only when someone leads', /lead\s*\n\s*\? `DeepDive · \$\{lead\.artist\.name\}\$\{others\.length \? " and support" : ""\}`/.test(src));
+check('artists with no tracks are not named', /const billed = show\.sets\.filter\(\(x\) => x\.tracks\.length\);/.test(src));
+check('no leftover position-based naming', !/names\[names\.length - 1\]/.test(src));
+// So a name that doesn't match the contents is visible rather than a
+// guess.
+check('the breakdown reports tracks per artist', /\$\{s\.tracks\.length\} tracks\//.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

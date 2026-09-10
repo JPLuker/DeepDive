@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.8";
+export const BUILD = "2.9.9";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3817,17 +3817,34 @@ async function buildShowNow() {
     totalMs: mins * 60 * 1000,
     familiar: document.getElementById("show-familiar")?.value || savedFamiliar(),
   });
-  const names = show.sets.map((s) => s.artist.name);
   prog.innerHTML = `
-    <p class="nav-hint">${show.tracks.length} tracks, about ${Math.round(show.totalMs / 60000)} minutes — ${show.sets.map((s) => `${esc(s.artist.name)} ${Math.round(s.totalMs / 60000)}min`).join(", ")}</p>
+    <p class="nav-hint">${show.tracks.length} tracks, about ${Math.round(show.totalMs / 60000)} minutes — ${show.sets.map((s) => `${esc(s.artist.name)} ${s.tracks.length} tracks/${Math.round(s.totalMs / 60000)}min`).join(", ")}</p>
     ${failed.length ? `<p class="empty-note">Left out — ${esc(failed.join("; "))}</p>` : ""}`;
+
+  // Naming used to take the last name on the list and call them the
+  // headliner, which was right when position set the weighting. Tags
+  // replaced position in 2.9.7 and this was left behind, so a bill
+  // could be named after whoever happened to be typed last while
+  // containing mostly somebody else.
+  //
+  // A headliner now only exists if one was tagged. Otherwise the bill
+  // is a list of equals and gets named like one.
+  const billed = show.sets.filter((x) => x.tracks.length);
+  const lead = billed.find((x) => x.emphasis === "more") || null;
+  const others = billed.filter((x) => x !== lead).map((x) => x.artist.name);
+  const title = lead ? lead.artist.name
+    : (billed.length === 1 ? billed[0].artist.name : billed.map((x) => x.artist.name).join(" · "));
+  const subtitle = lead && others.length ? `with ${others.join(", ")}`
+    : (billed.length > 1 ? `${billed.length} artists, in the order you'll hear them` : "an hour of them");
 
   openCardModal({
     id: "show",
-    title: names[names.length - 1] || "Your night",
-    subtitle: names.length > 1 ? `with ${names.slice(0, -1).join(", ")}` : "an hour of them",
+    title: title || "Your night",
+    subtitle,
     simple: true,
-    name: `DeepDive · ${names[names.length - 1]}${names.length > 1 ? " and support" : ""}`,
+    name: lead
+      ? `DeepDive · ${lead.artist.name}${others.length ? " and support" : ""}`
+      : `DeepDive · ${billed.map((x) => x.artist.name).join(" · ")}`,
     count: show.tracks.length,
     tracks: show.tracks,
   });
