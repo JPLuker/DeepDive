@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.8.65.** If the build in `js/app.js` is well
+**Last updated at build 2.8.66.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -482,3 +482,36 @@ work:
 
 Given how the appeared-on and top-tracks endpoints turned out, test both
 before designing around them.
+
+## Before any release: rewrite the words
+
+**Joseph's rule, 7 Sept.** Every string a user can read — button
+labels, errors, empty states, descriptions, the landing page — gets
+rewritten before a release goes out. Not proofread. Rewritten, by
+someone reading it as a person rather than as its author.
+
+This is not about correctness. The copy in this app is accurate and
+still reads as machine-made, which is worse in a tool people are
+trusting with their library.
+
+**The tells, measured in this codebase rather than imagined:**
+
+- **Em dashes.** Sixteen of them in user-facing strings at 2.8.65. It's
+  the strongest single signal, and it's mine — I reach for one whenever
+  a sentence has two clauses. Most should be a full stop.
+- **The same message written twice, differently.** "Last.fm rejected
+  the key — check it in Settings." sat alongside "Last.fm rejected the
+  key. Check it in Settings." A person writing an app writes that once.
+- **Explaining the reasoning in the interface.** "Crawls every artist
+  you've liked. Thorough, and slow — one request per release." The user
+  does not need the architecture; they need to know it takes a while.
+- **Balanced pairs and triads.** "Dip for the highlights, dive for
+  everything." Reads well, but three of them on one screen reads like
+  a house style nobody chose.
+- **Hedging that softens a plain fact.** "should", "usually", "can" in
+  places where the app knows the answer.
+- **Over-explaining an empty state.** Two sentences where one would do.
+
+**The test:** read it aloud. If it sounds like a product describing
+itself rather than a person telling you something, rewrite it.
+

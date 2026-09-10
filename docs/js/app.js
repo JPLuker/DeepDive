@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.65";
+export const BUILD = "2.8.66";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3394,7 +3394,7 @@ async function renderAskSimilar() {
       similar = await lastfm.similarArtists(name, 40);
     } catch (e) {
       out.innerHTML = `<p class="empty-note">${esc(e.suspended
-        ? "Last.fm rejected the key — check it in Settings."
+        ? "Last.fm rejected the key. Check it in Settings."
         : `Couldn't reach Last.fm: ${e.message || e}`)}</p>`;
       return;
     }

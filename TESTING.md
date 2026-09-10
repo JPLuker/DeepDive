@@ -16,6 +16,14 @@
 > opens, or a request that returns something other than what the
 > documentation describes.
 >
+> **A second gate, added 7 Sept:** every readable string gets rewritten
+> before release so the app doesn't sound machine-written. The tells,
+> counted in this codebase, are listed in `CLAUDE.md` — sixteen em
+> dashes in user-facing strings, the same error phrased two ways, and
+> the interface explaining its own architecture. Accurate copy that
+> reads as generated is worse in a tool people trust with their library
+> than in one they don't.
+>
 > The highest-value sections, in order:
 >
 > 1. **Per-feature blocking** — if scoping is wrong it is wrong silently

@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.66
+- The same Last.fm error was written two different ways. Now written
+  once.
+- Added a release rule: every readable string gets rewritten before a
+  release, so the app doesn't sound machine-written. Recorded with the
+  actual tells found in this codebase rather than a vague instruction.
+
 ## 2.8.65
 - Fixed the genres cache properly. It was a race, not a storage
   failure: loading set the cache to an empty object, awaited the store,

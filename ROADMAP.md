@@ -66,6 +66,13 @@ artwork. Screenshots from it are ours outright.
 
 ## Before 2.9 ships
 
+**Rewrite every readable string.** Joseph's rule, 7 Sept: before any
+release, all user-visible text is rewritten so it doesn't read as
+machine-written — errors, empty states, button labels, descriptions,
+the landing page. `CLAUDE.md` lists the specific tells found in this
+codebase, with counts. This is a gate, alongside the testing pass.
+
+
 **A full pass through `TESTING.md` is required.** Joseph's call, 7 Sept.
 Most of it is believed to work from daily use, but nothing there has
 been deliberately worked through, and every significant bug this project
@@ -140,7 +147,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.65
+## Shipped since — build 2.8.66
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
