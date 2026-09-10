@@ -244,6 +244,13 @@ caching similar-artist and chart data for at least a week. Don't carry
 one assumption to the other — doing exactly that is why Last.fm data
 was re-fetched on every page load for five builds.
 
+**Any job measured in minutes gets the dive screen.** Dives, genre
+fetches, recommendation fetches and Multi-Dip builds all spend hundreds
+of requests over a minute or more. Reporting that through a line of
+text under a form reads as stalled, which is exactly how the genre
+fetch was described before 2.9.7 moved it. The rule is the shape of the
+work, not which feature it belongs to.
+
 **Check preconditions before the work, not after it.** Cover upload
 tests for its scope at upload time, so a Multi-Dip spent several
 catalogue reads and minutes of quota before reporting that a reconnect
