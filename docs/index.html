@@ -451,6 +451,25 @@
     .hero-copy { padding:56px 48px 52px; }
   }
 
+  /* Figures, in the manner of stats.fm's counter band — but theirs
+     counts a platform and DeepDive has none, so these are what a
+     single dive produces and what the app costs you in privacy. The
+     last one is a zero on purpose. */
+  .figures {
+    display:grid; grid-template-columns:repeat(2,1fr); gap:26px 20px;
+    margin:64px 0 8px; padding:32px 0;
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+  }
+  .figure-n {
+    display:block; font-family:'Martius','Inter',sans-serif;
+    font-size:clamp(30px,7vw,44px); line-height:1; letter-spacing:-0.01em;
+  }
+  .figure-l {
+    display:block; margin-top:8px; font-size:13px;
+    color:var(--muted); line-height:1.45; max-width:22ch;
+  }
+  @media (min-width: 760px) { .figures { grid-template-columns:repeat(4,1fr); gap:32px; } }
+
   /* Four statements, not four cards. Boxing each in its own rounded
      rectangle with a matching icon is the SaaS default and adds a
      border for every idea; a two-column text block reads faster. */
@@ -487,6 +506,11 @@
     .showcase-shot { justify-self:start; }
   }
 
+
+  .landing-legal {
+    font-size:12px; line-height:1.6; color:var(--muted-soft);
+    max-width:64ch; margin:18px auto 0;
+  }
 
   .landing-foot { text-align:center; border-top:1px solid var(--line); padding-top:28px; display:flex; flex-direction:column; align-items:center; gap:14px; }
 
@@ -726,6 +750,30 @@
       </div>
     </section>
 
+    <!-- A figures band, following stats.fm's. Theirs counts their
+         platform: users, streams, tracks. DeepDive has no platform and
+         no users to count — it runs on your machine — so counting
+         anything global would be a borrowed gesture with nothing
+         behind it. These are the numbers a dive actually produces. -->
+    <section class="figures">
+      <div class="figure">
+        <span class="figure-n">61</span>
+        <span class="figure-l">tracks read for Modern Baseball</span>
+      </div>
+      <div class="figure">
+        <span class="figure-n">58</span>
+        <span class="figure-l">of them new to that library</span>
+      </div>
+      <div class="figure">
+        <span class="figure-n">40+</span>
+        <span class="figure-l">ways to cut what you've saved</span>
+      </div>
+      <div class="figure">
+        <span class="figure-n">0</span>
+        <span class="figure-l">of it leaves your browser</span>
+      </div>
+    </section>
+
     <!-- Four things it does, each stated as the situation it resolves
          rather than as a feature. No icons: a small line drawing above
          each heading is decoration, and these are already short. -->
@@ -754,6 +802,17 @@
       <a class="btn btn-primary" href="app/">Open DeepDive</a>
       <p class="landing-note" style="margin-top:18px;">
         <a href="https://github.com/JPLuker/DeepDive" style="color:var(--muted);">Source on GitHub</a>
+      </p>
+
+      <p class="landing-legal">
+        Music metadata and artwork are provided by Spotify. DeepDive is not
+        affiliated with Spotify AB. Tag and popularity data are provided by
+        Last.fm. All copyrighted content — album artwork and artist
+        photography — remains the property of its respective owners.
+      </p>
+      <p class="landing-legal">
+        Artists pictured: Maciann, Modern Baseball. Their photographs appear
+        here only as examples of the app in use and imply no endorsement.
       </p>
     </div>
   </div>

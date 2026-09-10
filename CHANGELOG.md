@@ -4,6 +4,17 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.55
+- The landing page now credits Spotify and Last.fm, states that album
+  artwork and artist photography belong to their respective owners,
+  names the artists pictured, and disclaims endorsement. It had no
+  attribution at all, which the Developer Terms require regardless of
+  the photography question.
+- Added a figures band in the manner of stats.fm's — but theirs counts
+  a platform and DeepDive has none, so these are what one real dive
+  produced, and how much of it leaves your browser. That last figure is
+  a zero.
+
 ## 2.8.54
 - Rebuilt the landing page again. The first attempt fanned three phone
   screenshots across the hero, which is app-marketing wallpaper — the

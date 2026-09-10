@@ -59,5 +59,23 @@ for (const ch of css) {
 }
 check('stylesheet balances', depth === 0 && stray === 0);
 
+// Attribution. The Developer Terms require crediting Spotify, and the
+// page had none at all — nor any acknowledgement that the photographs
+// belong to someone. Artist photos are provisional here, used as
+// examples while Joseph asks permission, so the page must say that
+// rather than imply endorsement.
+check('spotify is credited', /not\s+affiliated with Spotify AB/.test(html));
+check('last.fm is credited', /Last\.fm/.test(html));
+check('photography ownership is stated', /remains the property of its respective owners/.test(html));
+check('artists are named', /Artists pictured:/.test(html));
+check('and endorsement is disclaimed', /imply no endorsement/.test(html));
+
+// A figures band, after stats.fm — but theirs counts a platform and
+// DeepDive has none, so counting anything global would be a borrowed
+// gesture with nothing behind it.
+check('figures are shown', /<section class="figures">/.test(html));
+check('they describe a real dive', /tracks read for Modern Baseball/.test(html));
+check('and the privacy figure is a zero', /of it leaves your browser/.test(html));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

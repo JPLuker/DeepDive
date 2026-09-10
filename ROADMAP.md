@@ -26,6 +26,37 @@ actively mislead.
 
 ---
 
+## Artist photography — provisional
+
+The landing page shows photographs of Maciann and Modern Baseball,
+taken from screenshots of real dives.
+
+**Joseph's position, 7 Sept:** acceptable as examples for now, nothing
+beyond that, and he will email the artists for permission.
+
+**So this is a hold, not a settled decision.** The photographs must not
+be used for anything wider — no social posts, no app store listing, no
+advertising, no press — until permission comes back. If permission is
+refused or doesn't arrive, they come off the page.
+
+Why it matters beyond the legal question: Spotify licenses that imagery
+for display inside its own ecosystem, and that licence does not extend
+to marketing another product. The copyright belongs to the
+photographers and labels, not to Spotify, so it was never Spotify's to
+pass on. And these are small artists — the ones least able to object
+and most affected by an implied association they didn't agree to.
+
+The page now credits Spotify and Last.fm, states that copyrighted
+content belongs to its owners, names the artists pictured, and
+disclaims endorsement. None of that existed before; it is the minimum,
+not a substitute for asking.
+
+**If permission doesn't come:** demo mode was built to stage every
+screen without real data and uses gradient placeholders instead of
+artwork. Screenshots from it are ours outright.
+
+---
+
 ## Before 2.9 ships
 
 **A full pass through `TESTING.md` is required.** Joseph's call, 7 Sept.
@@ -102,7 +133,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.54
+## Shipped since — build 2.8.55
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
