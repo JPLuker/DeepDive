@@ -74,7 +74,9 @@ to the show, and the bill is spent. Reloading a past one is a case that
 sounds useful and isn't. `history.recordBill`, `listBills` and
 `removeBill` come out with it, along with the storage they use.
 
-**The build should use the full-bleed screen.** A Multi-Dip runs a
+**The build should use the full-bleed screen.** *Still outstanding —
+Joseph raised it again on 8 Sept. Noted in 2.9.9, not built in 2.9.10;
+that build only moved the permission check.* A Multi-Dip runs a
 catalogue read per artist — the most expensive thing in the app — and
 watching it happen behind a progress line under a form reads as stalled.
 Genres and recommendations were moved onto the dive screen in 2.9.7 for
@@ -98,31 +100,6 @@ rather than by a failure at the end of a job.
 knowable for free at the start belongs at the start. The remaining
 instance is confirming what a job needs *before* starting it, which
 matters if any future feature needs a permission mid-run.
-
----
-
-## Next build — Multi-Dip screen
-
-Joseph, 8 Sept.
-
-**Drop the saved-bills list.** "Built before" sits under the search on
-the Multi-Dip screen and earns nothing. A lineup is a one-off — you go
-to the show, and the bill is spent. Reloading a past one is a case that
-sounds useful and isn't. `history.recordBill`, `listBills` and
-`removeBill` come out with it, along with the storage they use.
-
-**The build should use the full-bleed screen.** A Multi-Dip runs a
-catalogue read per artist — the most expensive thing in the app — and
-watching it happen behind a progress line under a form reads as stalled.
-Genres and recommendations were moved onto the dive screen in 2.9.7 for
-exactly this reason and the Multi-Dip build was missed, which is the
-inconsistency worth fixing: **every job that spends minutes gets the
-dive screen.** The artist currently being read is the obvious thing to
-show, so the slideshow has something real to display as it moves down
-the bill.
-
-Same goes for "If you like…", which fetches on choosing an artist and
-currently reports through a line of text.
 
 ---
 
