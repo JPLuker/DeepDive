@@ -71,6 +71,45 @@ export function recordDive({ artistId, artistName, imageUrl, duplicates, newTrac
   save(DIVES_KEY, filtered.slice(0, MAX_DIVES));
 }
 
+const BILLS_KEY = "deepdive_bills";
+
+/**
+ * A bill that was built, so a festival lineup isn't retyped.
+ *
+ * Kept with history rather than as its own store: "what did I get
+ * ready for" is the same question as "what did I dive", and a lineup
+ * you never reuse should age out the same way.
+ */
+export function recordBill(artists, { lengthMins = 180 } = {}) {
+  const names = (artists || []).map((a) => a && a.name).filter(Boolean);
+  if (names.length < 1) return;
+  const list = load(BILLS_KEY);
+  const key = names.join(" | ").toLowerCase();
+  // The same lineup built twice is one entry, updated — not two.
+  const filtered = list.filter((b) => (b.artists || []).join(" | ").toLowerCase() !== key);
+  filtered.unshift({
+    artists: names,
+    ids: (artists || []).map((a) => (a && a.id) || null),
+    lengthMins,
+    at: new Date().toISOString(),
+  });
+  save(BILLS_KEY, filtered.slice(0, 20));
+}
+
+export function listBills() {
+  return load(BILLS_KEY);
+}
+
+export function removeBill(index) {
+  const list = load(BILLS_KEY);
+  list.splice(index, 1);
+  save(BILLS_KEY, list);
+}
+
+export function clearBills() {
+  save(BILLS_KEY, []);
+}
+
 export function listDives() {
   return load(DIVES_KEY);
 }

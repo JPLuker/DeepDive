@@ -211,6 +211,9 @@ export async function runSearch(client, artistName, opts = {}) {
     collapsed_count: collapsed.collapsedCount,
     collapsed_groups: collapsed.groups,
     already_liked_count: phase1.already_liked.length,
+    // The ids, not just the count: a dip needs to know which tracks
+    // you already know so it can lead with them, or leave them out.
+    already_liked_ids: phase1.already_liked.map((t) => t && t.id).filter(Boolean),
     // The whole catalogue, for callers that want to re-rank it rather
     // than take the already-liked / new split. A dip orders it by
     // popularity; nothing else uses it, so it costs only the reference.

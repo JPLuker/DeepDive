@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.1
+- **Songs you already own** is now a setting on dips and concert prep,
+  rather than a separate feature: mix them in, start with what you
+  know, or leave them out. Before a show the ones you don't know are
+  the ones that need the work.
+- In a show it applies per artist, since what you already own differs
+  between the headliner you have three albums of and the opener you
+  have none of.
+- Owning an artist's whole catalogue falls back to including them
+  rather than producing an empty set.
+- Bills are saved to history. Building the same lineup twice updates
+  one entry instead of making two, and a saved bill can be loaded back
+  or removed.
+
 ## 2.9.0 — The rework, finished, with concert prep
 
 Joseph's call. 3.0 stays reserved as the final release; this is the

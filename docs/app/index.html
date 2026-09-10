@@ -532,6 +532,9 @@
   .intent-gear[aria-expanded="true"] { background:var(--tile-hover); color:var(--ink); }
   .intent-gear svg { width:19px; height:19px; }
   .intent-adjust { margin-top:14px; }
+  .intent-familiar { margin-top:14px; }
+  .intent-familiar label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+  .intent-familiar .sort-select { width:100%; }
 
   .intent-list { display:flex; flex-direction:column; gap:9px; }
   .intent-opt { display:flex; gap:12px; align-items:flex-start; padding:13px 15px; border:1.5px solid var(--line); border-radius:var(--radius); cursor:pointer; background:transparent; text-align:left; width:100%; font-family:inherit; color:var(--ink); }
@@ -1090,6 +1093,13 @@
           <label class="checkbox-option"><input type="checkbox" id="opt-remaster"> Count remasters as duplicates</label>
           <label class="checkbox-option"><input type="checkbox" id="opt-compilations"> Include compilations &amp; greatest hits</label>
           <label class="checkbox-option"><input type="checkbox" id="opt-appears-on"> Include releases they only guest on</label>
+          <!-- A dip's question, not a dive's: a dive shows you
+               everything and marks what you own, whereas a dip has to
+               choose what goes in. -->
+          <div class="intent-familiar">
+            <label for="opt-familiar">Songs you already own</label>
+            <select id="opt-familiar" class="sort-select"></select>
+          </div>
         </div>
         </div>
       </div>

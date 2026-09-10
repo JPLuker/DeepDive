@@ -521,7 +521,13 @@ function pickCanonical(tracks) {
  * an artist it has never heard of still produces a mix rather than
  * nothing.
  */
-export function buildDip(catalogTracks, topTracks, { targetMs = 60 * 60 * 1000 } = {}) {
+export const FAMILIAR_MODES = ["mixed", "known-first", "new-only"];
+
+export function buildDip(catalogTracks, topTracks, {
+  targetMs = 60 * 60 * 1000,
+  familiar = "mixed",
+  likedIds = null,
+} = {}) {
   const rank = new Map();
   (topTracks || []).forEach((t, i) => {
     const key = normalizeTitle(t.name || "");
@@ -529,7 +535,7 @@ export function buildDip(catalogTracks, topTracks, { targetMs = 60 * 60 * 1000 }
   });
 
   const seen = new Set();
-  const scored = [];
+  let scored = [];
   for (const t of catalogTracks || []) {
     if (!t || !t.id) continue;
     const key = normalizeTitle(t.name || "");
@@ -541,7 +547,30 @@ export function buildDip(catalogTracks, topTracks, { targetMs = 60 * 60 * 1000 }
     scored.push({ track: t, rank: r });
   }
 
-  scored.sort((a, b) => a.rank - b.rank);
+  // What you already know, and what to do about it.
+  //
+  //   mixed        popularity alone, which is what a dip has always done
+  //   known-first  the songs you own lead, so the set opens on ground
+  //                you recognise and the unfamiliar arrives later
+  //   new-only     drop what you own — you know those already, and
+  //                before a show they are not what needs the work
+  const liked = likedIds instanceof Set ? likedIds : new Set(likedIds || []);
+  const known = (t) => liked.has(t.id);
+
+  let ordered = scored;
+  if (liked.size && familiar === "new-only") {
+    ordered = scored.filter((x) => !known(x.track));
+    // Dropping everything you own leaves nothing for an artist you
+    // already own completely, which is worse than ignoring the setting.
+    if (!ordered.length) ordered = scored;
+  }
+
+  ordered.sort((a, b) => a.rank - b.rank);
+  if (liked.size && familiar === "known-first") {
+    // Stable within each group, so popularity still orders them.
+    ordered = [...ordered.filter((x) => known(x.track)), ...ordered.filter((x) => !known(x.track))];
+  }
+  scored = ordered;
 
   const out = [];
   let total = 0;
@@ -571,7 +600,7 @@ export function buildDip(catalogTracks, topTracks, { targetMs = 60 * 60 * 1000 }
  * @param entries [{ artist, catalog, topTracks }] in billing order,
  *                openers first, headliner last
  */
-export function buildShow(entries, { totalMs = 3 * 60 * 60 * 1000 } = {}) {
+export function buildShow(entries, { totalMs = 3 * 60 * 60 * 1000, familiar = "mixed" } = {}) {
   const live = (entries || []).filter((e) => e && e.catalog && e.catalog.length);
   if (!live.length) return { sets: [], tracks: [], totalMs: 0 };
 
@@ -582,7 +611,11 @@ export function buildShow(entries, { totalMs = 3 * 60 * 60 * 1000 } = {}) {
 
   const sets = live.map((entry, i) => {
     const share = totalMs * (weights[i] / sum);
-    const dip = buildDip(entry.catalog, entry.topTracks || [], { targetMs: share });
+    // Per artist, since the tracks you already know differ for each of
+    // them — the headliner you own three albums of, the opener none.
+    const dip = buildDip(entry.catalog, entry.topTracks || [], {
+      targetMs: share, familiar, likedIds: entry.likedIds || null,
+    });
     return {
       artist: entry.artist,
       headliner: i === live.length - 1,

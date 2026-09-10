@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.0";
+export const BUILD = "2.9.1";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1385,6 +1385,18 @@ function openIntentModal(artistName, { force = false } = {}) {
   const gear = document.getElementById("intent-gear");
   const dipBtn = document.getElementById("intent-dip");
 
+  // Populated here rather than in markup so the options and the saved
+  // choice stay in one place.
+  const famSel = document.getElementById("opt-familiar");
+  if (famSel && !famSel.options.length) {
+    famSel.innerHTML = FAMILIAR_LABELS
+      .map(([v, label]) => `<option value="${v}">${label}</option>`).join("");
+  }
+  if (famSel) {
+    famSel.value = savedFamiliar();
+    famSel.onchange = () => setFamiliar(famSel.value);
+  }
+
   // The heading says what you're choosing about; the subtitle says who.
   const titleEl = document.getElementById("intent-title");
   if (titleEl) titleEl.textContent = artistName || "How should DeepDive search?";
@@ -2711,7 +2723,10 @@ async function presentDip(result) {
     flash("Couldn't reach Last.fm — ordering by catalogue instead.");
   }
 
-  const dip = matching.buildDip(pool, top);
+  const dip = matching.buildDip(pool, top, {
+    familiar: savedFamiliar(),
+    likedIds: result.already_liked_ids || [],
+  });
   if (!dip.tracks.length) {
     renderProgressError(`Couldn't build a dip for ${artistName} — no tracks came back.`);
     return;
@@ -3512,6 +3527,31 @@ async function renderRecommendations() {
   row.querySelector("[data-rec-ask]")?.addEventListener("click", () => renderAskSimilar());
 }
 
+// What to do with the songs you already own. Shared by dips and
+// concert prep, since it is the same question in both: you know these
+// already, so should they lead, or not be there at all?
+const FAMILIAR_KEY = "deepdive_familiar";
+function savedFamiliar() {
+  try { return localStorage.getItem(FAMILIAR_KEY) || "mixed"; } catch (e) { return "mixed"; }
+}
+function setFamiliar(v) {
+  try { localStorage.setItem(FAMILIAR_KEY, v); } catch (e) {}
+}
+const FAMILIAR_LABELS = [
+  ["mixed", "Mix them in", "Ordered by what people play most, however well you know it."],
+  ["known-first", "Start with what I know", "Opens on ground you recognise, unfamiliar later."],
+  ["new-only", "Only what's new to me", "Leaves out what you already own."],
+];
+// The id arrives as a literal attribute string, not a value to
+// interpolate: `id="${id}"` hides it from the getElementById orphan
+// audit. Third time I have made this mistake despite it being written
+// down.
+function familiarSelect(idAttr, value) {
+  return `<select ${idAttr} class="sort-select">
+    ${FAMILIAR_LABELS.map(([v, label]) => `<option value="${v}"${v === value ? " selected" : ""}>${label}</option>`).join("")}
+  </select>`;
+}
+
 // ---- concert prep ----
 //
 // The 3.0 feature. Several artists, one running order, weighted by
@@ -3543,7 +3583,13 @@ async function renderShow() {
     <p class="nav-hint" style="margin-top:0;">Add everyone on the bill, openers first. DeepDive gives each of them a share of the night — the headliner gets the most — and puts it in the order you'll hear it.</p>
     ${searchShellHtml()}
     <div id="show-bill">${rows || `<p class="empty-note">Nobody added yet.</p>`}</div>
+    <div id="show-saved"></div>
     <div class="set-group set-group-spaced">
+      <div class="set-row set-row-block">
+        <div class="set-row-text"><div class="set-row-title">Songs you already own</div>
+          <div class="set-row-detail">Before a show, the ones you don't know are the ones that need the work.</div></div>
+        ${familiarSelect('id="show-familiar"', savedFamiliar())}
+      </div>
       <div class="set-row set-row-block">
         <div class="set-row-text"><div class="set-row-title">How long is the night</div>
           <div class="set-row-detail">Doors to lights up, near enough.</div></div>
@@ -3583,6 +3629,33 @@ async function renderShow() {
     renderShow();
   }));
 
+  // Lineups you've built before, so a festival isn't retyped.
+  const saved = history.listBills().filter((bl) =>
+    (bl.artists || []).join("|").toLowerCase() !== _showBill.map((a) => a.name).join("|").toLowerCase());
+  const savedEl = document.getElementById("show-saved");
+  if (savedEl && saved.length) {
+    savedEl.innerHTML = `
+      <div class="crate-header"><span class="label">Built before</span></div>
+      ${saved.slice(0, 6).map((bl, i) => `
+        <div class="watchlist-row">
+          <span class="watchlist-name">${esc(bl.artists.join(", "))}</span>
+          <div class="watchlist-actions">
+            <button class="btn btn-ghost btn-small" data-bill-load="${i}">Load</button>
+            <button class="btn btn-ghost btn-small" data-bill-rm="${i}">Remove</button>
+          </div>
+        </div>`).join("")}`;
+    savedEl.querySelectorAll("[data-bill-load]").forEach((b) => b.addEventListener("click", () => {
+      const bl = saved[+b.dataset.billLoad];
+      _showBill = bl.artists.map((n, k) => ({ id: (bl.ids || [])[k] || n, name: n }));
+      renderShow();
+    }));
+    savedEl.querySelectorAll("[data-bill-rm]").forEach((b) => b.addEventListener("click", () => {
+      history.removeBill(history.listBills().indexOf(saved[+b.dataset.billRm]));
+      renderShow();
+    }));
+  }
+
+  document.getElementById("show-familiar")?.addEventListener("change", (e) => setFamiliar(e.target.value));
   document.getElementById("show-go")?.addEventListener("click", buildShowNow);
 }
 
@@ -3606,7 +3679,12 @@ async function buildShowNow() {
       });
       let top = [];
       try { if (lastfm.hasKey()) top = await lastfm.topTracks(a.name, 50); } catch (e) {}
-      entries.push({ artist: a, catalog: res.catalog_tracks || [], topTracks: top });
+      entries.push({
+        artist: a,
+        catalog: res.catalog_tracks || [],
+        topTracks: top,
+        likedIds: res.already_liked_ids || [],
+      });
     } catch (e) {
       // One artist failing shouldn't lose the others already read.
       prog.innerHTML = `<p class="empty-note">Couldn't read ${esc(a.name)}: ${esc(e.message || e)}</p>`;
@@ -3619,7 +3697,11 @@ async function buildShowNow() {
     return;
   }
 
-  const show = matching.buildShow(entries, { totalMs: mins * 60 * 1000 });
+  history.recordBill(_showBill, { lengthMins: mins });
+  const show = matching.buildShow(entries, {
+    totalMs: mins * 60 * 1000,
+    familiar: document.getElementById("show-familiar")?.value || savedFamiliar(),
+  });
   const names = show.sets.map((s) => s.artist.name);
   prog.innerHTML = `<p class="nav-hint">${show.tracks.length} tracks, about ${Math.round(show.totalMs / 60000)} minutes — ${show.sets.map((s) => `${esc(s.artist.name)} ${Math.round(s.totalMs / 60000)}min`).join(", ")}</p>`;
 

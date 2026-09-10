@@ -50,5 +50,51 @@ check('the cost is stated as it runs', /Reading \$\{esc\(a\.name\)\} — \$\{i \
 check('one artist failing keeps the rest', /Couldn't read \$\{esc\(a\.name\)\}/.test(src));
 check('and nothing at all is explained', /Nothing came back for anyone on the bill/.test(src));
 
+// What you already own is a setting, not a layer — and it's the same
+// question for a dip and for a night, so it's one control.
+import { buildDip, FAMILIAR_MODES } from '../docs/js/matching.js';
+const solo = Array.from({ length: 20 }, (_, i) => ({
+  id: 't' + i, name: 'Song ' + i, duration_ms: 210000, album: { name: 'A' },
+}));
+const owned = new Set(['t5', 't6', 't7']);
+const ranked = solo.map((t) => ({ name: t.name }));
+
+check('three modes', FAMILIAR_MODES.length === 3);
+const mixed = buildDip(solo, ranked, { familiar: 'mixed', likedIds: owned });
+const first = buildDip(solo, ranked, { familiar: 'known-first', likedIds: owned });
+const only = buildDip(solo, ranked, { familiar: 'new-only', likedIds: owned });
+
+check('mixed ignores ownership', mixed.tracks[0].id === 't0');
+check('known-first leads with what you own', first.tracks.slice(0, 3).every((t) => owned.has(t.id)));
+check('and popularity still orders within that', first.tracks[0].id === 't5');
+check('new-only drops what you own', !only.tracks.some((t) => owned.has(t.id)));
+// Dropping everything leaves nothing for an artist you own completely,
+// which is worse than ignoring the setting.
+check('owning everything falls back rather than emptying',
+  buildDip(solo, ranked, { familiar: 'new-only', likedIds: new Set(solo.map((t) => t.id)) }).tracks.length > 0);
+check('no liked ids behaves as mixed',
+  buildDip(solo, ranked, { familiar: 'known-first' }).tracks[0].id === 't0');
+
+// Per artist in a show: the headliner you own three albums of, the
+// opener none.
+const showEntries = [
+  { artist: { name: 'A' }, catalog: solo, topTracks: ranked, likedIds: [] },
+  { artist: { name: 'B' }, catalog: solo.map((t) => ({ ...t, id: 'b' + t.id })), topTracks: [], likedIds: ['bt0'] },
+];
+check('shows take the setting', /familiar = "mixed"/.test(readFileSync(new URL('../docs/js/matching.js', import.meta.url), 'utf8')));
+check('and liked ids per artist', /likedIds: entry\.likedIds/.test(readFileSync(new URL('../docs/js/matching.js', import.meta.url), 'utf8')));
+
+// The control appears in both places, and the choice is remembered.
+check('offered on concert prep', /id="show-familiar"/.test(src));
+check('offered on dives and dips', /id="opt-familiar"/.test(src) || /opt-familiar/.test(readFileSync(new URL('../docs/app/index.html', import.meta.url), 'utf8')));
+check('the choice is remembered', /deepdive_familiar/.test(src));
+check('the search exposes which tracks you own', /already_liked_ids/.test(readFileSync(new URL('../docs/js/search.js', import.meta.url), 'utf8')));
+
+// Bills live in history rather than their own store.
+check('a built bill is recorded', /history\.recordBill\(_showBill/.test(src));
+check('and can be reloaded', /data-bill-load/.test(src));
+check('or removed', /data-bill-rm/.test(src));
+check('the same lineup twice is one entry', /filtered = list\.filter\(\(b\) =>/.test(readFileSync(new URL('../docs/js/history.js', import.meta.url), 'utf8')));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -147,7 +147,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.0
+## Shipped since — build 2.9.1
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -584,14 +584,14 @@ the library knowledge are what make the feature worth having.
 
 **Still to build before 3.0**, from the original 3.x plan:
 
-- The **library-aware layer** (was 3.3): what you already know versus
-  what you'd be standing through cold. Arguably the most DeepDive-ish
-  part of the idea and the strongest reason to use this over building a
-  playlist by hand.
+- ~~The **library-aware layer**~~ — *shipped in 2.9.1, and Joseph was
+  right that it's a setting rather than a layer: three modes on dips and
+  concert prep alike, since it's the same question in both.*
 - The **per-artist song count slider** (was 3.5, festival mode). The
   billing weighting is automatic now; letting it be overridden is the
   obvious next step.
-- Saving a bill, so a festival lineup doesn't have to be retyped.
+- ~~Saving a bill~~ — *shipped in 2.9.1, in history rather than its own
+  store.*
 
 **Superseded plan below, kept for the reasoning:**
 
