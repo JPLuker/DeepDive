@@ -558,6 +558,46 @@ export function buildDip(catalogTracks, topTracks, { targetMs = 60 * 60 * 1000 }
 }
 
 /**
+ * A night, not a playlist.
+ *
+ * Several artists, one running order. The difference from running a dip
+ * each and concatenating is that a bill isn't equal: you're there for
+ * the headliner and you'd like to recognise four songs by the opener.
+ *
+ * Shares are derived from billing position rather than asked for. An
+ * opener getting the same twenty minutes as the headliner is not what
+ * anyone means by getting ready for a show.
+ *
+ * @param entries [{ artist, catalog, topTracks }] in billing order,
+ *                openers first, headliner last
+ */
+export function buildShow(entries, { totalMs = 3 * 60 * 60 * 1000 } = {}) {
+  const live = (entries || []).filter((e) => e && e.catalog && e.catalog.length);
+  if (!live.length) return { sets: [], tracks: [], totalMs: 0 };
+
+  // Weights rise toward the headliner. With one artist this is just a
+  // dip; with four it's roughly 1 : 1.4 : 1.9 : 2.6.
+  const weights = live.map((_, i) => Math.pow(1.35, i));
+  const sum = weights.reduce((a, b) => a + b, 0);
+
+  const sets = live.map((entry, i) => {
+    const share = totalMs * (weights[i] / sum);
+    const dip = buildDip(entry.catalog, entry.topTracks || [], { targetMs: share });
+    return {
+      artist: entry.artist,
+      headliner: i === live.length - 1,
+      tracks: dip.tracks,
+      totalMs: dip.totalMs,
+    };
+  });
+
+  // Order mirrors the night: openers first, headliner last. A dip is
+  // shuffled; a show isn't.
+  const tracks = sets.flatMap((s) => s.tracks);
+  return { sets, tracks, totalMs: sets.reduce((n, s) => n + s.totalMs, 0) };
+}
+
+/**
  * Collapses tracks that are the same recording on different releases.
  *
  * @returns { tracks, collapsedCount, groups }

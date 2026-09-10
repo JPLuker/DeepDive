@@ -4,6 +4,31 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 3.0.0 — Concert prep
+
+Joseph's call: 2.9 becomes 3.0, and concert prep lands with it.
+
+- **Concert prep.** Add everyone on the bill, openers first, say how
+  long the night is, and DeepDive builds the whole evening in the order
+  you'll hear it. Each artist gets a share weighted by billing — the
+  headliner gets the most, the opener enough to recognise a few songs.
+- Billing order is editable, since a search arrives in whatever order
+  you typed it and the order is the point.
+- One artist failing doesn't lose the others already read.
+
+**Dropped: setlist.fm.** It cannot be called from a browser — blocked
+on two engines from the real origin, a rejected preflight before the
+key is ever seen. The alternatives were a server, which this project
+has refused throughout, or a wrapper that would only fix the packaged
+Android build and split what DeepDive is. Real setlists would only have
+improved which songs got picked; the weighting, the running order and
+the library knowledge are the feature, and they all survive.
+
+Everything since 2.5 ships with this: Home, Dives and Mixes as separate
+destinations, Settings rebuilt, a continuous desktop layout, forty-odd
+mix types, Build your own, per-feature blocking, self-diagnosis, and
+the Last.fm work — dips, recommendations and genre mixes.
+
 ## 2.8.66
 - The same Last.fm error was written two different ways. Now written
   once.

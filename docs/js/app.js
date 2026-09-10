@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.8.66";
+export const BUILD = "3.0.0";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -399,6 +399,7 @@ async function renderDives() {
     <div id="suggestions-row"></div>
     <div class="set-group set-group-spaced">
       ${navRow('id="go-scrub"', "Full library scan", "Crawls every artist you've liked. Thorough, and slow — one request per release.")}
+      ${navRow('id="go-show"', "Concert prep", "Everyone on the bill, weighted by billing and ordered like the night runs.")}
       ${navRow('id="go-history"', "Dive history", "What you've dived, what DeepDive built, and how to undo it.")}
       ${navRow('id="go-pins"', "Pins &amp; blocked", "Artists you've pinned, and ones you've told DeepDive to stop suggesting.")}
     </div>`;
@@ -407,6 +408,7 @@ async function renderDives() {
   wireApiBanner();
   loadSuggestions({ showAllPins: true });
   document.getElementById("go-scrub")?.addEventListener("click", () => renderScrubForm());
+  document.getElementById("go-show")?.addEventListener("click", () => renderShow());
   document.getElementById("go-history")?.addEventListener("click", () => renderHistory());
   document.getElementById("go-pins")?.addEventListener("click", () => renderWatchlist());
 }
@@ -3508,6 +3510,128 @@ async function renderRecommendations() {
     btn.addEventListener("click", () =>
       openCardModal(cards.find((c) => c.id === btn.dataset.recCard))));
   row.querySelector("[data-rec-ask]")?.addEventListener("click", () => renderAskSimilar());
+}
+
+// ---- concert prep ----
+//
+// The 3.0 feature. Several artists, one running order, weighted by
+// where they sit on the bill and ordered the way the night runs.
+//
+// Setlist.fm would have improved which songs get picked; it cannot be
+// called from a browser, and everything that makes this worth having —
+// the weighting, the order, knowing what you already own — survives
+// without it.
+let _showBill = [];
+
+async function renderShow() {
+  setTitle("DeepDive · Concert prep");
+  setActiveTab("dives");
+  const rows = _showBill.map((a, i) => `
+    <div class="watchlist-row">
+      <span class="watchlist-name">
+        <span>${esc(a.name)}</span>
+        ${i === _showBill.length - 1 && _showBill.length > 1 ? `<span class="pill-reason">headlining</span>` : ""}
+      </span>
+      <div class="watchlist-actions">
+        ${i > 0 ? `<button class="btn btn-ghost btn-small" data-show-up="${i}" title="Earlier on the bill">&uarr;</button>` : ""}
+        <button class="btn btn-ghost btn-small" data-show-rm="${i}">Remove</button>
+      </div>
+    </div>`).join("");
+
+  root.innerHTML = `
+    <div class="row-head"><h2>Concert prep</h2></div>
+    <p class="nav-hint" style="margin-top:0;">Add everyone on the bill, openers first. DeepDive gives each of them a share of the night — the headliner gets the most — and puts it in the order you'll hear it.</p>
+    ${searchShellHtml()}
+    <div id="show-bill">${rows || `<p class="empty-note">Nobody added yet.</p>`}</div>
+    <div class="set-group set-group-spaced">
+      <div class="set-row set-row-block">
+        <div class="set-row-text"><div class="set-row-title">How long is the night</div>
+          <div class="set-row-detail">Doors to lights up, near enough.</div></div>
+        <select id="show-length" class="sort-select">
+          <option value="90">An hour and a half</option>
+          <option value="120">Two hours</option>
+          <option value="180" selected>Three hours</option>
+          <option value="240">Four hours — a festival day</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="show-go"${_showBill.length ? "" : " disabled"}>Build the night</button>
+      <button class="btn btn-ghost" data-tab="dives">Back</button>
+    </div>
+    <div id="show-progress"></div>`;
+
+  wireArtistSearch({
+    inputId: "artist-input",
+    listId: "autofill-list",
+    source: (q) => client.searchArtists(q, 6),
+    onChoose: (it) => {
+      if (!_showBill.some((a) => a.id === it.id)) _showBill.push(it);
+      renderShow();
+    },
+  });
+
+  root.querySelectorAll("[data-show-rm]").forEach((b) => b.addEventListener("click", () => {
+    _showBill.splice(+b.dataset.showRm, 1);
+    renderShow();
+  }));
+  // Billing order is the whole point, so it has to be editable — a
+  // search result arrives in the order you happened to type it.
+  root.querySelectorAll("[data-show-up]").forEach((b) => b.addEventListener("click", () => {
+    const i = +b.dataset.showUp;
+    [_showBill[i - 1], _showBill[i]] = [_showBill[i], _showBill[i - 1]];
+    renderShow();
+  }));
+
+  document.getElementById("show-go")?.addEventListener("click", buildShowNow);
+}
+
+async function buildShowNow() {
+  const prog = document.getElementById("show-progress");
+  const mins = parseInt(document.getElementById("show-length").value, 10) || 180;
+  document.getElementById("show-go").disabled = true;
+
+  // One catalogue read per artist, which is a dive each. Said plainly
+  // before it starts rather than discovered as a wait.
+  const entries = [];
+  for (let i = 0; i < _showBill.length; i++) {
+    const a = _showBill[i];
+    prog.innerHTML = `<p class="nav-hint">Reading ${esc(a.name)} — ${i + 1} of ${_showBill.length}…</p>`;
+    try {
+      const res = await search.runSearch(client, a.name, {
+        libraryCache, resolvedArtist: a,
+        onProgress: (pct, stage) => {
+          prog.innerHTML = `<p class="nav-hint">${esc(a.name)} — ${i + 1} of ${_showBill.length} — ${esc(stage || "")} ${pct}%</p>`;
+        },
+      });
+      let top = [];
+      try { if (lastfm.hasKey()) top = await lastfm.topTracks(a.name, 50); } catch (e) {}
+      entries.push({ artist: a, catalog: res.catalog_tracks || [], topTracks: top });
+    } catch (e) {
+      // One artist failing shouldn't lose the others already read.
+      prog.innerHTML = `<p class="empty-note">Couldn't read ${esc(a.name)}: ${esc(e.message || e)}</p>`;
+    }
+  }
+
+  if (!entries.length) {
+    prog.innerHTML = `<p class="empty-note">Nothing came back for anyone on the bill.</p>`;
+    document.getElementById("show-go").disabled = false;
+    return;
+  }
+
+  const show = matching.buildShow(entries, { totalMs: mins * 60 * 1000 });
+  const names = show.sets.map((s) => s.artist.name);
+  prog.innerHTML = `<p class="nav-hint">${show.tracks.length} tracks, about ${Math.round(show.totalMs / 60000)} minutes — ${show.sets.map((s) => `${esc(s.artist.name)} ${Math.round(s.totalMs / 60000)}min`).join(", ")}</p>`;
+
+  openCardModal({
+    id: "show",
+    title: names[names.length - 1] || "Your night",
+    subtitle: names.length > 1 ? `with ${names.slice(0, -1).join(", ")}` : "an hour of them",
+    simple: true,
+    name: `DeepDive · ${names[names.length - 1]}${names.length > 1 ? " and support" : ""}`,
+    count: show.tracks.length,
+    tracks: show.tracks,
+  });
 }
 
 // ---- genre tags ----

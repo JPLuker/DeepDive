@@ -524,6 +524,19 @@ All three need a Last.fm key in Settings.
 - [ ] A nonsense name says Last.fm doesn't know them rather than
       failing silently
 
+## 18. Concert prep (3.0.0)
+
+- [ ] Dives → Concert prep opens a screen with an artist search
+- [ ] Adding artists builds a bill; the last one is marked as headlining
+- [ ] The arrows reorder the bill and the headliner marker follows
+- [ ] Remove takes one off
+- [ ] Building runs one catalogue read per artist, naming who it's on
+- [ ] The result runs openers first, headliner last
+- [ ] The headliner has visibly more tracks than the opener
+- [ ] A three-hour night is roughly three hours
+- [ ] A bill with one artist works — it's just a dip
+- [ ] An artist that fails doesn't lose the others
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

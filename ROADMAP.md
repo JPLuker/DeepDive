@@ -147,7 +147,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.8.66
+## Shipped since — build 3.0.0
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -566,7 +566,32 @@ than artist tags alone.
 
 ---
 
-## Session 6 — 3.0 · Concert prep
+## 3.0 — shipped 7 Sept
+
+Joseph's call: 2.9 became 3.0, with concert prep landing alongside the
+rework rather than after it.
+
+**setlist.fm is dropped.** Confirmed unreachable from a browser on two
+engines. The alternatives were a server — refused throughout this
+project — or a Capacitor wrapper fixing only the packaged Android
+build, which would split what DeepDive is. Real setlists would only
+have improved song *selection*; the weighting, the running order and
+the library knowledge are what make the feature worth having.
+
+**Still to build on top of it**, from the original 3.x plan:
+
+- The **library-aware layer** (was 3.3): what you already know versus
+  what you'd be standing through cold. Arguably the most DeepDive-ish
+  part of the idea and the strongest reason to use this over building a
+  playlist by hand.
+- The **per-artist song count slider** (was 3.5, festival mode). The
+  billing weighting is automatic now; letting it be overridden is the
+  obvious next step.
+- Saving a bill, so a festival lineup doesn't have to be retyped.
+
+**Superseded plan below, kept for the reasoning:**
+
+## Session 6 — the original 3.x staging
 
 ⚠️ **Prerequisite — setlist.fm CORS check.** The only thing left, and
 the riskiest unknown in 3.x. A test page is deployed at
