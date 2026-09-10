@@ -407,57 +407,64 @@
 
   /* ---- landing page ---- */
   .landing { padding-top:24px; }
-  .landing-lede { font-size:20px; font-weight:600; margin:22px auto 10px; max-width:520px; line-height:1.35; }
-  .landing-sub { font-size:15px; color:var(--muted); max-width:560px; margin:0 auto; line-height:1.6; }
   .landing-cta { margin:26px 0 10px; }
   .landing-note { font-size:12.5px; color:var(--muted-soft); margin:0; }
 
   /* ---- hero ----
-     The photographs carry this, not the type. A dive fills the screen
-     with the artist, and that is the thing worth showing first. */
-  .hero {
-    display:grid; grid-template-columns:1fr; gap:40px;
-    align-items:center; padding:8px 0 24px;
+     A dive gives the artist the whole screen and lays the words over
+     the bottom of the photograph. The page does the same, so the first
+     thing anyone sees is the thing the product is actually like. */
+  .hero { margin:0 0 8px; }
+  .hero-frame {
+    position:relative; border-radius:24px; overflow:hidden;
+    min-height:min(78vh, 640px); display:flex; align-items:flex-end;
+    background:#0a0a0a;
   }
+  .hero-photo {
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; object-position:50% 28%;
+  }
+  /* Dark enough at the base for text, clear at the top so the
+     photograph is still a photograph. */
+  .hero-scrim {
+    position:absolute; inset:0;
+    background:linear-gradient(180deg,
+      rgba(8,8,10,0.15) 0%,
+      rgba(8,8,10,0.55) 52%,
+      rgba(8,8,10,0.94) 100%);
+  }
+  .hero-copy { position:relative; padding:36px 24px 34px; max-width:640px; }
   .hero-tagline {
-    font-family:'Martius','Inter',sans-serif;
-    font-size:clamp(52px, 11vw, 96px);
-    line-height:0.92; letter-spacing:-0.02em;
-    margin:18px 0 0; text-transform:uppercase;
+    font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
+    font-size:clamp(46px, 12vw, 104px); line-height:0.88;
+    letter-spacing:-0.02em; margin:0; color:#fff;
   }
   .hero-lede {
-    font-size:17px; line-height:1.55; color:var(--muted);
-    max-width:46ch; margin:18px 0 26px;
+    font-size:16.5px; line-height:1.55; margin:16px 0 24px;
+    color:rgba(255,255,255,0.78); max-width:44ch;
   }
-
-  .hero-shots { position:relative; height:420px; }
-  .hero-shots .shot {
-    position:absolute; top:0; height:100%; width:auto;
-    border-radius:22px; display:block;
-    box-shadow:0 24px 60px rgba(0,0,0,0.5);
-  }
-  /* Fanned, with the sharpest photograph in front. The two behind are
-     dimmed so the stack reads as depth rather than as three things
-     competing. */
-  .shot-front { left:0; z-index:3; }
-  .shot-mid   { left:112px; z-index:2; filter:brightness(0.7); }
-  .shot-back  { left:224px; z-index:1; filter:brightness(0.45); }
+  .landing-cta { display:flex; flex-wrap:wrap; align-items:center; gap:14px; }
+  .hero-note { font-size:13px; color:rgba(255,255,255,0.6); }
 
   @media (min-width: 900px) {
-    .hero {
-      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-      gap:56px; padding:24px 0 56px;
-    }
-    .hero-shots { height:560px; }
-    .shot-mid { left:150px; }
-    .shot-back { left:300px; }
+    .hero-frame { min-height:min(82vh, 760px); }
+    .hero-copy { padding:56px 48px 52px; }
   }
-  /* Below 560px the fan would run off the screen, so it becomes a
-     single phone rather than a cropped stack. */
-  @media (max-width: 560px) {
-    .hero-shots { height:360px; display:flex; justify-content:center; }
-    .hero-shots .shot { position:static; }
-    .shot-mid, .shot-back { display:none; }
+
+  /* Four statements, not four cards. Boxing each in its own rounded
+     rectangle with a matching icon is the SaaS default and adds a
+     border for every idea; a two-column text block reads faster. */
+  .does {
+    display:grid; grid-template-columns:1fr; gap:34px;
+    margin:76px 0; padding-top:8px;
+  }
+  .does-item h3 {
+    font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
+    font-size:20px; letter-spacing:-0.01em; margin:0 0 10px;
+  }
+  .does-item p { margin:0; color:var(--muted); line-height:1.62; max-width:54ch; }
+  @media (min-width: 760px) {
+    .does { grid-template-columns:1fr 1fr; gap:44px 56px; }
   }
 
   /* One screenshot beside the argument it makes. */
@@ -480,12 +487,6 @@
     .showcase-shot { justify-self:start; }
   }
 
-  .landing-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:44px 0 34px; }
-  .landing-card { border:1.5px solid var(--line); border-radius:var(--radius-lg); padding:20px; background:var(--paper); }
-  .landing-icon { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:var(--radius); background:var(--surface); color:var(--accent); margin-bottom:12px; }
-  .landing-icon svg { width:18px; height:18px; }
-  .landing-card h3 { font-size:15px; margin:0 0 6px; }
-  .landing-card p { font-size:13.5px; color:var(--muted); line-height:1.55; margin:0; }
 
   .landing-foot { text-align:center; border-top:1px solid var(--line); padding-top:28px; display:flex; flex-direction:column; align-items:center; gap:14px; }
 
@@ -647,7 +648,6 @@
 
     /* Two columns of feature cards is unreadable at phone width. */
     .landing-grid { grid-template-columns:1fr; gap:10px; margin:30px 0 26px; }
-    .landing-card { padding:16px; }
     .landing-lede { font-size:17px; }
     .landing-sub { font-size:14px; }
 
@@ -693,27 +693,24 @@
 </head>
 <body>
   <div class="wrap landing">
+    <!-- The page opens the way a dive does: the artist fills the
+         screen, the words sit over the bottom of the photograph, and
+         nothing competes with the picture. Borrowing the product's own
+         most distinctive screen as the page's design language, rather
+         than the fanned-phones arrangement every app marketing page
+         uses. -->
     <header class="hero">
-      <div class="hero-words">
-        <span class="wordmark-hero"><img src="assets/dd-logo.png" alt="" class="wordmark-hero-icon">DeepDive</span>
-        <h1 class="hero-tagline">Hear it all.</h1>
-        <p class="hero-lede">You liked the album version. You missed the single. DeepDive reads an artist's whole catalogue against your Spotify library and finds the recordings you already love but never saved.</p>
-        <div class="landing-cta">
-          <a class="btn btn-primary" href="app/">Open DeepDive</a>
+      <div class="hero-frame">
+        <img src="img/shots/hero-maciann.jpg" alt="" class="hero-photo" fetchpriority="high" width="1400" height="1933">
+        <div class="hero-scrim"></div>
+        <div class="hero-copy">
+          <h1 class="hero-tagline">Hear it all.</h1>
+          <p class="hero-lede">You liked the album version. You missed the single. DeepDive reads an artist's whole catalogue against your library and finds the recordings you already love but never saved.</p>
+          <div class="landing-cta">
+            <a class="btn btn-primary" href="app/">Open DeepDive</a>
+            <span class="hero-note">Free. Runs in your browser. Two minutes to set up.</span>
+          </div>
         </div>
-        <p class="landing-note">Free, and it runs entirely in your browser. About two minutes to set up.</p>
-      </div>
-
-      <!-- The screenshots are the hero. A dive is a full-bleed artist
-           photograph with a quiet progress bar over it, which is the
-           least utility-like thing about this utility and the reason
-           anyone remembers it. Three of them, fanned, bleeding off the
-           right edge — the photographs do the work a headline would
-           otherwise have to. -->
-      <div class="hero-shots" aria-hidden="true">
-        <img src="img/shots/dive-vial.jpg" alt="" class="shot shot-back" loading="eager" width="760" height="1430">
-        <img src="img/shots/dive-leisure-hour.jpg" alt="" class="shot shot-mid" loading="eager" width="760" height="1462">
-        <img src="img/shots/dive-maciann.jpg" alt="" class="shot shot-front" loading="eager" width="760" height="1458">
       </div>
     </header>
 
@@ -729,38 +726,28 @@
       </div>
     </section>
 
-    <div class="landing-grid">
-      <div class="landing-card">
-        <span class="landing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg></span>
-        <h3>Find what you missed</h3>
-        <p>You liked a song off an album years ago. The same recording turned up later on an EP, and Spotify showed it to you like it was new. DeepDive reads an artist's whole catalogue against your Liked Songs and finds those near-misses &mdash; matching on the recording itself, not just the title.</p>
+    <!-- Four things it does, each stated as the situation it resolves
+         rather than as a feature. No icons: a small line drawing above
+         each heading is decoration, and these are already short. -->
+    <section class="does">
+      <div class="does-item">
+        <h3>The single you never saved</h3>
+        <p>You liked a song off an album years ago. The same recording came out again on an EP, and Spotify never mentioned it. DeepDive matches on the recording itself, not the title, so a reissue under a different name still counts as the one you already love.</p>
       </div>
-      <div class="landing-card">
-        <span class="landing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15V6M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM12 12H3M16 6H3M12 18H3"/></svg></span>
-        <h3>Build the playlist</h3>
-        <p>Everything by that artist you genuinely haven't heard, in album order or however you like it &mdash; length, ordering and naming all yours. Nothing touches your library until you press the button.</p>
+      <div class="does-item">
+        <h3>An hour of anyone</h3>
+        <p>A dip takes one artist and gives you their best hour, most-played first. Where a dive is thorough, a dip is the version you actually put on.</p>
       </div>
-      <div class="landing-card">
-        <span class="landing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-        <h3>Sample what you barely know</h3>
-        <p>Artists you've liked once or twice and never followed up on. Each one leads with the song you already know, then two you don't &mdash; an introduction rather than a pile of strangers.</p>
+      <div class="does-item">
+        <h3>Mixes out of your own library</h3>
+        <p>Forty-odd ways of cutting what you've already saved: a year, a decade, the songs under two-thirty, the artists you own one track by. Or build your own from any combination.</p>
       </div>
-      <div class="landing-card">
-        <span class="landing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21 8 14 2 9.4h7.6z"/></svg></span>
-        <h3>Playlists from your own history</h3>
-        <p>Your 2019. Albums that landed. Music you found twenty years late. One from every year you've been collecting. All built from what's already in your library, with nothing created until you confirm it.</p>
+      <div class="does-item">
+        <h3>Genres Spotify won't tell you</h3>
+        <p>Not "rock". Shoegaze, midwest emo, riot grrrl — worked out from what your artists are actually tagged as, then turned into mixes of music you already own.</p>
       </div>
-      <div class="landing-card">
-        <span class="landing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/></svg></span>
-        <h3>Pins and suggestions</h3>
-        <p>Pin an artist to come back to. Suggestions come half from what you've been playing and half from your own library, and each one tells you why it's there &mdash; "one song liked", "last added 2019".</p>
-      </div>
-      <div class="landing-card">
-        <span class="landing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4.5 8-11a8 8 0 1 0-16 0c0 6.5 8 11 8 11z"/><circle cx="12" cy="11" r="3"/></svg></span>
-        <h3>Yours alone</h3>
-        <p>No server, no account, no data collected &mdash; there's nowhere to collect it to. Everything happens in your browser, between you and Spotify. Undo what it did, and export your settings whenever you like.</p>
-      </div>
-    </div>
+    </section>
+
 
     <div class="landing-foot">
       <p class="landing-note">Spotify requires every app to have its own credentials, so you'll create a free one on their developer dashboard. It's a form, and you only do it once.</p>

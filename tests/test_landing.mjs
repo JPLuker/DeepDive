@@ -19,7 +19,9 @@ check('and the link preview', /og:description/.test(html) && /og:image/.test(htm
 
 // Every referenced screenshot must exist and be small enough to load.
 const refs = [...html.matchAll(/img\/shots\/([a-z-]+\.jpg)/g)].map((m) => m[1]);
-check('screenshots are referenced', refs.length >= 4);
+// Three now, not four: the hero uses a cropped photograph rather than
+// a stack of phone mockups, so fewer images do more.
+check('screenshots are referenced', refs.length >= 3);
 for (const f of new Set(refs)) {
   const path = new URL('../docs/img/shots/' + f, import.meta.url);
   check(`${f} exists`, existsSync(path));
@@ -27,12 +29,23 @@ for (const f of new Set(refs)) {
   check(`${f} is web-sized`, existsSync(path) && statSync(path).size < 200 * 1024);
 }
 
-check('hero shows the dive screen', /class="hero-shots"/.test(html));
-check('and the fan is decorative, not content', /class="hero-shots" aria-hidden="true"/.test(html));
-// A fanned stack would run off a phone screen.
-check('the fan collapses on narrow screens', /@media \(max-width: 560px\)[\s\S]{0,300}\.shot-mid, \.shot-back \{ display:none; \}/.test(html));
-check('images are sized to avoid reflow', (html.match(/width="760" height="\d+"/g) || []).length >= 4);
-check('below-fold images load lazily', /class="showcase-shot" loading="lazy"/.test(html));
+// The page opens the way a dive does: the artist fills the frame and
+// the words sit over the bottom of the photograph. Three phones fanned
+// out — the first attempt — is app-marketing wallpaper, and the app's
+// own most distinctive screen is a better source than the template.
+check('hero is a photograph, not a phone mockup', /class="hero-photo"/.test(html));
+check('and the fanned stack is gone', !/shot-front|hero-shots/.test(html));
+check('words sit over the image', /class="hero-scrim"/.test(html) && /class="hero-copy"/.test(html));
+check('the photo has no app UI on it', /hero-maciann\.jpg/.test(html));
+check('hero image loads first', /fetchpriority="high"/.test(html));
+
+// Four statements rather than four bordered cards with matching icons,
+// which is the SaaS default and adds a border for every idea.
+check('what it does is stated plainly', /<section class="does">/.test(html));
+check('no card kit', !/landing-card|landing-icon/.test(html));
+check('each says the situation it resolves', /The single you never saved/.test(html) && /An hour of anyone/.test(html));
+check('and covers what the app now is', /Genres Spotify won't tell you/.test(html));
+
 // The result screen carries a real number, which is the argument.
 check('the results screenshot is used', /results-modern-baseball\.jpg/.test(html));
 check('with meaningful alt text', /alt="A finished dive on Modern Baseball/.test(html));

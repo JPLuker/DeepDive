@@ -4,6 +4,22 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.54
+- Rebuilt the landing page again. The first attempt fanned three phone
+  screenshots across the hero, which is app-marketing wallpaper — the
+  default arrangement rather than a decision.
+- The page now opens the way a dive does: the artist fills the frame,
+  the words sit over the bottom of the photograph, nothing competes
+  with the picture. The product's most distinctive screen is a better
+  source for the page's design than the template is.
+- Replaced the four bordered cards with four plain statements, each
+  naming the situation it resolves rather than the feature. A rounded
+  box and a matching icon per idea is the SaaS kit; the text reads
+  faster without them.
+- The copy now covers dips and genre mixes, which the page had never
+  mentioned.
+- Removed the styles and images the rebuild orphaned.
+
 ## 2.8.53
 - Rebuilt the landing page around the app itself. The hero is three
   dive screens fanned out — a dive fills the screen with the artist,
