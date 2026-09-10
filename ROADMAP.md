@@ -64,6 +64,43 @@ artwork. Screenshots from it are ours outright.
 
 ---
 
+## Next build — cover art doesn't reach a Multi-Dip
+
+Joseph, 8 Sept: a Multi-Dip built correctly but the playlist had no
+cover.
+
+**Where to look first, in order:**
+
+1. **Is the scope actually granted?** He reconnected from the banner in
+   2.9.10, but nothing has confirmed `grantedScopes()` now contains
+   `ugc-image-upload`. If the banner is gone, it is. If it's still
+   there, the reconnect didn't take and that's the whole answer.
+2. **`maybeSetCover` returns early on `res.reused`.** A Multi-Dip is
+   built with `forceNew`, so it should never be a reuse — but if the
+   playlist matched an existing name, it would be, and the cover would
+   be skipped by design.
+3. **The album images may not be there.** `albumImages` reads
+   `t.album.images[0].url`. Catalogue tracks come from the album
+   endpoint, and whether they carry an `images` array at track level
+   has never been checked. If they don't, `buildCover` gets an empty
+   list and returns null — silently, which is how this got this far.
+4. **The upload could be failing.** Errors are swallowed to
+   `console.warn`, deliberately, so a cover never breaks a build. That
+   means the one place the answer would appear is a console nobody has
+   open.
+
+**The fix is probably not the upload.** Suspicion is (3): no images on
+the track objects. Worth logging what `albumImages` actually returns
+before changing anything — this is the fourth bug this session that
+looked like one thing and was another, and three of the four were found
+by reading the data rather than the code.
+
+**Also worth fixing regardless:** covers fail entirely silently. A
+failure the user can see would have made this a five-second diagnosis
+instead of a guess.
+
+---
+
 ## Next build — Multi-Dip screen
 
 Joseph, 8 Sept.
