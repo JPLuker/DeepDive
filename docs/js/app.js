@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.7";
+export const BUILD = "2.9.8";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1515,7 +1515,7 @@ function openIntentModal(artistName, { force = false } = {}) {
       const artist = _pendingArtist;
       close();
       if (artist && !_showBill.some((a) => (a.name || "").toLowerCase() === artist.toLowerCase())) {
-        _showBill.push({ id: artist, name: artist });
+        _showBill.push({ id: null, name: artist });
       }
       _pendingArtist = null;
       renderShow();
@@ -3768,12 +3768,18 @@ async function buildShowNow() {
   // One catalogue read per artist, which is a dive each. Said plainly
   // before it starts rather than discovered as a wait.
   const entries = [];
+  const failed = [];
   for (let i = 0; i < _showBill.length; i++) {
     const a = _showBill[i];
     prog.innerHTML = `<p class="nav-hint">Reading ${esc(a.name)} — ${i + 1} of ${_showBill.length}…</p>`;
     try {
       const res = await search.runSearch(client, a.name, {
-        libraryCache, resolvedArtist: a,
+        libraryCache,
+        // Only skip the lookup when this really is a resolved Spotify
+        // artist. An entry added from the popup carries a name and no
+        // id, and handing that over as resolved is what silently lost
+        // one of the two artists.
+        resolvedArtist: a && a.id ? a : null,
         onProgress: (pct, stage) => {
           prog.innerHTML = `<p class="nav-hint">${esc(a.name)} — ${i + 1} of ${_showBill.length} — ${esc(stage || "")} ${pct}%</p>`;
         },
@@ -3789,8 +3795,11 @@ async function buildShowNow() {
         emphasis: a.emphasis || null,
       });
     } catch (e) {
-      // One artist failing shouldn't lose the others already read.
-      prog.innerHTML = `<p class="empty-note">Couldn't read ${esc(a.name)}: ${esc(e.message || e)}</p>`;
+      // One artist failing shouldn't lose the others already read — but
+      // it also shouldn't vanish. This used to write into the progress
+      // line, which the next artist immediately overwrote, so a bill of
+      // two could quietly become a bill of one.
+      failed.push(`${a.name}: ${e.message || e}`);
     }
   }
 
@@ -3801,12 +3810,17 @@ async function buildShowNow() {
   }
 
   history.recordBill(_showBill, { lengthMins: mins });
+  for (const e of entries) {
+    if (!e.catalog.length) failed.push(`${e.artist.name}: nothing came back`);
+  }
   const show = matching.buildShow(entries, {
     totalMs: mins * 60 * 1000,
     familiar: document.getElementById("show-familiar")?.value || savedFamiliar(),
   });
   const names = show.sets.map((s) => s.artist.name);
-  prog.innerHTML = `<p class="nav-hint">${show.tracks.length} tracks, about ${Math.round(show.totalMs / 60000)} minutes — ${show.sets.map((s) => `${esc(s.artist.name)} ${Math.round(s.totalMs / 60000)}min`).join(", ")}</p>`;
+  prog.innerHTML = `
+    <p class="nav-hint">${show.tracks.length} tracks, about ${Math.round(show.totalMs / 60000)} minutes — ${show.sets.map((s) => `${esc(s.artist.name)} ${Math.round(s.totalMs / 60000)}min`).join(", ")}</p>
+    ${failed.length ? `<p class="empty-note">Left out — ${esc(failed.join("; "))}</p>` : ""}`;
 
   openCardModal({
     id: "show",

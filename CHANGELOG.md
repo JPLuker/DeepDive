@@ -4,6 +4,18 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.8
+- Fixed: a Multi-Dip started from an artist's popup lost that artist.
+  The popup has a name, not a resolved artist, and storing the name as
+  the id meant the catalogue read asked Spotify for an artist whose id
+  was "Frank Sinatra" — which fails. The artist was dropped and the
+  night was built from whoever was left.
+- Anyone left out is now named under the result. The failure used to be
+  written into the progress line, which the next artist immediately
+  overwrote, so a bill of two could quietly become a bill of one.
+- An artist whose catalogue came back empty is reported too, rather
+  than silently vanishing.
+
 ## 2.9.7
 - Playlist covers are no longer optional. The permission is part of the
   standard set, so new connections just get it. Anyone connected before

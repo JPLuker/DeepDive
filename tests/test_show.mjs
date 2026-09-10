@@ -74,7 +74,12 @@ check('artists can be removed', /data-show-rm/.test(src));
 check('it uses the shared artist search', /inputId: "artist-input"[\s\S]{0,300}_showBill\.push/.test(src));
 // One catalogue read per artist is a dive each, so it says so.
 check('the cost is stated as it runs', /Reading \$\{esc\(a\.name\)\} — \$\{i \+ 1\} of/.test(src));
-check('one artist failing keeps the rest', /Couldn't read \$\{esc\(a\.name\)\}/.test(src));
+// It kept the rest, but wrote the failure into the progress line that
+// the next artist immediately overwrote — so a bill of two quietly
+// became a bill of one with nothing said.
+check('one artist failing keeps the rest', /failed\.push\(`\$\{a\.name\}: \$\{e\.message \|\| e\}`\)/.test(src));
+check('and the ones left out are named', /Left out — /.test(src));
+check('including any that returned nothing', /nothing came back/.test(src));
 check('and nothing at all is explained', /Nothing came back for anyone on the bill/.test(src));
 
 // What you already own is a setting, not a layer — and it's the same
@@ -128,7 +133,12 @@ check('the same lineup twice is one entry', /filtered = list\.filter\(\(b\) =>/.
 // one you're going for — so it seeds the lineup.
 check('multidip is offered beside dip and dive', /id="intent-multi"/.test(shell));
 check('and says what it does', /several artists, one night/.test(shell));
-check('it seeds the bill with the searched artist', /_showBill\.push\(\{ id: artist, name: artist \}\)/.test(src));
+// The popup has a name, not a resolved artist. Storing the name as the
+// id meant it was passed as `resolvedArtist`, so the catalogue read
+// asked Spotify for an artist whose id was "Frank Sinatra" — which
+// fails, and lost that artist from the bill entirely.
+check('it seeds the bill with the searched artist', /_showBill\.push\(\{ id: null, name: artist \}\)/.test(src));
+check('and only skips the lookup for a real artist', /resolvedArtist: a && a\.id \? a : null/.test(src));
 check('without duplicating someone already on it', /!_showBill\.some\(\(a\) => \(a\.name \|\| ""\)\.toLowerCase\(\) === artist\.toLowerCase\(\)\)/.test(src));
 // One name for one feature: it was "Concert prep" on Dives and would
 // have been "Multi-Dip" in the popup.
