@@ -112,5 +112,25 @@ for (const m of html.matchAll(/img\/shots\/([a-z-]+\.jpg)" alt="[^"]*" width="(\
   check(`${file} dimensions are declared correctly`, dims && dims.w === +w && dims.h === +h);
 }
 
+// The page described DeepDive as it was two sessions ago. These are
+// the features that were on screen in the device row and never in the
+// copy.
+check('recommendations are advertised', /If you like Oliver Tree/.test(html));
+check('with their own panel', /Music you own and forgot/.test(html));
+check('the duplicate check is mentioned', /quietly liked twice/.test(html));
+
+// The hero claimed "no account, nothing installed". A Spotify Client ID
+// is required, and the setup screen is the worst place to learn that.
+check('the client id requirement is stated up front', /Client ID of your own/.test(html));
+check('and no longer claims otherwise', !/no account, nothing installed/.test(html));
+
+// Panels alternate; two flips in a row put the same side twice.
+const panels = [...html.matchAll(/<section class="(panel[^"]*)"/g)].map((m) => m[1]);
+check('panels alternate', panels.every((p, i) => (i % 2 === 1) === p.includes('flip')));
+
+// The landing page kept its own copy of styles for markup deleted from
+// the app in 2.8.25.
+check('no dead sampler styles', !/sampler-row|btn-sampler/.test(html));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

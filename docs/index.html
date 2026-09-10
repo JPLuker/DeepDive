@@ -260,15 +260,6 @@
 
   /* Sampler: a full-width accent row rather than a dashed pill. It's an
      action, not another tag in the list above it. */
-  .sampler-row { margin-top:12px; }
-  .btn-sampler {
-    display:flex; align-items:center; justify-content:center; gap:9px;
-    width:100%; padding:14px; border:none; border-radius:var(--radius);
-    background:var(--tile); color:var(--ink); font-size:14px; font-weight:600;
-    cursor:pointer; font-family:inherit; transition:background .15s ease;
-  }
-  .btn-sampler:hover { background:var(--tile-hover); }
-  .btn-sampler svg { width:15px; height:15px; color:var(--accent); }
 
   /* ---- playlist cards ---- */
   /* Gradient fills rather than outlines. Six identical bordered boxes
@@ -753,7 +744,7 @@
         <a class="btn btn-primary" href="app/">Open DeepDive</a>
         <a class="lead-link" href="#how">How it works</a>
       </div>
-      <p class="lead-note">Free, no account, nothing installed. Runs entirely in your browser.</p>
+      <p class="lead-note">Free, and nothing to install. You'll need a Spotify Client ID of your own — it's a two-minute step, and it's the reason none of your listening is ever pooled with anyone else's.</p>
 
       <div class="devices" aria-hidden="true">
         <figure class="device device-l"><img src="img/shots/app-home.jpg" alt="" width="640" height="1229" loading="eager"></figure>
@@ -775,7 +766,11 @@
       <ul class="listing-items">
         <li>
           <h3>Finds the recording, not the title</h3>
-          <p>A song reissued on an EP under a different name is the same recording. DeepDive matches on that, so the version you already love still counts as yours.</p>
+          <p>A song reissued on an EP under a different name is the same recording. DeepDive matches on that, so the version you already love still counts as yours. It can also scan your library against itself, for the songs you've quietly liked twice.</p>
+        </li>
+        <li>
+          <h3>"If you like Oliver Tree"</h3>
+          <p>DeepDive asks which artists resemble the ones you play most, then builds a mix from the ones you already own and rarely reach for. A recommendation you can press play on rather than a shopping list.</p>
         </li>
         <li>
           <h3>An hour of anyone</h3>
@@ -814,6 +809,17 @@
       </figure>
     </section>
 
+    <section class="panel">
+      <div class="panel-words">
+        <h2>Music you own and forgot</h2>
+        <p>DeepDive asks Last.fm which artists resemble the ones you play most, then crosses that against your library. What comes back isn't a list of things to go and buy — it's a mix of records you already have and haven't reached for in years.</p>
+        <p>Every mix works the same way: choose how many tracks, choose the order, look through it, then build it.</p>
+      </div>
+      <figure class="device device-still">
+        <img src="img/shots/app-recommend.jpg" alt="A recommendation mix built from artists similar to Oliver Tree, showing tracks already in the listener's library" width="640" height="1130" loading="lazy">
+      </figure>
+    </section>
+
     <section class="closing">
       <h2>Start with one artist</h2>
       <p>Pick someone you think you know well. That's usually where the surprise is.</p>
@@ -849,7 +855,7 @@
         photography — remains the property of its respective owners.
       </p>
       <p class="landing-legal">
-        Artists pictured: Leisure Hour, VIAL, Houseghost, and the artists shown in the app's own screens. Their
+        Artists pictured: Leisure Hour, VIAL, Houseghost, and the artists and album artwork shown inside the app's own screens. Their
         photographs appear here only as examples of the app in use and imply
         no endorsement.
       </p>

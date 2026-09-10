@@ -4,6 +4,23 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.61
+- Fixed: in the mix dialog, "Order" sat inline beside the last track-count
+  pill instead of starting its own row. The container carried
+  `.card-len`, which is a wrapping flex row, and the options render
+  their own rows inside it — so the labels became flex items too.
+- The landing page no longer claims "no account, nothing installed".
+  A Spotify Client ID is required; it says so, and gives the reason —
+  nothing you listen to is pooled with anyone else's.
+- Added recommendations to the page: an "If you like Oliver Tree" item
+  and a panel of its own. It was the newest feature, visible in the
+  device row, and never mentioned in the copy.
+- The duplicate check within your own library is mentioned for the
+  first time. It's the app's original premise and the page had never
+  said it existed.
+- Removed the landing page's copy of the sampler styles, dead since
+  2.8.25.
+
 ## 2.8.60
 - Swapped in the correctly cropped results screenshot, and corrected
   the height declared for it — a stale one reserves the wrong space and
