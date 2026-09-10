@@ -524,9 +524,12 @@ All three need a Last.fm key in Settings.
 - [ ] A nonsense name says Last.fm doesn't know them rather than
       failing silently
 
-## 18. Concert prep (3.0.0)
+## 18. Multidip (2.9.0–2.9.2)
 
-- [ ] Dives → Concert prep opens a screen with an artist search
+- [ ] Search an artist — the popup offers **Multidip** as well as Dip
+      and Dive, and choosing it opens the screen with that artist
+      already on the bill
+- [ ] Dives → Multidip opens the same screen empty
 - [ ] Adding artists builds a bill; the last one is marked as headlining
 - [ ] The arrows reorder the bill and the headliner marker follows
 - [ ] Remove takes one off

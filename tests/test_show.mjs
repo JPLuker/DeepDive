@@ -96,5 +96,18 @@ check('and can be reloaded', /data-bill-load/.test(src));
 check('or removed', /data-bill-rm/.test(src));
 check('the same lineup twice is one entry', /filtered = list\.filter\(\(b\) =>/.test(readFileSync(new URL('../docs/js/history.js', import.meta.url), 'utf8')));
 
+// Reachable from the artist popup, not only from a row on Dives. The
+// artist you just searched is almost always on the bill — usually the
+// one you're going for — so it seeds the lineup.
+const shell = readFileSync(new URL('../docs/app/index.html', import.meta.url), 'utf8');
+check('multidip is offered beside dip and dive', /id="intent-multi"/.test(shell));
+check('and says what it does', /several artists, one night/.test(shell));
+check('it seeds the bill with the searched artist', /_showBill\.push\(\{ id: artist, name: artist \}\)/.test(src));
+check('without duplicating someone already on it', /!_showBill\.some\(\(a\) => \(a\.name \|\| ""\)\.toLowerCase\(\) === artist\.toLowerCase\(\)\)/.test(src));
+// One name for one feature: it was "Concert prep" on Dives and would
+// have been "Multidip" in the popup.
+check('one name everywhere', !/Concert prep/.test(src));
+check('and that name is Multidip', /<h2>Multidip<\/h2>/.test(src) && /"Multidip", "Everyone on the bill/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

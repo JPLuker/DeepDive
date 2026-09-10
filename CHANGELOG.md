@@ -4,6 +4,12 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.2
+- **Multidip** is offered in the artist popup alongside Dip and Dive,
+  and starts with whoever you just searched already on the bill.
+- It was called Concert prep on the Dives page and would have been
+  Multidip in the popup. One name now: Multidip.
+
 ## 2.9.1
 - **Songs you already own** is now a setting on dips and concert prep,
   rather than a separate feature: mix them in, start with what you
@@ -23,7 +29,7 @@
 Joseph's call. 3.0 stays reserved as the final release; this is the
 rework landing, with concert prep alongside it.
 
-- **Concert prep.** Add everyone on the bill, openers first, say how
+- **Multidip.** Add everyone on the bill, openers first, say how
   long the night is, and DeepDive builds the whole evening in the order
   you'll hear it. Each artist gets a share weighted by billing — the
   headliner gets the most, the opener enough to recognise a few songs.
