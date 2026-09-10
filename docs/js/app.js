@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.2";
+export const BUILD = "2.9.3";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -307,14 +307,20 @@ function columnsAtWidth() {
  * keeps the same one because that's where you land when you came
  * specifically to dive.
  */
-function searchShellHtml() {
+/**
+ * @param options  Show the dive-options gear. Multidip has its own
+ *                 settings on the page, so the gear there would open a
+ *                 dialog about a dive that isn't about to happen —
+ *                 which is why it appeared to do nothing.
+ */
+function searchShellHtml({ options = true } = {}) {
   return `
     <div class="search-shell">
       <div class="search-pill-form">
         <input type="text" id="artist-input" placeholder="Search an artist" autocomplete="off" autofocus>
-        <button type="button" class="settings-icon-btn" id="settings-toggle-btn" aria-label="Search options" title="Search options">
+        ${options ? `<button type="button" class="settings-icon-btn" id="settings-toggle-btn" aria-label="Search options" title="Search options">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-        </button>
+        </button>` : ""}
         <button type="button" class="search-icon-btn" id="search-go-btn" aria-label="Search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
@@ -3584,21 +3590,21 @@ async function renderShow() {
   setTitle("DeepDive · Multidip");
   setActiveTab("dives");
   const rows = _showBill.map((a, i) => `
-    <div class="watchlist-row">
-      <span class="watchlist-name">
-        <span>${esc(a.name)}</span>
-        ${i === _showBill.length - 1 && _showBill.length > 1 ? `<span class="pill-reason">headlining</span>` : ""}
+    <div class="bill-row">
+      <span class="bill-pos">${i + 1}</span>
+      <span class="bill-name">${esc(a.name)}</span>
+      ${i === _showBill.length - 1 && _showBill.length > 1
+        ? `<span class="bill-tag">headlining</span>` : ""}
+      <span class="bill-actions">
+        ${i > 0 ? `<button class="bill-btn" data-show-up="${i}" aria-label="Move ${esc(a.name)} earlier on the bill">&uarr;</button>` : ""}
+        <button class="bill-btn" data-show-rm="${i}" aria-label="Remove ${esc(a.name)}">&times;</button>
       </span>
-      <div class="watchlist-actions">
-        ${i > 0 ? `<button class="btn btn-ghost btn-small" data-show-up="${i}" title="Earlier on the bill">&uarr;</button>` : ""}
-        <button class="btn btn-ghost btn-small" data-show-rm="${i}">Remove</button>
-      </div>
     </div>`).join("");
 
   root.innerHTML = `
     <div class="row-head"><h2>Multidip</h2></div>
     <p class="nav-hint" style="margin-top:0;">Add everyone on the bill, openers first. DeepDive gives each of them a share of the night — the headliner gets the most — and puts it in the order you'll hear it.</p>
-    ${searchShellHtml()}
+    ${searchShellHtml({ options: false })}
     <div id="show-bill">${rows || `<p class="empty-note">Nobody added yet.</p>`}</div>
     <div id="show-saved"></div>
     <div class="set-group set-group-spaced">

@@ -8,6 +8,7 @@
 import { readFileSync } from 'fs';
 import { buildShow } from '../docs/js/matching.js';
 const src = readFileSync(new URL('../docs/js/app.js', import.meta.url), 'utf8');
+const shell = readFileSync(new URL('../docs/app/index.html', import.meta.url), 'utf8');
 
 let pass = 0, fail = 0;
 function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } }
@@ -43,6 +44,20 @@ check('artists with no catalogue are skipped', buildShow([{ artist: { name: 'X' 
 check('there is a way in from Dives', /id="go-show"/.test(src));
 check('and a screen', /async function renderShow/.test(src));
 check('billing order is editable', /data-show-up/.test(src));
+// The bill reused .watchlist-row, which is built for a name and one
+// button — not a name, a position, an order control, a marker and a
+// button. The name and the controls overlapped.
+check('the bill has its own row markup', /class="bill-row"/.test(src));
+check('and no longer borrows the watchlist row', !/_showBill\.map\(\(a, i\) => `\s*\n\s*<div class="watchlist-row">/.test(src));
+check('the name truncates instead of pushing controls off', /\.bill-name \{[\s\S]{0,200}text-overflow:ellipsis/.test(shell));
+check('position is shown', /class="bill-pos"/.test(src));
+check('the headliner is marked', /class="bill-tag"/.test(src));
+// The gear opens dive options. On Multidip there is no dive about to
+// happen, so it did nothing at all.
+check('the shell can omit the options gear', /function searchShellHtml\(\{ options = true \} = \{\}\)/.test(src));
+check('multidip omits it', /searchShellHtml\(\{ options: false \}\)/.test(src));
+check('but keeps the search button', src.includes('` : ""}') && /id="search-go-btn"/.test(src));
+check('and the autofill list', /id="autofill-list"/.test(src));
 check('artists can be removed', /data-show-rm/.test(src));
 check('it uses the shared artist search', /inputId: "artist-input"[\s\S]{0,300}_showBill\.push/.test(src));
 // One catalogue read per artist is a dive each, so it says so.
@@ -99,7 +114,6 @@ check('the same lineup twice is one entry', /filtered = list\.filter\(\(b\) =>/.
 // Reachable from the artist popup, not only from a row on Dives. The
 // artist you just searched is almost always on the bill — usually the
 // one you're going for — so it seeds the lineup.
-const shell = readFileSync(new URL('../docs/app/index.html', import.meta.url), 'utf8');
 check('multidip is offered beside dip and dive', /id="intent-multi"/.test(shell));
 check('and says what it does', /several artists, one night/.test(shell));
 check('it seeds the bill with the searched artist', /_showBill\.push\(\{ id: artist, name: artist \}\)/.test(src));

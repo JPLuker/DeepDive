@@ -4,6 +4,19 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.3
+- Fixed the Multidip bill. It was reusing the row built for pins and
+  history — a name and one button — where it needed a name, a position,
+  an order control, a headliner marker and a remove button. The name
+  and the controls ended up on top of each other. It has its own row
+  now, and a long artist name truncates rather than pushing the buttons
+  off the edge.
+- The options gear did nothing on Multidip, because it opens settings
+  for a dive and there's no dive about to happen. It's gone from that
+  screen; the settings that matter there are already on the page.
+- Each artist shows their position on the bill, so the running order is
+  readable rather than implied.
+
 ## 2.9.2
 - **Multidip** is offered in the artist popup alongside Dip and Dive,
   and starts with whoever you just searched already on the bill.
