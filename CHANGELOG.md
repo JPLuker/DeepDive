@@ -4,6 +4,18 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.6
+- Added playlist cover art, built from the album images of the songs
+  inside the playlist. Off by default; turn it on in Settings.
+- **Nobody has to reconnect unless they want it.** Uploading needs an
+  extra Spotify permission, and asking for it up front would make every
+  existing user reconnect for something most will never use. It's asked
+  for at the moment you switch it on.
+- Covers are decoration, so nothing about them can break a build: a
+  missing permission skips silently, a failure is logged rather than
+  shown, and a playlist that already existed keeps whatever cover it
+  had.
+
 ## 2.9.5
 - Any artist on a Multi-Dip bill can be pinned to an exact number of
   songs — four for the opener you've never heard, twenty for the one

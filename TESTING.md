@@ -547,6 +547,19 @@ All three need a Last.fm key in Settings.
 - [ ] A bill with one artist works — it's just a dip
 - [ ] An artist that fails doesn't lose the others
 
+## 19. Cover art (2.9.6)
+
+- [ ] Settings → Playlist covers → Make covers. Switching it on should
+      send you through Spotify's consent screen once
+- [ ] After that, a **newly created** playlist gets a cover built from
+      its album art
+- [ ] A playlist that already existed and was updated keeps its
+      existing cover
+- [ ] With the switch off, nothing changes and no permission is asked
+      for
+- [ ] Refusing the permission at Spotify's screen doesn't break
+      anything — playlists still build, just without covers
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

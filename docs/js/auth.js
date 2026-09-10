@@ -26,6 +26,22 @@ const SCOPE = (
 );
 
 const AUTH_URL = "https://accounts.spotify.com/authorize";
+
+export const UPLOAD_SCOPE = "ugc-image-upload";
+const GRANTED_KEY = "deepdive_granted_scope";
+
+/** What Spotify actually granted, which is not always what was asked. */
+export function grantedScopes() {
+  try { return localStorage.getItem(GRANTED_KEY) || ""; } catch (e) { return ""; }
+}
+
+export function hasScope(scope) {
+  return grantedScopes().split(/\s+/).includes(scope);
+}
+
+export function rememberGranted(scope) {
+  try { localStorage.setItem(GRANTED_KEY, scope || ""); } catch (e) {}
+}
 const TOKEN_URL = "https://accounts.spotify.com/api/token";
 
 // localStorage keys
@@ -87,7 +103,17 @@ export function logout() {
 
 // Kick off login: build the PKCE challenge, stash the verifier/state,
 // and redirect out to Spotify. Returns nothing (navigates away).
-export async function beginLogin() {
+/**
+ * @param extraScopes  Scopes to request on top of the usual set.
+ *
+ * Spotify lets you re-authorise with a different scope set at any time,
+ * which means an optional feature doesn't have to force everyone to
+ * reconnect. Uploading a playlist cover needs `ugc-image-upload`;
+ * asking for it up front would make every existing user reconnect for
+ * something most of them will never use. Asked for at the point of
+ * use instead, by the person who wants it.
+ */
+export async function beginLogin({ extraScopes = "" } = {}) {
   const clientId = getClientId();
   if (!clientId) throw new Error("No Client ID set.");
 
@@ -100,7 +126,7 @@ export async function beginLogin() {
   const params = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
-    scope: SCOPE,
+    scope: extraScopes ? `${SCOPE} ${extraScopes}`.trim() : SCOPE,
     code_challenge_method: "S256",
     code_challenge: challenge,
     redirect_uri: redirectUri(),
@@ -169,6 +195,10 @@ function cleanUrl() {
 
 function storeTokens(data) {
   if (data.access_token) localStorage.setItem(LS.access, data.access_token);
+  // Spotify returns what it actually granted, which can be narrower
+  // than what was asked for. Recording it means an optional feature can
+  // tell whether it has permission instead of finding out with a 403.
+  if (data.scope !== undefined) rememberGranted(data.scope);
   // On refresh, Spotify may omit refresh_token — keep the existing one.
   if (data.refresh_token) localStorage.setItem(LS.refresh, data.refresh_token);
   const expiresInMs = (data.expires_in || 3600) * 1000;

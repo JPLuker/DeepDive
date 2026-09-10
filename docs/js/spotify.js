@@ -259,7 +259,7 @@ export class SpotifyClient {
 
   // One HTTP request. Throws SpotifyApiError on >=400 so the retry
   // wrapper can branch. Honors a hard per-attempt timeout via AbortController.
-  async _request(method, pathOrUrl, { params = null, jsonBody = null } = {}) {
+  async _request(method, pathOrUrl, { params = null, jsonBody = null, rawBody = null, contentType = null } = {}) {
     let url = pathOrUrl.startsWith("http") ? pathOrUrl : API_BASE + pathOrUrl;
     if (params) {
       const qs = new URLSearchParams(params).toString();
@@ -268,7 +268,12 @@ export class SpotifyClient {
     const token = await this._getToken();
     const headers = { Authorization: "Bearer " + token };
     const init = { method, headers };
-    if (jsonBody !== null) {
+    if (rawBody !== null && rawBody !== undefined) {
+      // Playlist covers are the one call that isn't JSON: Spotify wants
+      // raw base64 with an image content type.
+      headers["Content-Type"] = contentType || "text/plain";
+      init.body = rawBody;
+    } else if (jsonBody !== null) {
       headers["Content-Type"] = "application/json";
       init.body = JSON.stringify(jsonBody);
     }
@@ -852,6 +857,25 @@ export class SpotifyClient {
   }
 
   // -----------------------------------------------------------------
+  /**
+   * Set a playlist's cover image.
+   *
+   * The odd one out among these calls: the body is raw base64 JPEG, not
+   * JSON, and the content type says so. Spotify caps it at 256KB.
+   *
+   * Needs the `ugc-image-upload` scope, which DeepDive only asks for
+   * when someone actually wants a cover — see auth.js.
+   */
+  async setPlaylistCover(playlistId, base64Jpeg) {
+    const body = (base64Jpeg || "").replace(/^data:image\/jpeg;base64,/, "");
+    if (!body) throw new Error("No image to upload.");
+    if (body.length > 256 * 1024) throw new Error("Cover is over Spotify's 256KB limit.");
+    return this._call("PUT", `playlists/${playlistId}/images`, {
+      rawBody: body,
+      contentType: "image/jpeg",
+    });
+  }
+
   // Library writes
   // -----------------------------------------------------------------
   async likeTracks(trackIds) {

@@ -19,11 +19,12 @@ import { bestStore } from "./storage.js";
 import * as history from "./history.js";
 import * as demo from "./demo.js";
 import * as lastfm from "./lastfm.js";
+import * as cover from "./cover.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.5";
+export const BUILD = "2.9.6";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1271,6 +1272,7 @@ function openCardModal(card) {
         // playlist to reuse, so it creates one either way.
         { forceNew: simple }
       );
+      await maybeSetCover(res, list, (nameInput.value || "").trim() || card.title);
       msg.innerHTML = `Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}. <a href="${esc(res.url)}" data-spotify style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
       msg.classList.remove("hidden", "error");
       // Recorded so it can be removed from History. Only newly created
@@ -3575,6 +3577,33 @@ function familiarSelect(idAttr, value) {
   </select>`;
 }
 
+/**
+ * Give a new playlist a cover made from its own album art.
+ *
+ * Silent by design. It needs a scope most people haven't granted, it is
+ * decoration rather than the point, and a playlist without a cover is
+ * not a failure — so nothing here is allowed to interrupt or to turn a
+ * successful build into a visible error.
+ */
+async function maybeSetCover(res, tracks, title) {
+  if (!res || !res.id || res.reused) return;      // don't overwrite an existing cover
+  if (!coverArtOn() || !auth.hasScope(auth.UPLOAD_SCOPE)) return;
+  try {
+    const data = await cover.buildCover(cover.albumImages(tracks, 4), { title });
+    if (data) await client.setPlaylistCover(res.id, data);
+  } catch (e) {
+    console.warn("[DeepDive] cover art failed:", e);
+  }
+}
+
+const COVER_KEY = "deepdive_cover_art";
+function coverArtOn() {
+  try { return localStorage.getItem(COVER_KEY) === "1"; } catch (e) { return false; }
+}
+function setCoverArtOn(v) {
+  try { localStorage.setItem(COVER_KEY, v ? "1" : "0"); } catch (e) {}
+}
+
 // ---- concert prep ----
 //
 // The 3.0 feature. Several artists, one running order, weighted by
@@ -4190,6 +4219,18 @@ function renderSettings() {
       </div>
 
       <div class="set-group">
+        <div class="set-group-label">Playlist covers</div>
+        <p class="set-note">DeepDive can make a cover for each playlist it creates, from the album art of the songs inside it. Spotify needs an extra permission for this, so turning it on means reconnecting once — which is why it isn't asked for up front.</p>
+        ${settingRow({
+          title: "Make covers",
+          detail: auth.hasScope(auth.UPLOAD_SCOPE)
+            ? "Permission granted."
+            : "Needs one reconnect to grant permission.",
+          control: setSwitch('id="set-cover-art"', coverArtOn()),
+        })}
+      </div>
+
+      <div class="set-group">
         <div class="set-group-label">Last.fm</div>
         <p class="set-note">Optional but recommended. Powers genre and subgenre mixes and an artist's best hour — things Spotify no longer exposes. Leave it empty and those features simply don't appear.</p>
         <div class="set-row set-row-block">
@@ -4242,6 +4283,17 @@ function renderSettings() {
   if (uriEl) uriEl.textContent = auth.redirectUri();
   const idInput = document.getElementById("set-client-id");
   if (idInput) idInput.value = auth.getClientId();
+  const coverToggle = document.getElementById("set-cover-art");
+  if (coverToggle) coverToggle.addEventListener("change", async () => {
+    if (!coverToggle.checked) { setCoverArtOn(false); flash("Covers off."); return; }
+    if (auth.hasScope(auth.UPLOAD_SCOPE)) { setCoverArtOn(true); flash("Covers on."); return; }
+    // Turning it on is the moment to ask for the permission — the only
+    // moment anyone has a reason to grant it.
+    setCoverArtOn(true);
+    flash("Reconnecting to grant permission…");
+    await auth.beginLogin({ extraScopes: auth.UPLOAD_SCOPE });
+  });
+
   const lfmInput = document.getElementById("set-lastfm-key");
   if (lfmInput) lfmInput.value = lastfm.getKey();
   document.getElementById("set-save-lastfm")?.addEventListener("click", () => {
