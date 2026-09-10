@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.8.64.** If the build in `js/app.js` is well
+**Last updated at build 2.8.65.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -218,6 +218,14 @@ became the other half of that dialog, anyone who had ticked the box got
 no popup and no dip — the feature simply did not exist for them. When a
 dialog gains a new purpose, re-examine every way there is of not
 seeing it.
+
+**A lazy loader that reassigns its own cache will lose concurrent
+readers.** `loadCache` set `_cache` to an empty object, awaited storage,
+then replaced `_cache` with a merged one. Anything that called it during
+that await got the empty object and kept a reference to something that
+was then thrown away. Mixes starts three renders at once, so two of
+them saw an empty cache forever. Share one in-flight promise, and merge
+into the existing object rather than replacing it.
 
 **Two sources, two opposite caching rules.** Spotify's terms forbid
 retaining content beyond immediate use. Last.fm's terms *require*

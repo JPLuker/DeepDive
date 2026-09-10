@@ -130,15 +130,43 @@ export function attachStore(store) {
   _store = store;
 }
 
+let _loading = null;
+
+/**
+ * Load once, share the same promise.
+ *
+ * The previous version set `_cache` to an empty object, awaited the
+ * store, then *reassigned* `_cache` to a merged one. Mixes starts three
+ * renders at once, so the second caller saw `_cache` already set,
+ * returned the empty object immediately, and kept a reference to an
+ * object the first caller then threw away — permanently empty, for the
+ * life of the page. That is why genres asked to be found again on every
+ * reload while the data sat in IndexedDB.
+ *
+ * Now concurrent callers await the same promise, and the loaded data is
+ * merged *into* the existing object rather than replacing it, so no
+ * reference can go stale.
+ */
 async function loadCache() {
   if (_cache) return _cache;
-  _cache = { tags: {}, similar: {}, toptracks: {} };
-  if (!_store) return _cache;
-  try {
-    const saved = await _store.get(CACHE_KEY);
-    if (saved && typeof saved === "object") _cache = { ...(_cache), ...saved };
-  } catch (e) { /* a cold cache is not an error */ }
-  return _cache;
+  if (_loading) return _loading;
+  _loading = (async () => {
+    const fresh = { tags: {}, similar: {}, toptracks: {} };
+    if (_store) {
+      try {
+        const saved = await _store.get(CACHE_KEY);
+        if (saved && typeof saved === "object") {
+          for (const k of Object.keys(fresh)) {
+            if (saved[k] && typeof saved[k] === "object") Object.assign(fresh[k], saved[k]);
+          }
+        }
+      } catch (e) { /* a cold cache is not an error */ }
+    }
+    _cache = fresh;
+    _loading = null;
+    return _cache;
+  })();
+  return _loading;
 }
 
 async function saveCache() {

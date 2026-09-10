@@ -4,6 +4,16 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.8.65
+- Fixed the genres cache properly. It was a race, not a storage
+  failure: loading set the cache to an empty object, awaited the store,
+  then replaced the cache with a merged one. Mixes renders three
+  sections at once, so the second and third callers took the empty
+  object and held a reference to something the first then discarded —
+  permanently empty for the life of the page. Concurrent callers now
+  share one load, and loaded data is merged in place rather than
+  replacing the object.
+
 ## 2.8.64
 - Suggestions no longer reload every time you switch tabs. Your top
   artists and recently-played were re-read on each visit to Home or
