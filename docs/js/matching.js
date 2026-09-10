@@ -604,23 +604,48 @@ export function buildShow(entries, { totalMs = 3 * 60 * 60 * 1000, familiar = "m
   const live = (entries || []).filter((e) => e && e.catalog && e.catalog.length);
   if (!live.length) return { sets: [], tracks: [], totalMs: 0 };
 
+  // An artist can be pinned to an exact number of songs — four for the
+  // opener you've never heard, everything for the one you're there for.
+  // Pinned artists are built first and their time comes off the top;
+  // whatever is left is shared out by billing among the rest, so
+  // pinning one person doesn't silently rob the others of their share
+  // of a night that was only ever three hours long.
+  const pinned = new Map();
+  let pinnedMs = 0;
+  for (const entry of live) {
+    const n = Number(entry.songs);
+    if (!Number.isFinite(n) || n <= 0) continue;
+    const dip = buildDip(entry.catalog, entry.topTracks || [], {
+      targetMs: Number.MAX_SAFE_INTEGER, familiar, likedIds: entry.likedIds || null,
+    });
+    const tracks = dip.tracks.slice(0, n);
+    const ms = tracks.reduce((t, x) => t + (x.duration_ms || 0), 0);
+    pinned.set(entry, { tracks, ms });
+    pinnedMs += ms;
+  }
+
+  const auto = live.filter((e) => !pinned.has(e));
   // Weights rise toward the headliner. With one artist this is just a
   // dip; with four it's roughly 1 : 1.4 : 1.9 : 2.6.
-  const weights = live.map((_, i) => Math.pow(1.35, i));
-  const sum = weights.reduce((a, b) => a + b, 0);
+  const weights = auto.map((e) => Math.pow(1.35, live.indexOf(e)));
+  const sum = weights.reduce((a, b) => a + b, 0) || 1;
+  const remaining = Math.max(0, totalMs - pinnedMs);
 
-  const sets = live.map((entry, i) => {
-    const share = totalMs * (weights[i] / sum);
-    // Per artist, since the tracks you already know differ for each of
-    // them — the headliner you own three albums of, the opener none.
+  const sets = live.map((entry) => {
+    const hit = pinned.get(entry);
+    if (hit) {
+      return {
+        artist: entry.artist, headliner: entry === live[live.length - 1],
+        tracks: hit.tracks, totalMs: hit.ms, pinned: true,
+      };
+    }
+    const share = remaining * (weights[auto.indexOf(entry)] / sum);
     const dip = buildDip(entry.catalog, entry.topTracks || [], {
       targetMs: share, familiar, likedIds: entry.likedIds || null,
     });
     return {
-      artist: entry.artist,
-      headliner: i === live.length - 1,
-      tracks: dip.tracks,
-      totalMs: dip.totalMs,
+      artist: entry.artist, headliner: entry === live[live.length - 1],
+      tracks: dip.tracks, totalMs: dip.totalMs, pinned: false,
     };
   });
 

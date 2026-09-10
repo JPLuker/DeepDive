@@ -524,7 +524,14 @@ All three need a Last.fm key in Settings.
 - [ ] A nonsense name says Last.fm doesn't know them rather than
       failing silently
 
-## 18. Multi-Dip (2.9.0–2.9.2)
+## 18. Multi-Dip (2.9.0–2.9.5)
+
+- [ ] **Never run against real data** — this is the newest and most
+      expensive feature in the app, tested only against synthetic
+      catalogues. Start here, and start with two artists rather than a
+      festival bill
+- [ ] Pin one artist to a few songs — they get exactly that many, and
+      the others expand to keep the night its stated length
 
 - [ ] Search an artist — the popup offers **Multi-Dip** as well as Dip
       and Dive, and choosing it opens the screen with that artist

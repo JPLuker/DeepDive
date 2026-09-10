@@ -147,7 +147,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.4
+## Shipped since — build 2.9.5
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -587,9 +587,9 @@ the library knowledge are what make the feature worth having.
 - ~~The **library-aware layer**~~ — *shipped in 2.9.1, and Joseph was
   right that it's a setting rather than a layer: three modes on dips and
   concert prep alike, since it's the same question in both.*
-- The **per-artist song count slider** (was 3.5, festival mode). The
-  billing weighting is automatic now; letting it be overridden is the
-  obvious next step.
+- ~~The **per-artist song count**~~ — *shipped in 2.9.5. Pinned artists
+  come off the top of the night's budget so the rest still share what's
+  left, rather than the total quietly shrinking.*
 - ~~Saving a bill~~ — *shipped in 2.9.1, in history rather than its own
   store.*
 

@@ -23,7 +23,7 @@ import * as lastfm from "./lastfm.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.4";
+export const BUILD = "2.9.5";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3596,6 +3596,11 @@ async function renderShow() {
       ${i === _showBill.length - 1 && _showBill.length > 1
         ? `<span class="bill-tag">headlining</span>` : ""}
       <span class="bill-actions">
+        <select class="bill-songs" data-show-songs="${i}" aria-label="Songs for ${esc(a.name)}">
+          <option value=""${a.songs ? "" : " selected"}>Auto</option>
+          ${[2, 3, 4, 5, 6, 8, 10, 15, 20].map((n) =>
+            `<option value="${n}"${a.songs === n ? " selected" : ""}>${n} songs</option>`).join("")}
+        </select>
         ${i > 0 ? `<button class="bill-btn" data-show-up="${i}" aria-label="Move ${esc(a.name)} earlier on the bill">&uarr;</button>` : ""}
         <button class="bill-btn" data-show-rm="${i}" aria-label="Remove ${esc(a.name)}">&times;</button>
       </span>
@@ -3603,7 +3608,7 @@ async function renderShow() {
 
   root.innerHTML = `
     <div class="row-head"><h2>Multi-Dip</h2></div>
-    <p class="nav-hint" style="margin-top:0;">Add everyone on the bill, openers first. DeepDive gives each of them a share of the night — the headliner gets the most — and puts it in the order you'll hear it.</p>
+    <p class="nav-hint" style="margin-top:0;">Add everyone on the bill, openers first. DeepDive gives each of them a share of the night — the headliner gets the most — and puts it in the order you'll hear it. Set an exact number of songs for anyone you want to pin.</p>
     ${searchShellHtml({ options: false })}
     <div id="show-bill">${rows || `<p class="empty-note">Nobody added yet.</p>`}</div>
     <div id="show-saved"></div>
@@ -3639,6 +3644,13 @@ async function renderShow() {
       renderShow();
     },
   });
+
+  // Kept on the bill rather than in state elsewhere, so reordering
+  // carries the choice with the artist it belongs to.
+  root.querySelectorAll("[data-show-songs]").forEach((sel) => sel.addEventListener("change", () => {
+    const n = parseInt(sel.value, 10);
+    _showBill[+sel.dataset.showSongs].songs = Number.isFinite(n) ? n : null;
+  }));
 
   root.querySelectorAll("[data-show-rm]").forEach((b) => b.addEventListener("click", () => {
     _showBill.splice(+b.dataset.showRm, 1);
@@ -3707,6 +3719,7 @@ async function buildShowNow() {
         catalog: res.catalog_tracks || [],
         topTracks: top,
         likedIds: res.already_liked_ids || [],
+        songs: a.songs || null,
       });
     } catch (e) {
       // One artist failing shouldn't lose the others already read.

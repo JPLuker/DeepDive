@@ -1,0 +1,85 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Cover art check</title>
+<style>
+  body { margin:0; padding:24px; background:#0b0b0f; color:#e8e8ea;
+         font:15px/1.55 system-ui, sans-serif; max-width:760px; }
+  h1 { font-size:20px; margin:0 0 6px; }
+  p  { color:#9a9aa2; margin:0 0 16px; }
+  button { padding:12px 20px; font-size:15px; font-weight:600; border:none;
+           border-radius:999px; background:#0b54ff; color:#fff; cursor:pointer; }
+  pre { margin-top:18px; padding:16px; background:#16181d; border-radius:10px;
+        white-space:pre-wrap; word-break:break-word; font-size:13px; line-height:1.5; }
+  .ok  { color:#4ade80; }
+  .bad { color:#f87171; }
+  canvas { display:none; }
+</style>
+
+<h1>Custom cover art — is it possible?</h1>
+<p>
+  Two unknowns sit in front of this feature. This answers the one that
+  doesn't need anybody to reconnect their account.
+</p>
+<p>
+  <strong>Can we read album artwork back off a canvas?</strong> Building a
+  cover from four album images means drawing them and exporting the result.
+  If Spotify's image CDN doesn't send CORS headers, the canvas is tainted
+  the moment an image lands on it and the export throws — the picture is
+  visible on screen and unreadable by the page.
+</p>
+<p>
+  The other unknown isn't testable here: uploading needs the
+  <code>ugc-image-upload</code> scope, which every existing user would have
+  to reconnect to grant. That's a product decision, not a technical one.
+</p>
+
+<button id="go">Run the check</button>
+<pre id="out">Waiting.</pre>
+<canvas id="cv" width="300" height="300"></canvas>
+
+<script>
+const out = document.getElementById("out");
+const say = (html) => { out.innerHTML = html; };
+
+document.getElementById("go").addEventListener("click", async () => {
+  // A stable Spotify cover: Radiohead, In Rainbows.
+  const url = "https://i.scdn.co/image/ab67616d0000b273de3c04b5fc750b68899b20a9";
+  say("Loading an album cover from Spotify's CDN…");
+
+  const img = new Image();
+  // Without this the image loads but taints the canvas silently. With
+  // it, the load itself fails when the CDN sends no CORS headers —
+  // which is the thing worth knowing.
+  img.crossOrigin = "anonymous";
+
+  img.onload = () => {
+    const cv = document.getElementById("cv");
+    const ctx = cv.getContext("2d");
+    ctx.drawImage(img, 0, 0, 300, 300);
+    try {
+      const data = cv.toDataURL("image/jpeg", 0.9);
+      say('<span class="ok">It works.</span> The image loaded cross-origin and the canvas exported ' +
+          Math.round(data.length / 1024) + 'KB of JPEG.\n\n' +
+          'Building a cover from album art is possible. What remains is the ' +
+          'ugc-image-upload scope, which forces every existing user to reconnect — ' +
+          'a product decision rather than a technical one.');
+    } catch (e) {
+      say('<span class="bad">Canvas is tainted.</span> The image drew, but reading it back threw:\n' +
+          e.message + '\n\nSpotify serves the image without CORS headers, so a cover built ' +
+          'this way can be shown but never exported. Custom art would need images from ' +
+          'somewhere else, or generated art that uses no album covers at all.');
+    }
+  };
+
+  img.onerror = () => {
+    say('<span class="bad">Blocked.</span> The image refused to load cross-origin at all.\n\n' +
+        'Spotify\'s CDN sends no permissive CORS headers, so album art cannot be read ' +
+        'back off a canvas. A cover built from album covers is not possible in a ' +
+        'browser-only app; generated art that uses no album images still is.');
+  };
+
+  img.src = url;
+});
+</script>

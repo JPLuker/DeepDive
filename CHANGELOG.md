@@ -4,6 +4,18 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.5
+- Any artist on a Multi-Dip bill can be pinned to an exact number of
+  songs — four for the opener you've never heard, twenty for the one
+  you came to see. Everyone else still shares the night by billing.
+- Pinning someone doesn't shorten the night: their time comes off the
+  top and what's left is shared among the rest, so a three-hour evening
+  stays three hours.
+- Added a check for the custom cover art question at
+  `/DeepDive/art-check.html`. It answers whether album artwork can be
+  read back off a canvas, which decides whether the feature is possible
+  at all.
+
 ## 2.9.4
 - Multidip is spelled **Multi-Dip**.
 

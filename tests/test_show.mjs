@@ -125,5 +125,27 @@ check('and that name is Multi-Dip', /<h2>Multi-Dip<\/h2>/.test(src) && /"Multi-D
 // One spelling, or the app and its docs drift apart.
 check('no unhyphenated spelling remains', !/Multidip/.test(src) && !/Multidip/.test(shell));
 
+// Pinning an artist to an exact song count — four for the opener you've
+// never heard, everything for the one you came to see.
+const pin = (n, songs) => ({
+  artist: { name: n },
+  catalog: Array.from({ length: 40 }, (_, i) => ({ id: n[0] + i, name: n + ' S' + i, duration_ms: 210000, album: { name: 'A' } })),
+  topTracks: [], songs,
+});
+const auto = buildShow([pin('Opener'), pin('Middle'), pin('Head')], { totalMs: 3 * 3600000 });
+const withPin = buildShow([pin('Opener', 4), pin('Middle'), pin('Head')], { totalMs: 3 * 3600000 });
+
+check('a pinned artist gets exactly that many', withPin.sets[0].tracks.length === 4);
+check('and is marked as pinned', withPin.sets[0].pinned && !withPin.sets[1].pinned);
+// Pinning one person must not quietly rob the night of its length.
+check('the night stays the length asked for', Math.abs(withPin.totalMs - 3 * 3600000) < 12 * 60000);
+check('the freed time goes to the others', withPin.sets[2].tracks.length > auto.sets[2].tracks.length);
+check('billing order still holds among the unpinned', withPin.sets[2].totalMs > withPin.sets[1].totalMs);
+check('pinning everyone still builds', buildShow([pin('A', 3), pin('B', 3)], { totalMs: 3600000 }).tracks.length === 6);
+
+check('the control is on each bill row', /data-show-songs/.test(src));
+check('the choice rides with the artist', /_showBill\[\+sel\.dataset\.showSongs\]\.songs/.test(src));
+check('and reaches the builder', /songs: a\.songs \|\| null/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

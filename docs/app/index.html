@@ -472,7 +472,12 @@
     color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, transparent);
     padding:3px 8px; border-radius:999px;
   }
-  .bill-actions { flex:0 0 auto; display:flex; gap:6px; }
+  .bill-actions { flex:0 0 auto; display:flex; align-items:center; gap:6px; }
+  .bill-songs {
+    font-family:inherit; font-size:13px; padding:6px 8px;
+    border-radius:999px; border:1px solid var(--line);
+    background:var(--surface); color:var(--ink); cursor:pointer;
+  }
   .bill-btn {
     width:34px; height:34px; border-radius:50%;
     border:1px solid var(--line); background:none; color:var(--muted);
