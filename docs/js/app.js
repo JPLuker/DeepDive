@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.14";
+export const BUILD = "2.9.15";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -2199,6 +2199,18 @@ async function runSearchWithOptions(artistName, opts) {
   if (opening) { _haveArtistPhoto = true; addDiveImage(opening); }
   else if (artist.id) fetchArtistImages(artist.id);
 
+  // A dip wants an hour, not a catalogue. Last.fm knows which tracks
+  // matter and a search turns each into something playable — roughly
+  // eighteen requests instead of the forty to eighty a catalogue read
+  // costs, on a quota group that is usually still answering when the
+  // album endpoints have stopped.
+  if (opts && opts.dip) {
+    const done = await runDipViaSearch(artist, artistName, opts);
+    if (done) return;
+    // Last.fm knew nothing about them; fall through to the catalogue.
+    updateDiveScreen(5, "Reading their catalogue instead…");
+  }
+
   try {
     const result = await search.runSearch(client, artistName, {
       ...opts,
@@ -3741,6 +3753,107 @@ async function maybeSetCover(res, tracks, title) {
 }
 
 
+/**
+ * A dip without reading the catalogue.
+ *
+ * Last.fm says which tracks matter; Spotify only has to make each one
+ * playable. One request per track, and only as many tracks as the
+ * target length needs — an hour is about eighteen, against the forty to
+ * eighty releases a catalogue read costs for the same artist.
+ *
+ * It also uses a different quota group from album tracklists, which is
+ * the group that runs out first.
+ *
+ * Falls back to null when Last.fm has nothing, so the caller can use
+ * the catalogue instead rather than producing an empty mix.
+ */
+async function dipViaSearch(artistName, { targetMs, familiar, likedIds, onProgress }) {
+  let top = [];
+  try {
+    if (lastfm.hasKey()) top = await lastfm.topTracks(artistName, 50);
+  } catch (e) { /* handled by the empty check below */ }
+  if (!top.length) return null;
+
+  const liked = likedIds instanceof Set ? likedIds : new Set(likedIds || []);
+  const picked = [];
+  const seen = new Set();
+  let totalMs = 0;
+  let searched = 0;
+
+  for (const t of top) {
+    if (totalMs >= targetMs) break;
+    // Stop hunting long before the list runs out: past the top thirty a
+    // "top track" is barely played, and every one costs a request.
+    if (searched >= 30) break;
+    searched++;
+    if (onProgress) onProgress(searched, Math.min(top.length, 30), totalMs, targetMs);
+
+    const found = await client.searchTrack(artistName, t.name);
+    if (!found || !found.id) continue;
+
+    const key = matching.normalizeTitle(found.name);
+    if (seen.has(key)) continue;       // a remaster and its original are one song
+    seen.add(key);
+
+    const isLiked = liked.has(found.id);
+    if (familiar === "new-only" && isLiked && liked.size) continue;
+
+    picked.push({ track: found, liked: isLiked });
+    totalMs += found.duration_ms || 0;
+  }
+
+  if (!picked.length) return null;
+
+  // Popularity order is already Last.fm's order. Only the familiarity
+  // setting reorders it.
+  let tracks = picked.map((p) => p.track);
+  if (familiar === "known-first" && liked.size) {
+    tracks = [...picked.filter((p) => p.liked), ...picked.filter((p) => !p.liked)]
+      .map((p) => p.track);
+  }
+  return { tracks, totalMs, searched };
+}
+
+/**
+ * A dip built from search rather than a catalogue read.
+ *
+ * Returns true when it produced something. False means Last.fm had
+ * nothing for this artist and the caller should fall back.
+ */
+async function runDipViaSearch(artist, artistName, opts) {
+  let likedIds = new Set();
+  try {
+    const cached = await libraryCache.peek();
+    for (const t of cached || []) if (t && t.id) likedIds.add(t.id);
+  } catch (e) { /* a dip without the duplicate check is still a dip */ }
+
+  const built = await dipViaSearch(artistName, {
+    targetMs: 60 * 60 * 1000,
+    familiar: savedFamiliar(),
+    likedIds,
+    onProgress: (n, of, ms, target) => {
+      updateDiveScreen(
+        Math.min(95, Math.round((ms / target) * 100)),
+        `Finding their best hour… ${n} of ${of} checked`
+      );
+    },
+  });
+  if (!built) return false;
+
+  hideDiveScreen();
+  const owned = built.tracks.filter((t) => likedIds.has(t.id)).length;
+  openCardModal({
+    id: `dip-${artist.id || artistName}`,
+    title: `${artist.name || artistName}, in an hour`,
+    subtitle: `${built.tracks.length} tracks, about ${Math.round(built.totalMs / 60000)} minutes, most played first${owned ? ` · you already own ${owned}` : ""}`,
+    simple: true,
+    name: `DeepDive · ${artist.name || artistName} in an hour`,
+    count: built.tracks.length,
+    tracks: built.tracks,
+  });
+  return true;
+}
+
 // ---- concert prep ----
 //
 // The 3.0 feature. Several artists, one running order, weighted by
@@ -3851,46 +3964,55 @@ async function buildShowNow() {
   let quotaStopped = false;
   showDiveScreen("Building your night…", () => { cancelled = true; });
 
+  // Shares are worked out first so each artist is only searched as far
+  // as their own slice of the night needs. Reading three catalogues to
+  // keep three hours was the most expensive thing in the app; this is
+  // about one request per track kept.
+  const pinnedCount = _showBill.filter((a) => a.songs).length;
+  const autoCount = Math.max(1, _showBill.length - pinnedCount);
+  const perArtistMs = (mins * 60 * 1000) / Math.max(1, _showBill.length);
+
+  let likedIds = new Set();
+  try {
+    const cached = await libraryCache.peek();
+    for (const t of cached || []) if (t && t.id) likedIds.add(t.id);
+  } catch (e) { /* the duplicate check is a bonus, not a requirement */ }
+
   for (let i = 0; i < _showBill.length; i++) {
     if (cancelled) break;
     const a = _showBill[i];
     setDiveHeading(a.name);
+
+    // Weighting is applied by buildShow afterwards; this only decides
+    // how deep to search, so a "More" artist isn't cut short.
+    const weight = a.emphasis === "more" ? 2 : (a.emphasis === "less" ? 0.5 : 1);
+    const wantMs = a.songs
+      ? a.songs * 4 * 60 * 1000
+      : perArtistMs * weight * 1.4;   // headroom, since buildShow trims
+
     try {
-      const res = await search.runSearch(client, a.name, {
-        libraryCache,
-        // Only skip the lookup when this really is a resolved Spotify
-        // artist. An entry added from the popup carries a name and no
-        // id, and handing that over as resolved is what silently lost
-        // one of the two artists.
-        resolvedArtist: a && a.id ? a : null,
-        onProgress: (pct, stage) => {
-          // The bill's overall progress, not this artist's — one of
-          // three being 100% done says nothing about the night.
-          const overall = Math.round(((i + pct / 100) / _showBill.length) * 100);
-          updateDiveScreen(overall, `${a.name} — ${i + 1} of ${_showBill.length} — ${stage || ""}`);
+      const built = await dipViaSearch(a.name, {
+        targetMs: wantMs,
+        familiar: document.getElementById("show-familiar")?.value || savedFamiliar(),
+        likedIds,
+        onProgress: (n, of) => {
+          const overall = Math.round(((i + n / of) / _showBill.length) * 100);
+          updateDiveScreen(overall, `${a.name} — ${i + 1} of ${_showBill.length} — ${n} of ${of} checked`);
         },
-        onArtwork: (url) => addDiveImage(url),
       });
-      let top = [];
-      try { if (lastfm.hasKey()) top = await lastfm.topTracks(a.name, 50); } catch (e) {}
-      entries.push({
-        artist: a,
-        catalog: res.catalog_tracks || [],
-        topTracks: top,
-        likedIds: res.already_liked_ids || [],
-        songs: a.songs || null,
-        emphasis: a.emphasis || null,
-      });
+      if (built && built.tracks.length) {
+        entries.push({
+          artist: a,
+          catalog: built.tracks,
+          topTracks: built.tracks.map((t) => ({ name: t.name })),
+          likedIds,
+          songs: a.songs || null,
+          emphasis: a.emphasis || null,
+        });
+        continue;
+      }
+      failed.push(`${a.name} — Last.fm doesn't know them well enough`);
     } catch (e) {
-      // One artist failing shouldn't lose the others already read — but
-      // it also shouldn't vanish. This used to write into the progress
-      // line, which the next artist immediately overwrote, so a bill of
-      // two could quietly become a bill of one.
-      //
-      // Quota and rate limits are different from an artist simply not
-      // working: every remaining artist will fail the same way, so
-      // grinding through them wastes minutes to arrive at the same
-      // answer. Stop and say which ones never got read.
       const quota = e && (e.quotaExhausted || e.status === 429);
       failed.push(`${a.name} — ${quota ? "Spotify's limit was reached" : (e.message || e)}`);
       if (quota) {

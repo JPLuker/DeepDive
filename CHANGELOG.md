@@ -4,6 +4,23 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.15
+- **Dips and Multi-Dips no longer read an artist's catalogue.** Last.fm
+  already knows which tracks matter, so Spotify only has to make each
+  one playable: roughly eighteen requests for an hour, against the
+  forty to eighty releases a catalogue read costs for the same artist.
+- It uses a different quota group, too. Album tracklists are the first
+  thing to run out; search is usually still answering when they've
+  stopped — which is exactly when you want a dip.
+- A Multi-Dip only searches as deep as each artist's share of the night
+  needs, so a three-artist bill went from the most expensive thing in
+  the app to one of the cheapest.
+- The duplicate check survives: search results carry ISRC, so a dip
+  still knows what you already own and the familiarity setting still
+  works.
+- An artist Last.fm doesn't know falls back to the catalogue rather
+  than producing nothing.
+
 ## 2.9.14
 - A Multi-Dip stopped by Spotify's limit now stops properly. It used to
   keep going after the limit was hit, failing each remaining artist in

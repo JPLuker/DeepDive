@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.14.** If the build in `js/app.js` is well
+**Last updated at build 2.9.15.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -244,6 +244,14 @@ that await got the empty object and kept a reference to something that
 was then thrown away. Mixes starts three renders at once, so two of
 them saw an empty cache forever. Share one in-flight promise, and merge
 into the existing object rather than replacing it.
+
+**Spend the cheaper source first.** Dips read an entire catalogue to
+keep an hour of it, because they were built on the dive pipeline that
+already existed rather than on what the job needed. Last.fm names the
+tracks for nothing and a search makes each playable — about eighteen
+requests against forty to eighty — on a quota group that survives
+longer. When a feature is expensive, check whether it's spending the
+right currency before optimising how much it spends.
 
 **Two sources, two opposite caching rules.** Spotify's terms forbid
 retaining content beyond immediate use. Last.fm's terms *require*

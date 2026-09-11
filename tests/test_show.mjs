@@ -82,7 +82,7 @@ check('it uses the shared artist search', /inputId: "artist-input"[\s\S]{0,300}_
 check('the cost is stated as it runs', src.includes('${a.name} — ${i + 1} of ${_showBill.length}'));
 check('on the full screen', src.includes('showDiveScreen("Building your night…"'));
 check('and it can be stopped', src.includes('() => { cancelled = true; }'));
-check('progress is the bill, not one artist', src.includes('(i + pct / 100) / _showBill.length'));
+check('progress is the bill, not one artist', src.includes('(i + n / of) / _showBill.length'));
 // It kept the rest, but wrote the failure into the progress line that
 // the next artist immediately overwrote — so a bill of two quietly
 // became a bill of one with nothing said.
@@ -154,7 +154,14 @@ check('and says what it does', /several artists, one night/.test(shell));
 // id meant it was passed as `resolvedArtist`, so the catalogue read
 // asked Spotify for an artist whose id was "Frank Sinatra" — which
 // fails, and lost that artist from the bill entirely.
-check('and only skips the lookup for a real artist', /resolvedArtist: a && a\.id \? a : null/.test(src));
+// Multi-Dip no longer reads catalogues at all: Last.fm names the
+// tracks and one search each makes them playable. Three catalogue
+// reads — the most expensive thing in the app — became about one
+// request per track kept, on a quota group that is usually still
+// answering when the album endpoints have stopped.
+check('a bill is built from search, not catalogues', /await dipViaSearch\(a\.name, \{/.test(src));
+check('and only searches as deep as the share needs', /perArtistMs \* weight \* 1\.4/.test(src));
+check('a pinned artist searches for their own count', /a\.songs \* 4 \* 60 \* 1000/.test(src));
 check('the inline search still refuses duplicates', /!_showBill\.some\(\(a\) => a\.id === it\.id\)/.test(src));
 // One name for one feature: it was "Concert prep" on Dives and would
 // have been "Multi-Dip" in the popup.

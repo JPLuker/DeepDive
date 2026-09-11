@@ -488,6 +488,12 @@ All three need a Last.fm key in Settings.
 - [ ] The search bar's options icon still opens straight to the options,
       with no artist chosen
 - [ ] Running a dip produces an hour-ish mix, best-known tracks first
+- [ ] **A dip is now cheap** — it should finish in seconds and work
+      even when a dive won't, since it uses search rather than album
+      tracklists
+- [ ] Check the tracks are the right artist; search can return covers
+- [ ] An obscure artist Last.fm doesn't know falls back to a catalogue
+      read
 - [ ] A deluxe edition doesn't put the same song in twice
 - [ ] With the Last.fm key removed, a dip still builds — just ordered by
       catalogue rather than popularity

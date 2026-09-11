@@ -158,6 +158,16 @@ export function limitedUntil() {
   }
 }
 
+/** Loose comparison for matching names across two services. */
+function normalizeForMatch(v) {
+  return (v || "")
+    .toLowerCase()
+    .replace(/\(.*?\)|\[.*?\]/g, "")           // (Remastered 2011), [Live]
+    .replace(/\s+-\s+.*$/, "")                  // " - Radio Edit"
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
 export class SpotifyClient {
   constructor(getToken) {
     this._getToken = getToken;
@@ -547,6 +557,51 @@ export class SpotifyClient {
       if (a.name.toLowerCase() === name.toLowerCase()) return a;
     }
     return items[0];
+  }
+
+  /**
+   * Find one playable track by name and artist.
+   *
+   * The cheap route to a dip. Reading an artist's whole catalogue costs
+   * one request per release — eighty for a prolific act — and then
+   * throws nearly all of it away to keep an hour. Last.fm already knows
+   * which tracks matter, so this only has to turn each name into
+   * something Spotify can play: one request per track, and only for as
+   * many tracks as the hour needs.
+   *
+   * It also lands on a different quota group. When album tracklists are
+   * refusing with QUOTA_EXCEEDED, search is usually still answering,
+   * which is precisely when someone wants a dip.
+   *
+   * Returns a full track object — including `external_ids.isrc`, so the
+   * duplicate check against the library still works.
+   */
+  async searchTrack(artistName, title) {
+    if (!artistName || !title) return null;
+    // Field-scoped rather than a bare string: "Blackout" alone returns
+    // whoever is most popular, not the artist asked for.
+    const q = `track:"${title.replace(/"/g, "")}" artist:"${artistName.replace(/"/g, "")}"`;
+    let items = [];
+    try {
+      const res = await this.get("search", { q, type: "track", limit: 5 });
+      items = (res.tracks && res.tracks.items) || [];
+    } catch (e) {
+      if (e && (e.quotaExhausted || e.status === 429)) throw e;
+      return null;   // one unfindable track shouldn't end a dip
+    }
+    if (!items.length) return null;
+
+    const want = normalizeForMatch(title);
+    const wantArtist = normalizeForMatch(artistName);
+    // Spotify will happily return a cover or a different artist's song
+    // with the same title, so the credit has to be checked rather than
+    // trusting the ranking.
+    const byArtist = items.filter((t) =>
+      (t.artists || []).some((a) => normalizeForMatch(a.name) === wantArtist));
+    const pool = byArtist.length ? byArtist : [];
+    if (!pool.length) return null;
+
+    return pool.find((t) => normalizeForMatch(t.name) === want) || pool[0];
   }
 
   async searchArtists(query, limit = 6) {
