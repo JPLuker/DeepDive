@@ -65,7 +65,17 @@ check('with a reconnect that acts', /id="scope-reconnect"/.test(src) && /await a
 check('an unrecorded scope set still warns', !/if \(!auth\.grantedScopes\(\)\) return "";/.test(src));
 check('nothing is said to someone not connected', /if \(!auth\.isLoggedIn\(\)\) return "";/.test(src));
 check('and it can be put off for the session', /id="scope-dismiss"/.test(src));
-check('failure never surfaces as an error', /console\.warn\("\[DeepDive\] cover art failed:"/.test(src));
+// Silence is why a missing cover went unexplained for three builds —
+// the only account of it was a console nobody has open. It still must
+// not turn a built playlist into a failure, so it reports without
+// throwing.
+check('a failure is reported, not thrown', /DD-COVER/.test(src));
+check('and the playlist still counts as made', /Playlist made, but the cover didn't upload/.test(src));
+
+// Catalogue tracks are trimmed during the release read and carry a
+// single album.image_url; library tracks carry album.images[]. Reading
+// only the second meant a Multi-Dip found no art at all.
+check('both album shapes are read', /al\.image_url/.test(cov) && /al\.images\[0\]/.test(cov));
 // Replacing a cover someone already set would be worse than not having one.
 check('an existing playlist keeps its cover', /if \(!res \|\| !res\.id \|\| res\.reused\) return;/.test(src));
 

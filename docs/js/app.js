@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.12";
+export const BUILD = "2.9.13";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3381,6 +3381,31 @@ async function renderGenreSection() {
   // offset keeps them visually distinct from the row above without
   // being a different kind of object.
   const row = document.getElementById("genre-cards");
+  paintGenreCards(row, cards);
+
+  const gs0 = document.getElementById("genre-search");
+  if (gs0) {
+    // Repaint the cards only. Re-rendering the section rebuilt the
+    // input, and a rebuilt input loses focus — which on a phone closes
+    // the keyboard after every letter.
+    gs0.addEventListener("input", () => {
+      _genreQuery = gs0.value;
+      const q2 = _genreQuery.trim().toLowerCase();
+      const next = q2 ? everyGenre.filter((c) => c.title.toLowerCase().includes(q2)) : everyGenre;
+      paintGenreCards(row, (q2 || _genresExpanded) ? next : next.slice(0, 14));
+    });
+  }
+
+  wireGenreControls(artists);
+}
+
+/** Draws the genre cards into a container and wires them. */
+function paintGenreCards(row, cards) {
+  if (!row) return;
+  if (!cards.length) {
+    row.innerHTML = `<p class="empty-note">No genre matches that.</p>`;
+    return;
+  }
   row.innerHTML = cards.map((c, i) => `
     <button class="pcard" data-genre-card="${esc(c.id)}" style="--h:${(20 + i * 53) % 360};">
       <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
@@ -3390,19 +3415,10 @@ async function renderGenreSection() {
   row.querySelectorAll("[data-genre-card]").forEach((btn) =>
     btn.addEventListener("click", () =>
       openCardModal(cards.find((c) => c.id === btn.dataset.genreCard))));
+}
 
-  const gs = document.getElementById("genre-search");
-  if (gs) {
-    gs.addEventListener("input", () => {
-      _genreQuery = gs.value;
-      renderGenreSection();
-      // Re-rendering replaces the field, so put the cursor back where
-      // it was rather than dropping focus on every keystroke.
-      const again = document.getElementById("genre-search");
-      if (again) { again.focus(); again.setSelectionRange(again.value.length, again.value.length); }
-    });
-  }
-
+/** The section's own controls, bound once per render. */
+function wireGenreControls(artists) {
   document.getElementById("genre-expand")?.addEventListener("click", () => {
     _genresExpanded = true;
     renderGenreSection();
@@ -3413,7 +3429,24 @@ async function renderGenreSection() {
   });
   document.getElementById("genre-more")?.addEventListener("click", async () => {
     const rest = artists.filter((a) => !_genreTags.has(a.name.trim().toLowerCase()));
-    await fetchGenreTags(rest);
+    if (!rest.length) return;
+    showDiveScreen("Finding your genres…", cancelGenreFetch);
+    setDiveHeading("Finding your genres");
+    try {
+      await fetchGenreTags(rest, (done, total) => {
+        updateDiveScreen(
+          Math.round((done / total) * 100),
+          `Asking Last.fm about ${total} more artists… ${done} done`
+        );
+      });
+    } catch (e) {
+      hideDiveScreen();
+      flash(e.suspended
+        ? "Last.fm rejected the key. Check it in Settings."
+        : `Last.fm couldn't be reached: ${e.message || e}`, true);
+      return;
+    }
+    hideDiveScreen();
     renderGenreSection();
   });
 }
@@ -3688,10 +3721,22 @@ async function maybeSetCover(res, tracks, title) {
 
   if (!auth.hasScope(auth.UPLOAD_SCOPE)) return;
   try {
-    const data = await cover.buildCover(cover.albumImages(tracks, 4), { title });
-    if (data) await client.setPlaylistCover(res.id, data);
+    const urls = cover.albumImages(tracks, 4);
+    if (!urls.length) {
+      console.warn("[DeepDive] no album art on these tracks, so no cover");
+      return;
+    }
+    const data = await cover.buildCover(urls, { title });
+    if (!data) {
+      flash("Couldn't build a cover for that one — DD-COVER.", true);
+      return;
+    }
+    await client.setPlaylistCover(res.id, data);
   } catch (e) {
+    // Reported, not thrown: a cover is decoration and must never turn a
+    // built playlist into a failure.
     console.warn("[DeepDive] cover art failed:", e);
+    flash(`Playlist made, but the cover didn't upload — DD-COVER: ${e.message || e}`, true);
   }
 }
 
@@ -3716,11 +3761,8 @@ async function renderShow() {
       <span class="bill-actions">
         <button class="bill-tag-btn${a.emphasis === "less" ? " on" : ""}" data-show-emph="${i}" data-emph="less">Less</button>
         <button class="bill-tag-btn${a.emphasis === "more" ? " on" : ""}" data-show-emph="${i}" data-emph="more">More</button>
-        <select class="bill-songs" data-show-songs="${i}" aria-label="Songs for ${esc(a.name)}">
-          <option value=""${a.songs ? "" : " selected"}>Auto</option>
-          ${[2, 3, 4, 5, 6, 8, 10, 15, 20].map((n) =>
-            `<option value="${n}"${a.songs === n ? " selected" : ""}>${n}</option>`).join("")}
-        </select>
+        ${a.songs ? `<button class="bill-tag-btn on" data-show-songs-open="${i}">${a.songs} songs</button>` : ""}
+        <button class="bill-btn" data-show-songs-open="${i}" aria-label="Set a song count for ${esc(a.name)}" title="Set a song count">#</button>
         <button class="bill-btn" data-show-rm="${i}" aria-label="Remove ${esc(a.name)}">&times;</button>
       </span>
     </div>`).join("");
@@ -3773,9 +3815,17 @@ async function renderShow() {
     renderShow();
   }));
 
-  root.querySelectorAll("[data-show-songs]").forEach((sel) => sel.addEventListener("change", () => {
-    const n = parseInt(sel.value, 10);
-    _showBill[+sel.dataset.showSongs].songs = Number.isFinite(n) ? n : null;
+  root.querySelectorAll("[data-show-songs-open]").forEach((b) => b.addEventListener("click", () => {
+    const i = +b.dataset.showSongsOpen;
+    const a = _showBill[i];
+    const answer = prompt(
+      `How many songs by ${a.name}?\n\nLeave blank for a share of the night worked out from the More and Less tags.`,
+      a.songs || ""
+    );
+    if (answer === null) return;
+    const n = parseInt(answer, 10);
+    a.songs = Number.isFinite(n) && n > 0 ? n : null;
+    renderShow();
   }));
 
   root.querySelectorAll("[data-show-rm]").forEach((b) => b.addEventListener("click", () => {

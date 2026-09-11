@@ -178,7 +178,10 @@ check('unpinned artists still share what is left', withPin.sets[1].totalMs > 0 &
 check('pinning everyone still builds', buildShow([pin('A', 3), pin('B', 3)], { totalMs: 3600000 }).tracks.length === 6);
 
 check('the control is on each bill row', /data-show-songs/.test(src));
-check('the choice rides with the artist', /_showBill\[\+sel\.dataset\.showSongs\]\.songs/.test(src));
+check('the choice rides with the artist', /a\.songs = Number\.isFinite\(n\) && n > 0 \? n : null;/.test(src));
+check('the count is behind a button', /data-show-songs-open/.test(src));
+check('and only shown once set', /\$\{a\.songs\} songs<\/button>/.test(src));
+check('no bare Auto dropdown', !/>Auto<\/option>/.test(src));
 check('and reaches the builder', /songs: a\.songs \|\| null/.test(src));
 
 // Naming took the last name on the list and called them the headliner.

@@ -64,54 +64,6 @@ artwork. Screenshots from it are ours outright.
 
 ---
 
-## Next build — cover art doesn't reach a Multi-Dip
-
-Joseph, 8 Sept: a Multi-Dip built correctly but the playlist had no
-cover.
-
-**Where to look first, in order:**
-
-1. **Is the scope actually granted?** He reconnected from the banner in
-   2.9.10, but nothing has confirmed `grantedScopes()` now contains
-   `ugc-image-upload`. If the banner is gone, it is. If it's still
-   there, the reconnect didn't take and that's the whole answer.
-2. **`maybeSetCover` returns early on `res.reused`.** A Multi-Dip is
-   built with `forceNew`, so it should never be a reuse — but if the
-   playlist matched an existing name, it would be, and the cover would
-   be skipped by design.
-3. **The album images may not be there.** `albumImages` reads
-   `t.album.images[0].url`. Catalogue tracks come from the album
-   endpoint, and whether they carry an `images` array at track level
-   has never been checked. If they don't, `buildCover` gets an empty
-   list and returns null — silently, which is how this got this far.
-4. **The upload could be failing.** Errors are swallowed to
-   `console.warn`, deliberately, so a cover never breaks a build. That
-   means the one place the answer would appear is a console nobody has
-   open.
-
-**The fix is probably not the upload.** Suspicion is (3): no images on
-the track objects. Worth logging what `albumImages` actually returns
-before changing anything — this is the fourth bug this session that
-looked like one thing and was another, and three of the four were found
-by reading the data rather than the code.
-
-**Also worth fixing regardless:** covers fail entirely silently. A
-failure the user can see would have made this a five-second diagnosis
-instead of a guess.
-
----
-
-## Multi-Dip screen — done in 2.9.12
-
-Saved bills removed, and the build moved onto the full-bleed dive
-screen along with "If you like…".
-
-**Still outstanding from that note:** the per-artist song count still
-reads as "Auto" followed by bare numbers. Move it behind the row so the
-default is name, More, Less, remove.
-
----
-
 ## Permissions are checked at load — done in 2.9.10
 
 The cover-upload scope is now reported by a banner when the app opens,
@@ -178,6 +130,19 @@ version was too much ceremony, and the ceremony was then left sitting
 next to it.
 
 Failing that, at minimum: label it, and say what Auto means.
+
+---
+
+## Done, 8 Sept
+
+Cover art reached no Multi-Dip because catalogue tracks carry a single
+`album.image_url` while library tracks carry `album.images[]` — the
+builder read only the second. Suspicion (3) in the note, and found by
+reading what the data actually contains rather than the code around it.
+
+Saved bills removed, Multi-Dip and the Last.fm fetches moved to the
+full-bleed screen, the genre search stopped closing the keyboard, and
+the per-artist song count moved behind a button.
 
 ---
 
@@ -264,7 +229,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.12
+## Shipped since — build 2.9.13
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:

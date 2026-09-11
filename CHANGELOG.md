@@ -4,6 +4,22 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.13
+- **Found the cover art bug.** Catalogue tracks carry a single
+  `album.image_url`; library tracks carry `album.images[]`. The cover
+  builder only read the second, so a Multi-Dip found no artwork at all
+  and gave up without a word. Both shapes are read now.
+- Cover failures are visible. They were logged to a console nobody has
+  open, which is why this went three builds unexplained. A cover still
+  can't turn a built playlist into a failure — it reports and moves on.
+- "Look up N more artists" now uses the full screen. It ran with no
+  progress display at all, which was worse than the first fetch.
+- Searching genres no longer closes the keyboard on every letter. The
+  whole section was re-rendered per keystroke, which rebuilt the input
+  and lost focus; only the cards repaint now.
+- The per-artist song count is behind a button and only shown once set,
+  so a bill row reads name, More, Less, remove.
+
 ## 2.9.12
 - Fixed: pressing Multi-Dip on a new artist added them to the bill from
   last time. Coming in from an artist means "build a night around this

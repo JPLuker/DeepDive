@@ -24,8 +24,15 @@ export function albumImages(tracks, limit = 4) {
   const out = [];
   for (const t of tracks || []) {
     const al = t && t.album;
-    const url = al && al.images && al.images.length
-      ? (al.images[0] && al.images[0].url) : null;
+    // Two shapes reach here. Library tracks arrive from Spotify whole
+    // and carry `album.images[]`. Catalogue tracks are trimmed during
+    // the release read and carry a single `album.image_url`. Reading
+    // only the first meant a Multi-Dip found no art at all, and the
+    // cover was skipped without a word.
+    const url = al
+      ? (al.image_url
+        || (al.images && al.images.length ? (al.images[0] && al.images[0].url) : null))
+      : null;
     if (!url || seen.has(url)) continue;
     seen.add(url);
     out.push(url);
