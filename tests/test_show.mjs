@@ -86,8 +86,12 @@ check('progress is the bill, not one artist', src.includes('(i + pct / 100) / _s
 // It kept the rest, but wrote the failure into the progress line that
 // the next artist immediately overwrote — so a bill of two quietly
 // became a bill of one with nothing said.
-check('one artist failing keeps the rest', /failed\.push\(`\$\{a\.name\}: \$\{e\.message \|\| e\}`\)/.test(src));
-check('and the ones left out are named', /Left out — /.test(src));
+check('one artist failing keeps the rest', /failed\.push\(`\$\{a\.name\} — /.test(src));
+check('and the ones left out are named', /Some of the bill is missing/.test(src));
+check('quota stops the run', /if \(quota\) \{/.test(src));
+check('and names the artists never attempted', /not read, the limit was already reached/.test(src));
+check('the raw api url is not shown', !/Left out — \$\{esc\(failed/.test(src));
+check('a short bill is called out, not just listed', /so the night is shared between fewer people/.test(src));
 check('including any that returned nothing', /nothing came back/.test(src));
 check('and nothing at all is explained', /Nothing came back for anyone on the bill/.test(src));
 

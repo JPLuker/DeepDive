@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.13";
+export const BUILD = "2.9.14";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3846,7 +3846,9 @@ async function buildShowNow() {
   // before it starts rather than discovered as a wait.
   const entries = [];
   const failed = [];
+  const _billSize = _showBill.length;
   let cancelled = false;
+  let quotaStopped = false;
   showDiveScreen("Building your night…", () => { cancelled = true; });
 
   for (let i = 0; i < _showBill.length; i++) {
@@ -3884,7 +3886,20 @@ async function buildShowNow() {
       // it also shouldn't vanish. This used to write into the progress
       // line, which the next artist immediately overwrote, so a bill of
       // two could quietly become a bill of one.
-      failed.push(`${a.name}: ${e.message || e}`);
+      //
+      // Quota and rate limits are different from an artist simply not
+      // working: every remaining artist will fail the same way, so
+      // grinding through them wastes minutes to arrive at the same
+      // answer. Stop and say which ones never got read.
+      const quota = e && (e.quotaExhausted || e.status === 429);
+      failed.push(`${a.name} — ${quota ? "Spotify's limit was reached" : (e.message || e)}`);
+      if (quota) {
+        for (const rest of _showBill.slice(i + 1)) {
+          failed.push(`${rest.name} — not read, the limit was already reached`);
+        }
+        quotaStopped = true;
+        break;
+      }
     }
   }
 
@@ -3905,8 +3920,13 @@ async function buildShowNow() {
     familiar: document.getElementById("show-familiar")?.value || savedFamiliar(),
   });
   prog.innerHTML = `
+    ${failed.length ? `<div class="api-banner">
+      <div class="api-banner-head">${quotaStopped ? "Spotify's limit stopped this part-way" : "Some of the bill is missing"}</div>
+      <p class="api-banner-detail">Built from ${show.sets.length} of ${_billSize} artists, so the night is shared between fewer people than you asked for.${quotaStopped ? " The limit refills on its own — try again later." : ""}</p>
+      <p class="api-banner-detail">${esc(failed.join(" · "))}</p>
+    </div>` : ""}
     <p class="nav-hint">${show.tracks.length} tracks, about ${Math.round(show.totalMs / 60000)} minutes — ${show.sets.map((s) => `${esc(s.artist.name)} ${s.tracks.length} tracks/${Math.round(s.totalMs / 60000)}min`).join(", ")}</p>
-    ${failed.length ? `<p class="empty-note">Left out — ${esc(failed.join("; "))}</p>` : ""}`;
+`;
 
   // Naming used to take the last name on the list and call them the
   // headliner, which was right when position set the weighting. Tags

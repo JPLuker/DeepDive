@@ -542,6 +542,9 @@ All three need a Last.fm key in Settings.
       appear. Starting from the popup used to lose that artist entirely,
       and the night was built from whoever was left
 - [ ] Anyone left out is named under the result rather than vanishing
+- [ ] If Spotify's limit is hit part-way, the build **stops** rather
+      than failing every remaining artist one at a time
+- [ ] The result says how many of the bill were actually built
 - [ ] The playlist name matches what's in it — an untagged bill is
       named after everyone, and only a **More** tag produces
       "X and support"

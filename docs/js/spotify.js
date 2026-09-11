@@ -322,7 +322,7 @@ export class SpotifyClient {
       } catch (e) {
         try { msg = await resp.text(); } catch (e2) { msg = null; }
       }
-      const apiErr = new SpotifyApiError(resp.status, `${url}: ${msg}`, {
+      const apiErr = new SpotifyApiError(resp.status, msg, {
         retryAfter: resp.headers.get("Retry-After"),
         reason,
       });

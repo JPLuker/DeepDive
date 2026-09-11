@@ -4,6 +4,17 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.14
+- A Multi-Dip stopped by Spotify's limit now stops properly. It used to
+  keep going after the limit was hit, failing each remaining artist in
+  turn — several minutes to arrive at the same answer — then hand the
+  whole night to whoever happened to be read first.
+- The result says what's missing: how many of the bill were built, who
+  was left out and why, and that the night is therefore shared between
+  fewer people than you asked for.
+- API errors no longer show a raw endpoint URL. The URL is kept for
+  diagnostics, which is where it's useful.
+
 ## 2.9.13
 - **Found the cover art bug.** Catalogue tracks carry a single
   `album.image_url`; library tracks carry `album.images[]`. The cover
