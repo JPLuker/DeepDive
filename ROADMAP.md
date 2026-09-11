@@ -101,30 +101,14 @@ instead of a guess.
 
 ---
 
-## Next build — Multi-Dip screen
+## Multi-Dip screen — done in 2.9.12
 
-Joseph, 8 Sept.
+Saved bills removed, and the build moved onto the full-bleed dive
+screen along with "If you like…".
 
-**Drop the saved-bills list.** "Built before" sits under the search on
-the Multi-Dip screen and earns nothing. A lineup is a one-off — you go
-to the show, and the bill is spent. Reloading a past one is a case that
-sounds useful and isn't. `history.recordBill`, `listBills` and
-`removeBill` come out with it, along with the storage they use.
-
-**The build should use the full-bleed screen.** *Still outstanding —
-Joseph raised it again on 8 Sept. Noted in 2.9.9, not built in 2.9.10;
-that build only moved the permission check.* A Multi-Dip runs a
-catalogue read per artist — the most expensive thing in the app — and
-watching it happen behind a progress line under a form reads as stalled.
-Genres and recommendations were moved onto the dive screen in 2.9.7 for
-exactly this reason and the Multi-Dip build was missed, which is the
-inconsistency worth fixing: **every job that spends minutes gets the
-dive screen.** The artist currently being read is the obvious thing to
-show, so the slideshow has something real to display as it moves down
-the bill.
-
-Same goes for "If you like…", which fetches on choosing an artist and
-currently reports through a line of text.
+**Still outstanding from that note:** the per-artist song count still
+reads as "Auto" followed by bare numbers. Move it behind the row so the
+default is name, More, Less, remove.
 
 ---
 
@@ -280,7 +264,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.11
+## Shipped since — build 2.9.12
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:

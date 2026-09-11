@@ -4,6 +4,18 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.12
+- Fixed: pressing Multi-Dip on a new artist added them to the bill from
+  last time. Coming in from an artist means "build a night around this
+  one", so it starts fresh — and a bill that's been built is cleared,
+  because it's spent.
+- Removed the saved-bills list. A lineup is a one-off; reloading a past
+  one is a case that sounds useful and isn't. Its storage went too.
+- The Multi-Dip build and "If you like…" now use the full screen a dive
+  gets. Both wait on the network for a while, and reporting that under
+  a form reads as nothing happening. Multi-Dip shows the bill's overall
+  progress rather than one artist's, and can be stopped.
+
 ## 2.9.11
 - Fixed: a Multi-Dip produced twenty tracks by the first artist and
   nobody else. Every built mix was being capped at twenty tracks — a

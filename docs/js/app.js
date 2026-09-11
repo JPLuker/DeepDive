@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.11";
+export const BUILD = "2.9.12";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1526,9 +1526,7 @@ function openIntentModal(artistName, { force = false } = {}) {
     freshMulti.addEventListener("click", () => {
       const artist = _pendingArtist;
       close();
-      if (artist && !_showBill.some((a) => (a.name || "").toLowerCase() === artist.toLowerCase())) {
-        _showBill.push({ id: null, name: artist });
-      }
+      _showBill = artist ? [{ id: null, name: artist }] : [];
       _pendingArtist = null;
       renderShow();
     });
@@ -3501,10 +3499,19 @@ async function renderAskSimilar() {
   });
 
   async function build(name) {
-    out.innerHTML = `<p class="nav-hint">Asking Last.fm who sounds like ${esc(name)}…</p>`;
+    // The same full screen a dive gets. The rule is the shape of the
+    // work, not the feature: this waits on the network for several
+    // seconds and then does real work, and a line of text under a
+    // search box reads as nothing happening.
+    out.innerHTML = "";
+    showDiveScreen(`Artists like ${name}…`, () => {});
+    setDiveHeading(name);
+    updateDiveScreen(25, `Asking Last.fm who sounds like ${name}…`);
+
     let cached = [];
     try { cached = await libraryCache.peek(); } catch (e) { cached = []; }
     if (!cached.length) {
+      hideDiveScreen();
       out.innerHTML = `<p class="empty-note">Your library hasn't been read yet.</p>
         <div class="actions"><button class="btn btn-primary btn-small" data-read-library>Read my library</button></div>`;
       wireReadLibrary(out, () => build(name));
@@ -3515,20 +3522,25 @@ async function renderAskSimilar() {
     try {
       similar = await lastfm.similarArtists(name, 40);
     } catch (e) {
+      hideDiveScreen();
       out.innerHTML = `<p class="empty-note">${esc(e.suspended
         ? "Last.fm rejected the key. Check it in Settings."
         : `Couldn't reach Last.fm: ${e.message || e}`)}</p>`;
       return;
     }
     if (!similar.length) {
+      hideDiveScreen();
       out.innerHTML = `<p class="empty-note">Last.fm doesn't know who sounds like ${esc(name)}. Try a better-known spelling.</p>`;
       return;
     }
 
+    updateDiveScreen(75, `Checking ${similar.length} artists against your library…`);
     const mix = insights.similarOwnedMix(cached, similar, name);
+    hideDiveScreen();
+
     if (mix.tracks.length < 5) {
-      // Being specific about why: the artist was found, the neighbours
-      // were found, you just don't own them.
+      // Specific about why: the artist was found, the neighbours were
+      // found, you just don't own them.
       out.innerHTML = `<p class="empty-note">Last.fm found ${similar.length} artists like ${esc(name)}, but you own too few of them to build a mix${mix.artists.length ? ` — just ${esc(mix.artists.join(", "))}` : ""}.</p>`;
       return;
     }
@@ -3718,7 +3730,6 @@ async function renderShow() {
     <p class="nav-hint" style="margin-top:0;">Add everyone playing. They share the night evenly unless you say otherwise — tag the one you're really there for as More, and anyone you barely know as Less. Or pin someone to an exact number of songs.</p>
     ${searchShellHtml({ options: false })}
     <div id="show-bill">${rows || `<p class="empty-note">Nobody added yet.</p>`}</div>
-    <div id="show-saved"></div>
     <div class="set-group set-group-spaced">
       <div class="set-row set-row-block">
         <div class="set-row-text"><div class="set-row-title">Songs you already own</div>
@@ -3772,32 +3783,6 @@ async function renderShow() {
     renderShow();
   }));
 
-  // Lineups you've built before, so a festival isn't retyped.
-  const saved = history.listBills().filter((bl) =>
-    (bl.artists || []).join("|").toLowerCase() !== _showBill.map((a) => a.name).join("|").toLowerCase());
-  const savedEl = document.getElementById("show-saved");
-  if (savedEl && saved.length) {
-    savedEl.innerHTML = `
-      <div class="crate-header"><span class="label">Built before</span></div>
-      ${saved.slice(0, 6).map((bl, i) => `
-        <div class="watchlist-row">
-          <span class="watchlist-name">${esc(bl.artists.join(", "))}</span>
-          <div class="watchlist-actions">
-            <button class="btn btn-ghost btn-small" data-bill-load="${i}">Load</button>
-            <button class="btn btn-ghost btn-small" data-bill-rm="${i}">Remove</button>
-          </div>
-        </div>`).join("")}`;
-    savedEl.querySelectorAll("[data-bill-load]").forEach((b) => b.addEventListener("click", () => {
-      const bl = saved[+b.dataset.billLoad];
-      _showBill = bl.artists.map((n, k) => ({ id: (bl.ids || [])[k] || n, name: n }));
-      renderShow();
-    }));
-    savedEl.querySelectorAll("[data-bill-rm]").forEach((b) => b.addEventListener("click", () => {
-      history.removeBill(history.listBills().indexOf(saved[+b.dataset.billRm]));
-      renderShow();
-    }));
-  }
-
   document.getElementById("show-familiar")?.addEventListener("change", (e) => setFamiliar(e.target.value));
   document.getElementById("show-go")?.addEventListener("click", buildShowNow);
 }
@@ -3811,9 +3796,13 @@ async function buildShowNow() {
   // before it starts rather than discovered as a wait.
   const entries = [];
   const failed = [];
+  let cancelled = false;
+  showDiveScreen("Building your night…", () => { cancelled = true; });
+
   for (let i = 0; i < _showBill.length; i++) {
+    if (cancelled) break;
     const a = _showBill[i];
-    prog.innerHTML = `<p class="nav-hint">Reading ${esc(a.name)} — ${i + 1} of ${_showBill.length}…</p>`;
+    setDiveHeading(a.name);
     try {
       const res = await search.runSearch(client, a.name, {
         libraryCache,
@@ -3823,8 +3812,12 @@ async function buildShowNow() {
         // one of the two artists.
         resolvedArtist: a && a.id ? a : null,
         onProgress: (pct, stage) => {
-          prog.innerHTML = `<p class="nav-hint">${esc(a.name)} — ${i + 1} of ${_showBill.length} — ${esc(stage || "")} ${pct}%</p>`;
+          // The bill's overall progress, not this artist's — one of
+          // three being 100% done says nothing about the night.
+          const overall = Math.round(((i + pct / 100) / _showBill.length) * 100);
+          updateDiveScreen(overall, `${a.name} — ${i + 1} of ${_showBill.length} — ${stage || ""}`);
         },
+        onArtwork: (url) => addDiveImage(url),
       });
       let top = [];
       try { if (lastfm.hasKey()) top = await lastfm.topTracks(a.name, 50); } catch (e) {}
@@ -3845,13 +3838,15 @@ async function buildShowNow() {
     }
   }
 
+  hideDiveScreen();
+
   if (!entries.length) {
-    prog.innerHTML = `<p class="empty-note">Nothing came back for anyone on the bill.</p>`;
-    document.getElementById("show-go").disabled = false;
+    prog.innerHTML = `<p class="empty-note">${cancelled ? "Stopped." : "Nothing came back for anyone on the bill."}</p>`;
+    const go = document.getElementById("show-go");
+    if (go) go.disabled = false;
     return;
   }
 
-  history.recordBill(_showBill, { lengthMins: mins });
   for (const e of entries) {
     if (!e.catalog.length) failed.push(`${e.artist.name}: nothing came back`);
   }
@@ -3879,6 +3874,7 @@ async function buildShowNow() {
   const subtitle = lead && others.length ? `with ${others.join(", ")}`
     : (billed.length > 1 ? `${billed.length} artists, in the order you'll hear them` : "an hour of them");
 
+  _showBill = [];
   openCardModal({
     id: "show",
     title: title || "Your night",

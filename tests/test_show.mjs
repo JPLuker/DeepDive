@@ -73,7 +73,16 @@ check('and the autofill list', /id="autofill-list"/.test(src));
 check('artists can be removed', /data-show-rm/.test(src));
 check('it uses the shared artist search', /inputId: "artist-input"[\s\S]{0,300}_showBill\.push/.test(src));
 // One catalogue read per artist is a dive each, so it says so.
-check('the cost is stated as it runs', /Reading \$\{esc\(a\.name\)\} — \$\{i \+ 1\} of/.test(src));
+// Now on the dive screen, with the bill's overall progress rather
+// than one artist's — one of three being finished says nothing about
+// the night.
+// Now on the dive screen, with the bill's overall progress rather
+// than one artist's — one of three being finished says nothing about
+// the night.
+check('the cost is stated as it runs', src.includes('${a.name} — ${i + 1} of ${_showBill.length}'));
+check('on the full screen', src.includes('showDiveScreen("Building your night…"'));
+check('and it can be stopped', src.includes('() => { cancelled = true; }'));
+check('progress is the bill, not one artist', src.includes('(i + pct / 100) / _showBill.length'));
 // It kept the rest, but wrote the failure into the progress line that
 // the next artist immediately overwrote — so a bill of two quietly
 // became a bill of one with nothing said.
@@ -122,11 +131,15 @@ check('offered on dives and dips', /id="opt-familiar"/.test(src) || /opt-familia
 check('the choice is remembered', /deepdive_familiar/.test(src));
 check('the search exposes which tracks you own', /already_liked_ids/.test(readFileSync(new URL('../docs/js/search.js', import.meta.url), 'utf8')));
 
-// Bills live in history rather than their own store.
-check('a built bill is recorded', /history\.recordBill\(_showBill/.test(src));
-check('and can be reloaded', /data-bill-load/.test(src));
-check('or removed', /data-bill-rm/.test(src));
-check('the same lineup twice is one entry', /filtered = list\.filter\(\(b\) =>/.test(readFileSync(new URL('../docs/js/history.js', import.meta.url), 'utf8')));
+// Saved bills are gone. A lineup is a one-off — you go to the show and
+// the bill is spent — so reloading a past one is a case that sounds
+// useful and isn't.
+check('bills are not saved', !/recordBill|listBills|removeBill/.test(src));
+check('and the history api went with them', !/BILLS_KEY/.test(readFileSync(new URL('../docs/js/history.js', import.meta.url), 'utf8')));
+// The bill survived between visits, so pressing Multi-Dip on a third
+// artist appended them to a night already built and used.
+check('the popup starts a fresh bill', /_showBill = artist \? \[\{ id: null, name: artist \}\] : \[\];/.test(src));
+check('and a built bill is cleared', /_showBill = \[\];\s*\n\s*openCardModal\(\{\s*\n\s*id: "show"/.test(src));
 
 // Reachable from the artist popup, not only from a row on Dives. The
 // artist you just searched is almost always on the bill — usually the
@@ -137,9 +150,8 @@ check('and says what it does', /several artists, one night/.test(shell));
 // id meant it was passed as `resolvedArtist`, so the catalogue read
 // asked Spotify for an artist whose id was "Frank Sinatra" — which
 // fails, and lost that artist from the bill entirely.
-check('it seeds the bill with the searched artist', /_showBill\.push\(\{ id: null, name: artist \}\)/.test(src));
 check('and only skips the lookup for a real artist', /resolvedArtist: a && a\.id \? a : null/.test(src));
-check('without duplicating someone already on it', /!_showBill\.some\(\(a\) => \(a\.name \|\| ""\)\.toLowerCase\(\) === artist\.toLowerCase\(\)\)/.test(src));
+check('the inline search still refuses duplicates', /!_showBill\.some\(\(a\) => a\.id === it\.id\)/.test(src));
 // One name for one feature: it was "Concert prep" on Dives and would
 // have been "Multi-Dip" in the popup.
 check('one name everywhere', !/Concert prep/.test(src));
