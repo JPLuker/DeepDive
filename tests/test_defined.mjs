@@ -75,5 +75,31 @@ check('build tag is off by default', /localStorage\.getItem\(BUILD_TAG_KEY\) ===
 check('and toggleable from settings', /id="set-show-build"/.test(src));
 check('and set before the redirect handling', src.indexOf('tag.textContent = BUILD') < src.indexOf('handleRedirectCallback'));
 
+// Identifiers used inside a function that are declared in a different
+// one. `maybeSetCover(res, news, …)` was added to applyResults, but
+// `news` belongs to renderResults — so creating a playlist from a dive
+// threw "news is not defined" while every suite stayed green, because
+// source-text assertions cannot see scope.
+{
+  const fnAt = (name) => {
+    const i = src.indexOf(name);
+    if (i < 0) return "";
+    let d = 0;
+    for (let k = src.indexOf("{", i); k < src.length; k++) {
+      if (src[k] === "{") d++;
+      else if (src[k] === "}") { d--; if (!d) return src.slice(i, k); }
+    }
+    return "";
+  };
+  // The two result handlers, which have similar shapes and similar
+  // variable names — exactly where a stray reference hides.
+  for (const fn of ["async function applyResults(r, action)", "function renderResults(r)"]) {
+    const body = fnAt(fn);
+    check(`${fn.slice(0, 28)}… has no stray locals`, !!body && ["news", "dups", "cards", "entries"]
+      .every((n) => !new RegExp(`\\b${n}\\b`).test(body)
+        || new RegExp(`(const|let|var)\\s+${n}\\b`).test(body)));
+  }
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

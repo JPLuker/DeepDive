@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.18
+- Fixed: creating a playlist from a dive failed with "news is not
+  defined". Adding cover art to that path in 2.9.16 referenced a
+  variable belonging to a different function.
+- Added a check for that shape of mistake: an identifier used inside
+  one result handler but declared in the other. Every suite stayed
+  green while this was broken, because source-text assertions can't see
+  scope.
+
 ## 2.9.17
 - The DeepDive mark is top left on playlist covers, opposite the kind.
 - Fixed: it wasn't appearing at all. The path was relative to the app

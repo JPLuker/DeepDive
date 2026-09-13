@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.17";
+export const BUILD = "2.9.18";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -2919,7 +2919,7 @@ async function applyResults(r, action) {
         `New-to-you tracks by ${r.artist ? r.artist.name : ""}, found by DeepDive.`,
         newIds
       );
-      await maybeSetCover(res, news, playlistName, {
+      await maybeSetCover(res, r.new_tracks || [], playlistName, {
         images: [r.artist && (r.artist.image_url_large || r.artist.image_url)].filter(Boolean),
         title: (r.artist && r.artist.name) || playlistName,
         kind: "Dive",
