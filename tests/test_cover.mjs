@@ -91,11 +91,15 @@ check('photos are cropped, not squashed', /const scale = Math\.max\(w \/ img\.wi
 
 check('the kind is set top right', /function drawKind/.test(cov));
 check('and each caller names its own', /kind: "Dip"/.test(src) && /kind: "Multi-Dip"/.test(src) && /kind: "Dive"/.test(src));
-check('the logo goes bottom right', /function drawLogo/.test(cov));
+check('the logo goes top left', /function drawLogo/.test(cov) && /ctx\.drawImage\(img, 26, 26, w, h\)/.test(cov));
 // Same origin as the page, unlike the album art this replaced.
-check('the logo is local', /img\.src = "assets\/dd-logo\.png"/.test(cov));
+// The app lives at /DeepDive/app/, so "assets/…" resolved to a file
+// that isn't there and the first covers shipped with no logo at all —
+// silently, because a missing logo is deliberately not fatal.
+check('the logo path is relative to the app', /img\.src = "\.\.\/assets\/dd-logo\.png"/.test(cov));
+check('and it sits on a disc so it survives a pale photo', /ctx\.arc\(26 \+ w \/ 2, 26 \+ h \/ 2/.test(cov));
 check('and a missing logo does not lose the cover', /img\.onerror = \(\) => resolve\(\)/.test(cov));
-check('the title leaves room for it', /const room = SIZE - 56 - 86;/.test(cov));
+check('the title has the bottom edge to itself', /const room = SIZE - 56;/.test(cov));
 
 // Mixes and genres have no artist, so album art is still the fallback.
 check('album art remains the fallback', /: cover\.albumImages\(tracks, 4\)/.test(src));

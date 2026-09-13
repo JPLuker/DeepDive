@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.17
+- The DeepDive mark is top left on playlist covers, opposite the kind.
+- Fixed: it wasn't appearing at all. The path was relative to the app
+  page, where `assets/` doesn't exist, and a missing logo is
+  deliberately not fatal — so the first covers shipped without one and
+  nothing said so.
+- It sits on a dark disc, since a solid mark disappears against a
+  photograph of the same tone.
+
 ## 2.9.16
 - Playlist covers are built around the artist now. One artist gets
   their photograph filling the square; the DeepDive mark sits bottom

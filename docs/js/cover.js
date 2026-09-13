@@ -148,8 +148,7 @@ function drawTitle(ctx, title) {
   ctx.fillStyle = "#fff";
   ctx.font = "700 46px Inter, system-ui, sans-serif";
   ctx.textBaseline = "alphabetic";
-  // Room left for the logo in the corner.
-  const room = SIZE - 56 - 86;
+  const room = SIZE - 56;
   let text = title;
   while (ctx.measureText(text).width > room && text.length > 4) text = text.slice(0, -1);
   if (text !== title) text = text.slice(0, -1) + "…";
@@ -157,25 +156,33 @@ function drawTitle(ctx, title) {
 }
 
 /**
- * The DeepDive mark, bottom right.
+ * The DeepDive mark, top left.
  *
  * Same origin as the page, so unlike the album art this never had a
- * CORS question hanging over it.
+ * CORS question hanging over it — but the path is relative to the app
+ * at /DeepDive/app/, and `assets/…` resolved to a file that isn't
+ * there. It failed silently, because a missing logo is deliberately
+ * not fatal, so the first covers shipped without one.
  */
 function drawLogo(ctx) {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
-      const h = 54;
+      const h = 56;
       const w = img.width * (h / img.height);
-      ctx.globalAlpha = 0.92;
-      ctx.drawImage(img, SIZE - w - 26, SIZE - h - 26, w, h);
-      ctx.globalAlpha = 1;
+      // A dark disc behind it: the mark is a solid colour and vanishes
+      // against a photograph that happens to be the same tone.
+      const pad = 14;
+      ctx.fillStyle = "rgba(8,8,10,0.55)";
+      ctx.beginPath();
+      ctx.arc(26 + w / 2, 26 + h / 2, Math.max(w, h) / 2 + pad, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.drawImage(img, 26, 26, w, h);
       resolve();
     };
     // A missing logo is not a reason to lose the cover.
     img.onerror = () => resolve();
-    img.src = "assets/dd-logo.png";
+    img.src = "../assets/dd-logo.png";
   });
 }
 

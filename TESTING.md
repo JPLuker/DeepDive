@@ -577,7 +577,8 @@ All three need a Last.fm key in Settings.
 - [ ] Reconnect from the banner, then create a playlist — it gets a
       cover
 - [ ] A dip's cover is that artist's photo, with "DIP" top right and
-      the DeepDive mark bottom right
+      the DeepDive mark top left — the mark was missing entirely until
+      2.9.17, so check it's actually there
 - [ ] A Multi-Dip splits the square between its artists; a dip doesn't
 - [ ] A portrait photo isn't stretched
 - [ ] A library mix still gets album art, since it has no artist
