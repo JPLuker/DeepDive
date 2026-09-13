@@ -4,6 +4,17 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.16
+- Playlist covers are built around the artist now. One artist gets
+  their photograph filling the square; the DeepDive mark sits bottom
+  right and the kind — Dip, Dive, Multi-Dip — sits top right.
+- Only a Multi-Dip splits the square, one panel per artist, because
+  that split is what says it's a bill rather than one artist.
+- Photographs are cropped to fill rather than stretched, so a portrait
+  shot isn't squashed into a square.
+- Library mixes and genres still use album art, since there's no artist
+  to show.
+
 ## 2.9.15
 - **Dips and Multi-Dips no longer read an artist's catalogue.** Last.fm
   already knows which tracks matter, so Spotify only has to make each

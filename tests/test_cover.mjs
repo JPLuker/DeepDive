@@ -79,5 +79,26 @@ check('both album shapes are read', /al\.image_url/.test(cov) && /al\.images\[0\
 // Replacing a cover someone already set would be worse than not having one.
 check('an existing playlist keeps its cover', /if \(!res \|\| !res\.id \|\| res\.reused\) return;/.test(src));
 
+// The cover is the artist, not a grid of album art. A grid is what
+// every playlist tool produces and says nothing about which playlist
+// this is; a face does, at a glance, in a list of forty.
+check('one artist fills the square', /if \(!split \|\| images\.length === 1\)/.test(cov));
+check('only a bill splits', /split: billed\.length > 1/.test(src));
+check('a dip does not', !/kind: "Dip",[\s\S]{0,120}split: true/.test(src));
+// drawImage stretches to the box it is given, which distorts a
+// portrait photograph in a square.
+check('photos are cropped, not squashed', /const scale = Math\.max\(w \/ img\.width, h \/ img\.height\)/.test(cov));
+
+check('the kind is set top right', /function drawKind/.test(cov));
+check('and each caller names its own', /kind: "Dip"/.test(src) && /kind: "Multi-Dip"/.test(src) && /kind: "Dive"/.test(src));
+check('the logo goes bottom right', /function drawLogo/.test(cov));
+// Same origin as the page, unlike the album art this replaced.
+check('the logo is local', /img\.src = "assets\/dd-logo\.png"/.test(cov));
+check('and a missing logo does not lose the cover', /img\.onerror = \(\) => resolve\(\)/.test(cov));
+check('the title leaves room for it', /const room = SIZE - 56 - 86;/.test(cov));
+
+// Mixes and genres have no artist, so album art is still the fallback.
+check('album art remains the fallback', /: cover\.albumImages\(tracks, 4\)/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

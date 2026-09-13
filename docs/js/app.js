@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.15";
+export const BUILD = "2.9.16";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1284,7 +1284,7 @@ function openCardModal(card) {
         // playlist to reuse, so it creates one either way.
         { forceNew: simple }
       );
-      await maybeSetCover(res, list, (nameInput.value || "").trim() || card.title);
+      await maybeSetCover(res, list, (nameInput.value || "").trim() || card.title, card.art);
       msg.innerHTML = `Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}. <a href="${esc(res.url)}" data-spotify style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
       msg.classList.remove("hidden", "error");
       // Recorded so it can be removed from History. Only newly created
@@ -2919,6 +2919,11 @@ async function applyResults(r, action) {
         `New-to-you tracks by ${r.artist ? r.artist.name : ""}, found by DeepDive.`,
         newIds
       );
+      await maybeSetCover(res, news, playlistName, {
+        images: [r.artist && (r.artist.image_url_large || r.artist.image_url)].filter(Boolean),
+        title: (r.artist && r.artist.name) || playlistName,
+        kind: "Dive",
+      });
       parts.push(`Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}.`);
       btns.forEach((b) => (b.disabled = false));
       showActionResult({ headline: "Done", detail: parts.join(" "), url: res.url });
@@ -3728,17 +3733,25 @@ function familiarSelect(idAttr, value) {
  * not a failure — so nothing here is allowed to interrupt or to turn a
  * successful build into a visible error.
  */
-async function maybeSetCover(res, tracks, title) {
+async function maybeSetCover(res, tracks, title, art) {
   if (!res || !res.id || res.reused) return;      // don't overwrite an existing cover
 
   if (!auth.hasScope(auth.UPLOAD_SCOPE)) return;
   try {
-    const urls = cover.albumImages(tracks, 4);
+    const urls = (art && art.images && art.images.length)
+      ? art.images
+      : cover.albumImages(tracks, 4);
     if (!urls.length) {
-      console.warn("[DeepDive] no album art on these tracks, so no cover");
+      console.warn("[DeepDive] nothing to build a cover from");
       return;
     }
-    const data = await cover.buildCover(urls, { title });
+    const data = await cover.buildCover(urls, {
+      title: (art && art.title) || title,
+      kind: (art && art.kind) || "Mix",
+      // Only a bill splits. One artist gets their whole photograph,
+      // which is what makes it recognisable in a list.
+      split: !!(art && art.split),
+    });
     if (!data) {
       flash("Couldn't build a cover for that one — DD-COVER.", true);
       return;
@@ -3846,6 +3859,11 @@ async function runDipViaSearch(artist, artistName, opts) {
     id: `dip-${artist.id || artistName}`,
     title: `${artist.name || artistName}, in an hour`,
     subtitle: `${built.tracks.length} tracks, about ${Math.round(built.totalMs / 60000)} minutes, most played first${owned ? ` · you already own ${owned}` : ""}`,
+    art: {
+      images: [largestImage(artist.images) || artist.image_url_large || artist.image_url].filter(Boolean),
+      title: artist.name || artistName,
+      kind: "Dip",
+    },
     simple: true,
     name: `DeepDive · ${artist.name || artistName} in an hour`,
     count: built.tracks.length,
@@ -4071,6 +4089,12 @@ async function buildShowNow() {
     id: "show",
     title: title || "Your night",
     subtitle,
+    art: {
+      images: billed.map((x) => x.artist.image_url_large || x.artist.image_url).filter(Boolean),
+      title: lead ? lead.artist.name : (billed[0] && billed[0].artist.name) || "Your night",
+      kind: "Multi-Dip",
+      split: billed.length > 1,
+    },
     simple: true,
     name: lead
       ? `DeepDive · ${lead.artist.name}${others.length ? " and support" : ""}`

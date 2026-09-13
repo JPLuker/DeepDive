@@ -576,6 +576,11 @@ All three need a Last.fm key in Settings.
       as a banner when you open the app — not after a job has run
 - [ ] Reconnect from the banner, then create a playlist — it gets a
       cover
+- [ ] A dip's cover is that artist's photo, with "DIP" top right and
+      the DeepDive mark bottom right
+- [ ] A Multi-Dip splits the square between its artists; a dip doesn't
+- [ ] A portrait photo isn't stretched
+- [ ] A library mix still gets album art, since it has no artist
 - [ ] "Not now" hides it for the session and it returns next time
 - [ ] After that, a **newly created** playlist gets a cover built from
       its album art

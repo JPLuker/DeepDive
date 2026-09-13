@@ -54,14 +54,23 @@ function loadImage(url) {
 }
 
 /**
- * A cover from up to four album images.
+ * A cover for a built playlist.
  *
- * One image fills the square; two split it; three or four make a grid.
- * Fewer than one is not an error — the caller simply doesn't get a
- * cover, which is better than a blank square.
+ * One artist gets their photograph, whole. Album art in a grid is what
+ * every playlist tool does and it says nothing about which playlist
+ * this is — the face does, at a glance, in a list of forty.
+ *
+ * A Multi-Dip is the exception: several artists, so the square splits
+ * between them. That split is the signal that it's a bill rather than
+ * one artist, which is worth more than a tidier picture.
+ *
+ * @param urls   artist photographs, one per artist
+ * @param kind   "Dip", "Dive", "Multi-Dip", "Mix" — set top right
+ * @param title  set bottom left, usually the artist
+ * @param split  divide the square between the images
  */
-export async function buildCover(urls, { title = "" } = {}) {
-  const list = (urls || []).slice(0, 4);
+export async function buildCover(urls, { title = "", kind = "", split = false } = {}) {
+  const list = (urls || []).filter(Boolean).slice(0, 4);
   if (!list.length) return null;
 
   const images = [];
@@ -77,47 +86,107 @@ export async function buildCover(urls, { title = "" } = {}) {
   ctx.fillStyle = "#0b0b0f";
   ctx.fillRect(0, 0, SIZE, SIZE);
 
+  // `drawImage` stretches to the box it's given, which distorts a
+  // portrait photograph in a square. Crop to fill instead.
+  const cover = (img, x, y, w, h) => {
+    const scale = Math.max(w / img.width, h / img.height);
+    const dw = img.width * scale, dh = img.height * scale;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    ctx.clip();
+    ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+    ctx.restore();
+  };
+
   const half = SIZE / 2;
-  if (images.length === 1) {
-    ctx.drawImage(images[0], 0, 0, SIZE, SIZE);
+  if (!split || images.length === 1) {
+    cover(images[0], 0, 0, SIZE, SIZE);
   } else if (images.length === 2) {
-    ctx.drawImage(images[0], 0, 0, half, SIZE);
-    ctx.drawImage(images[1], half, 0, half, SIZE);
+    cover(images[0], 0, 0, half, SIZE);
+    cover(images[1], half, 0, half, SIZE);
   } else {
-    // Three images leave a quarter empty, so the first one takes two
-    // cells rather than leaving a hole.
+    // Three leaves a quarter empty, so the first takes the top half.
     const cells = images.length === 3
       ? [[0, 0, SIZE, half], [0, half, half, half], [half, half, half, half]]
       : [[0, 0, half, half], [half, 0, half, half], [0, half, half, half], [half, half, half, half]];
-    images.forEach((img, i) => {
-      const [x, y, w, h] = cells[i];
-      ctx.drawImage(img, x, y, w, h);
-    });
+    images.forEach((img, i) => cover(img, ...cells[i]));
   }
 
-  // A dark band along the bottom so a title stays readable over
-  // whatever the artwork happens to be.
-  if (title) {
-    const grad = ctx.createLinearGradient(0, SIZE * 0.62, 0, SIZE);
-    grad.addColorStop(0, "rgba(8,8,10,0)");
-    grad.addColorStop(1, "rgba(8,8,10,0.92)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, SIZE * 0.62, SIZE, SIZE * 0.38);
+  // A band along the bottom so the title stays readable over whatever
+  // the photograph happens to be.
+  const grad = ctx.createLinearGradient(0, SIZE * 0.55, 0, SIZE);
+  grad.addColorStop(0, "rgba(8,8,10,0)");
+  grad.addColorStop(1, "rgba(8,8,10,0.94)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, SIZE * 0.55, SIZE, SIZE * 0.45);
 
-    ctx.fillStyle = "#fff";
-    ctx.font = "600 44px Inter, system-ui, sans-serif";
-    ctx.textBaseline = "alphabetic";
-    // Truncated rather than shrunk: a long name at a smaller size next
-    // to a short one at full size looks like a mistake.
-    let text = title;
-    while (ctx.measureText(text).width > SIZE - 56 && text.length > 4) {
-      text = text.slice(0, -1);
-    }
-    if (text !== title) text = text.slice(0, -1) + "…";
-    ctx.fillText(text, 28, SIZE - 34);
-  }
+  if (kind) drawKind(ctx, kind);
+  if (title) drawTitle(ctx, title);
+  await drawLogo(ctx);
 
   return toJpeg(cv);
+}
+
+/** What kind of thing this is, top right. */
+function drawKind(ctx, kind) {
+  ctx.font = "600 26px Inter, system-ui, sans-serif";
+  const text = kind.toUpperCase();
+  const w = ctx.measureText(text).width;
+  const padX = 18, h = 46;
+  const x = SIZE - w - padX * 2 - 24, y = 24;
+  ctx.fillStyle = "rgba(8,8,10,0.62)";
+  roundRect(ctx, x, y, w + padX * 2, h, h / 2);
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, x + padX, y + h / 2 + 1);
+}
+
+/** The name, bottom left, truncated rather than shrunk. */
+function drawTitle(ctx, title) {
+  ctx.fillStyle = "#fff";
+  ctx.font = "700 46px Inter, system-ui, sans-serif";
+  ctx.textBaseline = "alphabetic";
+  // Room left for the logo in the corner.
+  const room = SIZE - 56 - 86;
+  let text = title;
+  while (ctx.measureText(text).width > room && text.length > 4) text = text.slice(0, -1);
+  if (text !== title) text = text.slice(0, -1) + "…";
+  ctx.fillText(text, 28, SIZE - 36);
+}
+
+/**
+ * The DeepDive mark, bottom right.
+ *
+ * Same origin as the page, so unlike the album art this never had a
+ * CORS question hanging over it.
+ */
+function drawLogo(ctx) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const h = 54;
+      const w = img.width * (h / img.height);
+      ctx.globalAlpha = 0.92;
+      ctx.drawImage(img, SIZE - w - 26, SIZE - h - 26, w, h);
+      ctx.globalAlpha = 1;
+      resolve();
+    };
+    // A missing logo is not a reason to lose the cover.
+    img.onerror = () => resolve();
+    img.src = "assets/dd-logo.png";
+  });
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
 }
 
 /** Step quality down until it fits Spotify's limit. */
