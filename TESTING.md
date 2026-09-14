@@ -491,7 +491,9 @@ All three need a Last.fm key in Settings.
 - [ ] **A dip is now cheap** — it should finish in seconds and work
       even when a dive won't, since it uses search rather than album
       tracklists
-- [ ] Check the tracks are the right artist; search can return covers
+- [ ] Check the tracks are the right artist. Search can return covers,
+      and two different bands can share a name — a dip on Provoked
+      returned a track by a different Provoked until 2.9.19
 - [ ] An obscure artist Last.fm doesn't know falls back to a catalogue
       read
 - [ ] A deluxe edition doesn't put the same song in twice

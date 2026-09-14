@@ -576,7 +576,7 @@ export class SpotifyClient {
    * Returns a full track object — including `external_ids.isrc`, so the
    * duplicate check against the library still works.
    */
-  async searchTrack(artistName, title) {
+  async searchTrack(artistName, title, { artistId = null } = {}) {
     if (!artistName || !title) return null;
     // Field-scoped rather than a bare string: "Blackout" alone returns
     // whoever is most popular, not the artist asked for.
@@ -593,12 +593,18 @@ export class SpotifyClient {
 
     const want = normalizeForMatch(title);
     const wantArtist = normalizeForMatch(artistName);
-    // Spotify will happily return a cover or a different artist's song
-    // with the same title, so the credit has to be checked rather than
-    // trusting the ranking.
-    const byArtist = items.filter((t) =>
+
+    // Match on id when there is one. Two different artists can share a
+    // name — Spotify has two called Provoked — and comparing names
+    // treats them as the same act, which is how a dip ended up with a
+    // track by a band the user had never searched for. A name match is
+    // only a fallback for callers that never resolved an id.
+    const byId = artistId
+      ? items.filter((t) => (t.artists || []).some((a) => a.id === artistId))
+      : [];
+    const byName = items.filter((t) =>
       (t.artists || []).some((a) => normalizeForMatch(a.name) === wantArtist));
-    const pool = byArtist.length ? byArtist : [];
+    const pool = byId.length ? byId : (artistId ? [] : byName);
     if (!pool.length) return null;
 
     return pool.find((t) => normalizeForMatch(t.name) === want) || pool[0];

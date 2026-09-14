@@ -18,11 +18,19 @@ const sp = readFileSync(new URL('../docs/js/spotify.js', import.meta.url), 'utf8
 let pass = 0, fail = 0;
 function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } }
 
-check('there is a track search', /async searchTrack\(artistName, title\)/.test(sp));
+check('there is a track search', /async searchTrack\(artistName, title, \{ artistId = null \} = \{\}\)/.test(sp));
 // A bare title returns whoever is most popular, not the artist asked for.
 check('it scopes the query to both fields', /track:"\$\{title[\s\S]{0,80}artist:"\$\{artistName/.test(sp));
 // Spotify will return a cover or another artist's song of the same name.
-check('the credit is verified, not trusted', /\(t\.artists \|\| \[\]\)\.some\(\(a\) => normalizeForMatch\(a\.name\) === wantArtist\)/.test(sp));
+// Two different artists can share a name — Spotify has two called
+// Provoked — so comparing names treated them as one act and a dip came
+// back with a track by a band the user had never searched for.
+check('the artist is matched by id', /\(t\.artists \|\| \[\]\)\.some\(\(a\) => a\.id === artistId\)/.test(sp));
+check('and a name match is only a fallback', /const pool = byId\.length \? byId : \(artistId \? \[\] : byName\)/.test(sp));
+check('a bill resolves ids before searching', /const resolved = await client\.findArtist\(a\.name\)/.test(src));
+// An hour is the target, not a promise: seven tracks is seventeen
+// minutes, and calling that "in an hour" is just wrong.
+check('nothing claims an hour', !/in an hour/.test(src));
 check('and the exact title is preferred', /pool\.find\(\(t\) => normalizeForMatch\(t\.name\) === want\) \|\| pool\[0\]/.test(sp));
 check('names are compared loosely across services', /function normalizeForMatch/.test(sp));
 // One unfindable track must not end a dip; a quota error must.

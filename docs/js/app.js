@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.18";
+export const BUILD = "2.9.19";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -2781,12 +2781,12 @@ async function presentDip(result) {
   const mins = Math.round(dip.totalMs / 60000);
   openCardModal({
     id: `dip-${(result.artist && result.artist.id) || artistName}`,
-    title: `${artistName}, in an hour`,
+    title: `${artistName}`,
     subtitle: top.length
       ? `${dip.tracks.length} tracks, about ${mins} minutes, most played first`
       : `${dip.tracks.length} tracks, about ${mins} minutes`,
     simple: true,
-    name: `DeepDive · ${artistName} in an hour`,
+    name: `DeepDive · ${artistName} dip`,
     count: dip.tracks.length,
     tracks: dip.tracks,
   });
@@ -3780,7 +3780,7 @@ async function maybeSetCover(res, tracks, title, art) {
  * Falls back to null when Last.fm has nothing, so the caller can use
  * the catalogue instead rather than producing an empty mix.
  */
-async function dipViaSearch(artistName, { targetMs, familiar, likedIds, onProgress }) {
+async function dipViaSearch(artistName, { artistId = null, targetMs, familiar, likedIds, onProgress }) {
   let top = [];
   try {
     if (lastfm.hasKey()) top = await lastfm.topTracks(artistName, 50);
@@ -3801,7 +3801,7 @@ async function dipViaSearch(artistName, { targetMs, familiar, likedIds, onProgre
     searched++;
     if (onProgress) onProgress(searched, Math.min(top.length, 30), totalMs, targetMs);
 
-    const found = await client.searchTrack(artistName, t.name);
+    const found = await client.searchTrack(artistName, t.name, { artistId });
     if (!found || !found.id) continue;
 
     const key = matching.normalizeTitle(found.name);
@@ -3841,6 +3841,7 @@ async function runDipViaSearch(artist, artistName, opts) {
   } catch (e) { /* a dip without the duplicate check is still a dip */ }
 
   const built = await dipViaSearch(artistName, {
+    artistId: artist.id || null,
     targetMs: 60 * 60 * 1000,
     familiar: savedFamiliar(),
     likedIds,
@@ -3857,7 +3858,7 @@ async function runDipViaSearch(artist, artistName, opts) {
   const owned = built.tracks.filter((t) => likedIds.has(t.id)).length;
   openCardModal({
     id: `dip-${artist.id || artistName}`,
-    title: `${artist.name || artistName}, in an hour`,
+    title: `${artist.name || artistName}`,
     subtitle: `${built.tracks.length} tracks, about ${Math.round(built.totalMs / 60000)} minutes, most played first${owned ? ` · you already own ${owned}` : ""}`,
     art: {
       images: [largestImage(artist.images) || artist.image_url_large || artist.image_url].filter(Boolean),
@@ -3865,7 +3866,7 @@ async function runDipViaSearch(artist, artistName, opts) {
       kind: "Dip",
     },
     simple: true,
-    name: `DeepDive · ${artist.name || artistName} in an hour`,
+    name: `DeepDive · ${artist.name || artistName} dip`,
     count: built.tracks.length,
     tracks: built.tracks,
   });
@@ -4009,7 +4010,15 @@ async function buildShowNow() {
       : perArtistMs * weight * 1.4;   // headroom, since buildShow trims
 
     try {
+      if (!a.id) {
+        const resolved = await client.findArtist(a.name);
+        if (resolved) {
+          a.id = resolved.id;
+          a.image_url_large = a.image_url_large || resolved.image_url_large || resolved.image_url;
+        }
+      }
       const built = await dipViaSearch(a.name, {
+        artistId: a.id || null,
         targetMs: wantMs,
         familiar: document.getElementById("show-familiar")?.value || savedFamiliar(),
         likedIds,
@@ -4082,7 +4091,7 @@ async function buildShowNow() {
   const title = lead ? lead.artist.name
     : (billed.length === 1 ? billed[0].artist.name : billed.map((x) => x.artist.name).join(" · "));
   const subtitle = lead && others.length ? `with ${others.join(", ")}`
-    : (billed.length > 1 ? `${billed.length} artists, in the order you'll hear them` : "an hour of them");
+    : (billed.length > 1 ? `${billed.length} artists, in the order you'll hear them` : "their best, most played first");
 
   _showBill = [];
   openCardModal({

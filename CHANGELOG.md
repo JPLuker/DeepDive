@@ -4,6 +4,16 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.19
+- Fixed: a dip could include tracks by a different band of the same
+  name. Spotify has two artists called Provoked, and the search
+  verified the credit by name — which treats them as one act. It
+  matches on the artist's id now, and a Multi-Dip resolves each name to
+  an id before searching.
+- Dips are no longer called "in an hour". An hour is the target, not a
+  promise: a band with seven tracks gets seventeen minutes, and the
+  name claimed otherwise. The subtitle gives the real length.
+
 ## 2.9.18
 - Fixed: creating a playlist from a dive failed with "news is not
   defined". Adding cover art to that path in 2.9.16 referenced a
