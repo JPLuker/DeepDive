@@ -496,6 +496,9 @@ All three need a Last.fm key in Settings.
       returned a track by a different Provoked until 2.9.19
 - [ ] An obscure artist Last.fm doesn't know falls back to a catalogue
       read
+- [ ] A small artist — one whose dip would be well under an hour —
+      comes back with their whole discography, best known first, rather
+      than a seventeen-minute stub
 - [ ] A deluxe edition doesn't put the same song in twice
 - [ ] With the Last.fm key removed, a dip still builds — just ordered by
       catalogue rather than popularity

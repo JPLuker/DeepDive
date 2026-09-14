@@ -4,6 +4,17 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.20
+- A dip on a small artist now gives you everything they've released,
+  best known first, instead of a stub. Last.fm only ranks what people
+  have actually played, so a band with a handful of played tracks was
+  coming back at seventeen minutes against a target of sixty.
+- The catalogue read this needs is cheap precisely when it's needed: an
+  artist with few known tracks has few releases.
+- Nothing is trimmed in that case — for an artist that small the deep
+  cuts are most of what there is. The ranking still orders the tracks
+  it knows, and the rest follow.
+
 ## 2.9.19
 - Fixed: a dip could include tracks by a different band of the same
   name. Spotify has two artists called Provoked, and the search

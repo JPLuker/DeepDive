@@ -55,5 +55,20 @@ check('and the dive path is the fallback', /Reading their catalogue instead/.tes
 check('multi-dip uses it too', /await dipViaSearch\(a\.name, \{/.test(src));
 check('the saving is stated for whoever reads this next', /instead of the forty to eighty/.test(src));
 
+// Last.fm only ranks what people have actually played, so a small band
+// leaves a dip well short of the hour — Provoked came back at seventeen
+// minutes. Rather than hand over a stub, read the catalogue and give
+// back everything, ordered by the ranking where it exists.
+check('a short dip falls back', /if \(built\.totalMs < TARGET_MS \* 0\.7\)/.test(src));
+check('to the whole discography', /async function wholeDiscographyDip/.test(src));
+check('ordered by what ranking exists', /const ranking = built\.tracks\.map\(\(t\) => \(\{ name: t\.name \}\)\)/.test(src));
+// Dropping the unranked tracks would defeat the point: for an artist
+// this small the deep cuts are most of what there is.
+check('and nothing is trimmed', /targetMs: Number\.MAX_SAFE_INTEGER/.test(src));
+check('the subtitle says what it is', /everything they've released/.test(src));
+// Cheap exactly when it applies: few known tracks means few releases.
+check('a failed read keeps the short dip', /return false;   \/\/ the short dip is better than an error/.test(src));
+check('and the ranking is reused, not refetched', !/lastfm\.topTracks[\s\S]{0,200}wholeDiscographyDip/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

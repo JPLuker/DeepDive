@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.19";
+export const BUILD = "2.9.20";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3854,6 +3854,20 @@ async function runDipViaSearch(artist, artistName, opts) {
   });
   if (!built) return false;
 
+  // Last.fm only ranks what people have actually played, so a small
+  // band leaves a dip well short of the hour — Provoked came back at
+  // seventeen minutes. In that case read the catalogue and give back
+  // everything, ordered by the ranking where it exists.
+  //
+  // Cheap precisely when it's needed: an artist with too few known
+  // tracks has few releases, so the read that would cost eighty
+  // requests for a major act costs a handful here.
+  const TARGET_MS = 60 * 60 * 1000;
+  if (built.totalMs < TARGET_MS * 0.7) {
+    const whole = await wholeDiscographyDip(artist, artistName, built, likedIds, opts);
+    if (whole) return true;
+  }
+
   hideDiveScreen();
   const owned = built.tracks.filter((t) => likedIds.has(t.id)).length;
   openCardModal({
@@ -3869,6 +3883,63 @@ async function runDipViaSearch(artist, artistName, opts) {
     name: `DeepDive · ${artist.name || artistName} dip`,
     count: built.tracks.length,
     tracks: built.tracks,
+  });
+  return true;
+}
+
+/**
+ * Everything they have, best-known first.
+ *
+ * The fallback when an artist hasn't enough played tracks to fill an
+ * hour. Last.fm's ranking still does the ordering for the tracks it
+ * knows; the rest follow in catalogue order rather than being dropped,
+ * because for an artist this small the deep cuts are most of the point.
+ *
+ * Returns false if the catalogue read fails, leaving the caller to
+ * present the shorter search-built dip rather than nothing.
+ */
+async function wholeDiscographyDip(artist, artistName, built, likedIds, opts) {
+  updateDiveScreen(20, `Only ${Math.round(built.totalMs / 60000)} minutes are well known — reading everything…`);
+  let result;
+  try {
+    result = await search.runSearch(client, artistName, {
+      ...opts,
+      libraryCache,
+      resolvedArtist: artist,
+      onProgress: (pct, stage) => updateDiveScreen(20 + Math.round(pct * 0.75), stage),
+      onArtwork: (url) => { if (!_haveArtistPhoto) addDiveImage(url); },
+    });
+  } catch (e) {
+    return false;   // the short dip is better than an error
+  }
+
+  const catalogue = result.catalog_tracks || [];
+  if (!catalogue.length) return false;
+
+  // The ranking we already paid for, reused rather than re-fetched.
+  const ranking = built.tracks.map((t) => ({ name: t.name }));
+  const dip = matching.buildDip(catalogue, ranking, {
+    targetMs: Number.MAX_SAFE_INTEGER,
+    familiar: savedFamiliar(),
+    likedIds: result.already_liked_ids || [...likedIds],
+  });
+  if (!dip.tracks.length) return false;
+
+  hideDiveScreen();
+  const owned = dip.tracks.filter((t) => likedIds.has(t.id)).length;
+  openCardModal({
+    id: `dip-${artist.id || artistName}`,
+    title: artist.name || artistName,
+    subtitle: `everything they've released — ${dip.tracks.length} tracks, about ${Math.round(dip.totalMs / 60000)} minutes, best known first${owned ? ` · you already own ${owned}` : ""}`,
+    art: {
+      images: [largestImage(artist.images) || artist.image_url_large || artist.image_url].filter(Boolean),
+      title: artist.name || artistName,
+      kind: "Dip",
+    },
+    simple: true,
+    name: `DeepDive · ${artist.name || artistName} dip`,
+    count: dip.tracks.length,
+    tracks: dip.tracks,
   });
   return true;
 }
