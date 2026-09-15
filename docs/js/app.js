@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.20";
+export const BUILD = "2.9.21";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -735,7 +735,7 @@ async function runSampler(artists) {
 // different places with three different sets of options. These are the
 // shared pieces, so every playlist in the app offers the same controls.
 
-const PLAYLIST_LENGTHS = [10, 20, 30, 40, 50, 100, "all"];
+const PLAYLIST_LENGTHS = [10, 20, 30, 40, 50, 100];
 
 const PLAYLIST_ORDERS = [
   { id: "album", label: "Album order" },
@@ -764,7 +764,13 @@ function applyPlaylistOptions(tracks, { order = "shuffle", length = "all" } = {}
 
 /** Renders the shared length + order controls into a container. */
 function renderPlaylistOptions(el, state, onChange, total) {
-  const lengths = PLAYLIST_LENGTHS.filter((n) => n === "all" || n < total);
+  // "All" used to sit at the end of this list. A generated card can
+  // hold 1,400 tracks and every hundred is a request at creation, so an
+  // open-ended option was the wrong thing to leave lying around. The
+  // whole mix is still reachable — as its actual count, which says what
+  // you are about to make.
+  const lengths = PLAYLIST_LENGTHS.filter((n) => n < total);
+  if (total > 0) lengths.push(total);
   el.innerHTML = `
     <div class="settings-panel-title">How many tracks</div>
     <div class="card-len" data-group="length">
@@ -776,7 +782,7 @@ function renderPlaylistOptions(el, state, onChange, total) {
     </div>`;
   el.querySelectorAll("[data-len]").forEach((b) => b.addEventListener("click", () => {
     const v = b.dataset.len;
-    state.length = v === "all" ? "all" : parseInt(v, 10);
+    state.length = parseInt(v, 10);
     onChange();
   }));
   el.querySelectorAll("[data-order]").forEach((b) => b.addEventListener("click", () => {
@@ -3541,14 +3547,14 @@ async function renderAskSimilar() {
     // Spotify's search rather than the library, so any artist can be
     // named — that is the whole point of this screen.
     source: (q) => client.searchArtists(q, 6),
-    onChoose: (it) => build(it.name),
+    onChoose: (it) => build(it.name, it),
   });
   document.getElementById("search-go-btn")?.addEventListener("click", () => {
     const n = document.getElementById("artist-input").value.trim();
-    if (n) build(n);
+    if (n) build(n, null);
   });
 
-  async function build(name) {
+  async function build(name, seed) {
     // The same full screen a dive gets. The rule is the shape of the
     // work, not the feature: this waits on the network for several
     // seconds and then does real work, and a line of text under a
@@ -3564,7 +3570,7 @@ async function renderAskSimilar() {
       hideDiveScreen();
       out.innerHTML = `<p class="empty-note">Your library hasn't been read yet.</p>
         <div class="actions"><button class="btn btn-primary btn-small" data-read-library>Read my library</button></div>`;
-      wireReadLibrary(out, () => build(name));
+      wireReadLibrary(out, () => build(name, seed));
       return;
     }
 
@@ -3600,6 +3606,13 @@ async function renderAskSimilar() {
       id: `ask-${name.toLowerCase().replace(/\s+/g, "-")}`,
       title: `If you like ${name}`,
       subtitle: `${mix.artists.length} similar artist${mix.artists.length === 1 ? "" : "s"} you already own`,
+      art: seed && (seed.image_url_large || seed.image_url) ? {
+        images: [seed.image_url_large || seed.image_url],
+        // The artist's name, not the playlist's: "If you like Leisure
+        // Hour" truncates to "If you like Lei…" on a square.
+        title: name,
+        kind: "Similar",
+      } : undefined,
       name: `DeepDive · If you like ${name}`,
       count: mix.tracks.length,
       tracks: mix.tracks,

@@ -192,7 +192,9 @@ check('and opens its own screen', /async function renderAskSimilar/.test(src));
 check('it uses the shared artist search', /inputId: "artist-input",[\s\S]{0,200}renderAskSimilar|renderAskSimilar[\s\S]{0,900}wireArtistSearch/.test(src));
 // Spotify's search, not the library, or you could only name artists you
 // already own — which defeats the point.
-check('any artist can be named', /source: \(q\) => client\.searchArtists\(q, 6\),[\s\S]{0,120}onChoose: \(it\) => build\(it\.name\)/.test(src));
+check('any artist can be named', /source: \(q\) => client\.searchArtists\(q, 6\),[\s\S]{0,120}onChoose: \(it\) => build\(it\.name, it\)/.test(src));
+check('the seed artist supplies the cover', /images: \[seed\.image_url_large \|\| seed\.image_url\]/.test(src));
+check('titled with the artist, not the playlist', /\/\/ Hour" truncates to "If you like Lei…" on a square\./.test(src) || /title: name,/.test(src));
 // Being specific about why an empty result is empty.
 check('owning too few is explained', /you own too few of them to build a mix/.test(src));
 check('an unknown artist is explained', /doesn't know who sounds like/.test(src));

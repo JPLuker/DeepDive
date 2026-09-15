@@ -4,6 +4,16 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.21
+- Removed "All" from the track-count picker. A generated card can hold
+  fourteen hundred tracks and every hundred is a request when the
+  playlist is created, so an open-ended option was the wrong thing to
+  leave sitting there. The whole mix is still reachable, as its actual
+  count — a number says what you're about to make.
+- An "If you like…" mix now uses a photo of the artist you named, since
+  that's what defines it. It was showing one album cover from the
+  result and a title that truncated to "If you like Lei…".
+
 ## 2.9.20
 - A dip on a small artist now gives you everything they've released,
   best known first, instead of a stub. Last.fm only ranks what people
