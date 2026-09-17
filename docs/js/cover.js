@@ -170,14 +170,15 @@ function drawLogo(ctx) {
     img.onload = () => {
       const h = 56;
       const w = img.width * (h / img.height);
-      // A dark disc behind it: the mark is a solid colour and vanishes
-      // against a photograph that happens to be the same tone.
-      const pad = 14;
-      ctx.fillStyle = "rgba(8,8,10,0.55)";
-      ctx.beginPath();
-      ctx.arc(26 + w / 2, 26 + h / 2, Math.max(w, h) / 2 + pad, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.65)";
+      ctx.shadowBlur = 18;
+      ctx.shadowOffsetY = 1;
+      // Twice, because one pass of a soft shadow under a small mark is
+      // barely there on a white sleeve.
       ctx.drawImage(img, 26, 26, w, h);
+      ctx.drawImage(img, 26, 26, w, h);
+      ctx.restore();
       resolve();
     };
     // A missing logo is not a reason to lose the cover.

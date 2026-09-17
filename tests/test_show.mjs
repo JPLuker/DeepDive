@@ -218,5 +218,18 @@ check('cards say their own length', /length: card\.defaultLength \|\| "all"/.tes
 check('and only the sampler asks for twenty', (src.match(/defaultLength: 20/g) || []).length === 1);
 check('a show does not set one, so it keeps every track', !/id: "show"[\s\S]{0,400}defaultLength/.test(src));
 
+// Multi-Dip covers had no artist photos. findArtist returned Spotify's
+// raw object while searchArtists returned a normalised one, so which
+// fields existed depended on which lookup had run — and a bill built
+// from the artist popup looked for image_url_large on a shape that
+// never had it.
+const spj = readFileSync(new URL('../docs/js/spotify.js', import.meta.url), 'utf8');
+check('there is one artist shape', /export function normaliseArtist/.test(spj));
+check('findArtist uses it', /return normaliseArtist\(exact \|\| items\[0\]\);/.test(spj));
+check('and so does searchArtists', /return items\.map\(normaliseArtist\);/.test(spj));
+// Two mappings for one shape is what caused this in the first place.
+check('no second mapping was left behind', (spj.match(/image_url_large: images\.length/g) || []).length === 1);
+check('the raw fields survive for the dive screen', /images,\n\s*image_url:/.test(spj));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

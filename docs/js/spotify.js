@@ -158,6 +158,29 @@ export function limitedUntil() {
   }
 }
 
+/**
+ * One artist shape, whichever call produced it.
+ *
+ * `searchArtists` normalised and `findArtist` didn't, so what a caller
+ * received depended on which lookup had happened — and a field that
+ * exists on one and not the other fails silently, which is how
+ * Multi-Dip covers lost their photographs.
+ *
+ * `images` is kept alongside, since the dive screen reads it directly.
+ */
+export function normaliseArtist(a) {
+  if (!a) return null;
+  const images = a.images || [];
+  return {
+    ...a,
+    id: a.id,
+    name: a.name,
+    images,
+    image_url: images.length ? (images.length >= 2 ? images[1].url : images[0].url) : null,
+    image_url_large: images.length ? images[0].url : null,
+  };
+}
+
 /** Loose comparison for matching names across two services. */
 function normalizeForMatch(v) {
   return (v || "")
@@ -553,10 +576,8 @@ export class SpotifyClient {
       items = (results.artists && results.artists.items) || [];
     }
     if (!items.length) return null;
-    for (const a of items) {
-      if (a.name.toLowerCase() === name.toLowerCase()) return a;
-    }
-    return items[0];
+    const exact = items.find((a) => a.name.toLowerCase() === name.toLowerCase());
+    return normaliseArtist(exact || items[0]);
   }
 
   /**
@@ -614,21 +635,9 @@ export class SpotifyClient {
     if (!query || !query.trim()) return [];
     const results = await this.get("search", { q: query.trim(), type: "artist", limit });
     const items = (results.artists && results.artists.items) || [];
-    return items.map((a) => {
-      const images = a.images || [];
-      return {
-        id: a.id,
-        name: a.name,
-        // Two sizes, deliberately. `image_url` is the smallest, which is
-        // right for a search-result tile and wrong for anything larger.
-        // `image_url_large` is the 640px original, for the full-screen
-        // dive — the small one upscales to a visibly soft mess there.
-        // Middle variant, not smallest: a 56px tile is ~168 device
-        // pixels at 3x and the 160px copy upscales visibly.
-        image_url: images.length ? (images.length >= 2 ? images[1].url : images[0].url) : null,
-        image_url_large: images.length ? images[0].url : null,
-      };
-    });
+    // The same normalisation findArtist uses. Two mappings for one
+    // shape is what caused the covers to lose their photographs.
+    return items.map(normaliseArtist);
   }
 
   /**

@@ -97,7 +97,11 @@ check('the logo goes top left', /function drawLogo/.test(cov) && /ctx\.drawImage
 // that isn't there and the first covers shipped with no logo at all —
 // silently, because a missing logo is deliberately not fatal.
 check('the logo path is relative to the app', /img\.src = "\.\.\/assets\/dd-logo\.png"/.test(cov));
-check('and it sits on a disc so it survives a pale photo', /ctx\.arc\(26 \+ w \/ 2, 26 \+ h \/ 2/.test(cov));
+// A disc solved the same problem — a solid mark vanishes against a
+// photograph of its own tone — but read as a grey blob stuck on the
+// corner of a pale sleeve. A shadow only shows where the art is light.
+check('the mark survives a pale photo', /ctx\.shadowColor = "rgba\(0,0,0,0\.65\)"/.test(cov));
+check('without a disc on the artwork', !/ctx\.arc\(26 \+ w \/ 2/.test(cov));
 check('and a missing logo does not lose the cover', /img\.onerror = \(\) => resolve\(\)/.test(cov));
 check('the title has the bottom edge to itself', /const room = SIZE - 56;/.test(cov));
 

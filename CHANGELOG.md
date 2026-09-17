@@ -4,6 +4,17 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.23
+- Fixed: Multi-Dip covers had no artist photos. Two lookups returned
+  two different artist shapes — `searchArtists` normalised its results
+  and `findArtist` handed back Spotify's raw object — so which fields
+  existed depended on which one had run. There's one shape now, used by
+  both.
+- The DeepDive mark no longer sits on a dark disc. The disc kept a
+  solid mark from vanishing against a photograph of its own tone, but
+  on a pale sleeve it read as a grey blob stuck in the corner. A shadow
+  does the same job and only shows where the artwork is light.
+
 ## 2.9.22
 - A few new artists since the last look are now looked up quietly
   rather than prompted about. Liking three albums shouldn't put "look

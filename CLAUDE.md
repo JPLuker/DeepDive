@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.22.** If the build in `js/app.js` is well
+**Last updated at build 2.9.23.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -187,6 +187,15 @@ decay removed the accident and the original bug reappeared.
 
 *When something adaptive looks like it works, check whether it works or
 whether stale state is covering for it.*
+
+**One shape per thing, normalised at the source.** `searchArtists`
+returned `{image_url, image_url_large}` and `findArtist` returned
+Spotify's raw object, so what a caller got depended on which lookup had
+run — and a field that exists on one shape and not the other fails
+silently. Multi-Dip covers lost their photographs to it, and album art
+had already been lost to the same thing (`album.images[]` versus
+`album.image_url`). Fix the producer, not the call site: patching one
+caller leaves the next to trip over it.
 
 **A flag that means three things will be wrong for someone.** `simple`
 meant create-a-new-playlist, keep-the-built-order, *and* cap at twenty.
