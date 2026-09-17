@@ -626,6 +626,9 @@ All three need a Last.fm key in Settings.
 ## 21. Artist popup (2.9.27)
 
 - [ ] No options icon on any search bar
+- [ ] The three choices show a depth gauge — one rung for Dip, two for
+      Multi-Dip, three for Dive
+- [ ] Dive and its gear read as one control, not a pill plus a box
 - [ ] Searching an artist opens the chooser just below the search bar,
       not mid-screen, and it slides in
 - [ ] The gear beside Dive opens a dropdown of modes, and the Dive

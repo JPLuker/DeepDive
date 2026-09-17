@@ -58,8 +58,13 @@ check('an empty dip is explained', /Couldn't build a dip for/.test(src));
 // options — which is what made Dip read as a setting rather than a
 // choice you were being offered.
 check('choices lead the dialog', /<div class="intent-choices">/.test(shell));
-check('dip is a choice, not a footer button', /<button class="intent-choice" id="intent-dip">/.test(shell));
-check('dive is the primary one', /<button class="intent-choice is-primary" id="intent-go">/.test(shell));
+check('dip is a choice, not a footer button', /<button class="intent-choice" data-depth="1" id="intent-dip">/.test(shell));
+check('the three read as one scale', /data-depth="1"[\s\S]*data-depth="2"[\s\S]*data-depth="3"/.test(shell));
+check('with a gauge showing how deep each goes', /class="intent-depth"/.test(shell));
+check('and no saturated primary slab', !/is-primary/.test(shell));
+// The gear was a separate box beside a pill; one shape split by a
+// hairline reads as a single control.
+check('dive and its settings are one control', /\.intent-choice-pair \{[\s\S]{0,160}gap:1px/.test(shell));
 check('each says what it does', /their best hour, most played first/.test(shell) && /their whole catalogue against your library/.test(shell));
 // The gear adjusts what a dive reads, so it belongs against Dive.
 check('gear sits with dive', /<div class="intent-choice-pair">[\s\S]{0,400}id="intent-gear"/.test(shell));

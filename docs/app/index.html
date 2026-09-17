@@ -588,29 +588,55 @@
      dialog. They were buttons in a footer below a page of options,
      which made Dip read as a setting rather than a choice. */
   .intent-choices { display:flex; flex-direction:column; gap:10px; margin:16px 0 4px; }
+  /* Dip, Multi-Dip and Dive are not three unrelated options — they are
+     one scale, from a handful of songs to a whole catalogue. The gauge
+     on the left says which end of it you're choosing, so the structure
+     carries the meaning instead of three identical cards relying on the
+     words alone. */
   .intent-choice {
-    display:flex; flex-direction:column; gap:3px; text-align:left;
+    display:grid; grid-template-columns:18px 1fr; align-items:center;
+    column-gap:14px; row-gap:2px; text-align:left;
     background:var(--tile); border:none; border-radius:var(--radius);
     padding:14px 16px; cursor:pointer; font-family:inherit; color:var(--ink);
     width:100%; transition:background .15s ease;
   }
   .intent-choice:hover { background:var(--tile-hover); }
-  .intent-choice.is-primary { background:var(--accent-gradient); color:#fff; }
-  .intent-choice.is-primary .intent-choice-sub { color:rgba(255,255,255,0.82); }
-  .intent-choice-title { font-size:16px; font-weight:700; letter-spacing:-0.015em; }
+  .intent-choice:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* Three rungs; the filled ones show how far down this option goes. */
+  .intent-depth {
+    grid-row:1 / span 2; align-self:center;
+    display:flex; flex-direction:column; gap:3px; width:18px;
+  }
+  .intent-depth i {
+    display:block; height:3px; border-radius:2px;
+    background:var(--line); transition:background .15s ease;
+  }
+  .intent-choice[data-depth="1"] .intent-depth i:nth-child(1),
+  .intent-choice[data-depth="2"] .intent-depth i:nth-child(-n+2),
+  .intent-choice[data-depth="3"] .intent-depth i { background:var(--accent); }
+
+  .intent-choice-title { font-size:15.5px; font-weight:650; letter-spacing:-0.01em; }
   .intent-choice-sub { font-size:12.5px; color:var(--muted); line-height:1.4; }
-  /* The gear belongs to Dive — it adjusts what a dive reads, not what a
-     dip is — so it sits against it rather than floating in the header. */
-  .intent-choice-pair { display:flex; gap:8px; align-items:stretch; }
-  .intent-choice-pair .intent-choice { flex:1; }
+
+  /* Dive and its settings read as one control rather than a pill with a
+     box stuck beside it: one shape, split by a hairline. */
+  .intent-choice-pair {
+    display:flex; align-items:stretch; gap:1px;
+    background:var(--line); border-radius:var(--radius); overflow:hidden;
+  }
+  .intent-choice-pair .intent-choice {
+    flex:1; border-radius:0;
+  }
   .intent-gear {
-    flex:0 0 auto; width:52px; border:none; border-radius:var(--radius);
+    flex:0 0 auto; width:54px; border:none; border-radius:0;
     background:var(--tile); color:var(--muted); cursor:pointer;
     display:flex; align-items:center; justify-content:center;
+    transition:background .15s ease, color .15s ease;
   }
   .intent-gear:hover { background:var(--tile-hover); color:var(--ink); }
-  .intent-gear[aria-expanded="true"] { background:var(--tile-hover); color:var(--ink); }
-  .intent-gear svg { width:19px; height:19px; }
+  .intent-gear:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+
   .intent-adjust { margin-top:14px; }
   .intent-mode-label {
     display:block; font-size:12.5px; color:var(--muted); margin-bottom:6px;
@@ -1160,23 +1186,26 @@
 
   <div class="modal-backdrop hidden" id="intent-modal">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="intent-title">
-      <h2 id="intent-title">What are you after?</h2>
+      <h2 id="intent-title">How far in?</h2>
       <p class="modal-sub" id="intent-artist"></p>
 
       <!-- The two things you can do, as the two things you can see.
            They used to be buttons in a footer under a page of options,
            which made Dip look like a setting rather than a choice. -->
       <div class="intent-choices">
-        <button class="intent-choice" id="intent-dip">
+        <button class="intent-choice" data-depth="1" id="intent-dip">
+          <span class="intent-depth" aria-hidden="true"><i></i><i></i><i></i></span>
           <span class="intent-choice-title">Dip</span>
           <span class="intent-choice-sub">their best hour, most played first</span>
         </button>
-        <button class="intent-choice" id="intent-multi">
+        <button class="intent-choice" data-depth="2" id="intent-multi">
+          <span class="intent-depth" aria-hidden="true"><i></i><i></i><i></i></span>
           <span class="intent-choice-title">Multi-Dip</span>
           <span class="intent-choice-sub">several artists, one night, weighted by billing</span>
         </button>
         <div class="intent-choice-pair">
-          <button class="intent-choice is-primary" id="intent-go">
+          <button class="intent-choice" data-depth="3" id="intent-go">
+          <span class="intent-depth" aria-hidden="true"><i></i><i></i><i></i></span>
             <span class="intent-choice-title">Dive</span>
             <span class="intent-choice-sub">their whole catalogue against your library</span>
           </button>

@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.30
+- Reworked the artist chooser. Dip, Multi-Dip and Dive aren't three
+  unrelated options — they're one scale, from a few songs to a whole
+  catalogue — so each row now carries a small gauge showing how far
+  down it goes.
+- Dive is no longer a saturated blue slab. It was the primary action
+  because it used to be the only thing DeepDive did; a dip is cheaper
+  and more common now, so the three read as equals and the gauge
+  carries the difference.
+- The settings gear was a box stuck beside a pill. It's part of the
+  same shape now, split by a hairline.
+- The heading asks "How far in?" and the line under it names all three
+  rather than two.
+
 ## 2.9.29
 - The dive modes are a dropdown now. They were five stacked cards, each
   with its own paragraph, which pushed the Dive button off the screen

@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.29";
+export const BUILD = "2.9.30";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1494,7 +1494,7 @@ function openIntentModal(artistName, { force = false } = {}) {
   const titleEl = document.getElementById("intent-title");
   if (titleEl) titleEl.textContent = artistName || "How should DeepDive search?";
   sub.textContent = artistName
-    ? "Dip for the highlights, dive for everything."
+    ? "A few songs, a night of them, or everything they've released."
     : "Pick what a dive does by default. You can change it any time.";
 
   // Opening the modal from Settings has no artist to act on, so the
