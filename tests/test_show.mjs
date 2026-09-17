@@ -231,5 +231,14 @@ check('and so does searchArtists', /return items\.map\(normaliseArtist\);/.test(
 check('no second mapping was left behind', (spj.match(/image_url_large: images\.length/g) || []).length === 1);
 check('the raw fields survive for the dive screen', /images,\n\s*image_url:/.test(spj));
 
+// The dive screen went black during a Multi-Dip. It had been fed
+// artwork by the catalogue read, and moving to search removed the
+// source without replacing it — so the most expensive screen in the app
+// showed a heading on an empty field.
+check('each artist shows their photo as they are searched', /if \(photo\) addDiveImage\(photo\);/.test(src));
+check('taken from the entry already in hand', /const photo = a\.image_url_large \|\| a\.image_url;/.test(src));
+// Same blank screen, same cause.
+check('and "if you like" shows its seed', /if \(seedPhoto\) addDiveImage\(seedPhoto\);/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

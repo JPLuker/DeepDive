@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.25
+- The dive screen is no longer blank during a Multi-Dip. It used to be
+  fed artwork by the catalogue read, and moving dips onto search
+  removed that source without replacing it — so the longest job in the
+  app ran against an empty field. Each artist's photo now shows as they
+  are searched.
+- "If you like…" does the same with the artist you named.
+
 ## 2.9.24
 - Re-running a mix now refreshes its cover. Covers were only ever set
   on a brand-new playlist, so artwork made by an older version of the

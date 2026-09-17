@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.24";
+export const BUILD = "2.9.25";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3592,6 +3592,8 @@ async function renderAskSimilar() {
     out.innerHTML = "";
     showDiveScreen(`Artists like ${name}…`, () => {});
     setDiveHeading(name);
+    const seedPhoto = seed && (seed.image_url_large || seed.image_url);
+    if (seedPhoto) addDiveImage(seedPhoto);
     updateDiveScreen(25, `Asking Last.fm who sounds like ${name}…`);
 
     let cached = [];
@@ -4147,6 +4149,8 @@ async function buildShowNow() {
           a.image_url_large = a.image_url_large || resolved.image_url_large || resolved.image_url;
         }
       }
+      const photo = a.image_url_large || a.image_url;
+      if (photo) addDiveImage(photo);
       const built = await dipViaSearch(a.name, {
         artistId: a.id || null,
         targetMs: wantMs,
