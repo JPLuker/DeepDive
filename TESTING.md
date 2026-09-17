@@ -623,6 +623,14 @@ All three need a Last.fm key in Settings.
 - [ ] Refusing the permission at Spotify's screen doesn't break
       anything — playlists still build, just without covers
 
+## 21. Artist popup (2.9.27)
+
+- [ ] No options icon on any search bar
+- [ ] Searching an artist opens the chooser just below the search bar,
+      not mid-screen, and it slides in
+- [ ] The gear beside Dive still opens the dive options
+- [ ] Nothing throws on a screen that never had the icon
+
 ## 20. Home mixes row (2.9.26)
 
 - [ ] Four cards, four kinds: sampler, an "If you like…", a library

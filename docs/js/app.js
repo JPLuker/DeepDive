@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.26";
+export const BUILD = "2.9.27";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -380,7 +380,7 @@ async function renderHome() {
     ${rateLimitBanner()}
     ${scopeBanner()}
     <div id="api-banner">${apiBannerHtml()}</div>
-    ${searchShellHtml()}
+    ${searchShellHtml({ options: false })}
     <div id="suggestions-row"></div>
     <div id="home-mixes"></div>`;
 
@@ -405,7 +405,7 @@ async function renderDives() {
     ${rateLimitBanner()}
     ${scopeBanner()}
     <div id="api-banner">${apiBannerHtml()}</div>
-    ${searchShellHtml()}
+    ${searchShellHtml({ options: false })}
     <div id="suggestions-row"></div>
     <div class="set-group set-group-spaced">
       ${navRow('id="go-scrub"', "Full library scan", "Crawls every artist you've liked. Thorough, and slow — one request per release.")}
@@ -1723,10 +1723,9 @@ function wireSearchBar() {
   const list = document.getElementById("autofill-list");
   const settingsBtn = document.getElementById("settings-toggle-btn");
 
-  // The options icon opens the intent chooser directly. It's the way
-  // back in for anyone who ticked "Don't ask again" — without it that
-  // choice would be permanent with no visible escape.
-  settingsBtn.addEventListener("click", (e) => {
+  // Kept guarded rather than deleted: the shell can still be asked for
+  // the icon, and a screen that does will want this behaviour.
+  settingsBtn?.addEventListener("click", (e) => {
     e.stopPropagation();
     const n = input.value.trim();
     openIntentModal(n || null, { force: true });

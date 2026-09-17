@@ -23,7 +23,11 @@ check('renderMixes exists', /async function renderMixes\(\)/.test(src));
 
 // Home: a search field and a taste of each destination.
 const home = src.slice(src.indexOf('async function renderHome()'), src.indexOf('async function renderDives()'));
-check('home keeps the search field', /searchShellHtml\(\)/.test(home));
+// The options gear is gone from every search bar: it duplicated the
+// one in the artist popup, which is where choosing what to do with an
+// artist actually happens.
+check('home keeps the search field', /searchShellHtml\(/.test(home));
+check('but not the options gear', !/searchShellHtml\(\)/.test(home));
 check('home suggestions are compact', /loadSuggestions\(\{ compact: true \}\)/.test(home));
 check('home mixes are a preview', /limit: perRow/.test(home));
 // Counts are per row rather than absolute, so Home looks deliberately
@@ -81,6 +85,16 @@ check('no loose pill row left', !/<div class="actions">\s*\n\s*<button class="bt
 // mistake the settings helpers made an hour earlier.
 check('nav row ids are literal', src.includes('id="go-scrub"') && src.includes('id="go-history"'));
 check('rows share the settings shape', /class="set-row set-row-nav"/.test(src));
+
+// The chooser floated mid-screen while the search bar that produced it
+// sits near the top, so picking an artist threw your eye somewhere
+// else entirely.
+const shellSrc = readFileSync(new URL('../docs/app/index.html', import.meta.url), 'utf8');
+check('the chooser sits near the search bar', /align-items:flex-start/.test(shellSrc));
+check('and drops rather than appearing', /animation:modal-drop/.test(shellSrc));
+check('with motion honoured', /prefers-reduced-motion: reduce\) \{\s*\n\s*\.modal \{ animation:none; \}/.test(shellSrc));
+// Removing the icon must not throw on a screen that never had one.
+check('the missing gear is handled', /settingsBtn\?\.addEventListener/.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

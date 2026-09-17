@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.27
+- Removed the options icon from the search bars. It duplicated the one
+  in the artist popup, which is where you actually choose what to do —
+  two ways in meant guessing which applied to what.
+- The artist popup opens near the search bar instead of floating in the
+  middle of the screen, and drops into place rather than appearing. It
+  belongs to the thing that produced it, so it should arrive next to
+  it. Reduced-motion settings are honoured.
+
 ## 2.9.26
 - The mixes row on Home is one of each kind now: the sampler, an "If
   you like…", something from your library, and a genre. It used to draw
