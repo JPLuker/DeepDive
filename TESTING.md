@@ -623,6 +623,17 @@ All three need a Last.fm key in Settings.
 - [ ] Refusing the permission at Spotify's screen doesn't break
       anything — playlists still build, just without covers
 
+## 20. Home mixes row (2.9.26)
+
+- [ ] Four cards, four kinds: sampler, an "If you like…", a library
+      mix, a genre
+- [ ] Refresh — the recommendation, library mix and genre change; the
+      sampler stays first
+- [ ] With no Last.fm key, the row is still four cards, all from your
+      library
+- [ ] Opening Home does not start a Last.fm fetch
+- [ ] The full Mixes page still shows everything
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

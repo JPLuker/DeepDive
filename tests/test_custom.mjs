@@ -146,5 +146,21 @@ check('the wrong advice is gone', !/Open Home and it'll cache in the background/
 // showed a thinner row and said nothing.
 check('home explains its thinner row', /state\.hasCache === false && suggestions\.length/.test(src));
 
+// Home drew four cards from one pool, so it was usually four
+// variations on the same idea — "everything you added in autumn" next
+// to "their tracks you own, oldest first". One of each kind covers the
+// whole app in the same four tiles.
+check('home builds a mixed row', /async function mixedRow/.test(src));
+check('starting with the sampler', /take\(allCards\.find\(\(c\) => c\.id === "sampler"\)\)/.test(src));
+check('then a recommendation', /take\(oneOf\(insights\.recommendationCards\(tracks, _similarBySeed\)\)\)/.test(src));
+check('then one from the library', /!c\.isRecommendation\s*\n?\s*&& c\.id !== "custom" && !String\(c\.id\)\.startsWith\("genre-"\)/.test(src));
+check('then a genre', /take\(oneOf\(insights\.genreCards\(tracks, _genreTags, \{ limit: 40 \}\)\)\)/.test(src));
+// No Last.fm key means no recommendations and no genres, and the row
+// still has to be the width it should be.
+check('gaps are filled from the pool', /for \(const c of insights\.seededPick\(allCards, allCards\.length, seed\)\)/.test(src));
+check('asking Last.fm is not triggered by opening home', /if \(_similarBySeed\.size\)/.test(src) && /if \(_genreTags\.size\)/.test(src));
+// The full Mixes page still wants everything.
+check('only the short row is curated', /if \(limit > 0\) _cards = await mixedRow/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

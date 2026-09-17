@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.25";
+export const BUILD = "2.9.26";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -463,6 +463,59 @@ const CARDS_PER_LOAD = 10;
  * @param headHtml Optional heading, so Home's preview can say where the
  *                 rest live rather than looking like the whole set.
  */
+/**
+ * One card of each kind, for the short row on Home.
+ *
+ * Drawing four from the one pool meant four variations on the same
+ * idea — usually "everything you added in autumn" next to "their
+ * tracks you own, oldest first". A sampler, something similar to what
+ * you play, something from your library and a genre covers the whole
+ * app in the same four tiles.
+ *
+ * Every kind is optional: no Last.fm key means no recommendation and no
+ * genre, and the row fills from the library instead rather than showing
+ * a gap.
+ */
+async function mixedRow(allCards, tracks, seed, limit) {
+  const picked = [];
+  const taken = new Set();
+  const take = (card) => {
+    if (!card || taken.has(card.id)) return false;
+    taken.add(card.id);
+    picked.push(card);
+    return true;
+  };
+  const oneOf = (list) => (list && list.length
+    ? list[Math.abs(seed + list.length) % list.length] : null);
+
+  take(allCards.find((c) => c.id === "sampler"));
+
+  // Recommendations and genres are only there once Last.fm has been
+  // asked, and asking here would turn opening Home into a fetch.
+  try {
+    if (_similarBySeed.size) {
+      take(oneOf(insights.recommendationCards(tracks, _similarBySeed)));
+    }
+  } catch (e) { /* the row is still worth drawing */ }
+
+  take(oneOf(allCards.filter((c) => !taken.has(c.id) && !c.isRecommendation
+    && c.id !== "custom" && !String(c.id).startsWith("genre-"))));
+
+  try {
+    if (_genreTags.size) {
+      take(oneOf(insights.genreCards(tracks, _genreTags, { limit: 40 })));
+    }
+  } catch (e) { /* as above */ }
+
+  // Whatever is missing — no key, no cache — is filled from the pool, so
+  // the row is always the width it should be.
+  for (const c of insights.seededPick(allCards, allCards.length, seed)) {
+    if (picked.length >= limit) break;
+    take(c);
+  }
+  return picked.slice(0, limit);
+}
+
 async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml = "" } = {}) {
   const el = document.getElementById(into);
   if (!el) return;
@@ -515,6 +568,10 @@ async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml 
       return;
     }
     _cards = insights.seededPick(_allCards, CARDS_PER_LOAD, seed);
+
+    // Only the short row on Home is curated this way. The full Mixes
+    // page wants everything, in no particular arrangement.
+    if (limit > 0) _cards = await mixedRow(_allCards, forMixes, seed, limit);
 
     renderCardRow(el);
   } catch (e) {

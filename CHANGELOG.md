@@ -4,6 +4,16 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.26
+- The mixes row on Home is one of each kind now: the sampler, an "If
+  you like…", something from your library, and a genre. It used to draw
+  four cards from one pool, which meant four variations on the same
+  idea sitting side by side.
+- Recommendations and genres only appear there once Last.fm has been
+  asked — opening Home won't start a fetch. Without them the row fills
+  from your library instead, so it's never short.
+- The full Mixes page is unchanged; it still shows everything.
+
 ## 2.9.25
 - The dive screen is no longer blank during a Multi-Dip. It used to be
   fed artwork by the catalogue read, and moving dips onto search
