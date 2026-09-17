@@ -146,6 +146,37 @@ the per-artist song count moved behind a button.
 
 ---
 
+## Next build — two from the 8 Sept pass
+
+**Multi-Dip covers have no artist photos.** Almost certainly the same
+two-shapes problem as the album art: bill entries added through the
+inline search carry `image_url_large`, because `searchArtists` builds
+that field. Entries added from the artist popup are resolved with
+`findArtist`, which returns Spotify's raw artist object — an `images[]`
+array and no `image_url_large` at all. So `a.image_url_large` stays
+undefined, the art object ends up with an empty `images` list, and the
+cover falls through to album art.
+
+Fix at the source rather than at the call site: `findArtist` should
+return the same shape `searchArtists` does. Patching the Multi-Dip path
+alone would leave the next caller to trip over it, which is how this
+one happened.
+
+Worth checking while in there whether a bill entry ever reaches the
+cover without *any* photo, and what it should do then — one artist's
+photo plus a blank panel would look broken.
+
+**The mark on the cover.** Joseph: *"what's up with the top right D?"*
+The mark is top left and the kind sits top right, so this needs one
+question before touching it: is the objection the mark itself — a
+semi-transparent dark disc turns into a grey blob on a pale sleeve like
+blink-182's — or does something about "SIMILAR" top right read wrong?
+
+Don't guess. The last three times I inferred what a one-line report
+meant, I fixed the wrong thing twice.
+
+---
+
 ## Before 2.9 ships
 
 **Rewrite every readable string.** Joseph's rule, 7 Sept: before any

@@ -51,6 +51,29 @@ source, not against Spotify.
 
 ---
 
+## Pass of 8 September — what Joseph actually ran
+
+He worked through the whole list bar two things: demo mode, and diving
+a prolific guest artist with "everything they've touched". Everything
+else passed.
+
+**Confirmed working:** genres present on load with no prompt; genre
+search and its clear button; "Show all" and "Show fewer"; the
+track-count picker; Settings rows; all four tabs; pins, unpinning and
+block scoping; dive history; "If you like…" both from a named artist
+and from a Recommended card; dips on mid-size, small and
+name-shared artists; export; Multi-Dip with tags, from the popup and
+from Dives; a dive that builds a playlist; re-creating a playlist;
+per-feature blocking in both scopes.
+
+**Still unrun:** demo mode (`?demo=index`), the guest-artist catalogue
+case, and anything desktop-only.
+
+**Two issues found — see the roadmap.** The mark on the cover, and
+Multi-Dip covers arriving without artist photos.
+
+---
+
 ## Before starting
 
 - [ ] Confirm the quota has actually cleared — a dive that fails
