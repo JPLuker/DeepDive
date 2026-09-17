@@ -166,14 +166,15 @@ Worth checking while in there whether a bill entry ever reaches the
 cover without *any* photo, and what it should do then — one artist's
 photo plus a blank panel would look broken.
 
-**The mark on the cover.** Joseph: *"what's up with the top right D?"*
-The mark is top left and the kind sits top right, so this needs one
-question before touching it: is the objection the mark itself — a
-semi-transparent dark disc turns into a grey blob on a pale sleeve like
-blink-182's — or does something about "SIMILAR" top right read wrong?
+**The dark disc behind the mark.** Confirmed by Joseph: the disc, not
+the mark or the kind label. It was added so a solid logo wouldn't
+vanish against a photograph of the same tone, but on a pale sleeve like
+blink-182's it reads as a grey blob stuck on the corner.
 
-Don't guess. The last three times I inferred what a one-line report
-meant, I fixed the wrong thing twice.
+Better: drop the disc and give the mark itself a soft shadow, or invert
+it to white on dark art and dark on pale art. The problem it was
+solving is real, so removing the disc outright needs something in its
+place.
 
 ---
 
