@@ -102,7 +102,14 @@ check('and a missing logo does not lose the cover', /img\.onerror = \(\) => reso
 check('the title has the bottom edge to itself', /const room = SIZE - 56;/.test(cov));
 
 // Mixes and genres have no artist, so album art is still the fallback.
-check('album art remains the fallback', /: cover\.albumImages\(tracks, 4\)/.test(src));
+// One album rather than four: the grid only ever meant "this is a
+// bill", and a mosaic of four unrelated covers says nothing.
+check('album art remains the fallback', /: cover\.albumImages\(tracks, 1\)/.test(src));
+// "If you like Oliver Tree" showed blackbear, because the cover fell
+// through to the first album in the mix — one of the similar artists,
+// not the one the card is named after.
+check('a recommendation uses its seed', /if \(!card\.art && card\.seedName\)/.test(src));
+check('and the card carries it', /seedImage: seedEntry\.image_url \|\| null/.test(readFileSync(new URL('../docs/js/insights.js', import.meta.url), 'utf8')));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

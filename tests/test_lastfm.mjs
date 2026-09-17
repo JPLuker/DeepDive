@@ -221,5 +221,20 @@ check('all genres are reachable', /id="genre-expand"/.test(src));
 check('and collapsible again', /id="genre-collapse"/.test(src));
 check('the prompt says what is already cached', /already looked up and remembered/.test(src));
 
+// Liking three albums shouldn't put "look up 3 more artists" under a
+// wall of genres every time the page opens — that reads as unfinished
+// work rather than an offer.
+check('a handful of new artists is topped up quietly', /untagged > 0 && untagged <= GENRE_AUTO_TOPUP/.test(src));
+check('and the button only appears above the threshold', /untagged > GENRE_AUTO_TOPUP \? `<button/.test(src));
+check('it does not fire while a fetch is running', /&& !_genreFetching\) \{/.test(src));
+// Expanding while a search was active kept the filter, so "show all
+// 173" showed the four that matched and there was no way back out.
+check('expanding clears the search', /_genresExpanded = true;\s*\n\s*_genreQuery = "";/.test(src));
+check('and so does collapsing', /_genresExpanded = false;\s*\n\s*_genreQuery = "";/.test(src));
+check('a search can also be cleared directly', /id="genre-clear"/.test(src));
+// 1044 tracks is eleven requests and a playlist nobody plays end to
+// end — the real count was the same open-ended option wearing a number.
+check('only standard lengths are offered', /if \(!lengths\.length && total > 0\) lengths\.push\(total\);/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

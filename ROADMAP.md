@@ -229,7 +229,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.21
+## Shipped since — build 2.9.22
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:

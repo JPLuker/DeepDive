@@ -4,6 +4,21 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.22
+- A few new artists since the last look are now looked up quietly
+  rather than prompted about. Liking three albums shouldn't put "look
+  up 3 more artists" under a wall of genres every time the page opens.
+  Above fifteen it's still a choice, since the wait is real.
+- Fixed: searching genres and then pressing "Show all" kept the search
+  applied, with no visible way back out. Expanding or collapsing clears
+  it, and the search box has a clear button.
+- The track-count picker offers the standard steps only. Showing the
+  real count was the same open-ended option wearing a number — 1,044
+  tracks is eleven requests and a playlist nobody plays end to end.
+- "If you like…" covers use the artist the card is named after.
+  "If you like Oliver Tree" was showing blackbear, who is one of the
+  similar artists rather than the seed.
+
 ## 2.9.21
 - Removed "All" from the track-count picker. A generated card can hold
   fourteen hundred tracks and every hundred is a request when the

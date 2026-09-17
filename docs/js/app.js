@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.21";
+export const BUILD = "2.9.22";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -770,7 +770,7 @@ function renderPlaylistOptions(el, state, onChange, total) {
   // whole mix is still reachable — as its actual count, which says what
   // you are about to make.
   const lengths = PLAYLIST_LENGTHS.filter((n) => n < total);
-  if (total > 0) lengths.push(total);
+  if (!lengths.length && total > 0) lengths.push(total);
   el.innerHTML = `
     <div class="settings-panel-title">How many tracks</div>
     <div class="card-len" data-group="length">
@@ -1178,6 +1178,16 @@ async function renderCustomMix() {
 }
 
 function openCardModal(card) {
+  // A card that names a seed artist gets their art, not the first album
+  // in the mix — "If you like Oliver Tree" was showing blackbear, who
+  // is one of the *similar* artists rather than the one it's named for.
+  if (!card.art && card.seedName) {
+    card.art = {
+      images: [card.seedImage].filter(Boolean),
+      title: card.seedName,
+      kind: "Similar",
+    };
+  }
   if (!card) return;
   const modal = document.getElementById("card-modal");
   const title = document.getElementById("card-title");
@@ -3387,17 +3397,30 @@ async function renderGenreSection() {
 
   const untagged = artists.filter((a) => !_genreTags.has(a.name.trim().toLowerCase())).length;
   const more = allGenres.length - cards.length;
+
+  // A handful of new artists since the last look isn't worth asking
+  // about. Liking three albums shouldn't put a "look up 3 more artists"
+  // button under a wall of genres every time the page opens — that
+  // reads as unfinished work rather than an offer. Below the threshold
+  // it just does it, which is a few seconds and keeps the tags honest.
+  if (untagged > 0 && untagged <= GENRE_AUTO_TOPUP && !_genreFetching) {
+    const fresh = artists.filter((a) => !_genreTags.has(a.name.trim().toLowerCase()));
+    fetchGenreTags(fresh)
+      .then(() => renderGenreSection())
+      .catch(() => { /* the prompt is still there if it fails */ });
+  }
   el.innerHTML = `
     <div class="row-head"><h2>Genres</h2><span class="qual">from Last.fm</span></div>
     ${allGenres.length > 8 ? `
       <div class="genre-filter">
-        <input type="text" id="genre-search" placeholder="Search ${allGenres.length} genres" autocomplete="off" spellcheck="false" value="${esc(_genreQuery)}">
+        <input type="text" id="genre-search" placeholder="Search ${everyGenre.length} genres" autocomplete="off" spellcheck="false" value="${esc(_genreQuery)}">
+        ${_genreQuery ? `<button type="button" class="genre-clear" id="genre-clear" aria-label="Clear search">&times;</button>` : ""}
       </div>` : ""}
     <div class="card-row" id="genre-cards"></div>
     <div class="actions">
       ${more > 0 ? `<button class="btn btn-ghost btn-small" id="genre-expand">Show all ${allGenres.length} genres</button>` : ""}
       ${_genresExpanded && allGenres.length > 14 ? `<button class="btn btn-ghost btn-small" id="genre-collapse">Show fewer</button>` : ""}
-      ${untagged ? `<button class="btn btn-ghost btn-small" id="genre-more">Look up ${untagged} more artist${untagged === 1 ? "" : "s"}</button>` : ""}
+      ${untagged > GENRE_AUTO_TOPUP ? `<button class="btn btn-ghost btn-small" id="genre-more">Look up ${untagged} more artist${untagged === 1 ? "" : "s"}</button>` : ""}
     </div>`;
 
   // Same card markup as the mixes row — a genre mix is a mix. The hue
@@ -3418,6 +3441,11 @@ async function renderGenreSection() {
       paintGenreCards(row, (q2 || _genresExpanded) ? next : next.slice(0, 14));
     });
   }
+
+  document.getElementById("genre-clear")?.addEventListener("click", () => {
+    _genreQuery = "";
+    renderGenreSection();
+  });
 
   wireGenreControls(artists);
 }
@@ -3444,10 +3472,12 @@ function paintGenreCards(row, cards) {
 function wireGenreControls(artists) {
   document.getElementById("genre-expand")?.addEventListener("click", () => {
     _genresExpanded = true;
+    _genreQuery = "";
     renderGenreSection();
   });
   document.getElementById("genre-collapse")?.addEventListener("click", () => {
     _genresExpanded = false;
+    _genreQuery = "";
     renderGenreSection();
   });
   document.getElementById("genre-more")?.addEventListener("click", async () => {
@@ -3753,7 +3783,7 @@ async function maybeSetCover(res, tracks, title, art) {
   try {
     const urls = (art && art.images && art.images.length)
       ? art.images
-      : cover.albumImages(tracks, 4);
+      : cover.albumImages(tracks, 1);
     if (!urls.length) {
       console.warn("[DeepDive] nothing to build a cover from");
       return;
@@ -4210,6 +4240,9 @@ async function buildShowNow() {
 let _genreTags = new Map();   // lowercased artist name -> [{name, weight}]
 let _genreFetching = false;
 let _genresExpanded = false;
+// Below this many unlooked-up artists, top up quietly rather than
+// asking. Above it the wait is long enough that it should be a choice.
+const GENRE_AUTO_TOPUP = 15;
 let _genreQuery = "";
 let _genreCancel = false;
 

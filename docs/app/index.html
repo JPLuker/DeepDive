@@ -450,7 +450,14 @@
      It reused .watchlist-row, which is built for a name and a button —
      not a name, a position, an order control, a marker and a button.
      The name and the buttons ended up on top of each other. */
-  .genre-filter { margin:0 0 12px; }
+  .genre-filter { margin:0 0 12px; position:relative; }
+  .genre-clear {
+    position:absolute; right:8px; top:50%; transform:translateY(-50%);
+    width:30px; height:30px; border-radius:50%;
+    border:none; background:none; color:var(--muted);
+    font-size:18px; line-height:1; cursor:pointer;
+  }
+  .genre-clear:hover { color:var(--ink); }
   .genre-filter input {
     width:100%; box-sizing:border-box; padding:11px 14px;
     font-family:inherit; font-size:14.5px;

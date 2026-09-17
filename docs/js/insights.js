@@ -877,6 +877,8 @@ export function recommendationCards(tracks, similarByArtist, { minTracks = 6, li
       id: `rec-${seedEntry.id}`,
       title: `If you like ${seedEntry.name}`,
       subtitle: `${seen.size} similar artist${seen.size === 1 ? "" : "s"} you already own`,
+      seedName: seedEntry.name,
+      seedImage: seedEntry.image_url || null,
       count: picked.length,
       tracks: picked,
       isRecommendation: true,
