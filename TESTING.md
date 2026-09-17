@@ -610,6 +610,9 @@ All three need a Last.fm key in Settings.
 - [ ] A Multi-Dip splits the square between its artists; a dip doesn't
 - [ ] A portrait photo isn't stretched
 - [ ] A library mix still gets album art, since it has no artist
+- [ ] **Re-run a mix you built earlier** — the cover should be rebuilt,
+      not left as it was. Before 2.9.24 a wrong cover could never be
+      corrected without deleting the playlist
 - [ ] "Not now" hides it for the session and it returns next time
 - [ ] After that, a **newly created** playlist gets a cover built from
       its album art

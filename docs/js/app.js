@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.23";
+export const BUILD = "2.9.24";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3776,8 +3776,24 @@ function familiarSelect(idAttr, value) {
  * not a failure — so nothing here is allowed to interrupt or to turn a
  * successful build into a visible error.
  */
+/**
+ * Did DeepDive make this playlist?
+ *
+ * Only ours get their covers refreshed on a re-run. Someone who set
+ * their own artwork on a playlist that happens to share a name should
+ * keep it.
+ */
+function ourPlaylist(id) {
+  try {
+    return history.listCreatedPlaylists().some((p) => p.playlistId === id);
+  } catch (e) {
+    return false;
+  }
+}
+
 async function maybeSetCover(res, tracks, title, art) {
-  if (!res || !res.id || res.reused) return;      // don't overwrite an existing cover
+  if (!res || !res.id) return;
+  if (res.reused && !ourPlaylist(res.id)) return;
 
   if (!auth.hasScope(auth.UPLOAD_SCOPE)) return;
   try {

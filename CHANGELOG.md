@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.24
+- Re-running a mix now refreshes its cover. Covers were only ever set
+  on a brand-new playlist, so artwork made by an older version of the
+  app stayed wrong forever and rebuilding the same mix wouldn't correct
+  it. Only playlists DeepDive is recorded as having made are refreshed
+  — artwork you set yourself stays yours.
+
 ## 2.9.23
 - Fixed: Multi-Dip covers had no artist photos. Two lookups returned
   two different artist shapes — `searchArtists` normalised its results

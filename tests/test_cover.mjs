@@ -77,7 +77,13 @@ check('and the playlist still counts as made', /Playlist made, but the cover did
 // only the second meant a Multi-Dip found no art at all.
 check('both album shapes are read', /al\.image_url/.test(cov) && /al\.images\[0\]/.test(cov));
 // Replacing a cover someone already set would be worse than not having one.
-check('an existing playlist keeps its cover', /if \(!res \|\| !res\.id \|\| res\.reused\) return;/.test(src));
+// Skipping every reuse meant a cover could never be corrected: a
+// re-run updated the tracks and left artwork from an older, wronger
+// version of this code in place, with no way back short of deleting
+// the playlist.
+check('a re-run refreshes our own cover', /if \(res\.reused && !ourPlaylist\(res\.id\)\) return;/.test(src));
+// But artwork somebody chose themselves stays theirs.
+check('and leaves anyone elses alone', /history\.listCreatedPlaylists\(\)\.some\(\(p\) => p\.playlistId === id\)/.test(src));
 
 // The cover is the artist, not a grid of album art. A grid is what
 // every playlist tool produces and says nothing about which playlist
