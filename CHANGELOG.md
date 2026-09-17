@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.28
+- The artist popup actually moves now. 2.9.27 only changed the desktop
+  rule; a mobile media query pins every modal to the bottom of the
+  screen, so on a phone — the only place it was reported from — nothing
+  changed at all. The chooser opens below the search bar; the card
+  modal stays a bottom sheet, which suits it.
+
 ## 2.9.27
 - Removed the options icon from the search bars. It duplicated the one
   in the artist popup, which is where you actually choose what to do —

@@ -90,7 +90,13 @@ check('rows share the settings shape', /class="set-row set-row-nav"/.test(src));
 // sits near the top, so picking an artist threw your eye somewhere
 // else entirely.
 const shellSrc = readFileSync(new URL('../docs/app/index.html', import.meta.url), 'utf8');
+// The desktop rule alone did nothing: a mobile media query pins every
+// modal to flex-end, so the chooser stayed a bottom sheet and the
+// change was invisible on the only device it was reported from.
 check('the chooser sits near the search bar', /align-items:flex-start/.test(shellSrc));
+check('on mobile too', /#intent-modal \{ align-items:flex-start/.test(shellSrc));
+// The card modal is long and scrolled — a sheet is right for that one.
+check('other modals stay sheets', /\.modal-backdrop \{ padding:0; align-items:flex-end; \}/.test(shellSrc));
 check('and drops rather than appearing', /animation:modal-drop/.test(shellSrc));
 check('with motion honoured', /prefers-reduced-motion: reduce\) \{\s*\n\s*\.modal \{ animation:none; \}/.test(shellSrc));
 // Removing the icon must not throw on a screen that never had one.

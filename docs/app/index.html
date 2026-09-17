@@ -1073,6 +1073,17 @@
 
     /* Modals: full-width sheets rather than centred boxes. */
     .modal-backdrop { padding:0; align-items:flex-end; }
+    /* Except the artist chooser, which belongs to the search bar it
+       came from. A sheet at the far edge of the screen made picking an
+       artist feel like being sent somewhere unrelated. */
+    #intent-modal { align-items:flex-start; padding:0 10px; }
+    #intent-modal .modal {
+      width:100%; margin-top:clamp(64px, 14vh, 150px);
+      border-radius:var(--radius-lg);
+      padding:20px 18px;
+      max-height:none;
+    }
+    #intent-modal .modal-actions { position:static; }
     .modal { width:100%; max-height:92vh; border-radius:var(--radius-lg) var(--radius-lg) 0 0; padding:22px 18px calc(22px + env(safe-area-inset-bottom)); }
     .modal-actions { position:sticky; bottom:0; background:var(--paper); padding-top:14px; margin-top:18px; }
     /* Don't stretch every action to equal width: with three buttons

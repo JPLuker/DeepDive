@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.27.** If the build in `js/app.js` is well
+**Last updated at build 2.9.28.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -238,6 +238,13 @@ tracks, and a cover-art line written for one was pasted into the other
 referencing `news`, which only exists in the first. Nothing caught it:
 `node --check` parses fine, and source-text assertions cannot see
 scope. `test_defined.mjs` now checks both handlers for stray locals.
+
+**A mobile override will quietly undo a desktop rule.** The artist
+chooser was moved to the top of the screen and nothing changed, because
+a `@media` block near the end of the stylesheet pins every modal to
+`flex-end`. Changing a base rule for a problem reported from a phone
+means checking the mobile block too — the fix looked right in the
+source and was invisible on the only device that mattered.
 
 **A green suite is not a working app.** The assertions read source
 text. They cannot see an element sitting on top of another, a dialog
