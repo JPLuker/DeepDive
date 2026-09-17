@@ -612,6 +612,15 @@
   .intent-gear[aria-expanded="true"] { background:var(--tile-hover); color:var(--ink); }
   .intent-gear svg { width:19px; height:19px; }
   .intent-adjust { margin-top:14px; }
+  .intent-mode-label {
+    display:block; font-size:12.5px; color:var(--muted); margin-bottom:6px;
+  }
+  .intent-adjust .sort-select { width:100%; }
+  /* One line about the mode that's actually chosen, rather than a
+     paragraph beside each of five. */
+  .intent-mode-desc {
+    margin:8px 0 0; font-size:13px; line-height:1.45; color:var(--muted);
+  }
   .intent-familiar { margin-top:14px; }
   .intent-familiar label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
   .intent-familiar .sort-select { width:100%; }
@@ -1078,10 +1087,11 @@
        artist feel like being sent somewhere unrelated. */
     #intent-modal { align-items:flex-start; padding:0 10px; }
     #intent-modal .modal {
-      width:100%; margin-top:clamp(64px, 14vh, 150px);
+      width:100%; margin-top:clamp(52px, 12vh, 132px);
       border-radius:var(--radius-lg);
       padding:20px 18px;
-      max-height:none;
+      max-height:calc(100vh - clamp(52px, 12vh, 132px) - 24px);
+      overflow-y:auto;
     }
     #intent-modal .modal-actions { position:static; }
     .modal { width:100%; max-height:92vh; border-radius:var(--radius-lg) var(--radius-lg) 0 0; padding:22px 18px calc(22px + env(safe-area-inset-bottom)); }

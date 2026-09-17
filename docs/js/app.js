@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.28";
+export const BUILD = "2.9.29";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1507,14 +1507,12 @@ function openIntentModal(artistName, { force = false } = {}) {
   let selected = savedIntentId();
 
   const paint = () => {
-    list.innerHTML = INTENTS.map((i) => `
-      <button type="button" class="intent-opt${i.id === selected ? " selected" : ""}" data-intent="${i.id}">
-        <span class="intent-radio"></span>
-        <span class="intent-text">
-          <span class="intent-name">${esc(i.name)}</span>
-          <span class="intent-desc">${esc(i.desc)}</span>
-        </span>
-      </button>`).join("");
+    list.innerHTML = `
+      <label class="intent-mode-label" for="intent-mode">How deep</label>
+      <select class="sort-select" id="intent-mode">
+        ${INTENTS.map((i) => `<option value="${i.id}"${i.id === selected ? " selected" : ""}>${esc(i.name)}</option>`).join("")}
+      </select>
+      <p class="intent-mode-desc" id="intent-mode-desc"></p>`;
     custom.classList.toggle("hidden", selected !== "custom");
     // Only warn when the slow option is actually chosen — a warning
     // that's always on screen stops being read.
@@ -1524,8 +1522,11 @@ function openIntentModal(artistName, { force = false } = {}) {
         (selected === "custom" && !!document.getElementById("opt-appears-on")?.checked);
       warn.classList.toggle("hidden", !heavy);
     }
-    list.querySelectorAll("[data-intent]").forEach((b) =>
-      b.addEventListener("click", () => { selected = b.dataset.intent; paint(); }));
+    const modeSel = document.getElementById("intent-mode");
+    const modeDesc = document.getElementById("intent-mode-desc");
+    const current = INTENTS.find((i) => i.id === selected);
+    if (modeDesc) modeDesc.textContent = current ? current.desc : "";
+    if (modeSel) modeSel.onchange = () => { selected = modeSel.value; paint(); };
   };
   paint();
 

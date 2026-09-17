@@ -628,7 +628,10 @@ All three need a Last.fm key in Settings.
 - [ ] No options icon on any search bar
 - [ ] Searching an artist opens the chooser just below the search bar,
       not mid-screen, and it slides in
-- [ ] The gear beside Dive still opens the dive options
+- [ ] The gear beside Dive opens a dropdown of modes, and the Dive
+      button stays reachable with it open
+- [ ] Changing mode updates the description under it
+- [ ] "Everything they've touched" still shows the slow-dive warning
 - [ ] Nothing throws on a screen that never had the icon
 
 ## 20. Home mixes row (2.9.26)

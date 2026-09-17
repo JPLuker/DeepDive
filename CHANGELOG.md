@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.29
+- The dive modes are a dropdown now. They were five stacked cards, each
+  with its own paragraph, which pushed the Dive button off the screen
+  the moment you opened them — you could read about the modes and not
+  act on one. The description shows for whichever mode is selected.
+- Fixed a regression from 2.9.28: the chooser had no maximum height, so
+  a long panel ran past the bottom of the screen with nothing to
+  scroll.
+
 ## 2.9.28
 - The artist popup actually moves now. 2.9.27 only changed the desktop
   rule; a mobile media query pins every modal to the bottom of the

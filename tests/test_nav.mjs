@@ -102,5 +102,18 @@ check('with motion honoured', /prefers-reduced-motion: reduce\) \{\s*\n\s*\.moda
 // Removing the icon must not throw on a screen that never had one.
 check('the missing gear is handled', /settingsBtn\?\.addEventListener/.test(src));
 
+// Five stacked option cards, each with a paragraph, pushed the Dive
+// button off the screen the moment the options were opened — you could
+// read about the modes and not act on one.
+check('the modes are a select', /id="intent-mode"/.test(src));
+check('with one description, for the chosen mode', /id="intent-mode-desc"/.test(src));
+check('and no stacked option cards', !/data-intent="\$\{i\.id/.test(src));
+// Repainting on change would rebuild the select mid-interaction.
+check('the description updates in place', /modeDesc\.textContent = current \? current\.desc : ""/.test(src));
+// max-height:none in 2.9.28 let the panel run past the bottom of the
+// screen with nothing to scroll.
+check('the chooser stays on screen', /max-height:calc\(100vh - clamp/.test(shellSrc));
+check('and scrolls when it has to', /#intent-modal \.modal \{[\s\S]{0,240}overflow-y:auto/.test(shellSrc));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
