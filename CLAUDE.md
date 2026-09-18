@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.31.** If the build in `js/app.js` is well
+**Last updated at build 2.9.32.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -231,6 +231,13 @@ Listener)` after a full render comes back dead on those fresh nodes.
 The tile overflow failed exactly this way and was patched twice before
 the cause was found. Delegate from a stable parent once, as `initTabs`
 already does.
+
+**A check that passes everything is worse than no check.** The stray-
+local audit counted braces from the first `{` after a function's name,
+which in `openIntentModal(artistName, { force = false } = {})` is the
+parameter — so it read 53 characters and passed. It had been green over
+a bug it was written to catch. When adding a check, break the code on
+purpose and confirm it fails.
 
 **Two functions with similar shapes will lend each other variables.**
 `applyResults` and `renderResults` both take `r` and both deal in

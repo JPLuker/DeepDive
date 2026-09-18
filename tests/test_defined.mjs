@@ -84,8 +84,17 @@ check('and set before the redirect handling', src.indexOf('tag.textContent = BUI
   const fnAt = (name) => {
     const i = src.indexOf(name);
     if (i < 0) return "";
+    // Skip the argument list first: a destructured parameter such as
+    // `({ force = false } = {})` opens braces of its own, and counting
+    // from the first one closes the "body" before it begins.
+    let p = 0, start = -1;
+    for (let k = src.indexOf("(", i); k < src.length; k++) {
+      if (src[k] === "(") p++;
+      else if (src[k] === ")") { p--; if (!p) { start = src.indexOf("{", k); break; } }
+    }
+    if (start < 0) return "";
     let d = 0;
-    for (let k = src.indexOf("{", i); k < src.length; k++) {
+    for (let k = start; k < src.length; k++) {
       if (src[k] === "{") d++;
       else if (src[k] === "}") { d--; if (!d) return src.slice(i, k); }
     }
@@ -93,9 +102,10 @@ check('and set before the redirect handling', src.indexOf('tag.textContent = BUI
   };
   // The two result handlers, which have similar shapes and similar
   // variable names — exactly where a stray reference hides.
-  for (const fn of ["async function applyResults(r, action)", "function renderResults(r)"]) {
+  for (const fn of ["async function applyResults(r, action)", "function renderResults(r)",
+                    "function openIntentModal("]) {
     const body = fnAt(fn);
-    check(`${fn.slice(0, 28)}… has no stray locals`, !!body && ["news", "dups", "cards", "entries"]
+    check(`${fn.slice(0, 28)}… has no stray locals`, !!body && ["news", "dups", "cards", "entries", "gear", "forArtist"]
       .every((n) => !new RegExp(`\\b${n}\\b`).test(body)
         || new RegExp(`(const|let|var)\\s+${n}\\b`).test(body)));
   }

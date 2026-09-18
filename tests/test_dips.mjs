@@ -80,8 +80,8 @@ check('settings opens straight on the options', /showDiveStep\(!artistName\)/.te
 check('and announces its state', /setAttribute\("aria-expanded", String\(!open\)\)/.test(src));
 // Opened from Settings there is no artist, so the choices make no sense
 // and the options are the whole point.
-check('settings opens straight to the options', /adjust\.classList\.toggle\("hidden", forArtist\)/.test(src));
-check('and hides the choices', /\.intent-choices"\)\?\.classList\.toggle\("hidden", !forArtist\)/.test(src));
+check('settings opens straight to the options', /showDiveStep\(!artistName\)/.test(src));
+check('and one function owns which step shows', (src.match(/intent-choices"\)\?\.classList\.toggle/g) || []).length === 1);
 check('the artist is the heading', /titleEl\.textContent = artistName/.test(src));
 
 // "Don't ask again" made sense when this dialog only chose how deep a

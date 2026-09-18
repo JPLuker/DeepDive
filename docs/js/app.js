@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.31";
+export const BUILD = "2.9.32";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1495,13 +1495,6 @@ function openIntentModal(artistName, { force = false } = {}) {
   sub.textContent = artistName
     ? "A few songs, a night of them, or everything they've released."
     : "Pick what a dive does by default. You can change it any time.";
-
-  // Opening the modal from Settings has no artist to act on, so the
-  // choices make no sense there — it's the options that are wanted.
-  const forArtist = !!artistName;
-  document.querySelector(".intent-choices")?.classList.toggle("hidden", !forArtist);
-  if (adjust) adjust.classList.toggle("hidden", forArtist);
-  if (gear) gear.setAttribute("aria-expanded", String(!forArtist));
 
   let selected = savedIntentId();
 

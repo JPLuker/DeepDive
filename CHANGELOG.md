@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.32
+- Fixed: tapping an artist did nothing. Removing the gear left one line
+  still referencing it, which threw the moment the chooser opened,
+  before anything was wired up.
+- The scope check that should have caught it was reading 53 characters
+  of a function instead of the whole thing — a destructured parameter
+  opens braces of its own, and it was counting from the wrong one. It
+  reads whole functions now, and covers the chooser.
+
 ## 2.9.31
 - The gear is gone. Tapping Dive now asks how deep as a second step,
   with Back and "Start the dive" — a choice and its settings were two
