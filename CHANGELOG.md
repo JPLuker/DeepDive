@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.31
+- The gear is gone. Tapping Dive now asks how deep as a second step,
+  with Back and "Start the dive" — a choice and its settings were two
+  controls for one decision.
+- Opened from Settings, where there's no artist to act on, it goes
+  straight to the options rather than showing three choices that lead
+  nowhere.
+
 ## 2.9.30
 - Reworked the artist chooser. Dip, Multi-Dip and Dive aren't three
   unrelated options — they're one scale, from a few songs to a whole

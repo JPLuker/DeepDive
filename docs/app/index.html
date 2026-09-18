@@ -619,23 +619,6 @@
   .intent-choice-title { font-size:15.5px; font-weight:650; letter-spacing:-0.01em; }
   .intent-choice-sub { font-size:12.5px; color:var(--muted); line-height:1.4; }
 
-  /* Dive and its settings read as one control rather than a pill with a
-     box stuck beside it: one shape, split by a hairline. */
-  .intent-choice-pair {
-    display:flex; align-items:stretch; gap:1px;
-    background:var(--line); border-radius:var(--radius); overflow:hidden;
-  }
-  .intent-choice-pair .intent-choice {
-    flex:1; border-radius:0;
-  }
-  .intent-gear {
-    flex:0 0 auto; width:54px; border:none; border-radius:0;
-    background:var(--tile); color:var(--muted); cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-    transition:background .15s ease, color .15s ease;
-  }
-  .intent-gear:hover { background:var(--tile-hover); color:var(--ink); }
-  .intent-gear:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
 
   .intent-adjust { margin-top:14px; }
   .intent-mode-label {
@@ -1192,7 +1175,7 @@
       <!-- The two things you can do, as the two things you can see.
            They used to be buttons in a footer under a page of options,
            which made Dip look like a setting rather than a choice. -->
-      <div class="intent-choices">
+      <div class="intent-choices" id="intent-choices">
         <button class="intent-choice" data-depth="1" id="intent-dip">
           <span class="intent-depth" aria-hidden="true"><i></i><i></i><i></i></span>
           <span class="intent-choice-title">Dip</span>
@@ -1203,16 +1186,11 @@
           <span class="intent-choice-title">Multi-Dip</span>
           <span class="intent-choice-sub">several artists, one night, weighted by billing</span>
         </button>
-        <div class="intent-choice-pair">
-          <button class="intent-choice" data-depth="3" id="intent-go">
+        <button class="intent-choice" data-depth="3" id="intent-go">
           <span class="intent-depth" aria-hidden="true"><i></i><i></i><i></i></span>
-            <span class="intent-choice-title">Dive</span>
-            <span class="intent-choice-sub">their whole catalogue against your library</span>
-          </button>
-          <button class="intent-gear" id="intent-gear" aria-label="Adjust the dive" aria-expanded="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.31.4.55.71.66H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          </button>
-        </div>
+          <span class="intent-choice-title">Dive</span>
+          <span class="intent-choice-sub">their whole catalogue against your library</span>
+        </button>
       </div>
 
       <div class="intent-adjust hidden" id="intent-adjust">
@@ -1245,8 +1223,10 @@
         <span><strong>This one is slow, and it has a real cost.</strong> Compilations and guest appearances can mean hundreds of extra releases, and Spotify allows only one request at a time — so a prolific artist takes several minutes. Worse, doing this repeatedly can get your Spotify app rate-limited for <strong>hours</strong>, which blocks all searches until it lifts. Use it deliberately rather than routinely, and leave the tab open while it runs.</span>
       </div>
       <div class="modal-actions">
+        <button class="btn btn-ghost hidden" id="intent-back">Back</button>
         <span class="spacer"></span>
         <button class="btn btn-ghost" id="intent-cancel">Cancel</button>
+        <button class="btn btn-primary hidden" id="intent-start">Start the dive</button>
       </div>
     </div>
   </div>

@@ -628,7 +628,10 @@ All three need a Last.fm key in Settings.
 - [ ] No options icon on any search bar
 - [ ] The three choices show a depth gauge — one rung for Dip, two for
       Multi-Dip, three for Dive
-- [ ] Dive and its gear read as one control, not a pill plus a box
+- [ ] There is no gear; tapping Dive opens the options as a second step
+- [ ] Back returns to the three choices, Start the dive runs it
+- [ ] Settings → the dive options open straight on the options, with no
+      Back button
 - [ ] Searching an artist opens the chooser just below the search bar,
       not mid-screen, and it slides in
 - [ ] The gear beside Dive opens a dropdown of modes, and the Dive

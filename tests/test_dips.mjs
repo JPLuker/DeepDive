@@ -57,19 +57,26 @@ check('an empty dip is explained', /Couldn't build a dip for/.test(src));
 // Dip and Dive are the dialog, not buttons in a footer under a page of
 // options — which is what made Dip read as a setting rather than a
 // choice you were being offered.
-check('choices lead the dialog', /<div class="intent-choices">/.test(shell));
+check("choices lead the dialog", /<div class="intent-choices" id="intent-choices">/.test(shell));
 check('dip is a choice, not a footer button', /<button class="intent-choice" data-depth="1" id="intent-dip">/.test(shell));
 check('the three read as one scale', /data-depth="1"[\s\S]*data-depth="2"[\s\S]*data-depth="3"/.test(shell));
 check('with a gauge showing how deep each goes', /class="intent-depth"/.test(shell));
 check('and no saturated primary slab', !/is-primary/.test(shell));
 // The gear was a separate box beside a pill; one shape split by a
 // hairline reads as a single control.
-check('dive and its settings are one control', /\.intent-choice-pair \{[\s\S]{0,160}gap:1px/.test(shell));
+// The gear is gone. A choice and its settings were two controls for one
+// decision; Dive asks how deep as a second step instead.
+check('no gear anywhere', !/intent-gear/.test(shell) && !/intent-gear/.test(src));
 check('each says what it does', /their best hour, most played first/.test(shell) && /their whole catalogue against your library/.test(shell));
 // The gear adjusts what a dive reads, so it belongs against Dive.
-check('gear sits with dive', /<div class="intent-choice-pair">[\s\S]{0,400}id="intent-gear"/.test(shell));
+check('dive opens a second step', /freshGo\.addEventListener\("click", \(\) => showDiveStep\(true\)\)/.test(src));
+check('with a way back', /id="intent-back"/.test(shell));
+check('and its own confirm', /id="intent-start"/.test(shell));
 check('options are behind it', /<div class="intent-adjust hidden" id="intent-adjust">/.test(shell));
-check('gear toggles them', /el\.classList\.toggle\("hidden", open\)/.test(src));
+check('the steps swap', /document\.getElementById\("intent-choices"\)\?\.classList\.toggle\("hidden", on\)/.test(src));
+// Opened from Settings there is no artist to act on, so the choices
+// would be an empty first step.
+check('settings opens straight on the options', /showDiveStep\(!artistName\)/.test(src));
 check('and announces its state', /setAttribute\("aria-expanded", String\(!open\)\)/.test(src));
 // Opened from Settings there is no artist, so the choices make no sense
 // and the options are the whole point.

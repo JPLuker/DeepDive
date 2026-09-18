@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.30";
+export const BUILD = "2.9.31";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1475,7 +1475,6 @@ function openIntentModal(artistName, { force = false } = {}) {
   if (!modal || !list) return;
 
   const adjust = document.getElementById("intent-adjust");
-  const gear = document.getElementById("intent-gear");
   const dipBtn = document.getElementById("intent-dip");
 
   // Populated here rather than in markup so the options and the saved
@@ -1574,19 +1573,42 @@ function openIntentModal(artistName, { force = false } = {}) {
   const cancelEl = document.getElementById("intent-cancel");
   const freshGo = goEl.cloneNode(true); goEl.replaceWith(freshGo);
   const freshCancel = cancelEl.cloneNode(true); cancelEl.replaceWith(freshCancel);
-  freshGo.addEventListener("click", () => confirm());
+  freshGo.addEventListener("click", () => showDiveStep(true));
 
-  if (gear) {
-    const freshGear = gear.cloneNode(true);
-    gear.replaceWith(freshGear);
-    freshGear.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const el = document.getElementById("intent-adjust");
-      const open = !el.classList.contains("hidden");
-      el.classList.toggle("hidden", open);
-      freshGear.setAttribute("aria-expanded", String(!open));
-    });
+  const backEl = document.getElementById("intent-back");
+  if (backEl) {
+    const freshBack = backEl.cloneNode(true);
+    backEl.replaceWith(freshBack);
+    freshBack.addEventListener("click", () => showDiveStep(false));
   }
+
+  const startEl = document.getElementById("intent-start");
+  if (startEl) {
+    const freshStart = startEl.cloneNode(true);
+    startEl.replaceWith(freshStart);
+    freshStart.addEventListener("click", () => confirm());
+  }
+
+  // Which half of the dialog is showing: the three choices, or how a
+  // dive should read.
+  function showDiveStep(on) {
+    document.getElementById("intent-choices")?.classList.toggle("hidden", on);
+    document.getElementById("intent-adjust")?.classList.toggle("hidden", !on);
+    document.getElementById("intent-back")?.classList.toggle("hidden", !on || !artistName);
+    document.getElementById("intent-start")?.classList.toggle("hidden", !on);
+    const t = document.getElementById("intent-title");
+    if (t) t.textContent = on ? "How deep?" : (artistName || "How should DeepDive search?");
+    if (sub) {
+      sub.textContent = on
+        ? `Reading ${artistName || "their catalogue"} against your library.`
+        : (artistName
+          ? "A few songs, a night of them, or everything they've released."
+          : "Pick what a dive does by default. You can change it any time.");
+    }
+  }
+  // Opened from Settings there is no artist, so the options are the
+  // whole point and the choices would be an empty step.
+  showDiveStep(!artistName);
 
   // A dip is a dive that stops early and keeps only the best hour, so
   // it takes the same options and the same route in — the difference is
