@@ -48,12 +48,12 @@ check('the heading follows what is shown', /<h2>\$\{pinHeading\}<\/h2>/.test(src
 check('dives does not list pins inline', /\} else \{\s*\n\s*shownPins = \[\];/.test(src));
 
 // --- starring ---
-check('the pins screen has a star', /data-star="\$\{esc\(e\.name\)\}"/.test(src));
+check('the crate has a star', /data-star="\$\{esc\(e\.name\)\}"/.test(src));
 check('and so do pin tiles', /data-upnext="\$\{esc\(p\.name\)\}"/.test(src));
 check('and suggestion tiles', /data-upnext="\$\{esc\(sg\.name\)\}"/.test(src));
 // A suggestion isn't pinned yet, so starring it has to carry what a pin needs.
 check('starring a suggestion carries its details', /watchlist\.setUpNext\(name, on, \{\s*\n\s*spotifyId: b\.dataset\.sid/.test(src));
-check('the star says which way it goes', /aria-pressed="\$\{watchlist\.isUpNext\(e\.name\)\}"/.test(src));
+check('the star says which way it goes', /aria-pressed="\$\{star\}"/.test(src));
 
 // --- the question after a playlist ---
 // Whether someone stays on Up next is the one thing only the listener

@@ -267,6 +267,30 @@ export function listUpNext() {
     .sort((a, b) => (a.up_next_at || "").localeCompare(b.up_next_at || ""));
 }
 
+/**
+ * Put an artist at the front of the crate.
+ *
+ * A crate of a hundred is read from the top, so where something sits is
+ * the only ordering that matters day to day. Stored as a timestamp
+ * rather than a position: moving one artist doesn't renumber the rest,
+ * and a newly added artist lands at the top too.
+ */
+export function moveToTop(name) {
+  const entries = load();
+  const i = _findIndex(entries, name);
+  if (i < 0) return;
+  entries[i].order_at = new Date().toISOString();
+  save(entries);
+}
+
+/** The crate in its own order: most recently added or moved first. */
+export function crateInOrder() {
+  const key = (e) => e.order_at || e.added_at || "";
+  return load()
+    .filter((e) => e.status !== "done")
+    .sort((a, b) => key(b).localeCompare(key(a)));
+}
+
 export function isPinned(name) {
   const target = (name || "").trim().toLowerCase();
   return listEntries().some((e) => (e.name || "").trim().toLowerCase() === target);

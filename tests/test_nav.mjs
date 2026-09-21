@@ -55,7 +55,7 @@ check('its pool is built wherever cards are drawn', /if \(!_samplerPool\.length\
 check('no leftover sampler strip', !/sampler-btn/.test(src));
 
 // The handlers must call functions that exist — renderPins didn't.
-for (const fn of ['renderWatchlist', 'renderHistory', 'renderScrubForm', 'openSampler']) {
+for (const fn of ['renderCrate', 'renderBlocked', 'renderHistory', 'renderScrubForm', 'openSampler']) {
   check(`${fn} is defined`, src.includes(`function ${fn}(`));
 }
 // The sampler pool is built by the suggestion row, which Mixes doesn't
@@ -79,7 +79,9 @@ check('library row is named for its contents', /<h2>From your library<\/h2>/.tes
 check('dive destinations are rows', /function navRow\(idAttr, title, detail\)/.test(src));
 check('the scan explains its cost', /one request per release/.test(dives));
 check('history explains itself', /how to undo it/.test(dives));
-check('pins explain themselves', /stop suggesting/.test(dives));
+// Pins became the Crate, and Blocked moved to Settings: blocking
+// changes what the app does, not what you're listening to.
+check('the crate explains itself', /Everyone you've put aside to get to/.test(dives));
 check('no loose pill row left', !/<div class="actions">\s*\n\s*<button class="btn btn-ghost btn-small" id="go-scrub"/.test(src));
 // Ids stay literal, or the orphan audit stops seeing them — the same
 // mistake the settings helpers made an hour earlier.

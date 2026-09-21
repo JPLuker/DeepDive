@@ -14,7 +14,7 @@ const mustExist = [
   'loadSuggestions','buildSuggestionRow','renderSuggestionRow',
   'renderDemo','renderDemoHome','renderDemoIndex',
   'renderHome','renderSetup','renderConnect','renderResults',
-  'renderProgressError','renderWatchlist','renderHistory','renderSettings','showDiveScreen','updateDiveScreen','hideDiveScreen','addDiveImage','startSlideshow','fetchArtistImages','setDiveHeading','openInSpotify','renderSamplerIntro','runSampler','confirmDialog','applyBmcVisibility','renderLanding','landingSeen','markLandingSeen','renderScrubForm','renderScrubResults',
+  'renderProgressError','renderCrate','renderBlocked','renderHistory','renderSettings','showDiveScreen','updateDiveScreen','hideDiveScreen','addDiveImage','startSlideshow','fetchArtistImages','setDiveHeading','openInSpotify','renderSamplerIntro','runSampler','confirmDialog','applyBmcVisibility','renderLanding','landingSeen','markLandingSeen','renderScrubForm','renderScrubResults',
   'startSearch','runSearchWithOptions','startScrub','applyResults','preflight',
   'explainError','diagnosticsHtml','maybeOfferUnpin','openIntentModal',
   'optionsForIntent','readCustomOptions','sortTracks','trackRow','esc','fmtDur',

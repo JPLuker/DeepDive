@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.37";
+export const BUILD = "2.9.38";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -200,7 +200,8 @@ function navigate(view) {
   if (!auth.isLoggedIn()) return renderConnect();
   if (view === "home") return renderHome();
   if (view === "scrub") return renderScrubForm();
-  if (view === "watchlist") return renderWatchlist();
+  if (view === "watchlist") return renderCrate();
+  if (view === "blocked") return renderBlocked();
   if (view === "history") return renderHistory();
   if (view === "settings") return renderSettings();
   if (view === "about") return renderLanding();
@@ -411,7 +412,7 @@ async function renderDives() {
       ${navRow('id="go-scrub"', "Full library scan", "Crawls every artist you've liked. Thorough, and slow — one request per release.")}
       ${navRow('id="go-show"', "Multi-Dip", "Everyone on the bill, weighted by billing and ordered like the night runs.")}
       ${navRow('id="go-history"', "Dive history", "What you've dived, what DeepDive built, and how to undo it.")}
-      ${navRow('id="go-pins"', "Pins &amp; blocked", "Artists you've pinned, and ones you've told DeepDive to stop suggesting.")}
+      ${navRow('id="go-pins"', "Crate", "Everyone you've put aside to get to, with Up next at the top.")}
     </div>`;
 
   wireSearchBar();
@@ -421,7 +422,7 @@ async function renderDives() {
   document.getElementById("go-scrub")?.addEventListener("click", () => renderScrubForm());
   document.getElementById("go-show")?.addEventListener("click", () => renderShow());
   document.getElementById("go-history")?.addEventListener("click", () => renderHistory());
-  document.getElementById("go-pins")?.addEventListener("click", () => renderWatchlist());
+  document.getElementById("go-pins")?.addEventListener("click", () => renderCrate());
 }
 
 /** Mixes — what Playlists were called — with the sampler alongside. */
@@ -1707,7 +1708,7 @@ function wireArtistSearch({ inputId, listId, source, onChoose, allowPin = false 
           <div class="autofill-item" data-i="${i}">
             ${it.image_url ? `<img src="${esc(it.image_url)}" alt="">` : ""}
             <span class="autofill-name">${esc(it.name)}</span>
-            ${allowPin ? `<button type="button" class="autofill-pin" data-pin-i="${i}" title="Pin for later" aria-label="Pin ${esc(it.name)}">
+            ${allowPin ? `<button type="button" class="autofill-pin" data-pin-i="${i}" title="Add to your crate" aria-label="Pin ${esc(it.name)}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>` : ""}
           </div>`).join("");
@@ -1727,7 +1728,7 @@ function wireArtistSearch({ inputId, listId, source, onChoose, allowPin = false 
             const it = items[+btn.dataset.pinI];
             if (!it) return;
             watchlist.pin(it.name, { spotifyId: it.id, imageUrl: it.image_url || null, imageUrlLarge: it.image_url_large || null });
-            flash(`Pinned ${it.name}.`);
+            flash(`${it.name} is in your crate.`);
             close();
             input.value = "";
             addPinToRow(it.name);
@@ -2053,7 +2054,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   const compact = _suggestOpts.compact;
   const perRow = columnsAtWidth();
   if (compact) suggestions = suggestions.slice(0, perRow * 2);
-  let pinHeading = "Pinned";
+  let pinHeading = "From your crate";
   let shownPins;
   if (compact) {
     const upNext = watchlist.listUpNext();
@@ -2114,7 +2115,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     <div class="tile-grid">
       ${suggestions.map((sg) => tile(sg.name, sg.image_url, sg.reason,
         `<button class="tile-btn" data-upnext="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" data-img-big="${esc(sg.image_url_large || "")}" title="Add to Up next">${STAR_SVG}</button>
-         <button class="tile-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" data-img-big="${esc(sg.image_url_large || "")}" title="Pin for later">+</button>
+         <button class="tile-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" data-img-big="${esc(sg.image_url_large || "")}" title="Add to your crate">+</button>
          <button class="tile-btn danger" data-block="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" title="Never suggest this artist">&minus;</button>`)).join("")}
     </div>` : "";
 
@@ -2148,7 +2149,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
       const why = state.listeningFailed
         ? "Couldn't reach Spotify for listening-based suggestions right now."
         : "Run a search first — suggestions are built from your library once it's been read.";
-      emptyHtml = `<p class="crate-note row-label">${esc(why)} Pin an artist from the search box to keep it here.</p>`;
+      emptyHtml = `<p class="crate-note row-label">${esc(why)} Add an artist to your crate to keep them here.</p>`;
     }
   }
 
@@ -2202,7 +2203,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     ev.stopPropagation();
     const name = b.dataset.pin;
     watchlist.pin(name, { spotifyId: b.dataset.sid || null, imageUrl: b.dataset.img || null, imageUrlLarge: b.dataset.imgBig || null });
-    flash(`Pinned ${name}.`);
+    flash(`${name} is in your crate.`);
     // Move it from suggestions to pins locally — the underlying data
     // hasn't changed, only where this artist belongs.
     const key = name.trim().toLowerCase();
@@ -2405,7 +2406,7 @@ function maybeOfferUnpin(artistName) {
   const btn = document.getElementById("unpin-after-dive");
   if (btn) btn.addEventListener("click", () => {
     watchlist.unpin(entry.id);
-    slot.textContent = `Removed ${artistName} from your pins.`;
+    slot.textContent = `${artistName} is out of your crate.`;
   });
 }
 
@@ -3276,13 +3277,6 @@ function renderScrubResults(r) {
       ` : `<p class="empty-note">Nothing new found.</p><div class="actions"><button class="btn btn-ghost" data-home>Back to search</button></div>`}
     </div>`;
   root.querySelector("[data-home]")?.addEventListener("click", () => renderHome());
-  root.querySelectorAll("[data-star]").forEach((b) => b.addEventListener("click", () => {
-    const name = b.dataset.star;
-    const on = !watchlist.isUpNext(name);
-    watchlist.setUpNext(name, on);
-    flash(on ? `${name} is up next.` : `${name} is off Up next.`);
-    renderWatchlist();
-  }));
 
   const sortSel = document.getElementById("new-sort");
   if (sortSel) {
@@ -4836,6 +4830,11 @@ function renderSettings() {
     </div>
 
     <div class="set-group">
+      <div class="set-group-label">Suggestions</div>
+      ${navRow('id="go-blocked"', "Blocked artists", "Anyone you've told DeepDive to stop suggesting, and where.")}
+    </div>
+
+    <div class="set-group">
       <div class="set-group-label">Spotify</div>
       ${settingRow({
         title: "Refresh library",
@@ -4851,7 +4850,7 @@ function renderSettings() {
       <div id="playlist-cleanup-all"></div>
       ${settingRow({
         title: "Disconnect",
-        detail: "Sign out of Spotify. Your pins and history stay.",
+        detail: "Sign out of Spotify. Your crate and history stay.",
         control: `<button class="btn btn-ghost btn-small" id="set-disconnect">Disconnect</button>`,
       })}
       <p class="set-note">Music metadata and artwork are provided by Spotify. DeepDive is not affiliated with Spotify AB.</p>
@@ -4949,6 +4948,8 @@ function renderSettings() {
   if (uriEl) uriEl.textContent = auth.redirectUri();
   const idInput = document.getElementById("set-client-id");
   if (idInput) idInput.value = auth.getClientId();
+  document.getElementById("go-blocked")?.addEventListener("click", () => renderBlocked());
+
   const lfmInput = document.getElementById("set-lastfm-key");
   if (lfmInput) lfmInput.value = lastfm.getKey();
   document.getElementById("set-save-lastfm")?.addEventListener("click", () => {
@@ -4965,7 +4966,7 @@ function renderSettings() {
     auth.setClientId(v);
     say(changed ? "Saved. Reconnect Spotify for it to take effect." : "Saved.");
   });
-  document.getElementById("go-pins")?.addEventListener("click", () => renderWatchlist());
+  document.getElementById("go-pins")?.addEventListener("click", () => renderCrate());
   document.getElementById("go-history")?.addEventListener("click", () => renderHistory());
   document.getElementById("set-refresh")?.addEventListener("click", () => refreshLibrary());
   document.getElementById("set-disconnect")?.addEventListener("click", () => { auth.logout(); render(); });
@@ -5237,33 +5238,209 @@ function renderHistory() {
   });
 }
 
+// ============================================================
+// Crate
+// ============================================================
+//
+// Everyone you've put aside to get to. Built to hold a hundred and stay
+// usable, the way a streaming queue does: you read it from the top,
+// Up next leads, and search and sort are how you reach the rest.
+//
+// Stored under the old "watchlist" key — renaming the storage would
+// strand everyone's existing crate for the sake of a word.
+
+let _crateQuery = "";
+let _crateSort = "order";
+
+const CRATE_SORTS = [
+  ["order", "Your order"],
+  ["added", "Recently added"],
+  ["az", "A–Z"],
+  ["undived", "Not dived yet"],
+];
+
+/** When each crated artist was last dived, by lower-cased name. */
+function divedDates() {
+  const out = new Map();
+  try {
+    for (const d of history.listDives()) {
+      const k = (d.artistName || "").trim().toLowerCase();
+      if (k && !out.has(k)) out.set(k, d.at || d.date || null);
+    }
+  } catch (e) { /* history is a nicety here */ }
+  return out;
+}
+
+function crateSorted(entries, dived) {
+  const list = entries.slice();
+  const name = (e) => (e.name || "").toLowerCase();
+  if (_crateSort === "az") list.sort((a, b) => name(a).localeCompare(name(b)));
+  else if (_crateSort === "added") list.sort((a, b) => (b.added_at || "").localeCompare(a.added_at || ""));
+  else if (_crateSort === "undived") {
+    // Not yet dived first, then the rest in your own order.
+    list.sort((a, b) => Number(dived.has(name(a))) - Number(dived.has(name(b))));
+  }
+  return list;
+}
+
+function crateTile(e, dived) {
+  const k = (e.name || "").trim().toLowerCase();
+  const when = dived.get(k);
+  const sub = dived.has(k)
+    ? (when ? `dived ${new Date(when).toLocaleDateString(undefined, { month: "short", year: "numeric" })}` : "dived")
+    : "not dived yet";
+  const star = watchlist.isUpNext(e.name);
+  const photo = e.image_url || e.image_url_large;
+  return `
+    <div class="crate-tile" data-crate="${esc(e.name)}">
+      <button class="crate-open" data-search="${esc(e.name)}">
+        ${photo
+          ? `<img src="${esc(photo)}" alt="" loading="lazy" class="crate-art">`
+          : `<span class="crate-art crate-art-blank">${esc((e.name || "?").charAt(0).toUpperCase())}</span>`}
+        <span class="crate-text">
+          <span class="crate-name">${esc(e.name)}</span>
+          <span class="crate-sub">${esc(sub)}</span>
+        </span>
+      </button>
+      <span class="crate-actions">
+        <button class="star-btn${star ? " on" : ""}" data-star="${esc(e.name)}"
+          aria-pressed="${star}" aria-label="${star ? "Remove from" : "Add to"} Up next" title="Up next">${STAR_SVG}</button>
+        <button class="crate-btn" data-top="${esc(e.name)}" aria-label="Move ${esc(e.name)} to the top" title="Move to the top">&uarr;</button>
+        <button class="crate-btn" data-crate-rm="${esc(e.id)}" data-name="${esc(e.name)}" aria-label="Take ${esc(e.name)} out of the crate" title="Take out">&times;</button>
+      </span>
+    </div>`;
+}
+
+function renderCrate() {
+  setTitle("DeepDive · Crate");
+  setActiveTab("dives");
+  const all = watchlist.crateInOrder();
+  const upNext = watchlist.listUpNext();
+
+  root.innerHTML = `
+    <div class="row-head"><h2>Crate</h2><span class="qual">${all.length} artist${all.length === 1 ? "" : "s"}</span></div>
+    ${all.length ? `
+      <p class="nav-hint" style="margin-top:0;">Everyone you've put aside to get to. Star someone to put them on Up next, which is what Home shows.</p>
+      <div class="crate-tools">
+        <input type="search" id="crate-search" placeholder="Search your crate" autocomplete="off" spellcheck="false" value="${esc(_crateQuery)}">
+        <select id="crate-sort" class="sort-select" aria-label="Sort the crate">
+          ${CRATE_SORTS.map(([v, l]) => `<option value="${v}"${v === _crateSort ? " selected" : ""}>${l}</option>`).join("")}
+        </select>
+      </div>
+      <div class="actions" style="margin-top:4px;">
+        <button class="btn btn-ghost btn-small" id="crate-sampler">Sampler from your crate</button>
+      </div>
+      <div id="crate-body"></div>`
+      : `<p class="empty-note">Your crate is empty. Add an artist from any tile's menu, or from the search box, and they'll wait here.</p>`}
+    <div class="actions"><button class="btn btn-ghost" data-tab="dives">Back</button></div>`;
+
+  if (!all.length) return;
+
+  const body = document.getElementById("crate-body");
+  const paint = () => {
+    const dived = divedDates();
+    const q = _crateQuery.trim().toLowerCase();
+    const match = (e) => !q || (e.name || "").toLowerCase().includes(q);
+    const queued = new Set(upNext.map((e) => e.name));
+    // While searching, one flat list is easier to scan than two.
+    const head = q ? [] : upNext.filter(match);
+    const rest = crateSorted(all.filter((e) => match(e) && (q || !queued.has(e.name))), dived);
+    body.innerHTML = `
+      ${head.length ? `
+        <div class="crate-section"><span class="label">Up next</span></div>
+        <div class="crate-grid">${head.map((e) => crateTile(e, dived)).join("")}</div>` : ""}
+      ${rest.length ? `
+        ${head.length ? `<div class="crate-section"><span class="label">Everyone else</span></div>` : ""}
+        <div class="crate-grid">${rest.map((e) => crateTile(e, dived)).join("")}</div>`
+        : (q ? `<p class="empty-note">No one in your crate matches that.</p>` : "")}`;
+  };
+  paint();
+
+  // Repaint only the list: re-rendering the page rebuilt the search box
+  // and lost focus, which on a phone closes the keyboard every letter.
+  const search = document.getElementById("crate-search");
+  search.addEventListener("input", () => { _crateQuery = search.value; paint(); });
+  document.getElementById("crate-sort").addEventListener("change", (e) => { _crateSort = e.target.value; paint(); });
+
+  // One listener on the list rather than one per tile, since the list
+  // repaints on every keystroke.
+  body.addEventListener("click", (ev) => {
+    const star = ev.target.closest("[data-star]");
+    const top = ev.target.closest("[data-top]");
+    const rm = ev.target.closest("[data-crate-rm]");
+    const open = ev.target.closest("[data-search]");
+    if (star) {
+      const n = star.dataset.star;
+      const on = !watchlist.isUpNext(n);
+      watchlist.setUpNext(n, on);
+      flash(on ? `${n} is up next.` : `${n} is off Up next.`);
+      renderCrate();
+    } else if (top) {
+      watchlist.moveToTop(top.dataset.top);
+      flash(`${top.dataset.top} moved to the top.`);
+      renderCrate();
+    } else if (rm) {
+      watchlist.remove(rm.dataset.crateRm);
+      flash(`${rm.dataset.name} is out of your crate.`);
+      renderCrate();
+    } else if (open) {
+      startSearch(open.dataset.search);
+    }
+  });
+
+  document.getElementById("crate-sampler")?.addEventListener("click", () => crateSampler(all));
+}
+
+/**
+ * A sampler drawn from the crate rather than from artists you've barely
+ * played: a few songs each from people you've put aside, which is a
+ * quick way to decide who to get to first.
+ */
+async function crateSampler(entries) {
+  // A random handful, not always the top of the crate — otherwise the
+  // same dozen would come back every time and the rest never would.
+  const pool = insights.seededPick(entries, SAMPLER_MAX_ARTISTS, Date.now() >>> 0);
+  const artists = [];
+  for (const e of pool) {
+    let id = e.spotify_id;
+    // Artists added by name alone have no id yet; one lookup each finds it.
+    if (!id) {
+      try {
+        const found = await client.findArtist(e.name);
+        if (found) {
+          id = found.id;
+          watchlist.setDetails(e.id, found.id, found.image_url);
+        }
+      } catch (err) { /* skip them rather than stop */ }
+    }
+    if (id) artists.push({ id, name: e.name, image_url: e.image_url, image_url_large: e.image_url_large });
+  }
+  if (artists.length < 2) {
+    flash("Not enough of your crate could be found on Spotify for a sampler.", true);
+    return;
+  }
+  runSampler(artists);
+}
+
+
 const STAR_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2.5 15.1 8.8 22 9.8 17 14.7 18.2 21.6 12 18.3 5.8 21.6 7 14.7 2 9.8 8.9 8.8 12 2.5"/></svg>`;
 
-function renderWatchlist() {
-  setTitle("DeepDive · Pins & blocked");
-  const pins = watchlist.pinned();
+/**
+ * Artists you've told DeepDive to leave alone.
+ *
+ * Lived beside the pins until the crate got its own screen. Blocking is
+ * a setting — it changes what the app does, not what you're listening
+ * to — so it moved to Settings.
+ */
+function renderBlocked() {
+  setTitle("DeepDive · Blocked artists");
+  setActiveTab("settings");
   const blocked = watchlist.listBlocked();
   root.innerHTML = `
     <div class="card">
-      <h1>Pins &amp; blocked</h1>
-      <p class="muted">Star a pin to put it on Up next, which is what Home shows. Blocked artists never appear at all. Both are stored in this browser only.</p>
-
-      <div class="crate-header"><span class="label">Pinned</span></div>
-      ${pins.length ? pins.map((e) => `
-        <div class="watchlist-row">
-          <span class="watchlist-name">${e.image_url ? `<img src="${esc(e.image_url)}" alt="" class="pill-avatar">` : ""}${esc(e.name)}</span>
-          <div class="watchlist-actions">
-            <button class="star-btn${watchlist.isUpNext(e.name) ? " on" : ""}" data-star="${esc(e.name)}"
-              aria-pressed="${watchlist.isUpNext(e.name)}" aria-label="${watchlist.isUpNext(e.name) ? "Remove from" : "Add to"} Up next"
-              title="Up next">${STAR_SVG}</button>
-            <button class="btn btn-ghost btn-small" data-wl-search="${esc(e.name)}">Dive now</button>
-            <button class="btn btn-ghost btn-small" data-wl-remove="${esc(e.id)}" data-name="${esc(e.name)}">Unpin</button>
-          </div>
-        </div>`).join("") : `<p class="empty-note">Nothing pinned. Pin an artist from the search suggestions, or from the dropdown as you type.</p>`}
-      ${pins.length ? `<div class="actions"><button class="btn btn-ghost btn-small" id="wipe-pins">Remove all pins</button></div>` : ""}
-
-      <div class="crate-header"><span class="label">Blocked</span></div>
-      <p class="nav-hint" style="margin-top:0;">Blocking is per feature. Not wanting to dive an artist isn't the same as not wanting them in a mix built from tracks you already liked.</p>
+      <h1>Blocked artists</h1>
+      <p class="muted">Blocked artists never appear in suggestions or mixes, depending on what you tick.</p>
+            <p class="nav-hint" style="margin-top:0;">Blocking is per feature. Not wanting to dive an artist isn't the same as not wanting them in a mix built from tracks you already liked.</p>
       ${blocked.length ? blocked.map((b) => {
         const sc = watchlist.blockScopes(b.name);
         return `
@@ -5276,33 +5453,19 @@ function renderWatchlist() {
           </div>
         </div>`; }).join("") : `<p class="empty-note">Nothing blocked. Use the &minus; button on any artist tile to stop suggesting them.</p>`}
 
-      <div class="actions"><button class="btn btn-ghost" data-home>Back to search</button></div>
+      <div class="actions"><button class="btn btn-ghost" data-tab="settings">Back to settings</button></div>
     </div>`;
 
-  root.querySelector("[data-home]")?.addEventListener("click", () => renderHome());
-  root.querySelectorAll("[data-wl-search]").forEach((b) => b.addEventListener("click", () => startSearch(b.dataset.wlSearch)));
-  root.querySelectorAll("[data-wl-remove]").forEach((b) => b.addEventListener("click", () => {
-        watchlist.unpin(b.dataset.wlRemove);
-    renderWatchlist();
-  }));
-  // Each scope is independent: turning both off removes the entry
-  // entirely, so there's no such thing as a block that blocks nothing.
   root.querySelectorAll("[data-scope]").forEach((c) => c.addEventListener("change", () => {
     watchlist.setBlockScope(c.dataset.nm, c.dataset.scope, c.checked);
     const left = watchlist.blockScopes(c.dataset.nm);
-    if (!left.length) { flash(`${c.dataset.nm} is no longer blocked.`); renderWatchlist(); }
+    if (!left.length) { flash(`${c.dataset.nm} is no longer blocked.`); renderBlocked(); }
   }));
 
   root.querySelectorAll("[data-unblock]").forEach((b) => b.addEventListener("click", () => {
     watchlist.unblock(b.dataset.unblock);
-    renderWatchlist();
+    renderBlocked();
   }));
-  const wipe = document.getElementById("wipe-pins");
-  if (wipe) wipe.addEventListener("click", async () => {
-    if (!await confirmDialog({ title: "Remove all pins?", body: `All ${pins.length} pins will be cleared. This cannot be undone.`, confirmLabel: "Remove all", danger: true })) return;
-    watchlist.clearAllPins();
-    renderWatchlist();
-  });
 }
 
 // ============================================================
@@ -5347,8 +5510,8 @@ const FEATURES = [
   },
   {
     icon: `<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/>`,
-    title: "Pins and suggestions",
-    body: "Pin an artist to come back to. Suggestions come half from what you've been playing and half from your own library, and each one tells you why it's there.",
+    title: "Your crate",
+    body: "Put aside the artists you mean to get to, and star the few you'll do next. Suggestions come half from what you've been playing and half from your own library.",
   },
   {
     icon: `<path d="M12 22s8-4.5 8-11a8 8 0 1 0-16 0c0 6.5 8 11 8 11z"/><circle cx="12" cy="11" r="3"/>`,

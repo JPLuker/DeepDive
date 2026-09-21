@@ -4,6 +4,25 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.38 — The Crate
+- **Pins are now the Crate**, rebuilt to hold a hundred artists and stay
+  usable. It reads from the top like a streaming queue: Up next leads,
+  then everyone else.
+- **Search** within it, and **sort** by your order, recently added, A–Z,
+  or not dived yet — the last one answers "who haven't I got to".
+- Each artist is a tile with their photo and one line of where you are
+  with them: "not dived yet", or when you last did. Photos load as they
+  scroll into view, so a hundred of them don't all fetch at once.
+- **Move to the top** from any tile, which is what reordering a queue
+  means day to day.
+- **Sampler from your crate**: a few songs each from a random handful
+  of the people you've put aside — a quick way to decide who to get to
+  first.
+- **Blocked artists moved to Settings.** Blocking changes what the app
+  does rather than what you're listening to, so it belongs there.
+- Fixed: the star on the old pins screen never worked. Its handler was
+  attached to the library scrub screen instead.
+
 ## 2.9.37
 - The landing page covers everything the app does. It predated
   Multi-Dip, Up next, playlist covers, the sampler and Build your own,

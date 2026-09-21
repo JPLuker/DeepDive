@@ -682,6 +682,19 @@ All three need a Last.fm key in Settings.
 - [ ] Opening Home does not start a Last.fm fetch
 - [ ] The full Mixes page still shows everything
 
+## 23. The Crate (2.9.38)
+
+- [ ] Dives → Crate opens a grid of photo tiles, not a list
+- [ ] Up next leads, then "Everyone else"
+- [ ] Search narrows it, and the keyboard stays up while typing
+- [ ] Each sort works; "Not dived yet" puts undived artists first
+- [ ] Tiles say "not dived yet" or when you last dived them
+- [ ] The star, move to top and remove each work from a tile
+- [ ] Tapping a tile opens the artist chooser
+- [ ] "Sampler from your crate" builds from a random handful
+- [ ] Settings → Blocked artists shows the blocked list and its scopes
+- [ ] Nowhere in the app still says "pin" or "pinned"
+
 ## 22. Up next (2.9.36)
 
 - [ ] Home with nothing starred shows four pins under "Pinned"
