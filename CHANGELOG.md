@@ -4,6 +4,21 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.36 — Up next
+- **Up next.** Star a pin to queue it, and Home shows the queue instead
+  of every pin. With nothing starred, Home shows four pins so it's never
+  empty. Pins were a library that had grown into a wall on Home; Up
+  next is the few you actually mean to get to.
+- Pins live on their own screen under Dives now rather than being
+  listed inline. Each has a star.
+- You can star straight from a tile on Home or in suggestions.
+  Starring someone who isn't pinned pins them, since Up next is drawn
+  from the pins.
+- After a playlist is made for someone on Up next, DeepDive asks
+  whether you're done with them — take them off, or keep them. That's
+  only something you'd know, so it asks rather than guessing. An "If
+  you like…" mix doesn't ask, since it isn't a playlist of that artist.
+
 ## 2.9.35
 - Fixed: tapping the "If you like…" card on Home did nothing. A tapped
   card was looked up only in the main pool of library mixes, and the

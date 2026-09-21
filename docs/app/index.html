@@ -464,6 +464,31 @@
     background:var(--tile); color:var(--ink);
   }
 
+  /* The star that puts a pin on Up next. Filled when it's on. */
+  .tile-btn svg { width:15px; height:15px; }
+  .tile-btn.is-on { color:#f5c451; }
+  .tile-btn.is-on svg { fill:currentColor; }
+
+  /* The question after a playlist: done with this artist, or not. */
+  .action-result-upnext {
+    margin:14px 0 4px; padding:12px 14px; border-radius:var(--radius);
+    background:var(--tile); font-size:13.5px;
+  }
+  .action-result-upnext p { margin:0 0 10px; color:var(--ink); }
+  .action-result-upnext p:only-child { margin:0; color:var(--muted); }
+  .action-result-upnext-btns { display:flex; gap:8px; flex-wrap:wrap; }
+
+  .star-btn {
+    width:34px; height:34px; border-radius:50%; flex:0 0 auto;
+    border:1px solid var(--line); background:none; color:var(--muted);
+    display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .star-btn svg { width:16px; height:16px; }
+  .star-btn:hover { color:var(--ink); border-color:var(--ink); }
+  .star-btn.on { color:#f5c451; border-color:#f5c451; }
+  .star-btn.on svg { fill:currentColor; }
+
   .bill-row {
     display:flex; align-items:center; gap:10px;
     background:var(--tile); border-radius:var(--radius-tile);

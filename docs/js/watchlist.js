@@ -222,6 +222,51 @@ export const pin = add;
 export const unpin = remove;
 
 /** Is this artist already pinned? Name match, case-insensitive. */
+// ---------------------------------------------------------------------
+// Up next
+// ---------------------------------------------------------------------
+//
+// Pins are a library: everyone you've meant to get round to. Up next is
+// a queue drawn from it — the few you actually mean to do soon — and
+// it's what Home shows. A flag on the pin rather than a second list, so
+// an artist can't be up next without being pinned, and unpinning takes
+// them off both.
+
+function _findIndex(entries, name) {
+  const key = (name || "").trim().toLowerCase();
+  return entries.findIndex((e) => (e.name || "").trim().toLowerCase() === key);
+}
+
+export function isUpNext(name) {
+  const entries = load();
+  const i = _findIndex(entries, name);
+  return i >= 0 && !!entries[i].up_next;
+}
+
+/**
+ * Put an artist on Up next, or take them off.
+ *
+ * Starring someone who isn't pinned pins them first: Up next is a view
+ * of the pins, so it can't hold anyone the pins don't.
+ */
+export function setUpNext(name, on, details = {}) {
+  if (on && !isPinned(name)) add(name, details);
+  const entries = load();
+  const i = _findIndex(entries, name);
+  if (i < 0) return;
+  entries[i].up_next = !!on;
+  // When they joined the queue, so it runs oldest first.
+  entries[i].up_next_at = on ? new Date().toISOString() : null;
+  save(entries);
+}
+
+/** The queue, in the order things were added to it. */
+export function listUpNext() {
+  return load()
+    .filter((e) => e.up_next && e.status !== "done")
+    .sort((a, b) => (a.up_next_at || "").localeCompare(b.up_next_at || ""));
+}
+
 export function isPinned(name) {
   const target = (name || "").trim().toLowerCase();
   return listEntries().some((e) => (e.name || "").trim().toLowerCase() === target);

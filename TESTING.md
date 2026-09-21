@@ -682,6 +682,22 @@ All three need a Last.fm key in Settings.
 - [ ] Opening Home does not start a Last.fm fetch
 - [ ] The full Mixes page still shows everything
 
+## 22. Up next (2.9.36)
+
+- [ ] Home with nothing starred shows four pins under "Pinned"
+- [ ] Star a pin (Dives → Pins & blocked) — Home switches to "Up next"
+      and shows only starred ones
+- [ ] Unstar the last one — Home goes back to four pins
+- [ ] Dives no longer lists pins inline
+- [ ] The star on a Home tile's menu works both ways
+- [ ] Starring a suggestion you haven't pinned pins them
+- [ ] Dip an Up next artist, make the playlist — the popup asks whether
+      you're done with them
+- [ ] "Take off Up next" removes them; "Keep them" doesn't
+- [ ] A Multi-Dip with two Up next artists asks about both at once
+- [ ] An "If you like…" mix asks nothing
+- [ ] Unpinning an Up next artist takes them off Up next too
+
 ## 5. Home tiles
 
 - [ ] Suggestion and pin tiles on Home look sharp rather than blocky

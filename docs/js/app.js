@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.35";
+export const BUILD = "2.9.36";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1367,6 +1367,7 @@ function openCardModal(card) {
         detail: `Added ${res.added_count} track${res.added_count === 1 ? "" : "s"}`
           + (res.already_present_count ? ` · ${res.already_present_count} already there` : ""),
         url: res.url,
+        artists: card.forArtists || [],
       });
       // Recorded so it can be removed from History. Only newly created
       // playlists are offered for removal — taking away one that already
@@ -2038,10 +2039,21 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
   // short.
   const compact = _suggestOpts.compact;
   const perRow = columnsAtWidth();
-  const PIN_VISIBLE = compact ? perRow : 8;
   if (compact) suggestions = suggestions.slice(0, perRow * 2);
-  const shownPins = showAllPins ? pins : pins.slice(0, PIN_VISIBLE);
-  const extraPins = pins.length - shownPins.length;
+  let pinHeading = "Pinned";
+  let shownPins;
+  if (compact) {
+    const upNext = watchlist.listUpNext();
+    if (upNext.length) {
+      pinHeading = "Up next";
+      shownPins = upNext;
+    } else {
+      shownPins = pins.slice(0, 4);
+    }
+  } else {
+    shownPins = [];
+  }
+  const extraPins = 0;
 
   // Tiles lead with artwork. The reason line stays — an unexplained
   // suggestion is clutter — but it's secondary text now rather than a
@@ -2068,10 +2080,11 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     </div>`;
 
   const pinsHtml = shownPins.length ? `
-    <div class="row-head"><h2>Pinned</h2></div>
+    <div class="row-head"><h2>${pinHeading}</h2></div>
     <div class="tile-grid">
       ${shownPins.map((p) => tile(p.name, p.image_url, null,
-        `<button class="tile-btn" data-block="${esc(p.name)}" data-sid="${esc(p.spotify_id || "")}" title="Never suggest this artist">&minus;</button>
+        `<button class="tile-btn${watchlist.isUpNext(p.name) ? " is-on" : ""}" data-upnext="${esc(p.name)}" title="${watchlist.isUpNext(p.name) ? "Remove from Up next" : "Add to Up next"}">${STAR_SVG}</button>
+         <button class="tile-btn" data-block="${esc(p.name)}" data-sid="${esc(p.spotify_id || "")}" title="Never suggest this artist">&minus;</button>
          <button class="tile-btn danger" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`, true)).join("")}
     </div>
     ${extraPins > 0 ? `<div style="text-align:center;margin-top:10px;"><button class="btn btn-ghost btn-small" id="show-more-pins">Show ${extraPins} more</button></div>` : ""}` : "";
@@ -2087,7 +2100,8 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
       ${compact ? `<button class="row-more" data-tab="dives">All dives</button>` : ""}</div>
     <div class="tile-grid">
       ${suggestions.map((sg) => tile(sg.name, sg.image_url, sg.reason,
-        `<button class="tile-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" data-img-big="${esc(sg.image_url_large || "")}" title="Pin for later">+</button>
+        `<button class="tile-btn" data-upnext="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" data-img-big="${esc(sg.image_url_large || "")}" title="Add to Up next">${STAR_SVG}</button>
+         <button class="tile-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" data-img-big="${esc(sg.image_url_large || "")}" title="Pin for later">+</button>
          <button class="tile-btn danger" data-block="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" title="Never suggest this artist">&minus;</button>`)).join("")}
     </div>` : "";
 
@@ -2185,6 +2199,18 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     redrawPins();       // and repaint only the pins section
   }));
 
+  el.querySelectorAll("[data-upnext]").forEach((b) => b.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    const name = b.dataset.upnext;
+    const on = !watchlist.isUpNext(name);
+    watchlist.setUpNext(name, on, {
+      spotifyId: b.dataset.sid || null,
+      imageUrl: b.dataset.img || null,
+      imageUrlLarge: b.dataset.imgBig || null,
+    });
+    flash(on ? `${name} is up next.` : `${name} is off Up next.`);
+    loadSuggestions(_suggestOpts);
+  }));
   el.querySelectorAll("[data-unpin]").forEach((b) => b.addEventListener("click", (ev) => {
     ev.stopPropagation();
     // Confirm before removing — a pin was a deliberate act, so losing one
@@ -2922,6 +2948,7 @@ async function presentDip(result) {
   const mins = Math.round(dip.totalMs / 60000);
   openCardModal({
     id: `dip-${(result.artist && result.artist.id) || artistName}`,
+    forArtists: [(result.artist && result.artist.name) || artistName],
     title: `${artistName}`,
     subtitle: top.length
       ? `${dip.tracks.length} tracks, about ${mins} minutes, most played first`
@@ -3067,7 +3094,8 @@ async function applyResults(r, action) {
       });
       parts.push(`Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}.`);
       btns.forEach((b) => (b.disabled = false));
-      showActionResult({ headline: "Done", detail: parts.join(" "), url: res.url });
+      showActionResult({ headline: "Done", detail: parts.join(" "), url: res.url,
+        artists: [r.artist && r.artist.name] });
       return;
     }
     if (parts.length) showActionResult({ headline: "Done", detail: parts.join(" ") });
@@ -3087,13 +3115,24 @@ async function applyResults(r, action) {
  * longer actionable, inviting a second press of the same button. The
  * dialog closes that page when dismissed.
  */
-function showActionResult({ headline, detail, url, ok = true }) {
+function showActionResult({ headline, detail, url, ok = true, artists = [] }) {
+  const queued = (artists || []).filter((n) => n && watchlist.isUpNext(n));
   const wrap = document.createElement("div");
   wrap.className = "action-result";
   wrap.innerHTML = `
     <div class="action-result-card">
       <div class="action-result-head">${esc(headline)}</div>
       ${detail ? `<p class="action-result-detail">${esc(detail)}</p>` : ""}
+      ${queued.length ? `
+        <div class="action-result-upnext" data-upnext-ask>
+          <p>${queued.length === 1
+            ? `${esc(queued[0])} is on Up next. Done with them?`
+            : `${queued.length} of these are on Up next. Done with them?`}</p>
+          <div class="action-result-upnext-btns">
+            <button class="btn btn-ghost btn-small" data-upnext-keep>Keep them</button>
+            <button class="btn btn-ghost btn-small" data-upnext-drop>Take off Up next</button>
+          </div>
+        </div>` : ""}
       <div class="action-result-actions">
         ${url ? `<a class="btn btn-primary" href="${esc(url)}" data-spotify>Open playlist</a>` : ""}
         <button class="btn ${url ? "btn-ghost" : "btn-primary"}" data-ar-close>Done</button>
@@ -3105,6 +3144,17 @@ function showActionResult({ headline, detail, url, ok = true }) {
     // The work is finished, so the page it was done on shouldn't remain.
     if (ok) renderHome();
   };
+  const answered = (msg) => {
+    const box = wrap.querySelector("[data-upnext-ask]");
+    if (box) box.innerHTML = `<p>${esc(msg)}</p>`;
+  };
+  wrap.querySelector("[data-upnext-drop]")?.addEventListener("click", () => {
+    for (const n of queued) watchlist.setUpNext(n, false);
+    answered(queued.length === 1 ? `${queued[0]} is off Up next.` : "Taken off Up next.");
+  });
+  wrap.querySelector("[data-upnext-keep]")?.addEventListener("click", () => {
+    answered("Kept on Up next.");
+  });
   wrap.querySelector("[data-ar-close]").addEventListener("click", close);
   wrap.addEventListener("click", (e) => { if (e.target === wrap) close(); });
   wrap.querySelector("[data-ar-close]").focus();
@@ -3213,6 +3263,13 @@ function renderScrubResults(r) {
       ` : `<p class="empty-note">Nothing new found.</p><div class="actions"><button class="btn btn-ghost" data-home>Back to search</button></div>`}
     </div>`;
   root.querySelector("[data-home]")?.addEventListener("click", () => renderHome());
+  root.querySelectorAll("[data-star]").forEach((b) => b.addEventListener("click", () => {
+    const name = b.dataset.star;
+    const on = !watchlist.isUpNext(name);
+    watchlist.setUpNext(name, on);
+    flash(on ? `${name} is up next.` : `${name} is off Up next.`);
+    renderWatchlist();
+  }));
 
   const sortSel = document.getElementById("new-sort");
   if (sortSel) {
@@ -4068,6 +4125,7 @@ async function runDipViaSearch(artist, artistName, opts) {
   const owned = built.tracks.filter((t) => likedIds.has(t.id)).length;
   openCardModal({
     id: `dip-${artist.id || artistName}`,
+    forArtists: [artist.name || artistName],
     title: `${artist.name || artistName}`,
     subtitle: `${built.tracks.length} tracks, about ${Math.round(built.totalMs / 60000)} minutes, most played first${owned ? ` · you already own ${owned}` : ""}`,
     art: {
@@ -4125,6 +4183,7 @@ async function wholeDiscographyDip(artist, artistName, built, likedIds, opts) {
   const owned = dip.tracks.filter((t) => likedIds.has(t.id)).length;
   openCardModal({
     id: `dip-${artist.id || artistName}`,
+    forArtists: [artist.name || artistName],
     title: artist.name || artistName,
     subtitle: `everything they've released — ${dip.tracks.length} tracks, about ${Math.round(dip.totalMs / 60000)} minutes, best known first${owned ? ` · you already own ${owned}` : ""}`,
     art: {
@@ -4365,6 +4424,7 @@ async function buildShowNow() {
   _showBill = [];
   openCardModal({
     id: "show",
+    forArtists: billed.map((x) => x.artist.name),
     title: title || "Your night",
     subtitle,
     art: {
@@ -5164,6 +5224,8 @@ function renderHistory() {
   });
 }
 
+const STAR_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2.5 15.1 8.8 22 9.8 17 14.7 18.2 21.6 12 18.3 5.8 21.6 7 14.7 2 9.8 8.9 8.8 12 2.5"/></svg>`;
+
 function renderWatchlist() {
   setTitle("DeepDive · Pins & blocked");
   const pins = watchlist.pinned();
@@ -5171,13 +5233,16 @@ function renderWatchlist() {
   root.innerHTML = `
     <div class="card">
       <h1>Pins &amp; blocked</h1>
-      <p class="muted">Pins appear at the top of your suggestions on the home page. Blocked artists never appear at all. Both are stored in this browser only.</p>
+      <p class="muted">Star a pin to put it on Up next, which is what Home shows. Blocked artists never appear at all. Both are stored in this browser only.</p>
 
       <div class="crate-header"><span class="label">Pinned</span></div>
       ${pins.length ? pins.map((e) => `
         <div class="watchlist-row">
           <span class="watchlist-name">${e.image_url ? `<img src="${esc(e.image_url)}" alt="" class="pill-avatar">` : ""}${esc(e.name)}</span>
           <div class="watchlist-actions">
+            <button class="star-btn${watchlist.isUpNext(e.name) ? " on" : ""}" data-star="${esc(e.name)}"
+              aria-pressed="${watchlist.isUpNext(e.name)}" aria-label="${watchlist.isUpNext(e.name) ? "Remove from" : "Add to"} Up next"
+              title="Up next">${STAR_SVG}</button>
             <button class="btn btn-ghost btn-small" data-wl-search="${esc(e.name)}">Dive now</button>
             <button class="btn btn-ghost btn-small" data-wl-remove="${esc(e.id)}" data-name="${esc(e.name)}">Unpin</button>
           </div>
