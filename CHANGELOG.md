@@ -4,6 +4,16 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.35
+- Fixed: tapping the "If you like…" card on Home did nothing. A tapped
+  card was looked up only in the main pool of library mixes, and the
+  Home row's recommendation and genre come from separate generators —
+  so the lookup found nothing and nothing opened.
+- Mix sheets no longer offer an order. Nobody wants album order across
+  forty tracks from twenty records, and Spotify reorders a playlist
+  anyway. It's just how many tracks, then shuffle. The sampler keeps
+  its built order, since that structure is the point of it.
+
 ## 2.9.34
 - Fixed: the slow-dive warning appeared on the first step of the
   chooser, under Dip, Multi-Dip and Dive, whenever "Everything they've

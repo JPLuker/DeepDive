@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.34";
+export const BUILD = "2.9.35";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -643,7 +643,11 @@ function renderCardRow(el) {
   el.querySelector("[data-sampler]")?.addEventListener("click", () => openSampler(samplerSourceArtists()));
   el.querySelector("[data-custom]")?.addEventListener("click", () => renderCustomMix());
   el.querySelectorAll("[data-card]").forEach((b) =>
-    b.addEventListener("click", () => openCardModal((_allCards.length ? _allCards : _cards).find((c) => c.id === b.dataset.card))));
+    b.addEventListener("click", () => {
+      const id = b.dataset.card;
+      const card = _cards.find((c) => c.id === id) || _allCards.find((c) => c.id === id);
+      if (card) openCardModal(card);
+    }));
 }
 
 /**
@@ -1288,21 +1292,15 @@ function openCardModal(card) {
   // which, in openers-first order, were all one artist.
   //
   // A card that has already decided its own length says so.
-  // "If you like…", from a card or from the search: drawn from several
-  // artists who only share a resemblance, so there's no order worth
-  // choosing between.
-  const isSimilar = !!(card.seedName || card.isRecommendation
-    || String(card.id || "").startsWith("ask-") || String(card.id || "").startsWith("rec-"));
   const opts = simple
     ? { length: card.defaultLength || "all", order: card.defaultOrder || "found" }
     : { length: card.count <= 50 ? "all" : 50, order: "shuffle" };
-  if (isSimilar) opts.order = "shuffle";
 
   const tracksFor = () => applyPlaylistOptions(card.tracks, opts);
 
   const paint = () => {
     if (simple) lenRow.innerHTML = "";
-    else renderPlaylistOptions(lenRow, opts, paint, card.count, { order: !isSimilar });
+    else renderPlaylistOptions(lenRow, opts, paint, card.count, { order: false });
   };
   paint();
 

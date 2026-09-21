@@ -127,7 +127,8 @@ check('search accepts a resolved artist', /resolvedArtist \|\| await client\.fin
 // overlay above it. Nothing cleared the intro, so it sat underneath for
 // the whole run and came back the moment the overlay went away — on
 // cancel, and behind the results dialog on success.
-const samplerBlock = src.slice(src.indexOf('async function runSampler'), src.indexOf('openCardModal(card);'));
+const _sStart = src.indexOf('async function runSampler');
+const samplerBlock = src.slice(_sStart, src.indexOf('openCardModal(card);', _sStart));
 check('sampler clears its intro page', /root\.innerHTML = "";/.test(samplerBlock));
 check('sampler restores home before results', /hideDiveScreen\(\);\s*\n\s*await renderHome\(\);/.test(samplerBlock));
 

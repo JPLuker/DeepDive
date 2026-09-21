@@ -56,7 +56,11 @@ check('spotlight varies by seed', a && b && (a.id!==b.id || true));
 check('ten shown per load', /const CARDS_PER_LOAD = 10;/.test(src));
 check('subset drawn from the pool', /_cards = insights\.seededPick\(_allCards, CARDS_PER_LOAD, seed\)/.test(src));
 check('seed changes per load', /Date\.now\(\) >>> 0\) \^ Math\.floor\(Math\.random/.test(src));
-check('modal looks up the full pool', /_allCards\.length \? _allCards : _cards/.test(src));
+// Looking only in _allCards missed the Home row's recommendation and
+// genre, which come from separate generators — so tapping them did
+// nothing at all.
+check('modal looks up the full pool', /_cards\.find\(\(c\) => c\.id === id\) \|\| _allCards\.find\(\(c\) => c\.id === id\)/.test(src));
+check('and a missing card is not opened as undefined', /if \(card\) openCardModal\(card\);/.test(src));
 
 // --- pill styling ---
 // 2.8 replaced pill cards with gradient tiles.

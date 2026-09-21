@@ -51,6 +51,18 @@ source, not against Spotify.
 
 ---
 
+## Pass of 10 September
+
+**Confirmed:** the warning only on the dive step and gone on returning;
+no preview on mix sheets; mix sheet opens from the top; the "playlist
+created" popup.
+
+**Found and fixed in 2.9.35:** tapping Home's "If you like…" card did
+nothing, and order options were removed from mixes altogether at
+Joseph's call.
+
+---
+
 ## Pass of 9 September — the chooser and Home
 
 **Confirmed:** chooser opens from every entry point, no gear, Dip, Back,

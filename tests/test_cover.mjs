@@ -127,8 +127,12 @@ check('similar covers fetch the photograph', /if \(art && art\.lookupPhoto && ar
 check('and keep the sleeve if that fails', /catch \(e\) \{ \/\* the album art it already has will do \*\/ \}/.test(src));
 
 // Similar-artist mixes have no order worth choosing.
-check('similar mixes shuffle', /if \(isSimilar\) opts\.order = "shuffle";/.test(src));
-check('and offer no order control', /\{ order: !isSimilar \}/.test(src));
+// No mix offers an order now: nobody wants album order across forty
+// tracks from twenty records, and Spotify reorders a playlist anyway.
+check('mixes offer no order control', /renderPlaylistOptions\(lenRow, opts, paint, card\.count, \{ order: false \}\)/.test(src));
+check('and shuffle', /: \{ length: card\.count <= 50 \? "all" : 50, order: "shuffle" \}/.test(src));
+// The sampler's built order is the point of it.
+check('the sampler keeps its order', /order: card\.defaultOrder \|\| "found"/.test(src));
 
 // Three ways of saying "done": a popup for a dive, a line of text above
 // the button for a mix, another for the scrub.
