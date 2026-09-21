@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.39";
+export const BUILD = "2.9.40";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -4329,11 +4329,13 @@ function wireBillDrag() {
       const row = handle.closest(".bill-row");
       if (!row) return;
       ev.preventDefault();
-      handle.setPointerCapture(ev.pointerId);
+      const pid = ev.pointerId;
       row.classList.add("dragging");
       let moved = false;
 
       const onMove = (e) => {
+        if (e.pointerId !== pid) return;
+        e.preventDefault();
         moved = true;
         const rows = [...bill.querySelectorAll(".bill-row")].filter((r) => r !== row);
         const target = rows.find((r) => {
@@ -4343,17 +4345,22 @@ function wireBillDrag() {
         if (target) bill.insertBefore(row, target);
         else bill.appendChild(row);
       };
-      const onUp = () => {
-        handle.removeEventListener("pointermove", onMove);
-        handle.removeEventListener("pointerup", onUp);
-        handle.removeEventListener("pointercancel", onUp);
+      const onUp = (e) => {
+        if (e && e.pointerId !== undefined && e.pointerId !== pid) return;
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointercancel", onUp);
         row.classList.remove("dragging");
         if (moved) commit();
       };
-      handle.addEventListener("pointermove", onMove);
-      handle.addEventListener("pointerup", onUp);
-      handle.addEventListener("pointercancel", onUp);
+      // passive:false so preventDefault can stop the page scrolling
+      // under the finger while a row is being carried.
+      window.addEventListener("pointermove", onMove, { passive: false });
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onUp);
     });
+
+    handle.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
 
     // Dragging isn't available to everyone; the arrow keys do the same.
     handle.addEventListener("keydown", (ev) => {

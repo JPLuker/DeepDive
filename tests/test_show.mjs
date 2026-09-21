@@ -251,6 +251,14 @@ check('and "if you like" shows its seed', /if \(seedPhoto\) addDiveImage\(seedPh
 check('the bill can be reordered', /function wireBillDrag\(\)/.test(src));
 check('by a handle on each row', /class="bill-handle" data-drag/.test(src));
 check('rows move under the finger', /bill\.insertBefore\(row, target\)/.test(src));
+// The row is moved during the drag and the handle lives inside it;
+// mobile browsers can drop a pointer's capture when its element moves,
+// which is why dragging did nothing on a phone. The window never moves.
+check('the drag listens on the window', /window\.addEventListener\("pointermove", onMove, \{ passive: false \}\)/.test(src));
+check('not on the moving handle', !/handle\.addEventListener\("pointermove"/.test(src));
+check('and ignores other fingers', /if \(e\.pointerId !== pid\) return;/.test(src));
+// A touch the browser takes for a scroll arrives as pointercancel.
+check('a touch on the handle is never a scroll', /handle\.addEventListener\("touchstart", \(e\) => e\.preventDefault\(\), \{ passive: false \}\)/.test(src));
 check('and the new order is kept', /_showBill = order\.map\(\(i\) => _showBill\[i\]\)/.test(src));
 // Dragging isn't available to everyone.
 check('the arrow keys reorder too', /ev\.key === "ArrowUp" \? i - 1 : i \+ 1/.test(src));

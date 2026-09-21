@@ -4,6 +4,18 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.40
+- Fixed, probably: dragging a Multi-Dip row did nothing on a phone. The
+  row moves around the page during a drag and the handle holding the
+  finger sits inside it; mobile browsers can let go of a pointer when
+  its element moves, so the drag died after its first step. The drag
+  now listens on the window, which never moves.
+- A touch on the handle is also stopped from turning into a scroll.
+  A touch the browser reads as a scroll ends the drag before it starts,
+  and not every mobile browser honours the CSS that should prevent it.
+- "Probably" because this couldn't be tested on a phone before it
+  shipped.
+
 ## 2.9.39
 - A Multi-Dip's bill can be reordered, so openers go first. Drag a row
   by its handle; the rows move under your finger as you go. The
