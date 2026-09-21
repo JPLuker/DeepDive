@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.42";
+export const BUILD = "2.9.43";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -477,6 +477,22 @@ const CARDS_PER_LOAD = 10;
  * genre, and the row fills from the library instead rather than showing
  * a gap.
  */
+/**
+ * The library as mixes should see it: without anything blocked from mixes.
+ *
+ * The filter used to live inside the Home/Mixes card loader only, so the
+ * recommendations, genres, "If you like…" and Build your own all read the
+ * raw library and put blocked artists straight back. Every mix source
+ * goes through here instead. A track is dropped if any of its artists is
+ * blocked, features included.
+ */
+function withoutMixBlocked(tracks) {
+  const blocked = watchlist.blockedNameSet("mixes");
+  if (!blocked.size || !tracks) return tracks || [];
+  return tracks.filter((t) => !(t.artists || []).some(
+    (a) => blocked.has((a.name || "").trim().toLowerCase())));
+}
+
 async function mixedRow(allCards, tracks, seed, limit) {
   const picked = [];
   const taken = new Set();
@@ -556,11 +572,7 @@ async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml 
     // blocked artist was barred from one kind of mix and left in all
     // the rest. Filtering the source is simpler than teaching fifteen
     // card builders about it.
-    const mixBlocked = watchlist.blockedNameSet("mixes");
-    const forMixes = mixBlocked.size
-      ? cached.filter((t) => !(t.artists || []).some(
-          (a) => mixBlocked.has((a.name || "").trim().toLowerCase())))
-      : cached;
+    const forMixes = withoutMixBlocked(cached);
     _allCards = insights.playlistCards(forMixes, { seed });
     if (!_allCards.length) {
       el.innerHTML = `<p class="empty-note">Nothing to build a mix from yet — that usually means the cached library is very small.</p>`;
@@ -1056,6 +1068,7 @@ async function renderCustomMix() {
       `<p class="empty-note">Your library hasn't been read yet. Open Home once and it'll cache in the background.</p>`;
     return;
   }
+  cached = withoutMixBlocked(cached);
 
   // Only offer years and artists that exist, so no combination can come
   // back empty for a reason the form didn't show.
@@ -3529,6 +3542,7 @@ async function renderGenreSection() {
     wireReadLibrary(el, renderGenreSection);
     return;
   }
+  cached = withoutMixBlocked(cached);
 
   const artists = insights.artistsByWeight(cached);
   // Rehydrate from the persistent cache before deciding there is
@@ -3797,6 +3811,8 @@ async function renderAskSimilar() {
       wireReadLibrary(out, () => build(name, seed));
       return;
     }
+    // Asking about a blocked artist is fine; hearing blocked ones back isn't.
+    cached = withoutMixBlocked(cached);
 
     let similar = [];
     try {
@@ -3863,6 +3879,8 @@ async function renderRecommendations() {
   let cached = [];
   try { cached = await libraryCache.peek(); } catch (e) { cached = []; }
   if (!cached || !cached.length) { el.innerHTML = ""; return; }
+  // A blocked artist can't seed a card or fill one.
+  cached = withoutMixBlocked(cached);
 
   const seedArtists = insights.artistsByWeight(cached).slice(0, 12);
   await hydrateFromCache("similar", _similarBySeed);

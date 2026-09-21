@@ -229,7 +229,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.42
+## Shipped since — build 2.9.43
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -242,6 +242,7 @@ sessions below:
   "Remove all" was added for playlist cleanup
 - Playlist cleanup finds DeepDive playlists by name, including ones
   created before it kept records
+- Mix blocks apply to every mix, Recommended included, through one filter (2.9.43)
 - List rows wrap on a phone, so names no longer sit under their controls (2.9.42)
 - Service worker added — Android will not create a real installed app
   without one, which is why it was labelled "Web App"

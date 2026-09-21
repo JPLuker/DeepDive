@@ -35,7 +35,7 @@ check('and filters by it', /normalizeScopes\(b\)\.includes\(scope\)/.test(wl));
 check('dive suggestions use the dive scope', /watchlist\.blockedNameSet\("dives"\)/.test(src));
 check('the sampler uses the mix scope', (src.match(/blockedNameSet\("mixes"\)/g) || []).length >= 2);
 // The cards never had any filter at all.
-check('mix cards honour the mix block', /const forMixes = mixBlocked\.size/.test(src));
+check('mix cards honour the mix block', /const forMixes = withoutMixBlocked\(cached\)/.test(src) && /playlistCards\(forMixes,/.test(src));
 check('by filtering the source, not each builder', /insights\.playlistCards\(forMixes, \{ seed \}\)/.test(src));
 
 // UI
@@ -45,6 +45,30 @@ check('and says so', /won't be suggested for dives/.test(src));
 check('blocked list offers both scopes', /data-scope="dives"/.test(src) && /data-scope="mixes"/.test(src));
 check('toggling a scope is wired', /watchlist\.setBlockScope\(c\.dataset\.nm, c\.dataset\.scope, c\.checked\)/.test(src));
 check('scope controls are styled', /\.block-scope \{/.test(css));
+
+// Every mix source reads the library through the mix filter. It used to
+// live in the Home/Mixes card loader alone, so Recommended, genres,
+// "If you like…" and Build your own put blocked artists straight back.
+check('one mix filter', /function withoutMixBlocked\(tracks\)/.test(src));
+{
+  const builders = /insights\.(recommendationCards|neglectedNeighboursCard|similarOwnedMix|genreCards|playlistCards)\(/g;
+  let m, sites = 0;
+  while ((m = builders.exec(src))) {
+    sites++;
+    const at = m.index;
+    const start = Math.max(src.lastIndexOf('\nfunction ', at), src.lastIndexOf('\nasync function ', at));
+    const head = src.slice(start, src.indexOf('\n', start + 1));
+    const body = src.slice(start, at);
+    // mixedRow is handed its tracks; its caller is checked below.
+    const ok = /mixedRow\(/.test(head) || /withoutMixBlocked\(/.test(body);
+    check(`${m[1]} reads a filtered library (${head.trim().slice(0, 40)})`, ok);
+  }
+  check('found the mix builders', sites >= 6);
+  check('mixedRow is given the filtered library', /mixedRow\(_allCards, forMixes,/.test(src));
+  // Build your own lists artists and years from the same read.
+  const byo = src.indexOf('<h2>Build your own</h2>');
+  check('build your own is filtered', byo > -1 && /withoutMixBlocked\(cached\)/.test(src.slice(byo, byo + 1500)));
+}
 
 // On a phone the actions take the full width. Without wrapping, the
 // name was squeezed to nothing and drawn under the checkboxes.

@@ -4,6 +4,17 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.43
+- Fixed: blocking an artist from mixes didn't keep them out of
+  Recommended. "If you like Eminem" still appeared with Eminem blocked,
+  because the block was only applied where the library mixes were
+  built. Recommended, "Worth another listen", genres, "If you like…"
+  and Build your own all read the library unfiltered.
+- Every mix now reads the library through one filter. A blocked artist
+  can't seed a recommendation or appear in one, including as a featured
+  artist on someone else's track.
+- Build your own no longer offers mix-blocked artists in its picker.
+
 ## 2.9.42
 - Fixed: on a phone, the blocked artists list drew each name underneath
   its checkboxes. The mobile layout gives a row's buttons the full width

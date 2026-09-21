@@ -698,6 +698,20 @@ All three need a Last.fm key in Settings.
 - [ ] Settings → Blocked artists shows the blocked list and its scopes
 - [ ] Nowhere in the app still says "pin" or "pinned"
 
+## 25. Mix blocks everywhere (2.9.43)
+
+- [ ] With Eminem and Marilyn Manson blocked from mixes, neither has an
+      "If you like…" card under Recommended, on Mixes or Home
+- [ ] Open a Recommended card and check the tracks: no blocked artist,
+      not even as a feature
+- [ ] Genres: open one a blocked artist would fit and check the tracks
+- [ ] "If you like…" with a blocked artist's name still works, but
+      they're not in the result
+- [ ] Build your own doesn't offer a mix-blocked artist
+- [ ] An artist blocked from **dives only** (Leisure Hour, VIAL, girli)
+      still appears in mixes
+- [ ] Untick Mixes on a blocked artist, reload Mixes: they can come back
+
 ## 24. List rows on a phone (2.9.42)
 
 - [ ] Settings → Blocked artists: each name on its own line, the Dives,
