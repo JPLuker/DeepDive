@@ -235,7 +235,12 @@ check('the raw fields survive for the dive screen', /images,\n\s*image_url:/.tes
 // artwork by the catalogue read, and moving to search removed the
 // source without replacing it — so the most expensive screen in the app
 // showed a heading on an empty field.
-check('each artist shows their photo as they are searched', /if \(photo\) addDiveImage\(photo\);/.test(src));
+check('each artist shows their photo as they are searched', /if \(photo\) showOnlyDiveImage\(photo\);/.test(src));
+// Adding each photo to the rotation meant that once two were loaded the
+// screen cycled between them — the first artist on show while the
+// second was being searched.
+check('and only theirs, not a rotation', /_diveImages = \[url\];/.test(src));
+check('the previous one fades rather than vanishing', /old\.classList\.remove\("on"\);\s*\n\s*setTimeout\(\(\) => old\.remove\(\), 900\)/.test(src));
 check('taken from the entry already in hand', /const photo = a\.image_url_large \|\| a\.image_url;/.test(src));
 // Same blank screen, same cause.
 check('and "if you like" shows its seed', /if \(seedPhoto\) addDiveImage\(seedPhoto\);/.test(src));

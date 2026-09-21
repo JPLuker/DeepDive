@@ -4,6 +4,26 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.33
+- Fixed the Home mixes row, which 2.9.26 never actually changed. The row
+  always prepended Build your own and the sampler as their own tiles,
+  so the curated cards came after them and the sampler never reached
+  the selection. And recommendations and genres live in maps only the
+  Mixes page filled, so Home had none to offer. It now leads with the
+  sampler, reads the cached maps, and fills the rest with one
+  recommendation, one library mix and one genre.
+- "If you like…" mixes shuffle and don't offer an order. Album order
+  across nine different artists means nothing.
+- Their playlist covers use a photograph of the artist rather than an
+  album sleeve. The card only knew the artist through your library,
+  which holds album art; the photo is fetched when the playlist is made.
+- A Multi-Dip shows only the artist being searched. Adding each photo
+  to the slideshow meant it cycled between them, showing the first
+  artist while the second was being read.
+- Every "playlist created" message is the same popup now. A dive used a
+  popup; mixes and the library scrub used a line of text above the
+  button.
+
 ## 2.9.32
 - Fixed: tapping an artist did nothing. Removing the gear left one line
   still referencing it, which threw the moment the chooser opened,

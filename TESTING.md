@@ -51,6 +51,25 @@ source, not against Spotify.
 
 ---
 
+## Pass of 9 September — the chooser and Home
+
+**Confirmed:** chooser opens from every entry point, no gear, Dip, Back,
+Dive, the mode description, the slow-dive warning and Cancel all work.
+"Everything they've touched" behaved as intended. The dive options
+inside the chooser work.
+
+**Could not test:** long options scrolling, since every option there is
+the same height. The "Settings → dive options" item was wrong — there
+is no such entry in Settings, and that line should not have been on
+the list.
+
+**Found and fixed in 2.9.33:** Home led with Build your own and never
+showed a recommendation or genre; "If you like…" still offered an
+order; its covers were album art; Multi-Dip's photo cycled between
+artists; and playlist creation reported three different ways.
+
+---
+
 ## Pass of 8 September — what Joseph actually ran
 
 He worked through the whole list bar two things: demo mode, and diving

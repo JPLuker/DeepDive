@@ -121,5 +121,19 @@ check('album art remains the fallback', /: cover\.albumImages\(tracks, 1\)/.test
 check('a recommendation uses its seed', /if \(!card\.art && card\.seedName\)/.test(src));
 check('and the card carries it', /seedImage: seedEntry\.image_url \|\| null/.test(readFileSync(new URL('../docs/js/insights.js', import.meta.url), 'utf8')));
 
+// A recommendation card only knows its seed through the library, which
+// holds album art — so "If you like…" got a sleeve rather than a face.
+check('similar covers fetch the photograph', /if \(art && art\.lookupPhoto && art\.title\)/.test(src));
+check('and keep the sleeve if that fails', /catch \(e\) \{ \/\* the album art it already has will do \*\/ \}/.test(src));
+
+// Similar-artist mixes have no order worth choosing.
+check('similar mixes shuffle', /if \(isSimilar\) opts\.order = "shuffle";/.test(src));
+check('and offer no order control', /\{ order: !isSimilar \}/.test(src));
+
+// Three ways of saying "done": a popup for a dive, a line of text above
+// the button for a mix, another for the scrub.
+check('mixes report through the popup', !/msg\.innerHTML = `Playlist/.test(src));
+check('which closes the sheet first', /close\(\);\s*\n\s*showActionResult\(\{/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

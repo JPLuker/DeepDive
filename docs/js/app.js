@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.32";
+export const BUILD = "2.9.33";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -488,8 +488,6 @@ async function mixedRow(allCards, tracks, seed, limit) {
   const oneOf = (list) => (list && list.length
     ? list[Math.abs(seed + list.length) % list.length] : null);
 
-  take(allCards.find((c) => c.id === "sampler"));
-
   // Recommendations and genres are only there once Last.fm has been
   // asked, and asking here would turn opening Home into a fetch.
   try {
@@ -571,7 +569,18 @@ async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml 
 
     // Only the short row on Home is curated this way. The full Mixes
     // page wants everything, in no particular arrangement.
-    if (limit > 0) _cards = await mixedRow(_allCards, forMixes, seed, limit);
+    if (limit > 0) {
+      // Recommendations and genres live in session maps that only the
+      // Mixes page filled, so on Home they were always empty and the row
+      // fell back to library mixes every time. Reading the cache costs
+      // no requests.
+      try {
+        await hydrateFromCache("similar", _similarBySeed);
+        await hydrateFromCache("tags", _genreTags);
+      } catch (e) { /* the row still draws */ }
+      // One fewer than the row holds: the sampler is its own tile.
+      _cards = await mixedRow(_allCards, forMixes, seed, Math.max(1, limit - 1));
+    }
 
     renderCardRow(el);
   } catch (e) {
@@ -596,7 +605,7 @@ function renderCardRow(el) {
   // Mixes shows the lot; Home shows a few with a way through to the
   // rest, so its preview doesn't read as the whole set.
   const limit = el._cardLimit || 0;
-  const shown = limit ? _cards.slice(0, limit) : _cards;
+  const shown = limit ? _cards.slice(0, Math.max(0, limit - (_samplerPool.length >= 2 ? 1 : 0))) : _cards;
   // "Mixes" is the page. Genres are mixes too, so this row needed to
   // say what it actually is: patterns found in the library itself.
   const head = el._cardHead
@@ -622,7 +631,7 @@ function renderCardRow(el) {
   el.innerHTML = `
     ${head}
     <div class="card-row">
-      ${customCard}
+      ${limit ? "" : customCard}
       ${samplerCard}
       ${shown.map((c, i) => `
         <button class="pcard" data-card="${esc(c.id)}" style="--h:${(200 + i * 47) % 360};">
@@ -820,7 +829,7 @@ function applyPlaylistOptions(tracks, { order = "shuffle", length = "all" } = {}
 }
 
 /** Renders the shared length + order controls into a container. */
-function renderPlaylistOptions(el, state, onChange, total) {
+function renderPlaylistOptions(el, state, onChange, total, { order = true } = {}) {
   // "All" used to sit at the end of this list. A generated card can
   // hold 1,400 tracks and every hundred is a request at creation, so an
   // open-ended option was the wrong thing to leave lying around. The
@@ -833,10 +842,10 @@ function renderPlaylistOptions(el, state, onChange, total) {
     <div class="card-len" data-group="length">
       ${lengths.map((n) => `<button type="button" class="len-opt${n === state.length ? " active" : ""}" data-len="${n}">${n === "all" ? `All ${total}` : n}</button>`).join("")}
     </div>
-    <div class="settings-panel-title" style="margin-top:14px;">Order</div>
+    ${order ? `<div class="settings-panel-title" style="margin-top:14px;">Order</div>
     <div class="card-len" data-group="order">
       ${PLAYLIST_ORDERS.map((o) => `<button type="button" class="len-opt${o.id === state.order ? " active" : ""}" data-order="${o.id}">${esc(o.label)}</button>`).join("")}
-    </div>`;
+    </div>` : ""}`;
   el.querySelectorAll("[data-len]").forEach((b) => b.addEventListener("click", () => {
     const v = b.dataset.len;
     state.length = parseInt(v, 10);
@@ -1240,9 +1249,12 @@ function openCardModal(card) {
   // is one of the *similar* artists rather than the one it's named for.
   if (!card.art && card.seedName) {
     card.art = {
+      // A sleeve to fall back on; the photograph is fetched when the
+      // playlist is actually made.
       images: [card.seedImage].filter(Boolean),
       title: card.seedName,
       kind: "Similar",
+      lookupPhoto: true,
     };
   }
   if (!card) return;
@@ -1278,15 +1290,21 @@ function openCardModal(card) {
   // which, in openers-first order, were all one artist.
   //
   // A card that has already decided its own length says so.
+  // "If you like…", from a card or from the search: drawn from several
+  // artists who only share a resemblance, so there's no order worth
+  // choosing between.
+  const isSimilar = !!(card.seedName || card.isRecommendation
+    || String(card.id || "").startsWith("ask-") || String(card.id || "").startsWith("rec-"));
   const opts = simple
     ? { length: card.defaultLength || "all", order: card.defaultOrder || "found" }
     : { length: card.count <= 50 ? "all" : 50, order: "shuffle" };
+  if (isSimilar) opts.order = "shuffle";
 
   const tracksFor = () => applyPlaylistOptions(card.tracks, opts);
 
   const paint = () => {
     if (simple) lenRow.innerHTML = "";
-    else renderPlaylistOptions(lenRow, opts, paint, card.count);
+    else renderPlaylistOptions(lenRow, opts, paint, card.count, { order: !isSimilar });
     const list = tracksFor();
     summary.textContent = `Preview ${list.length} track${list.length === 1 ? "" : "s"}`;
     // Read-only preview: same row treatment, no checkbox, and the
@@ -1358,8 +1376,13 @@ function openCardModal(card) {
         { forceNew: simple }
       );
       await maybeSetCover(res, list, (nameInput.value || "").trim() || card.title, card.art);
-      msg.innerHTML = `Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}. <a href="${esc(res.url)}" data-spotify style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
-      msg.classList.remove("hidden", "error");
+      close();
+      showActionResult({
+        headline: res.reused ? "Playlist updated" : "Playlist created",
+        detail: `Added ${res.added_count} track${res.added_count === 1 ? "" : "s"}`
+          + (res.already_present_count ? ` · ${res.already_present_count} already there` : ""),
+        url: res.url,
+      });
       // Recorded so it can be removed from History. Only newly created
       // playlists are offered for removal — taking away one that already
       // existed and was merely updated would delete something the user
@@ -2465,6 +2488,43 @@ function preloadPhoto(url, timeoutMs = 5000) {
 }
 
 /**
+ * Show one image and only that one.
+ *
+ * A Multi-Dip reads artists in turn, and adding each photo to the
+ * rotation meant that once two were loaded the screen cycled between
+ * them — showing the first artist while the second was being searched.
+ * The screen should be about whoever is being read right now.
+ */
+function showOnlyDiveImage(url) {
+  if (!url) return;
+  const slides = document.getElementById("dive-slides");
+  if (!slides) return;
+  const probe = new Image();
+  probe.onload = () => {
+    _diveImages = [url];
+    _diveSlideIndex = 0;
+    const slide = document.createElement("div");
+    slide.className = "dive-slide";
+    slide.dataset.url = url;
+    slide.style.backgroundImage = `url("${url.replace(/"/g, "%22")}")`;
+    slides.appendChild(slide);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      slide.classList.add("on");
+      // The previous artist fades out rather than vanishing, then goes.
+      for (const old of [...slides.children]) {
+        if (old !== slide) {
+          old.classList.remove("on");
+          setTimeout(() => old.remove(), 900);
+        }
+      }
+      const load = document.getElementById("dive-loading");
+      if (load) load.classList.add("off");
+    }));
+  };
+  probe.src = url;
+}
+
+/**
  * Add a photo to the rotation. Loads it first, so a broken URL never
  * becomes a blank slide in the cycle. The first one to arrive clears the
  * loading field.
@@ -3181,8 +3241,11 @@ function renderScrubResults(r) {
     const name = (document.getElementById("playlist-name").value || "DeepDive · Library scrub").trim();
     try {
       const res = await client.addTracksToPlaylistDeduped(name, "New-to-you tracks found by DeepDive's full library scrub.", ids);
-      msg.innerHTML = `Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}. <a href="${esc(res.url)}" data-spotify style="color:var(--accent);text-decoration:underline;">Open playlist</a>`;
-      msg.classList.remove("hidden", "error");
+      showActionResult({
+        headline: res.reused ? "Playlist updated" : "Playlist created",
+        detail: `Added ${res.added_count} track${res.added_count === 1 ? "" : "s"}`,
+        url: res.url,
+      });
     } catch (e) {
       msg.textContent = `Something went wrong: ${e.message || e}`;
       msg.classList.remove("hidden"); msg.classList.add("error");
@@ -3871,6 +3934,13 @@ async function maybeSetCover(res, tracks, title, art) {
 
   if (!auth.hasScope(auth.UPLOAD_SCOPE)) return;
   try {
+    if (art && art.lookupPhoto && art.title) {
+      try {
+        const found = await client.findArtist(art.title);
+        const photo = found && (found.image_url_large || found.image_url);
+        if (photo) art = { ...art, images: [photo] };
+      } catch (e) { /* the album art it already has will do */ }
+    }
     const urls = (art && art.images && art.images.length)
       ? art.images
       : cover.albumImages(tracks, 1);
@@ -4222,7 +4292,7 @@ async function buildShowNow() {
         }
       }
       const photo = a.image_url_large || a.image_url;
-      if (photo) addDiveImage(photo);
+      if (photo) showOnlyDiveImage(photo);
       const built = await dipViaSearch(a.name, {
         artistId: a.id || null,
         targetMs: wantMs,

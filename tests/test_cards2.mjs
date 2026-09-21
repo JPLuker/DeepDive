@@ -48,7 +48,12 @@ check('count removed from the card face', !/pcard-count/.test(app));
 // fold. Home shows a short preview with a link through, which is a
 // different thing: it doesn't pretend to be the whole set.
 check('all cards rendered, none hidden', !/CARDS_VISIBLE/.test(app) && !/More ideas/.test(app) && /shown\.map/.test(app));
-check('mixes shows the lot', /const shown = limit \? _cards\.slice\(0, limit\) : _cards;/.test(app));
+// The Mixes page shows every card; only the short row on Home trims,
+// and it leaves one place for the sampler.
+check('mixes shows the lot', /: _cards;/.test(app) && /const shown = limit \?/.test(app));
+check('home leaves a place for the sampler', /limit - \(_samplerPool\.length >= 2 \? 1 : 0\)/.test(app));
+// Build your own belongs on the Mixes page, not leading Home.
+check('build your own only on the full page', /\$\{limit \? "" : customCard\}/.test(app));
 // The button is built by sectionHead from arguments, so the rendered
 // string never appears in source — check the call instead.
 check('home preview links onward', /sectionHead\("Mixes", "made from what you've saved", "mixes", "All mixes"\)/.test(app));

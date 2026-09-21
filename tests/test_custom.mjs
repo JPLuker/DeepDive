@@ -151,7 +151,9 @@ check('home explains its thinner row', /state\.hasCache === false && suggestions
 // to "their tracks you own, oldest first". One of each kind covers the
 // whole app in the same four tiles.
 check('home builds a mixed row', /async function mixedRow/.test(src));
-check('starting with the sampler', /take\(allCards\.find\(\(c\) => c\.id === "sampler"\)\)/.test(src));
+// The sampler is prepended as its own tile, so it never reached the
+// mixed row as a card — which is why Home led with Build your own.
+check('the sampler leads as its own tile', /\$\{samplerCard\}/.test(src));
 check('then a recommendation', /take\(oneOf\(insights\.recommendationCards\(tracks, _similarBySeed\)\)\)/.test(src));
 check('then one from the library', /!c\.isRecommendation\s*\n?\s*&& c\.id !== "custom" && !String\(c\.id\)\.startsWith\("genre-"\)/.test(src));
 check('then a genre', /take\(oneOf\(insights\.genreCards\(tracks, _genreTags, \{ limit: 40 \}\)\)\)/.test(src));
@@ -160,7 +162,10 @@ check('then a genre', /take\(oneOf\(insights\.genreCards\(tracks, _genreTags, \{
 check('gaps are filled from the pool', /for \(const c of insights\.seededPick\(allCards, allCards\.length, seed\)\)/.test(src));
 check('asking Last.fm is not triggered by opening home', /if \(_similarBySeed\.size\)/.test(src) && /if \(_genreTags\.size\)/.test(src));
 // The full Mixes page still wants everything.
-check('only the short row is curated', /if \(limit > 0\) _cards = await mixedRow/.test(src));
+check('only the short row is curated', /if \(limit > 0\) \{[\s\S]{0,600}_cards = await mixedRow/.test(src));
+// The maps were only filled on the Mixes page, so Home never had a
+// recommendation or a genre to offer and fell back to library mixes.
+check('home reads the cached maps', /await hydrateFromCache\("similar", _similarBySeed\);\s*\n\s*await hydrateFromCache\("tags", _genreTags\);/.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
