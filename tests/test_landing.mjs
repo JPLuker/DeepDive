@@ -143,7 +143,7 @@ for (const [label, re] of [
   ['build your own', /<h3>Build your own<\/h3>/],
   ['the sampler', /<h3>The sampler<\/h3>/],
   ['genres', /<h3>Genres, properly<\/h3>/],
-  ['up next', /<h3>Up next<\/h3>/],
+  ['the crate', /<h3>Your crate<\/h3>/],
   ['covers', /A cover for every playlist/],
 ]) check(`the page covers ${label}`, re.test(html));
 // A dip no longer reads the catalogue; the page shouldn't say it does.
