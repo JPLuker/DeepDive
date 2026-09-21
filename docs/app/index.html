@@ -1201,7 +1201,10 @@
     .track-name { font-size:13.5px; }
     .actions .btn { flex:1; justify-content:center; }
 
-    .watchlist-row { align-items:flex-start; }
+    /* The actions take the full width here, so the row has to wrap or
+       it squeezes the name to nothing and prints it under the controls. */
+    .watchlist-row { align-items:flex-start; flex-wrap:wrap; }
+    .watchlist-name { flex:1 1 100%; }
     .watchlist-actions { width:100%; }
     .watchlist-actions .btn { flex:1; justify-content:center; }
 

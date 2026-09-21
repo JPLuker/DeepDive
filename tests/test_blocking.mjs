@@ -46,5 +46,15 @@ check('blocked list offers both scopes', /data-scope="dives"/.test(src) && /data
 check('toggling a scope is wired', /watchlist\.setBlockScope\(c\.dataset\.nm, c\.dataset\.scope, c\.checked\)/.test(src));
 check('scope controls are styled', /\.block-scope \{/.test(css));
 
+// On a phone the actions take the full width. Without wrapping, the
+// name was squeezed to nothing and drawn under the checkboxes.
+{
+  const i = css.indexOf('.watchlist-actions { width:100%; }');
+  const mq = css.lastIndexOf('@media (max-width: 640px)', i);
+  const block = css.slice(mq, i);
+  check('mobile rows wrap', mq > -1 && /\.watchlist-row \{[^}]*flex-wrap:wrap/.test(block));
+  check('mobile name takes its own line', /\.watchlist-name \{ flex:1 1 100%; \}/.test(block));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

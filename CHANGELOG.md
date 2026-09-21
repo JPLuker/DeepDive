@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.42
+- Fixed: on a phone, the blocked artists list drew each name underneath
+  its checkboxes. The mobile layout gives a row's buttons the full width
+  but never let the row wrap, so the name was squeezed to nothing. Rows
+  now wrap: the name on its own line, the controls below. The same rows
+  are used for playlist cleanup, which had the same problem.
+
 ## 2.9.41
 - Dragging a bill row is animated. The row stays under your finger from
   wherever you grabbed it, the others slide out of its way as it

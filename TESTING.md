@@ -698,6 +698,15 @@ All three need a Last.fm key in Settings.
 - [ ] Settings → Blocked artists shows the blocked list and its scopes
 - [ ] Nowhere in the app still says "pin" or "pinned"
 
+## 24. List rows on a phone (2.9.42)
+
+- [ ] Settings → Blocked artists: each name on its own line, the Dives,
+      Mixes and Allow again controls below it, nothing overlapping
+- [ ] A long name (e.g. Freedom 10th Wonder) wraps without pushing
+      the controls off screen
+- [ ] Settings → Playlist cleanup rows look the same way
+- [ ] On desktop, the rows are still one line: name left, controls right
+
 ## 22. Up next (2.9.36)
 
 - [ ] Home with nothing starred shows four pins under "Pinned"
