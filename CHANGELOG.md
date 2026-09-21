@@ -4,6 +4,16 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.39
+- A Multi-Dip's bill can be reordered, so openers go first. Drag a row
+  by its handle; the rows move under your finger as you go. The
+  playlist keeps the order, since the order of the bill is the order
+  of the night.
+- A handle rather than arrows: the row already holds Less, More, a
+  song count and remove, and arrows on every row were the crowding that
+  removed reordering the first time. The arrow keys work on the handle
+  for anyone not dragging.
+
 ## 2.9.38 — The Crate
 - **Pins are now the Crate**, rebuilt to hold a hundred artists and stay
   usable. It reads from the top like a streaming queue: Up next leads,

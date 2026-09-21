@@ -546,6 +546,17 @@
   }
   /* Takes the slack so the controls sit hard right, and truncates
      rather than pushing them off the row. */
+  .bill-handle {
+    flex:0 0 auto; width:28px; height:34px; margin-left:-4px;
+    display:flex; align-items:center; justify-content:center;
+    border:none; background:none; color:var(--muted); cursor:grab;
+    /* The page must not scroll while a row is being dragged. */
+    touch-action:none;
+  }
+  .bill-handle svg { width:16px; height:16px; }
+  .bill-handle:active { cursor:grabbing; }
+  .bill-row.dragging { opacity:0.85; box-shadow:0 6px 18px rgba(0,0,0,0.35); position:relative; z-index:2; }
+
   .bill-name {
     flex:1 1 auto; min-width:0; font-size:15px; font-weight:600;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;

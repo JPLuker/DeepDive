@@ -245,5 +245,19 @@ check('taken from the entry already in hand', /const photo = a\.image_url_large 
 // Same blank screen, same cause.
 check('and "if you like" shows its seed', /if \(seedPhoto\) addDiveImage\(seedPhoto\);/.test(src));
 
+// The bill's order is the night's order — openers first — and the
+// playlist keeps it. A handle rather than arrows, since a pair of
+// arrows on every row was the crowding that removed reordering before.
+check('the bill can be reordered', /function wireBillDrag\(\)/.test(src));
+check('by a handle on each row', /class="bill-handle" data-drag/.test(src));
+check('rows move under the finger', /bill\.insertBefore\(row, target\)/.test(src));
+check('and the new order is kept', /_showBill = order\.map\(\(i\) => _showBill\[i\]\)/.test(src));
+// Dragging isn't available to everyone.
+check('the arrow keys reorder too', /ev\.key === "ArrowUp" \? i - 1 : i \+ 1/.test(src));
+// The page scrolling under a drag would fight it on a phone.
+check('the page holds still while dragging', /\.bill-handle \{[\s\S]{0,300}touch-action:none/.test(shell));
+// A shuffled playlist would throw the order away.
+check('a Multi-Dip keeps its built order', /id: "show",[\s\S]{0,400}simple: true/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

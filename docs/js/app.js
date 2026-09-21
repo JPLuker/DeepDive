@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.38";
+export const BUILD = "2.9.39";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -4221,7 +4221,10 @@ async function renderShow() {
   setTitle("DeepDive · Multi-Dip");
   setActiveTab("dives");
   const rows = _showBill.map((a, i) => `
-    <div class="bill-row">
+    <div class="bill-row" data-idx="${i}">
+      <button class="bill-handle" data-drag aria-label="Drag to reorder ${esc(a.name)}, or use the arrow keys" title="Drag to reorder">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+      </button>
       <span class="bill-name">${esc(a.name)}</span>
       <span class="bill-actions">
         <button class="bill-tag-btn${a.emphasis === "less" ? " on" : ""}" data-show-emph="${i}" data-emph="less">Less</button>
@@ -4234,7 +4237,7 @@ async function renderShow() {
 
   root.innerHTML = `
     <div class="row-head"><h2>Multi-Dip</h2></div>
-    <p class="nav-hint" style="margin-top:0;">Add everyone playing. They share the night evenly unless you say otherwise — tag the one you're really there for as More, and anyone you barely know as Less. Or pin someone to an exact number of songs.</p>
+    <p class="nav-hint" style="margin-top:0;">Add everyone playing, and drag them into the order they'll go on — openers first. They share the night evenly unless you tag the one you're there for as More, or someone you barely know as Less.</p>
     ${searchShellHtml({ options: false })}
     <div id="show-bill">${rows || `<p class="empty-note">Nobody added yet.</p>`}</div>
     <div class="set-group set-group-spaced">
@@ -4272,6 +4275,8 @@ async function renderShow() {
 
   // Kept on the bill rather than in state elsewhere, so reordering
   // carries the choice with the artist it belongs to.
+  wireBillDrag();
+
   // Tapping a tag that's already on turns it off, so neutral is always
   // one press away and nothing is compulsory.
   root.querySelectorAll("[data-show-emph]").forEach((b) => b.addEventListener("click", () => {
@@ -4300,6 +4305,69 @@ async function renderShow() {
 
   document.getElementById("show-familiar")?.addEventListener("change", (e) => setFamiliar(e.target.value));
   document.getElementById("show-go")?.addEventListener("click", buildShowNow);
+}
+
+/**
+ * Reorder the bill by dragging a row's handle.
+ *
+ * The order of the bill is the order of the night, and the playlist
+ * keeps it — openers first, then whoever you came for. Rows move under
+ * the finger as it passes their midpoints, so what you see while
+ * dragging is what you'll get.
+ */
+function wireBillDrag() {
+  const bill = document.getElementById("show-bill");
+  if (!bill) return;
+  const commit = () => {
+    const order = [...bill.querySelectorAll(".bill-row")].map((r) => +r.dataset.idx);
+    _showBill = order.map((i) => _showBill[i]);
+    renderShow();
+  };
+
+  bill.querySelectorAll("[data-drag]").forEach((handle) => {
+    handle.addEventListener("pointerdown", (ev) => {
+      const row = handle.closest(".bill-row");
+      if (!row) return;
+      ev.preventDefault();
+      handle.setPointerCapture(ev.pointerId);
+      row.classList.add("dragging");
+      let moved = false;
+
+      const onMove = (e) => {
+        moved = true;
+        const rows = [...bill.querySelectorAll(".bill-row")].filter((r) => r !== row);
+        const target = rows.find((r) => {
+          const box = r.getBoundingClientRect();
+          return e.clientY < box.top + box.height / 2;
+        });
+        if (target) bill.insertBefore(row, target);
+        else bill.appendChild(row);
+      };
+      const onUp = () => {
+        handle.removeEventListener("pointermove", onMove);
+        handle.removeEventListener("pointerup", onUp);
+        handle.removeEventListener("pointercancel", onUp);
+        row.classList.remove("dragging");
+        if (moved) commit();
+      };
+      handle.addEventListener("pointermove", onMove);
+      handle.addEventListener("pointerup", onUp);
+      handle.addEventListener("pointercancel", onUp);
+    });
+
+    // Dragging isn't available to everyone; the arrow keys do the same.
+    handle.addEventListener("keydown", (ev) => {
+      if (ev.key !== "ArrowUp" && ev.key !== "ArrowDown") return;
+      ev.preventDefault();
+      const i = +handle.closest(".bill-row").dataset.idx;
+      const j = ev.key === "ArrowUp" ? i - 1 : i + 1;
+      if (j < 0 || j >= _showBill.length) return;
+      [_showBill[i], _showBill[j]] = [_showBill[j], _showBill[i]];
+      renderShow();
+      // Keep focus on the artist that moved, so repeated presses carry on.
+      document.querySelectorAll("#show-bill [data-drag]")[j]?.focus();
+    });
+  });
 }
 
 async function buildShowNow() {

@@ -595,6 +595,9 @@ All three need a Last.fm key in Settings.
       expensive feature in the app, tested only against synthetic
       catalogues. Start here, and start with two artists rather than a
       festival bill
+- [ ] Drag a bill row by its handle — it moves under your finger, and
+      the page doesn't scroll while you drag
+- [ ] Build it — the playlist plays in the order you set, openers first
 - [ ] Artists share the night evenly until tagged; **More** and **Less**
       shift the balance, and pressing an active tag clears it
 - [ ] Pin one artist to a few songs — they get exactly that many, and
