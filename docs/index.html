@@ -466,6 +466,16 @@
   .listing-items { list-style:none; margin:0; padding:0; display:grid; gap:28px; }
   .listing-items h3 { font-size:17px; margin:0 0 7px; letter-spacing:-0.01em; }
   .listing-items p { margin:0; color:var(--muted); line-height:1.6; max-width:56ch; }
+  /* The same three-rung gauge the app uses in its artist chooser, so
+     the page and the app describe depth the same way. */
+  .listing-items .depth {
+    display:inline-flex; flex-direction:column; gap:3px;
+    width:16px; margin-right:12px; vertical-align:middle;
+  }
+  .listing-items .depth i { display:block; height:3px; border-radius:2px; background:var(--line); }
+  .listing-items .depth i.on { background:var(--accent); }
+  .listing + .listing { margin-top:56px; }
+
   @media (min-width:760px) { .listing-items { grid-template-columns:1fr 1fr; gap:34px 48px; } }
 
   /* Alternating panels on a raised surface, as stats.fm does. */
@@ -761,28 +771,61 @@
     </section>
 
     <section class="listing" id="how">
-      <h2 class="listing-title">What it does</h2>
-      <p class="listing-intro">Point it at an artist and it reads everything they've released — albums, singles, EPs, the compilations they turn up on if you ask — then sorts all of it against your library, track by track.</p>
+      <h2 class="listing-title">How far in</h2>
+      <p class="listing-intro">Name an artist and pick how deep to go. A few of their songs, a night of them alongside everyone else on the bill, or everything they have ever released.</p>
       <ul class="listing-items">
         <li>
-          <h3>Finds the recording, not the title</h3>
-          <p>A song reissued on an EP under a different name is the same recording. DeepDive matches on that, so the version you already love still counts as yours. It can also scan your library against itself, for the songs you've quietly liked twice.</p>
+          <h3><span class="depth" aria-hidden="true"><i class=on></i><i></i><i></i></span>Dip</h3>
+          <p>Their best hour, most played first, built in seconds. If there isn't an hour of well-known songs, you get the whole discography instead, best known at the top.</p>
         </li>
         <li>
-          <h3>"If you like Oliver Tree"</h3>
-          <p>DeepDive asks which artists resemble the ones you play most, then builds a mix from the ones you already own and rarely reach for. A recommendation you can press play on rather than a shopping list.</p>
+          <h3><span class="depth" aria-hidden="true"><i class=on></i><i class=on></i><i></i></span>Multi-Dip</h3>
+          <p>Everyone playing the show, in one playlist. They share the night evenly unless you say otherwise: mark the band you're there for as More, the opener you've never heard as Less, or give someone an exact number of songs.</p>
         </li>
         <li>
-          <h3>An hour of anyone</h3>
-          <p>A dip takes one artist and gives you their best hour, most-played first. Where a dive is thorough, a dip is the one you actually put on.</p>
+          <h3><span class="depth" aria-hidden="true"><i class=on></i><i class=on></i><i class=on></i></span>Dive</h3>
+          <p>Every album, single and EP, set against your library. It matches recordings rather than titles, so the version you already love still counts as yours, and it tells you what you have, what you missed, and what you liked twice without noticing.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section class="listing">
+      <h2 class="listing-title">Mixes from what you've saved</h2>
+      <p class="listing-intro">Your library already holds more playlists than you've made. These are cut from it, so everything in them is something you chose once.</p>
+      <ul class="listing-items">
+        <li>
+          <h3>If you like…</h3>
+          <p>Name any artist, even one you don't own, and DeepDive finds the ones in your library who sound like them. A recommendation you can press play on.</p>
         </li>
         <li>
-          <h3>Mixes out of your own library</h3>
-          <p>Forty-odd ways of cutting what you've saved — a year, a decade, songs under two-thirty, artists you own one track by — or build your own from any combination.</p>
+          <h3>Forty ways to slice it</h3>
+          <p>Your 2019. Everything you added in autumn. Records you liked three songs from. The decade you keep going back to. New ones appear as your library grows.</p>
         </li>
         <li>
-          <h3>Genres Spotify won't tell you</h3>
-          <p>Not "rock". Shoegaze, midwest emo, riot grrrl, worked out from what your artists are actually tagged as, then turned into mixes of music you already have.</p>
+          <h3>Build your own</h3>
+          <p>An era, a length, an artist, in any combination, with a count of matching tracks as you go.</p>
+        </li>
+        <li>
+          <h3>The sampler</h3>
+          <p>A few songs each from artists you saved once and barely played since, each led by the one you already know.</p>
+        </li>
+        <li>
+          <h3>Genres, properly</h3>
+          <p>Spotify stopped saying what genre anything is. Last.fm still knows, so you can have a playlist of every shoegaze record you own.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section class="listing">
+      <h2 class="listing-title">Around it</h2>
+      <ul class="listing-items">
+        <li>
+          <h3>Up next</h3>
+          <p>Pin the artists you mean to get round to and star the ones you'll do soon. Home shows the queue, and when a playlist is done it asks whether you're finished with them.</p>
+        </li>
+        <li>
+          <h3>A cover for every playlist</h3>
+          <p>The artist's photo, the kind of mix it is, and the DeepDive mark. A night out gets everyone on the bill.</p>
         </li>
       </ul>
     </section>

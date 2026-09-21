@@ -37,7 +37,12 @@ check('but leaves them pinned', w.isPinned('Norah Jones'));
 
 // --- Home ---
 check('home shows up next', /pinHeading = "Up next";/.test(src));
-check('and falls back to four pins when nothing is starred', /shownPins = pins\.slice\(0, 4\);/.test(src));
+// Always the same four meant the rest of the pins never appeared on
+// Home at all. Shuffled, but on the session's seed so a tab switch
+// doesn't reshuffle them — only refresh does.
+check('and falls back to four pins when nothing is starred', /shownPins = insights\.seededPick\(pins, 4,/.test(src));
+check('shuffled on the session seed', /\(_suggestSeed \|\| 0\) \^ sessionSeed\(\)/.test(src));
+check('one definition of that seed', (src.match(/sessionStorage\.getItem\("deepdive_sugg_seed"\)/g) || []).length === 1);
 check('the heading follows what is shown', /<h2>\$\{pinHeading\}<\/h2>/.test(src));
 // Dives stops listing pins inline — they have their own screen.
 check('dives does not list pins inline', /\} else \{\s*\n\s*shownPins = \[\];/.test(src));

@@ -4,6 +4,18 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.37
+- The landing page covers everything the app does. It predated
+  Multi-Dip, Up next, playlist covers, the sampler and Build your own,
+  and still described a dip as reading an artist's whole catalogue —
+  which stopped being true when dips moved onto search.
+- It's organised around depth now, the same way the artist chooser is:
+  Dip, Multi-Dip and Dive, each with the chooser's gauge. Then the mixes
+  cut from your library, then Up next and covers.
+- The four pins Home shows when nothing is starred are shuffled, so
+  the rest of your pins turn up too. They hold still between tab
+  switches and change on refresh.
+
 ## 2.9.36 — Up next
 - **Up next.** Star a pin to queue it, and Home shows the queue instead
   of every pin. With nothing starred, Home shows four pins so it's never

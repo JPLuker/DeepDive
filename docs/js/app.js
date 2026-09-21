@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.36";
+export const BUILD = "2.9.37";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1787,6 +1787,23 @@ function wireSearchBar() {
 
 
 /**
+ * A number fixed for the browser session.
+ *
+ * Anything drawn at random on a page someone returns to — suggestions,
+ * the pins shown on Home — should still be there when they come back,
+ * and only change when they ask it to.
+ */
+function sessionSeed() {
+  try {
+    let seed = parseInt(sessionStorage.getItem("deepdive_sugg_seed") || "0", 10);
+    if (!seed) { seed = Date.now() >>> 0; sessionStorage.setItem("deepdive_sugg_seed", String(seed)); }
+    return seed;
+  } catch (e) {
+    return 12345;
+  }
+}
+
+/**
  * @param compact     Home shows a short row with a way through to Dives.
  * @param showAllPins Dives is where the full pin list belongs.
  */
@@ -1844,11 +1861,7 @@ async function buildSuggestionRow(el) {
 
   // Stable for the session: something that caught your eye should still
   // be there when you come back to the page.
-  let seed;
-  try {
-    seed = parseInt(sessionStorage.getItem("deepdive_sugg_seed") || "0", 10);
-    if (!seed) { seed = Date.now() >>> 0; sessionStorage.setItem("deepdive_sugg_seed", String(seed)); }
-  } catch (e) { seed = 12345; }
+  const seed = sessionSeed();
 
   // Tiles render at 56px, which is ~168 device pixels on a 3x phone.
   // Spotify's smallest artist image is 160px and its smallest album
@@ -2048,7 +2061,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
       pinHeading = "Up next";
       shownPins = upNext;
     } else {
-      shownPins = pins.slice(0, 4);
+      shownPins = insights.seededPick(pins, 4, (_suggestSeed || 0) ^ sessionSeed());
     }
   } else {
     shownPins = [];

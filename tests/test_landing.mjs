@@ -115,9 +115,9 @@ for (const m of html.matchAll(/img\/shots\/([a-z-]+\.jpg)" alt="[^"]*" width="(\
 // The page described DeepDive as it was two sessions ago. These are
 // the features that were on screen in the device row and never in the
 // copy.
-check('recommendations are advertised', /If you like Oliver Tree/.test(html));
+check('recommendations are advertised', /<h3>If you like…<\/h3>/.test(html));
 check('with their own panel', /If you like them, you'll like these/.test(html));
-check('the duplicate check is mentioned', /quietly liked twice/.test(html));
+check('the duplicate check is mentioned', /liked twice without noticing/.test(html));
 
 // The hero claimed "no account, nothing installed". A Spotify Client ID
 // is required, and the setup screen is the worst place to learn that.
@@ -131,6 +131,25 @@ check('panels alternate', panels.every((p, i) => (i % 2 === 1) === p.includes('f
 // The landing page kept its own copy of styles for markup deleted from
 // the app in 2.8.25.
 check('no dead sampler styles', !/sampler-row|btn-sampler/.test(html));
+
+// The page predated Multi-Dip, Up next, covers, the sampler and Build
+// your own, and still described a dip as reading a whole catalogue after
+// dips moved onto search. Everything the app does should be on it.
+for (const [label, re] of [
+  ['dips', /<h3>[\s\S]{0,160}Dip<\/h3>/],
+  ['multi-dips', /Multi-Dip<\/h3>/],
+  ['dives', /Dive<\/h3>/],
+  ['library mixes', /Forty ways to slice it/],
+  ['build your own', /<h3>Build your own<\/h3>/],
+  ['the sampler', /<h3>The sampler<\/h3>/],
+  ['genres', /<h3>Genres, properly<\/h3>/],
+  ['up next', /<h3>Up next<\/h3>/],
+  ['covers', /A cover for every playlist/],
+]) check(`the page covers ${label}`, re.test(html));
+// A dip no longer reads the catalogue; the page shouldn't say it does.
+check('a dip is not described as a catalogue read', !/A dip takes one artist and gives you their best hour[\s\S]{0,120}reads everything/.test(html));
+// The same gauge as the app's chooser, so both describe depth alike.
+check('the depths carry the app\'s gauge', (html.match(/class="depth"/g) || []).length === 3);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
