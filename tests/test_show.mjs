@@ -267,5 +267,18 @@ check('the page holds still while dragging', /\.bill-handle \{[\s\S]{0,300}touch
 // A shuffled playlist would throw the order away.
 check('a Multi-Dip keeps its built order', /id: "show",[\s\S]{0,400}simple: true/.test(src));
 
+// Rows used to snap between slots with everything else jumping, which
+// works and feels broken.
+check('the carried row follows the finger', /row\.style\.transform = `translateY\(\$\{lift\}px\)`/.test(src));
+check('from wherever it was grabbed', /const grab = ev\.clientY - row\.getBoundingClientRect\(\)\.top;/.test(src));
+check('the others slide out of the way', /r\.animate\(\s*\n\s*\[\{ transform: `translateY\(\$\{dy\}px\)` \}/.test(src));
+// A row mid-slide measured with getBoundingClientRect would compound
+// its own animation.
+check('measured ignoring running transforms', /before = new Map\(others\.map\(\(r\) => \[r, r\.offsetTop\]\)\)/.test(src));
+check('it drops into place on release', /\.finished\.then\(settle, settle\)/.test(src));
+// Redrawing before it lands would cut the drop off halfway.
+check('the redraw waits for it to land', /const settle = \(\) => \{\s*\n\s*row\.classList\.remove\("dragging"\);\s*\n\s*if \(moved\) commit\(\);/.test(src));
+check('reduced motion is honoured', /prefers-reduced-motion: reduce\)"\)\.matches/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

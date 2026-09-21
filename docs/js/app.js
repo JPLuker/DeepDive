@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.40";
+export const BUILD = "2.9.41";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -4318,6 +4318,10 @@ async function renderShow() {
 function wireBillDrag() {
   const bill = document.getElementById("show-bill");
   if (!bill) return;
+  // Motion is the point of this change, and also the thing some people
+  // have asked their device to leave out.
+  const animate = !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    && typeof Element.prototype.animate === "function";
   const commit = () => {
     const order = [...bill.querySelectorAll(".bill-row")].map((r) => +r.dataset.idx);
     _showBill = order.map((i) => _showBill[i]);
@@ -4332,26 +4336,67 @@ function wireBillDrag() {
       const pid = ev.pointerId;
       row.classList.add("dragging");
       let moved = false;
+      // Where on the row the finger landed, so the row stays under it
+      // rather than jumping to line its top up with the finger.
+      const grab = ev.clientY - row.getBoundingClientRect().top;
+      let lift = 0;   // how far the row is currently translated
 
       const onMove = (e) => {
         if (e.pointerId !== pid) return;
         e.preventDefault();
         moved = true;
-        const rows = [...bill.querySelectorAll(".bill-row")].filter((r) => r !== row);
-        const target = rows.find((r) => {
+        const others = [...bill.querySelectorAll(".bill-row")].filter((r) => r !== row);
+        const target = others.find((r) => {
           const box = r.getBoundingClientRect();
           return e.clientY < box.top + box.height / 2;
         });
-        if (target) bill.insertBefore(row, target);
-        else bill.appendChild(row);
+        const already = target ? row.nextElementSibling === target : !row.nextElementSibling;
+        if (!already) {
+          // FLIP: note where the others are, move the row, then play
+          // each of them from where it was to where it now is. Measured
+          // with offsetTop, which ignores any transform still running,
+          // so a row mid-slide doesn't compound its own animation.
+          const before = new Map(others.map((r) => [r, r.offsetTop]));
+          if (target) bill.insertBefore(row, target);
+          else bill.appendChild(row);
+          if (animate) {
+            for (const r of others) {
+              const dy = before.get(r) - r.offsetTop;
+              if (dy) r.animate(
+                [{ transform: `translateY(${dy}px)` }, { transform: "translateY(0)" }],
+                { duration: 170, easing: "cubic-bezier(.2,.7,.3,1)" }
+              );
+            }
+          }
+        }
+        // Keep the carried row under the finger wherever its slot now
+        // is: the gap between where the finger wants it and where the
+        // layout put it.
+        const slotTop = row.getBoundingClientRect().top - lift;
+        lift = (e.clientY - grab) - slotTop;
+        row.style.transform = `translateY(${lift}px)`;
       };
       const onUp = (e) => {
         if (e && e.pointerId !== undefined && e.pointerId !== pid) return;
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", onUp);
         window.removeEventListener("pointercancel", onUp);
-        row.classList.remove("dragging");
-        if (moved) commit();
+        const settle = () => {
+          row.classList.remove("dragging");
+          if (moved) commit();
+        };
+        // Let go and it drops into its slot rather than snapping there.
+        // The page is only redrawn once it has landed, or the redraw
+        // would cut the animation off halfway.
+        row.style.transform = "";
+        if (animate && lift) {
+          row.animate(
+            [{ transform: `translateY(${lift}px)` }, { transform: "translateY(0)" }],
+            { duration: 160, easing: "cubic-bezier(.2,.7,.3,1)" }
+          ).finished.then(settle, settle);
+        } else {
+          settle();
+        }
       };
       // passive:false so preventDefault can stop the page scrolling
       // under the finger while a row is being carried.

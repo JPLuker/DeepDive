@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.41
+- Dragging a bill row is animated. The row stays under your finger from
+  wherever you grabbed it, the others slide out of its way as it
+  passes, and on release it drops into its slot rather than snapping.
+- Honours reduced-motion settings — with those on, it reorders without
+  the movement.
+
 ## 2.9.40
 - Fixed, probably: dragging a Multi-Dip row did nothing on a phone. The
   row moves around the page during a drag and the handle holding the
