@@ -93,5 +93,12 @@ check('the checkbox is gone', !/id="intent-remember"/.test(shell));
 check('an old stored skip is cleared', /localStorage\.removeItem\(INTENT_SKIP_KEY\)/.test(src));
 check('tapping an artist always opens the dialog', !/if \(!force && intentSkipped\(\)/.test(src));
 
+// The warning belongs to the dive options but sits outside them in the
+// markup, so a saved "Everything they've touched" showed it on the
+// first step — under three choices it has nothing to do with.
+check('the warning follows the step', /!heavy \|\| !diveStepShowing\(\)/.test(src));
+check('leaving the options hides it', /if \(!on\) document\.getElementById\("intent-warning"\)\?\.classList\.add\("hidden"\);/.test(src));
+check('entering them re-evaluates it', /else paint\(\);/.test(src));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

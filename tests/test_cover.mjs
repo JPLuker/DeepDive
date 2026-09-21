@@ -135,5 +135,9 @@ check('and offer no order control', /\{ order: !isSimilar \}/.test(src));
 check('mixes report through the popup', !/msg\.innerHTML = `Playlist/.test(src));
 check('which closes the sheet first', /close\(\);\s*\n\s*showActionResult\(\{/.test(src));
 
+// A preview of a shuffled mix lists tracks in an order that won't
+// survive being made, and it was the tallest thing in the sheet.
+check('mix sheets have no preview', !/card-preview/.test(src) && !/card-preview/.test(readFileSync(new URL('../docs/app/index.html', import.meta.url), 'utf8')));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

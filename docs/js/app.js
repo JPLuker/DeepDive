@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.33";
+export const BUILD = "2.9.34";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1263,8 +1263,6 @@ function openCardModal(card) {
   const sub = document.getElementById("card-sub");
   const nameInput = document.getElementById("card-name");
   const lenRow = document.getElementById("card-len");
-  const preview = document.getElementById("card-preview");
-  const summary = document.getElementById("card-preview-summary");
   const msg = document.getElementById("card-msg");
   if (!modal) return;
 
@@ -1305,17 +1303,6 @@ function openCardModal(card) {
   const paint = () => {
     if (simple) lenRow.innerHTML = "";
     else renderPlaylistOptions(lenRow, opts, paint, card.count, { order: !isSimilar });
-    const list = tracksFor();
-    summary.textContent = `Preview ${list.length} track${list.length === 1 ? "" : "s"}`;
-    // Read-only preview: same row treatment, no checkbox, and the
-    // artist rather than the album underneath since a mix spans many.
-    preview.innerHTML = list.slice(0, 100).map((t) => `
-      <div class="track-row newt is-static">
-        <div class="track-meta">
-          <div class="track-name">${esc(t.name)}</div>
-          <div class="track-sub">${esc((t.artists && t.artists[0] && t.artists[0].name) || "")}${t.album && t.album.name ? ` · ${esc(t.album.name)}` : ""}</div>
-        </div>
-      </div>`).join("") + (list.length > 100 ? `<p class="crate-note" style="margin-top:10px;">…and ${list.length - 100} more.</p>` : "");
   };
   paint();
 
@@ -1480,6 +1467,12 @@ function optionsForIntent(id, customOpts) {
 
 let _pendingArtist = null;
 
+/** Whether the chooser is on its second step, the dive options. */
+function diveStepShowing() {
+  const el = document.getElementById("intent-adjust");
+  return !!el && !el.classList.contains("hidden");
+}
+
 function openIntentModal(artistName, { force = false } = {}) {
   // "Don't ask again" used to make sense: this dialog only chose how
   // deep a dive went, so skipping it meant accepting a default. Now it
@@ -1535,7 +1528,7 @@ function openIntentModal(artistName, { force = false } = {}) {
     if (warn) {
       const heavy = selected === "everything" ||
         (selected === "custom" && !!document.getElementById("opt-appears-on")?.checked);
-      warn.classList.toggle("hidden", !heavy);
+      warn.classList.toggle("hidden", !heavy || !diveStepShowing());
     }
     const modeSel = document.getElementById("intent-mode");
     const modeDesc = document.getElementById("intent-mode-desc");
@@ -1560,7 +1553,7 @@ function openIntentModal(artistName, { force = false } = {}) {
   const appearsBox = document.getElementById("opt-appears-on");
   if (appearsBox) appearsBox.addEventListener("change", () => {
     const warn = document.getElementById("intent-warning");
-    if (warn && selected === "custom") warn.classList.toggle("hidden", !appearsBox.checked);
+    if (warn && selected === "custom") warn.classList.toggle("hidden", !appearsBox.checked || !diveStepShowing());
   });
 
 
@@ -1610,6 +1603,8 @@ function openIntentModal(artistName, { force = false } = {}) {
   function showDiveStep(on) {
     document.getElementById("intent-choices")?.classList.toggle("hidden", on);
     document.getElementById("intent-adjust")?.classList.toggle("hidden", !on);
+    if (!on) document.getElementById("intent-warning")?.classList.add("hidden");
+    else paint();
     document.getElementById("intent-back")?.classList.toggle("hidden", !on || !artistName);
     document.getElementById("intent-start")?.classList.toggle("hidden", !on);
     const t = document.getElementById("intent-title");

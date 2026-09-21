@@ -432,7 +432,6 @@
   .len-opt { font-family:'IBM Plex Mono',monospace; font-size:12px; padding:7px 12px; border-radius:var(--radius-pill); border:1.5px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }
   .len-opt:hover { border-color:var(--ink); color:var(--ink); }
   .len-opt.active { background:var(--accent-gradient); color:#fff; border-color:transparent; }
-  .card-preview { margin-top:10px; max-height:240px; overflow-y:auto; }
 
   .checkbox-option { display:flex; align-items:center; gap:9px; font-size:14px; color:var(--ink); cursor:pointer; user-select:none; }
   .checkbox-option input[type=checkbox] { width:16px; height:16px; accent-color:var(--accent); flex-shrink:0; }
@@ -1094,8 +1093,8 @@
     /* Except the artist chooser, which belongs to the search bar it
        came from. A sheet at the far edge of the screen made picking an
        artist feel like being sent somewhere unrelated. */
-    #intent-modal { align-items:flex-start; padding:0 10px; }
-    #intent-modal .modal {
+    #intent-modal, #card-modal { align-items:flex-start; padding:0 10px; }
+    #intent-modal .modal, #card-modal .modal {
       width:100%; margin-top:clamp(52px, 12vh, 132px);
       border-radius:var(--radius-lg);
       padding:20px 18px;
@@ -1243,10 +1242,6 @@
 
       <div id="card-len" role="group" aria-label="Playlist options"></div>
 
-      <details class="diag" style="margin-top:16px;">
-        <summary id="card-preview-summary">Preview tracks</summary>
-        <div id="card-preview" class="card-preview"></div>
-      </details>
 
 
       <!-- Two export buttons crowded the row to the point of truncating

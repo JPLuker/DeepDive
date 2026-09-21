@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.34
+- Fixed: the slow-dive warning appeared on the first step of the
+  chooser, under Dip, Multi-Dip and Dive, whenever "Everything they've
+  touched" was the saved mode. It belongs to the dive options and now
+  only shows there.
+- Removed the track preview from mix sheets. A preview of a shuffled mix
+  lists tracks in an order that won't survive being made, and it was
+  the tallest thing in the sheet.
+- The mix sheet opens from the top like the artist chooser, rather than
+  the two dialogs arriving from opposite edges of the screen.
+- On a phone, the Home mixes row is two cards — the sampler and one
+  "If you like…" — because the row is two columns wide. Kept, at
+  Joseph's call.
+
 ## 2.9.33
 - Fixed the Home mixes row, which 2.9.26 never actually changed. The row
   always prepended Build your own and the sampler as their own tiles,

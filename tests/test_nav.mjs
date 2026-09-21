@@ -94,7 +94,10 @@ const shellSrc = readFileSync(new URL('../docs/app/index.html', import.meta.url)
 // modal to flex-end, so the chooser stayed a bottom sheet and the
 // change was invisible on the only device it was reported from.
 check('the chooser sits near the search bar', /align-items:flex-start/.test(shellSrc));
-check('on mobile too', /#intent-modal \{ align-items:flex-start/.test(shellSrc));
+check('on mobile too', /#intent-modal, #card-modal \{ align-items:flex-start/.test(shellSrc));
+// The mix sheet arrived from the bottom while the chooser arrived from
+// the top — two dialogs in one app from opposite edges.
+check('and the mix sheet matches it', /#intent-modal \.modal, #card-modal \.modal \{/.test(shellSrc));
 // The card modal is long and scrolled — a sheet is right for that one.
 check('other modals stay sheets', /\.modal-backdrop \{ padding:0; align-items:flex-end; \}/.test(shellSrc));
 check('and drops rather than appearing', /animation:modal-drop/.test(shellSrc));
@@ -113,7 +116,7 @@ check('the description updates in place', /modeDesc\.textContent = current \? cu
 // max-height:none in 2.9.28 let the panel run past the bottom of the
 // screen with nothing to scroll.
 check('the chooser stays on screen', /max-height:calc\(100vh - clamp/.test(shellSrc));
-check('and scrolls when it has to', /#intent-modal \.modal \{[\s\S]{0,240}overflow-y:auto/.test(shellSrc));
+check('and scrolls when it has to', /#card-modal \.modal \{[\s\S]{0,240}overflow-y:auto/.test(shellSrc));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
