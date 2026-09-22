@@ -298,6 +298,10 @@
   .results-stat .dot.liked { background:rgba(255,255,255,0.75); }
 
   .results-body { padding-top:22px; }
+  /* The summary copy used to absorb this section heading's top margin.
+     With that copy gone, the first heading otherwise stacks 34px of its
+     own margin on top of the body's 22px padding. */
+  .results-body > .crate-header:first-child { margin-top:0; }
   /* Clears the docked actions so the last row isn't trapped under them. */
   .results-body { padding-bottom:132px; }
 

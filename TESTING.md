@@ -35,6 +35,13 @@
 >    session
 
 
+## 38. Dive results spacing (2.9.69)
+
+- [ ] On a phone, the first results heading sits about one normal content
+      gap below the hero rather than leaving a large empty band
+- [ ] Check both paths: a result with duplicates (“Already yours, elsewhere”)
+      and one without duplicates (“New to you”)
+
 ## 37. Dive results trim (2.9.68)
 
 - [ ] On a finished dive, the hero count badges are followed directly by

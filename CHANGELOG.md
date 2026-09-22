@@ -4,6 +4,12 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.69
+- Tightened the top of dive results after the summary copy was removed.
+  The first results section no longer adds its normal section margin on top
+  of the results-body padding, removing the oversized blank band below the
+  artist hero on phones.
+
 ## 2.9.68
 - Dive results no longer repeat the hero counts in explanatory paragraphs
   before the track lists. The result goes straight from the count badges to
