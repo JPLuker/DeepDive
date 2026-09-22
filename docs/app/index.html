@@ -479,9 +479,10 @@
     background:var(--tile); color:var(--ink);
   }
   .crate-tools .sort-select { flex:0 0 auto; }
-  /* Space below as well as above: with no Up next section to open the
-     list, the first row sat flush against the button. */
-  .crate-sampler-actions { margin:4px 0 16px; }
+  /* Tight under the search row, with room before the list. Two classes
+     so it outranks .actions, which comes later and sets a 32px top
+     margin; with one class that margin won and the button floated. */
+  .actions.crate-sampler-actions { margin:8px 0 14px; }
   .crate-section { margin:22px 0 10px; }
   .crate-section .label {
     font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;

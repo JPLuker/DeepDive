@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.46
+- Fixed: the crate's sampler button floated in a 32px gap below the
+  search row. Its own margin rule lost to the general `.actions` rule,
+  which comes later with the same specificity. The rule now uses both
+  classes. The 2.9.45 test only checked the rule existed, so it passed
+  over the broken layout; it now checks the rule that wins.
+
 ## 2.9.45
 - Landing page: every feature now appears once. Added Recommended,
   Suggested, blocking, the full library scan, history and undo, the dive

@@ -704,7 +704,7 @@ All three need a Last.fm key in Settings.
 - [ ] The setup note mentions Spotify Premium
 - [ ] One panel near the end, the crate, with its screenshot
 - [ ] Footer credits Leisure Hour only by name
-- [ ] Crate in the app: a gap between the sampler button and the first row
+- [ ] Crate in the app: the sampler button sits just under the search row, with a gap before the first row (fixed properly in 2.9.46)
 
 ## 26. Crate as a list (2.9.44)
 

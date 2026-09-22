@@ -50,7 +50,11 @@ check('tiles can move to the top', /data-top="\$\{esc\(e\.name\)\}"/.test(src));
   check('names truncate instead of pushing buttons off', /min-width:0/.test(rule('.crate-open')) && /text-overflow:ellipsis/.test(rule('.crate-name')));
   check('buttons keep their size', /flex:0 0 auto/.test(rule('.crate-actions')));
   check('rows go two-up on a wide screen, and never overflow a narrow one', /auto-fill, minmax\(min\(340px, 100%\), 1fr\)/.test(rule('.crate-grid')));
-  check('sampler button has room beneath it', /class="actions crate-sampler-actions"/.test(src) && /margin:4px 0 16px/.test(rule('.crate-sampler-actions')));
+  // It has to outrank .actions, not just exist: in 2.9.45 it lost to
+  // .actions' 32px top margin and this check still passed.
+  check('sampler button sits under the search row', /class="actions crate-sampler-actions"/.test(src)
+    && /margin:8px 0 14px/.test(rule('.actions.crate-sampler-actions'))
+    && !/\n  \.crate-sampler-actions \{/.test(shell));
   check('no mobile override reshapes the crate', !/@media[^{]*\{[^@]*\.crate-(tile|art|grid)\b/.test(shell));
 }
 
