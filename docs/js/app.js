@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.50";
+export const BUILD = "2.9.51";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1573,7 +1573,7 @@ function openIntentModal(artistName, { force = false } = {}) {
   if (titleEl) titleEl.textContent = artistName || "How should DeepDive search?";
   paintIntentHero(artistName);
   sub.textContent = artistName
-    ? "A few songs, a night of them, or everything they've released."
+    ? "A few songs, or everything they've released."
     : "Pick what a dive does by default. You can change it any time.";
 
   let selected = savedIntentId();
@@ -1671,13 +1671,15 @@ function openIntentModal(artistName, { force = false } = {}) {
     else paint();
     document.getElementById("intent-back")?.classList.toggle("hidden", !on || !artistName);
     document.getElementById("intent-start")?.classList.toggle("hidden", !on);
+    // Only on the first step, and only with someone to start the bill.
+    document.getElementById("intent-multi")?.classList.toggle("hidden", on || !artistName);
     const t = document.getElementById("intent-title");
     if (t) t.textContent = on ? "How deep?" : (artistName || "How should DeepDive search?");
     if (sub) {
       sub.textContent = on
         ? `Reading ${artistName || "their catalogue"} against your library.`
         : (artistName
-          ? "A few songs, a night of them, or everything they've released."
+          ? "A few songs, or everything they've released."
           : "Pick what a dive does by default. You can change it any time.");
     }
   }
@@ -1694,6 +1696,9 @@ function openIntentModal(artistName, { force = false } = {}) {
   if (multiEl) {
     const freshMulti = multiEl.cloneNode(true);
     multiEl.replaceWith(freshMulti);
+    freshMulti.textContent = artistName ? `Multi-Dip with ${artistName}` : "Multi-Dip";
+    freshMulti.title = freshMulti.textContent;
+    freshMulti.classList.toggle("hidden", !artistName || diveStepShowing());
     freshMulti.addEventListener("click", () => {
       const artist = _pendingArtist;
       close();

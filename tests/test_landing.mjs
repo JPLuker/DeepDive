@@ -167,7 +167,10 @@ check('no claim that mixes can be reordered', !/choose the order/.test(html));
 // A dip no longer reads the catalogue; the page shouldn't say it does.
 check('a dip is not described as a catalogue read', !/A dip takes one artist and gives you their best hour[\s\S]{0,120}reads everything/.test(html));
 // The same gauge as the app's chooser, so both describe depth alike.
-check('the depths carry the app\'s gauge', (html.match(/class="depth"/g) || []).length === 3);
+// Two depths since 2.9.51; Multi-Dip is listed without a gauge.
+check('the depths carry the app\'s gauge', (html.match(/class="depth"/g) || []).length === 2);
+check('multi-dip is not drawn as a depth', /<h3>Multi-Dip<\/h3>/.test(html));
+check('the intro no longer calls it a depth', !/a night of them/.test(html));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

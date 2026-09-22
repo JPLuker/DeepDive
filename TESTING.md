@@ -698,6 +698,19 @@ All three need a Last.fm key in Settings.
 - [ ] Settings → Blocked artists shows the blocked list and its scopes
 - [ ] Nowhere in the app still says "pin" or "pinned"
 
+## 31. Two depths, Multi-Dip in the corner (2.9.51)
+
+- [ ] Search an artist: Dip and Dive only, each with a two-rung gauge
+- [ ] Cancel bottom left, "Multi-Dip with [artist]" bottom right, on a
+      phone and on desktop
+- [ ] A long name cuts off with "…" rather than wrapping the button
+- [ ] Multi-Dip opens the bill with that artist already on it
+- [ ] Choose Dive: the options step has no Multi-Dip button
+- [ ] The subtitle under the name is fully visible, not clipped by the
+      photo
+- [ ] Landing page "How far in": Dip and Dive with gauges, Multi-Dip
+      after them without one
+
 ## 30. Artist photo on the chooser (2.9.50)
 
 - [ ] Search an artist: the chooser opens straight away, and their photo

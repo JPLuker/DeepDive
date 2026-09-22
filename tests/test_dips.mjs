@@ -59,7 +59,19 @@ check('an empty dip is explained', /Couldn't build a dip for/.test(src));
 // choice you were being offered.
 check("choices lead the dialog", /<div class="intent-choices" id="intent-choices">/.test(shell));
 check('dip is a choice, not a footer button', /<button class="intent-choice" data-depth="1" id="intent-dip">/.test(shell));
-check('the three read as one scale', /data-depth="1"[\s\S]*data-depth="2"[\s\S]*data-depth="3"/.test(shell));
+// 2.9.51: Dip and Dive are the scale; Multi-Dip left it for the footer.
+{
+  const choices = shell.slice(shell.indexOf('id="intent-choices"'), shell.indexOf('id="intent-adjust"'));
+  const actions = shell.slice(shell.indexOf('id="intent-back"'), shell.indexOf('id="intent-start"'));
+  check('two depths, dip then dive', /data-depth="1" id="intent-dip"[\s\S]*data-depth="2" id="intent-go"/.test(choices) && !/data-depth="3"/.test(shell));
+  check('gauges have two rungs', (choices.match(/<i><\/i><i><\/i><\/span>/g) || []).length === 2 && !/<i><\/i><i><\/i><i><\/i>/.test(choices));
+  check('multi-dip is not among the depths', !/intent-multi/.test(choices));
+  check('multi-dip sits after cancel, in the footer', /id="intent-cancel"[\s\S]*id="intent-multi"/.test(actions));
+  check('pushed right even on a phone, where the spacer is off', /\.intent-multi \{[^}]*margin-left:auto/.test(shell) && /\.modal-actions \.spacer \{ display:none; \}/.test(shell));
+  check('only on the first step, and only with an artist', /classList\.toggle\("hidden", on \|\| !artistName\)/.test(src));
+  check('subtitle drops the night', (src.match(/"A few songs, or everything they've released\."/g) || []).length === 2 && !/a night of them/.test(src));
+  check('subtitle is lifted above the photo fade', /\.modal\.has-hero \.modal-sub \{ position:relative; z-index:1; \}/.test(shell));
+}
 check('with a gauge showing how deep each goes', /class="intent-depth"/.test(shell));
 check('and no saturated primary slab', !/is-primary/.test(shell));
 // The gear was a separate box beside a pill; one shape split by a

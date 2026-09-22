@@ -148,8 +148,10 @@ check('and a built bill is cleared', /_showBill = \[\];\s*\n\s*openCardModal\(\{
 // Reachable from the artist popup, not only from a row on Dives. The
 // artist you just searched is almost always on the bill — usually the
 // one you're going for — so it seeds the lineup.
-check('multidip is offered beside dip and dive', /id="intent-multi"/.test(shell));
-check('and says what it does', /several artists, one night/.test(shell));
+// 2.9.51: offered from the chooser, but not as a depth. It's a
+// different job that starts with this artist, so it says so.
+check('multidip is offered from the chooser', /id="intent-multi"/.test(shell));
+check('and says who it starts with', /`Multi-Dip with \$\{artistName\}`/.test(src));
 // The popup has a name, not a resolved artist. Storing the name as the
 // id meant it was passed as `resolvedArtist`, so the catalogue read
 // asked Spotify for an artist whose id was "Frank Sinatra" — which

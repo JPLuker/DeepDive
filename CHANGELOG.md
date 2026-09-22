@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.51
+- The chooser offers two depths, Dip and Dive, with a two-rung gauge.
+  Multi-Dip was the middle rung, which presented it as a depth when
+  it's a different job: a lineup that starts with this artist. It's now
+  a button bottom right, opposite Cancel, reading "Multi-Dip with
+  [artist]". It shows only on the first step and only when an artist
+  was searched. The Dives menu still has it.
+- Subtitle is now "A few songs, or everything they've released."
+- Fixed: the 2.9.50 photo fade was drawn over the top of the subtitle.
+  The photo is positioned, so it painted above the subtitle, which
+  wasn't. The subtitle is lifted above it.
+- Landing page: "How far in" has two depths, with Multi-Dip listed
+  after them without a gauge. The intro says so.
+
 ## 2.9.50
 - The artist chooser shows the artist. Their photo runs across the top
   of the panel, fading into it, with their name over the fade. It fades

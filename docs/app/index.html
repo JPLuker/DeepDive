@@ -701,6 +701,9 @@
     font-size:30px; letter-spacing:-0.02em;
     text-shadow:0 2px 14px rgba(0,0,0,0.55);
   }
+  /* The hero is positioned, so it paints over anything that isn't; the
+     subtitle was clipped by the fade until it was lifted too. */
+  .modal.has-hero .modal-sub { position:relative; z-index:1; }
   @media (prefers-reduced-motion: reduce) { .intent-hero img { transition:none; } }
   .intent-choices { display:flex; flex-direction:column; gap:10px; margin:16px 0 4px; }
   /* Dip, Multi-Dip and Dive are not three unrelated options — they are
@@ -727,9 +730,16 @@
     display:block; height:3px; border-radius:2px;
     background:var(--line); transition:background .15s ease;
   }
+  /* Two rungs: Dip is one, Dive is both. Multi-Dip was the middle rung
+     until 2.9.51, which called it a depth when it's a different job. */
   .intent-choice[data-depth="1"] .intent-depth i:nth-child(1),
-  .intent-choice[data-depth="2"] .intent-depth i:nth-child(-n+2),
-  .intent-choice[data-depth="3"] .intent-depth i { background:var(--accent); }
+  .intent-choice[data-depth="2"] .intent-depth i { background:var(--accent); }
+  /* Bottom right, and it has to stay there on a phone, where the
+     spacer is switched off. Long names cut off rather than wrap. */
+  .intent-multi {
+    margin-left:auto; max-width:60%;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block;
+  }
 
   .intent-choice-title { font-size:15.5px; font-weight:650; letter-spacing:-0.01em; }
   .intent-choice-sub { font-size:12.5px; color:var(--muted); line-height:1.4; }
@@ -1299,17 +1309,12 @@
            which made Dip look like a setting rather than a choice. -->
       <div class="intent-choices" id="intent-choices">
         <button class="intent-choice" data-depth="1" id="intent-dip">
-          <span class="intent-depth" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="intent-depth" aria-hidden="true"><i></i><i></i></span>
           <span class="intent-choice-title">Dip</span>
           <span class="intent-choice-sub">their best hour, most played first</span>
         </button>
-        <button class="intent-choice" data-depth="2" id="intent-multi">
-          <span class="intent-depth" aria-hidden="true"><i></i><i></i><i></i></span>
-          <span class="intent-choice-title">Multi-Dip</span>
-          <span class="intent-choice-sub">several artists, one night, weighted by billing</span>
-        </button>
-        <button class="intent-choice" data-depth="3" id="intent-go">
-          <span class="intent-depth" aria-hidden="true"><i></i><i></i><i></i></span>
+        <button class="intent-choice" data-depth="2" id="intent-go">
+          <span class="intent-depth" aria-hidden="true"><i></i><i></i></span>
           <span class="intent-choice-title">Dive</span>
           <span class="intent-choice-sub">their whole catalogue against your library</span>
         </button>
@@ -1346,8 +1351,10 @@
       </div>
       <div class="modal-actions">
         <button class="btn btn-ghost hidden" id="intent-back">Back</button>
-        <span class="spacer"></span>
         <button class="btn btn-ghost" id="intent-cancel">Cancel</button>
+        <span class="spacer"></span>
+        <!-- Not a depth: a different job that starts with this artist. -->
+        <button class="btn btn-ghost intent-multi hidden" id="intent-multi">Multi-Dip</button>
         <button class="btn btn-primary hidden" id="intent-start">Start the dive</button>
       </div>
     </div>
