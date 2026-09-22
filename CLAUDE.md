@@ -79,6 +79,14 @@ write it there — including any decision it depends on — rather than
 building it immediately or asking what to do with it. He often sends a
 batch of notes mixing both; sort them and say which went where.
 
+- **A screenshot sent to show a bug is not a landing-page asset.** One
+  was put on the landing page without asking. When the plan says "I'll
+  ask for screenshots", ask for them.
+- **Don't delete what you didn't create without asking.** Cutting two
+  landing panels also deleted the VIAL and Houseghost photos, which are
+  in deliberate use while Joseph seeks the artists' permission.
+- **"Do what you think is best"** after a proposal means build the
+  proposal. Report what you changed from it and why.
 - Correct him when he's wrong, kindly. He'll do the same, and he's
   usually right — several of the worst bugs here were found because he
   pushed back on an explanation of mine that didn't hold.
@@ -135,8 +143,23 @@ confirms them.
 ./tests/run.sh
 ```
 
-430 assertions, 34 suites, plus a syntax check and a boot check. It takes
-seconds.
+1,508 assertions, 57 suites at 2.9.58, plus a syntax check and a boot
+check. It takes seconds.
+
+**Gate the push on the suite's own result.** `run.sh ... | tail -2 &&
+git push` pushes whatever the suite said, because `tail` succeeds. That
+shipped a failing 2.9.45. Use this shape:
+
+```bash
+bash tests/run.sh > /tmp/t.txt 2>&1
+if grep -q " 0 failed" /tmp/t.txt; then git add -A && git commit ... && git push ...
+else echo "SUITE FAILED, not pushing"; fi
+```
+
+**Prove every new check fails first.** Swap in the previous version of
+the file (`git show HEAD:path > path`), run the suite, restore. A check
+that can't fail is decoration; several this session passed over the
+exact breakage they were written for until this was done.
 
 **A suite reporting "(no output)" is not a passing suite.** The runner
 scores those as absent, not failed, so the summary line can read
@@ -160,6 +183,32 @@ them. But check the code first — sometimes the test is right.
 ---
 
 ## Things that have bitten, repeatedly
+
+**From the 22 Sept session (2.9.42 to 2.9.58), briefly:**
+
+- **Same specificity, later in the sheet, wins.** `.crate-sampler-actions`
+  lost to `.actions`, declared further down, and the button floated in a
+  32px gap. Test the rule that wins, not the rule that exists.
+- **Class names collide.** A new `.show-actions` footer rule was one
+  commit from restyling Home's tiles, whose open state is
+  `.tile-wrap.show-actions`. Grep a new class name in the old files
+  before using it.
+- **A new class can trip an old guard.** `crate-sampler-row` contained
+  `sampler-row`, which a test forbids as a dead style. Read the name
+  the guard is actually matching.
+- **A positioned element paints over an unpositioned one.** The
+  chooser's photo header covered the subtitle below it until the
+  subtitle was positioned too.
+- **Handing a render function straight to `addEventListener`** passes
+  the click event as its first argument. `renderConnect(error)` would
+  have shown "Spotify said: [object PointerEvent]". Wrap it:
+  `() => renderConnect()`. A test forbids the bare form.
+- **A check scoped too loosely.** The first "no phone rule touches this"
+  check sliced from the first `@media` to the end of the file and caught
+  desktop rules. Match the media block's braces.
+- **State held in the DOM resets on redraw.** The Multi-Dip length
+  select was rebuilt with three hours selected every render. Keep it in
+  a variable.
 
 **Reach for the endpoint test before theorising.** Settings → Advanced
 → Diagnostics fires one request at each endpoint and reports the raw
@@ -537,21 +586,24 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-See `ROADMAP.md`. In short: 2.5 "Changes" is built and pushed but **not
-tagged as a release** — that's the next release, cut from this work once
-Joseph has tested it. Everything since is commits only.
+Build **2.9.58**, all 2.9.x. **3.0 is the final release, not a next
+step**, and its number is Joseph's to take. The live picture, including
+what to pick up next, is the "Stopping point" section at the top of
+`ROADMAP.md`.
 
-Two gates neither of which has been run, both cheap, both blocking real
-work:
+Gates before 3.0, none done:
 
-1. **setlist.fm CORS** — blocks all of 3.x. A browser-only app cannot
-   call an API that refuses cross-origin requests, whoever owns the key.
-2. **Canvas export from Spotify's image CDN** — blocks custom playlist
-   cover art, which also needs the `ugc-image-upload` scope and so a
-   reconnect.
+1. **The copy rewrite.** Joseph has a fillable PDF of ~520 strings.
+   Its landing-page strings are long stale (the landing page was
+   rewritten several times in 2.9.45 to 2.9.51) and onboarding was
+   rebuilt in 2.9.56, so those ids no longer match. Offer short separate
+   PDFs for the landing page and onboarding rather than regenerating the
+   whole thing, which would renumber ids he may be partway through.
+2. **A full `TESTING.md` pass** on his phone.
+3. **Renaming the GitHub releases** to the song-title convention.
 
-Given how the appeared-on and top-tracks endpoints turned out, test both
-before designing around them.
+Settled since the older notes: setlist.fm is dropped (CORS blocks it on
+two browsers). Custom playlist covers work and shipped.
 
 ## Before any release: rewrite the words
 
