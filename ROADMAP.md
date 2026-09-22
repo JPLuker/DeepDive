@@ -233,7 +233,7 @@ clean before anything is built on it.
 
 ---
 
-## Stopping point, 22 Sept (build 2.9.61)
+## Stopping point, 22 Sept (build 2.9.62)
 
 Picking up next session:
 
@@ -252,11 +252,13 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.61
+## Shipped since — build 2.9.62
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Recommended qualifier changed from the vague "a little of everything"
+  to "from across your mixes" (2.9.62)
 - Recommended became a mixed shelf across Sampler, Similar artists, Mix
   ideas and Genres; the old recommendation group is now Similar artists.
   All four Dives destinations share coordinated gradient treatments

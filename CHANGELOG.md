@@ -4,6 +4,10 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.62
+- Recommended now reads "from across your mixes." The original "a
+  little of everything" was vague and did not explain the shelf.
+
 ## 2.9.61
 - Recommended is now a real top-of-page shelf: Sampler plus a changing
   selection drawn from Similar artists, Mix ideas and Genres. It uses

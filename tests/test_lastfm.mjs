@@ -147,6 +147,7 @@ check('a rejected key stops it', /Last\.fm rejected the key/.test(src));
 check('mixed recommendations lead the page', src.indexOf('id="featured-mixes"') < src.indexOf('id="rec-section"'));
 check('recommended draws across categories', /async function renderFeaturedMixes/.test(src) && /mixedRow\(libraryCards, cached, _featuredMixSeed, 3\)/.test(src));
 check('recommended includes the sampler', /data-featured-sampler/.test(src));
+check('recommended says why these cards are together', /<h2>Recommended<\/h2><span class="qual">from across your mixes<\/span>/.test(src));
 check('old recommendation section is now similar artists', /<h2>Similar artists<\/h2>/.test(src) && /already in your library/.test(src));
 // With Last.fm there are three distinct groups, so the generated grid
 // gets a descriptive name that does not imply the other two somehow

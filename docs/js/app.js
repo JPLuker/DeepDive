@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.61";
+export const BUILD = "2.9.62";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -700,7 +700,7 @@ async function renderFeaturedMixes() {
 
   if (!sampler && !cards.length) { el.innerHTML = ""; return; }
   el.innerHTML = `
-    <div class="row-head"><h2>Recommended</h2><span class="qual">a little of everything</span></div>
+    <div class="row-head"><h2>Recommended</h2><span class="qual">from across your mixes</span></div>
     <div class="card-row featured-mix-row">
       ${sampler}
       ${cards.map((c, i) => `
