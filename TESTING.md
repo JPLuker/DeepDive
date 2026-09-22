@@ -698,6 +698,24 @@ All three need a Last.fm key in Settings.
 - [ ] Settings → Blocked artists shows the blocked list and its scopes
 - [ ] Nowhere in the app still says "pin" or "pinned"
 
+## 33. Onboarding (2.9.56)
+
+Test in a private window, or clear site data, so it's a first visit.
+
+- [ ] Welcome: "Hear it all.", the two needs (Premium, two minutes),
+      Get started. No second DeepDive logo under the header
+- [ ] Step 1: Copy puts the address on the clipboard and says "Copied".
+      Open the dashboard opens Spotify in a new tab
+- [ ] Step 2: Continue stays off until the ID is 32 characters; a short
+      paste says how long it is; spaces round the edges are ignored
+- [ ] Step 3: Skip goes to Connect without an error; a bad key keeps
+      Save off
+- [ ] Step 4: Connect Spotify logs in and lands on Home
+- [ ] Deny access on Spotify's page: you come back to step 4 with
+      "access was not allowed"
+- [ ] Back on step 2 returns to step 1; the dots and "Step n of 4"
+      match each screen
+
 ## 32. Multi-Dip overhaul (2.9.53)
 
 - [ ] Open Multi-Dip from the chooser: the cover beside the title shows

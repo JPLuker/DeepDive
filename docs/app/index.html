@@ -106,8 +106,6 @@
   .menu-btn svg { width:24px; height:24px; }
   .wordmark { font-family:'Martius','Inter',sans-serif; text-transform:uppercase; letter-spacing:0.01em; color:var(--ink); text-decoration:none; font-size:22px; line-height:1; display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
   .wordmark-icon { height:1.5em; width:auto; display:block; }
-  .wordmark-hero { font-family:'Martius','Inter',sans-serif; text-transform:uppercase; letter-spacing:0.01em; color:var(--ink); font-size:76px; line-height:1; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; }
-  .wordmark-hero-icon { height:100px; width:auto; display:block; }
 
   .nav-backdrop { position:fixed; inset:0; background:rgba(10,10,10,0.35); opacity:0; pointer-events:none; transition:opacity .2s; z-index:40; }
   .nav-backdrop.open { opacity:1; pointer-events:auto; }
@@ -859,21 +857,60 @@
   .bmc-link svg { width:17px; height:17px; }
   .bmc-link:hover { color:var(--accent); border-color:var(--accent); }
 
-  /* ---- landing page ---- */
-  .landing { padding-top:24px; }
-  .landing-lede { font-size:20px; font-weight:600; margin:22px auto 10px; max-width:520px; line-height:1.35; }
-  .landing-sub { font-size:15px; color:var(--muted); max-width:560px; margin:0 auto; line-height:1.6; }
-  .landing-cta { margin:26px 0 10px; }
-  .landing-note { font-size:12.5px; color:var(--muted-soft); margin:0; }
-
-  .landing-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:44px 0 34px; }
-  .landing-card { border:1.5px solid var(--line); border-radius:var(--radius-lg); padding:20px; background:var(--paper); }
-  .landing-icon { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:var(--radius); background:var(--surface); color:var(--accent); margin-bottom:12px; }
-  .landing-icon svg { width:18px; height:18px; }
-  .landing-card h3 { font-size:15px; margin:0 0 6px; }
-  .landing-card p { font-size:13.5px; color:var(--muted); line-height:1.55; margin:0; }
-
-  .landing-foot { text-align:center; border-top:1px solid var(--line); padding-top:28px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+  /* ---- onboarding ----
+     One step per screen, one main button, a line of dots for where you
+     are. Same surfaces as everything else: tiles, pill buttons, muted
+     secondary text. Nothing here is overridden for phones; it is
+     narrow-first and simply stops growing at 560px. */
+  .onboard { max-width:560px; margin:8px auto 40px; }
+  .onboard-top { display:flex; justify-content:flex-end; margin:0 0 8px; }
+  .onboard-step { font-size:12.5px; font-weight:600; color:var(--muted); letter-spacing:0.02em; }
+  .onboard-dots { display:flex; gap:6px; margin:0 0 26px; }
+  .onboard-dots i { flex:1; height:4px; border-radius:2px; background:var(--line); }
+  .onboard-dots i.on { background:var(--accent-gradient); }
+  .onboard-title { font-size:26px; margin:0 0 10px; letter-spacing:-0.02em; }
+  .onboard-hero {
+    font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
+    font-size:clamp(44px, 13vw, 72px); line-height:0.95; margin:12px 0 14px; text-align:center;
+  }
+  .onboard-optional { font-size:14px; font-weight:500; color:var(--muted); margin-left:6px; letter-spacing:0; }
+  .onboard-lede { font-size:15px; line-height:1.55; color:var(--muted); margin:0 0 18px; }
+  .onboard-hint { font-size:13px; line-height:1.5; color:var(--muted-soft); margin:10px 0 0; }
+  .onboard-hint a { color:var(--accent); }
+  .onboard-list { margin:0 0 14px; padding-left:20px; font-size:14.5px; line-height:1.55; }
+  .onboard-list li + li { margin-top:8px; }
+  .onboard-copy {
+    display:flex; align-items:center; gap:10px;
+    background:var(--tile); border-radius:var(--radius-tile); padding:10px 10px 10px 14px;
+  }
+  .onboard-copy code {
+    flex:1 1 auto; min-width:0; font-size:13px; overflow-x:auto; white-space:nowrap;
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+  }
+  .onboard-copy .btn { flex:0 0 auto; }
+  .onboard-field { display:flex; flex-direction:column; gap:6px; margin:6px 0 0; }
+  .onboard-field span { font-size:12.5px; font-weight:600; color:var(--muted); }
+  .onboard-field input {
+    font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:15px;
+    padding:13px 14px; border-radius:var(--radius-tile);
+    border:1.5px solid var(--line); background:var(--field); color:var(--ink); width:100%;
+  }
+  .onboard-check { min-height:1.4em; font-size:13px; margin:8px 0 0; color:var(--muted); }
+  .onboard-check.good { color:#4fbf87; }
+  .onboard-check.bad { color:#e58a8a; }
+  .onboard-actions { display:flex; gap:10px; margin-top:26px; }
+  .onboard-actions .btn { flex:1 1 0; justify-content:center; }
+  .onboard-actions-center { justify-content:center; }
+  .onboard-actions-center .btn { flex:0 1 320px; }
+  .onboard-welcome, .onboard-connect { text-align:center; }
+  .onboard-welcome .onboard-lede, .onboard-connect .onboard-lede { max-width:440px; margin-left:auto; margin-right:auto; }
+  .onboard-needs { display:grid; gap:8px; margin:22px 0 0; text-align:left; }
+  .onboard-needs div {
+    background:var(--tile); border-radius:var(--radius-tile); padding:12px 14px;
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .onboard-needs strong { font-size:14.5px; }
+  .onboard-needs span { font-size:13px; color:var(--muted); line-height:1.45; }
 
   /* Always on screen. Confirming which build is loaded was taking a trip
      to the bottom of Settings, which made it easy to test a stale one
@@ -1222,10 +1259,6 @@
     .topbar { padding:10px 14px 8px; }
     .wordmark { font-size:19px; }
 
-    /* The hero took most of a phone screen before anything useful. */
-    .wordmark-hero { font-size:44px; }
-    .wordmark-hero-icon { height:58px; }
-
     h1 { font-size:22px; }
     .card { padding:20px 16px; border-radius:var(--radius); }
 
@@ -1262,12 +1295,6 @@
     .pcard { min-height:92px; padding:12px; }
     .row-head { margin:28px auto 12px; }
     .row-head h2, .row-head .qual { font-size:18px; }
-
-    /* Two columns of feature cards is unreadable at phone width. */
-    .landing-grid { grid-template-columns:1fr; gap:10px; margin:30px 0 26px; }
-    .landing-card { padding:16px; }
-    .landing-lede { font-size:17px; }
-    .landing-sub { font-size:14px; }
 
     /* Modals: full-width sheets rather than centred boxes. */
     .modal-backdrop { padding:0; align-items:flex-end; }
@@ -1321,8 +1348,6 @@
   /* Very narrow phones — the wordmark is still the first thing to
      overflow, so give it one more step down. */
   @media (max-width: 380px) {
-    .wordmark-hero { font-size:36px; }
-    .wordmark-hero-icon { height:48px; }
     .pill-name { font-size:12.5px; }
   }
 </style>

@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.55";
+export const BUILD = "2.9.56";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -212,72 +212,172 @@ function navigate(view) {
 // ============================================================
 // Setup (credentials)
 // ============================================================
-function renderSetup() {
-  setTitle("DeepDive · Configuration");
-  const rUri = auth.redirectUri();
-  const currentId = auth.getClientId();
-  // The app moved to /app/ in 2.7.1, which changes the redirect URI.
-  // Anyone set up before that has the old one registered and will hit
-  // INVALID_CLIENT until they add this one — worth saying plainly rather
-  // than leaving them to decode Spotify's error message.
-  const moved = /\/app\/?$/.test(rUri)
-    ? `<p class="crate-note" style="margin-bottom:14px;">Used DeepDive before the address changed? Add the URI below <em>alongside</em> your existing one — Spotify allows several — or logging in will fail.</p>`
-    : "";
-  root.innerHTML = `
-    <div class="card">
-      <h1>Spotify setup</h1>
-      <p class="muted">DeepDive uses your own Spotify app so it stays entirely yours — no shared server, no data leaving your browser. This is a one-time setup.</p>
-      ${moved}
-      <ol class="muted" style="line-height:1.9;">
-        <li>Go to the <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;">Spotify Developer Dashboard</a> and click <strong>Create app</strong> (any name).</li>
-        <li>In the app's settings, add this exact <strong>Redirect URI</strong>, then click Add <em>and</em> Save at the bottom:<br><code class="env">${esc(rUri)}</code><br><span style="font-size:13px;">Copy it exactly — the <code class="env">/app/</code> and the trailing slash both matter, and Spotify treats <code class="env">http</code> and <code class="env">https</code> as different.</span></li>
-        <li>Copy your <strong>Client ID</strong> and paste it below. No client secret needed — this app uses PKCE, so there isn't one.</li>
-      </ol>
-      <div style="margin-top:20px;">
-        <label class="mono" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Client ID</label>
-        <input type="text" id="client-id-input" placeholder="e.g. 0287b6335f0b4a4bae283bb94bfc2f05" value="${esc(currentId)}" style="margin-top:6px;">
-      </div>
-      <div class="crate-header"><span class="label">Last.fm</span><span class="qual">optional</span></div>
-      <p class="muted" style="margin-top:0;">Recommended. Spotify no longer exposes how popular a track is, which artists are similar, or anything beyond a broad genre — Last.fm does. With a key, DeepDive can build genre and subgenre mixes and an artist's best hour. Without one, those features simply don't appear; everything else works exactly the same.</p>
-      <p class="crate-note">Getting one takes about a minute and is approved instantly: create an app at <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener" style="color:var(--accent);">last.fm/api/account/create</a> and copy the API key. You only need the key, not the shared secret.</p>
-      <div style="margin-top:14px;">
-        <label class="nav-field-label" for="lastfm-key-input">Last.fm API key</label>
-        <input type="text" id="lastfm-key-input" class="nav-input" placeholder="optional" value="${esc(lastfm.getKey())}" autocomplete="off" spellcheck="false">
-      </div>
+// ============================================================
+// Onboarding
+// ============================================================
+//
+// One step per screen, one main button each, in the order the work
+// happens: create the Spotify app, paste its Client ID, optionally add
+// Last.fm, connect. The old version was one long page of numbered
+// instructions and two fields, with the reasoning for each written out.
+//
+// No artist photographs here: there is no Spotify connection yet to
+// fetch them with, and the ones shipped with the site may only appear
+// inside device frames on the landing page. The header already carries
+// the wordmark, so the steps don't repeat it.
 
-      <div class="actions">
-        <button class="btn btn-primary" id="save-creds-btn">Save & continue</button>
+const ONBOARD_STEPS = ["spotify", "client", "lastfm", "connect"];
+const CLIENT_ID_RE = /^[0-9a-f]{32}$/i;
+
+function onboardShell(step, body) {
+  const n = ONBOARD_STEPS.indexOf(step) + 1;
+  return `
+    <div class="onboard">
+      <div class="onboard-top">
+        <span class="onboard-step">Step ${n} of ${ONBOARD_STEPS.length}</span>
       </div>
+      <div class="onboard-dots" aria-hidden="true">${ONBOARD_STEPS.map((s, i) =>
+        `<i class="${i < n ? "on" : ""}"></i>`).join("")}</div>
+      ${body}
     </div>`;
-  document.getElementById("save-creds-btn").addEventListener("click", () => {
-    const id = document.getElementById("client-id-input").value.trim();
-    if (!id) { flash("Enter your Client ID first.", true); return; }
-    auth.setClientId(id);
-    // Optional, so an empty field is a valid answer rather than an
-    // error — saving nothing here simply leaves those features off.
-    lastfm.setKey(document.getElementById("lastfm-key-input").value);
-    flash("Saved.");
+}
+
+/** Step 1: create the Spotify app. */
+function renderSetup() {
+  setTitle("DeepDive · Set up");
+  const rUri = auth.redirectUri();
+  root.innerHTML = onboardShell("spotify", `
+    <h1 class="onboard-title">Make a Spotify app</h1>
+    <p class="onboard-lede">DeepDive runs on an app of your own, so your listening is never pooled with anyone else's. It's a short form, and you only fill it in once.</p>
+    <ol class="onboard-list">
+      <li>Open the dashboard and choose <strong>Create app</strong>. Any name will do.</li>
+      <li>Under <strong>Redirect URIs</strong>, paste this address, then save.</li>
+    </ol>
+    <div class="onboard-copy">
+      <code id="onboard-uri">${esc(rUri)}</code>
+      <button class="btn btn-ghost btn-small" id="onboard-copy-btn">Copy</button>
+    </div>
+    <p class="onboard-hint">It has to match exactly, down to the slash at the end.</p>
+    <div class="onboard-actions">
+      <a class="btn btn-ghost" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">Open the dashboard</a>
+      <button class="btn btn-primary" id="onboard-next">I've done this</button>
+    </div>`);
+  document.getElementById("onboard-copy-btn").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    try { await navigator.clipboard.writeText(rUri); btn.textContent = "Copied"; }
+    catch (err) {
+      // No clipboard access: select it so a long-press copies it.
+      const r = document.createRange(); r.selectNodeContents(document.getElementById("onboard-uri"));
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      btn.textContent = "Selected";
+    }
+    setTimeout(() => { btn.textContent = "Copy"; }, 1800);
+  });
+  document.getElementById("onboard-next").addEventListener("click", () => renderClientStep());
+}
+
+/** Step 2: the Client ID, checked as it's typed. */
+function renderClientStep() {
+  setTitle("DeepDive · Set up");
+  root.innerHTML = onboardShell("client", `
+    <h1 class="onboard-title">Paste your Client ID</h1>
+    <p class="onboard-lede">It's on your app's page in the dashboard, under Basic Information. You don't need the client secret.</p>
+    <label class="onboard-field">
+      <span>Client ID</span>
+      <input type="text" id="client-id-input" value="${esc(auth.getClientId() || "")}" placeholder="32 letters and numbers" autocomplete="off" spellcheck="false" autocapitalize="off">
+    </label>
+    <p class="onboard-check" id="client-id-check" aria-live="polite"></p>
+    <div class="onboard-actions">
+      <button class="btn btn-ghost" id="onboard-back">Back</button>
+      <button class="btn btn-primary" id="save-creds-btn" disabled>Continue</button>
+    </div>`);
+  const input = document.getElementById("client-id-input");
+  const note = document.getElementById("client-id-check");
+  const go = document.getElementById("save-creds-btn");
+  const check = () => {
+    const v = input.value.trim();
+    const ok = CLIENT_ID_RE.test(v);
+    go.disabled = !ok;
+    note.className = "onboard-check" + (v && !ok ? " bad" : ok ? " good" : "");
+    note.textContent = !v ? "" : ok ? "That looks right."
+      : `A Client ID is 32 letters and numbers. This one is ${v.length}.`;
+  };
+  input.addEventListener("input", check);
+  check();
+  document.getElementById("onboard-back").addEventListener("click", () => renderSetup());
+  go.addEventListener("click", () => {
+    const v = input.value.trim();
+    if (!CLIENT_ID_RE.test(v)) return;
+    auth.setClientId(v);
+    renderLastfmStep();
+  });
+}
+
+/** Step 3: Last.fm, optional, with skipping as good an answer as saving. */
+function renderLastfmStep() {
+  setTitle("DeepDive · Set up");
+  root.innerHTML = onboardShell("lastfm", `
+    <h1 class="onboard-title">Add Last.fm <span class="onboard-optional">optional</span></h1>
+    <p class="onboard-lede">Spotify no longer says what's popular or who sounds like whom. Last.fm does, and with a key you get Dips, recommendations and genre mixes.</p>
+    <p class="onboard-hint">Create an API account at <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener">last.fm/api</a> and copy the API key. It's approved straight away. You can add it later in Settings.</p>
+    <label class="onboard-field">
+      <span>Last.fm API key</span>
+      <input type="text" id="lastfm-key-input" value="${esc(lastfm.getKey() || "")}" placeholder="32 letters and numbers" autocomplete="off" spellcheck="false" autocapitalize="off">
+    </label>
+    <p class="onboard-check" id="lastfm-key-check" aria-live="polite"></p>
+    <div class="onboard-actions">
+      <button class="btn btn-ghost" id="onboard-skip">Skip for now</button>
+      <button class="btn btn-primary" id="onboard-save-lastfm" disabled>Save key</button>
+    </div>`);
+  const input = document.getElementById("lastfm-key-input");
+  const note = document.getElementById("lastfm-key-check");
+  const save = document.getElementById("onboard-save-lastfm");
+  const check = () => {
+    const v = input.value.trim();
+    const ok = CLIENT_ID_RE.test(v);
+    save.disabled = !ok;
+    note.className = "onboard-check" + (v && !ok ? " bad" : ok ? " good" : "");
+    note.textContent = !v ? "" : ok ? "That looks right."
+      : `A Last.fm key is 32 letters and numbers. This one is ${v.length}.`;
+  };
+  input.addEventListener("input", check);
+  check();
+  // Wrapped: handed straight to addEventListener, renderConnect would
+  // take the click event as an error message.
+  document.getElementById("onboard-skip").addEventListener("click", () => renderConnect());
+  save.addEventListener("click", () => {
+    const v = input.value.trim();
+    if (!CLIENT_ID_RE.test(v)) return;
+    lastfm.setKey(v);
     renderConnect();
   });
 }
 
-// ============================================================
-// Connect (login)
-// ============================================================
-function renderConnect() {
+/**
+ * Step 4: connect.
+ *
+ * A wrong redirect address never comes back here: Spotify stops on its
+ * own page with "Invalid redirect URI". So the likely problem is named
+ * before the button, not after it.
+ */
+function renderConnect(error = "") {
   setTitle("DeepDive");
-  root.innerHTML = `
-    <div style="margin-top:60px; text-align:center;">
-      <span class="wordmark-hero"><img src="../assets/dd-logo.png" alt="" class="wordmark-hero-icon">DeepDive</span>
-      <p class="muted" style="max-width:460px; margin:20px auto 0;">
-        DeepDive checks an artist's discography against your Liked Songs, finds recordings you've already liked under a different release, and helps you fold in the ones you're missing — then builds a playlist of everything you still haven't liked.
-      </p>
-      <div style="margin-top:26px;"><button class="btn btn-primary" id="connect-btn">Connect Spotify</button></div>
-    </div>`;
+  const hasId = !!auth.getClientId();
+  root.innerHTML = onboardShell("connect", `
+    <div class="onboard-connect">
+      <h1 class="onboard-title">Connect Spotify</h1>
+      <p class="onboard-lede">Spotify will ask you to allow DeepDive into your library and playlists. Nothing is changed without you choosing it.</p>
+      ${error ? `<p class="onboard-check bad">Spotify said: ${esc(error)}. Try again, or check the steps before this one.</p>` : ""}
+      <div class="onboard-actions onboard-actions-center">
+        <button class="btn btn-primary" id="connect-btn">Connect Spotify</button>
+      </div>
+      <p class="onboard-hint">If Spotify says <em>Invalid redirect URI</em>, the address from step 1 wasn't saved exactly. ${hasId ? `<button class="btn-link" id="onboard-restart">Go back to step 1</button>` : ""}</p>
+    </div>`);
   document.getElementById("connect-btn").addEventListener("click", async () => {
     try { await auth.beginLogin(); }
     catch (e) { flash(`Couldn't start login: ${e.message}`, true); }
   });
+  document.getElementById("onboard-restart")?.addEventListener("click", () => renderSetup());
 }
 
 // ============================================================
@@ -5761,71 +5861,28 @@ function markLandingSeen() {
   try { localStorage.setItem(LANDING_SEEN_KEY, "1"); } catch (e) {}
 }
 
-const FEATURES = [
-  {
-    icon: `<path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/>`,
-    title: "Find what you missed",
-    body: "You liked a song off an album years ago. The same recording turned up later on an EP, and Spotify showed it to you like it was new. DeepDive reads an artist's whole catalogue against your Liked Songs and finds those near-misses.",
-  },
-  {
-    icon: `<path d="M21 15V6M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM12 12H3M16 6H3M12 18H3"/>`,
-    title: "Build the playlist",
-    body: "Everything by that artist you genuinely haven't heard, in album order or however you like it — length, ordering and naming all yours. Nothing touches your library until you press the button.",
-  },
-  {
-    icon: `<polygon points="5 3 19 12 5 21 5 3"/>`,
-    title: "Sample what you barely know",
-    body: "Artists you've liked once or twice and never followed up on. Each one leads with the song you already know, then two you don't.",
-  },
-  {
-    icon: `<path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21 8 14 2 9.4h7.6z"/>`,
-    title: "Playlists from your own history",
-    body: "Your 2019. Albums that landed. Music you found twenty years late. One from every year you've been collecting. All built from what's already in your library.",
-  },
-  {
-    icon: `<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/>`,
-    title: "Your crate",
-    body: "Put aside the artists you mean to get to, and star the few you'll do next. Suggestions come half from what you've been playing and half from your own library.",
-  },
-  {
-    icon: `<path d="M12 22s8-4.5 8-11a8 8 0 1 0-16 0c0 6.5 8 11 8 11z"/><circle cx="12" cy="11" r="3"/>`,
-    title: "Yours alone",
-    body: "No server, no account, no data collected — there's nowhere to collect it to. Everything happens in your browser, between you and Spotify.",
-  },
-];
-
+/**
+ * The first screen anyone sees. It says what DeepDive is in the landing
+ * page's words, and what setting it up takes, including Premium:
+ * Spotify only lets an app in development mode run for an owner who
+ * pays, which was the one thing the old setup never mentioned.
+ */
 function renderLanding() {
   setTitle("DeepDive");
   root.innerHTML = `
-    <div class="landing">
-      <div style="text-align:center;">
-        <span class="wordmark-hero"><img src="../assets/dd-logo.png" alt="" class="wordmark-hero-icon">DeepDive</span>
-        <p class="landing-lede">You've liked the album version. You missed the single.</p>
-        <p class="landing-sub">DeepDive reconciles an artist's catalogue against your Spotify library — finding the recordings you already love hiding under a different release, and everything by them you've never heard at all.</p>
-        <div class="landing-cta">
-          <button class="btn btn-primary" id="landing-start">Get started</button>
-        </div>
-        <p class="landing-note">Free. Runs entirely in your browser. Takes about two minutes to set up.</p>
+    <div class="onboard onboard-welcome">
+      <h1 class="onboard-hero">Hear it all.</h1>
+      <p class="onboard-lede">DeepDive knows what's already in your Spotify library, so every playlist it builds is made of the songs you missed.</p>
+      <div class="onboard-needs">
+        <div><strong>Spotify Premium</strong><span>Spotify only runs apps like this for Premium accounts.</span></div>
+        <div><strong>About two minutes</strong><span>You'll make a free Spotify app and paste in one code.</span></div>
       </div>
-
-      <div class="landing-grid">
-        ${FEATURES.map((f) => `
-          <div class="landing-card">
-            <span class="landing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${f.icon}</svg></span>
-            <h3>${esc(f.title)}</h3>
-            <p>${esc(f.body)}</p>
-          </div>`).join("")}
+      <div class="onboard-actions onboard-actions-center">
+        <button class="btn btn-primary" id="landing-start">Get started</button>
       </div>
-
-      <div class="landing-foot">
-        <p class="landing-note">Spotify requires every app to have its own credentials, so you'll create a free one on their developer dashboard. It's a form, and you only do it once.</p>
-        <button class="btn btn-primary" id="landing-start-2">Set up Spotify</button>
-      </div>
+      <p class="onboard-hint"><a href="../" target="_blank" rel="noopener">See what DeepDive does</a></p>
     </div>`;
-
-  const go = () => { markLandingSeen(); renderSetup(); };
-  document.getElementById("landing-start")?.addEventListener("click", go);
-  document.getElementById("landing-start-2")?.addEventListener("click", go);
+  document.getElementById("landing-start").addEventListener("click", () => { markLandingSeen(); renderSetup(); });
 }
 
 // ---- demo screens ----
@@ -6011,8 +6068,9 @@ async function boot() {
   // Handle a PKCE redirect coming back from Spotify.
   const cb = await auth.handleRedirectCallback();
   if (cb.ok === false) {
-    flash(`Login failed: ${cb.error}`, true);
-    return renderConnect();
+    // Said on the connect step itself, where the retry is, rather than
+    // in a flash that disappears.
+    return renderConnect(cb.error === "access_denied" ? "access was not allowed" : cb.error);
   }
   if (cb.ok === true) { flash("Connected to Spotify."); return renderHome(); }
   render();

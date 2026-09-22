@@ -27,7 +27,7 @@ if (missing.length) console.log('  MISSING definitions:', missing.join(', '));
 check('every startup helper is defined', missing.length === 0);
 
 // Constants referenced by those helpers.
-for (const c of ['INTENTS','INTENT_KEY','BUILD','CARD_LENGTHS','BMC_KEY','FEATURES','LANDING_SEEN_KEY','CARDS_PER_LOAD','PLAYLIST_LENGTHS','PLAYLIST_ORDERS','SAMPLER_MAX_ARTISTS']) {
+for (const c of ['INTENTS','INTENT_KEY','BUILD','CARD_LENGTHS','BMC_KEY','LANDING_SEEN_KEY','CARDS_PER_LOAD','PLAYLIST_LENGTHS','PLAYLIST_ORDERS','SAMPLER_MAX_ARTISTS']) {
   check(`${c} is defined`, new RegExp(`const ${c}\\b`).test(src));
 }
 

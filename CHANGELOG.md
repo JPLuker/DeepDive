@@ -4,6 +4,27 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.56
+- Onboarding rebuilt. It was the oldest part of the app: a welcome
+  screen still in the v1 voice, one long setup page, and a connect
+  screen describing the Flask-era app. Now it's one step per screen,
+  with "Step n of 4" and a line of dots:
+  - Welcome: "Hear it all.", the landing page's line, and what you'll
+    need. That includes Spotify Premium, which the old setup never
+    mentioned. "See what DeepDive does" links to the landing page.
+  - Make a Spotify app: the redirect address with a Copy button (it
+    selects the text if the clipboard isn't available), and a button to
+    open the dashboard.
+  - Paste your Client ID: checked as you type. A Client ID is 32
+    letters and numbers; anything else is named, with its length,
+    before Spotify has to reject it.
+  - Add Last.fm: optional, and "Skip for now" sits beside "Save key".
+  - Connect: names the "Invalid redirect URI" case before the button,
+    since Spotify stops on its own page and never comes back. A refused
+    login returns here with the reason instead of a passing flash.
+- Removed: the pre-2.7.1 address-change note, the old welcome's feature
+  cards, and the styles only they used, including their phone rules.
+
 ## 2.9.55
 - Multi-Dip lengths are whole hours, one to six. The half hours are
   gone.

@@ -18,7 +18,8 @@ check('key is stored per user', /const KEY_STORAGE = "deepdive_lastfm_key"/.test
 check('no key is embedded', !/api_key\s*[:=]\s*["'][0-9a-f]{20,}/.test(lfm));
 check('setup offers the key', /id="lastfm-key-input"/.test(src));
 check('settings offers it too', /id="set-lastfm-key"/.test(src));
-check('setup marks it optional', /<span class="qual">optional<\/span>/.test(src));
+check('setup marks it optional', /Add Last\.fm <span class="onboard-optional">optional<\/span>/.test(src));
+check('and skipping is as easy as saving', /id="onboard-skip">Skip for now</.test(src));
 check('an empty key is a valid answer', /Last\.fm key removed/.test(src));
 
 // Optional means optional: a missing key must never break a screen.
