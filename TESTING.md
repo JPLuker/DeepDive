@@ -687,7 +687,7 @@ All three need a Last.fm key in Settings.
 
 ## 23. The Crate (2.9.38)
 
-- [ ] Dives → Crate opens a grid of photo tiles, not a list
+- [ ] Dives → Crate opens a list of rows (was photo tiles until 2.9.44)
 - [ ] Up next leads, then "Everyone else"
 - [ ] Search narrows it, and the keyboard stays up while typing
 - [ ] Each sort works; "Not dived yet" puts undived artists first
@@ -697,6 +697,17 @@ All three need a Last.fm key in Settings.
 - [ ] "Sampler from your crate" builds from a random handful
 - [ ] Settings → Blocked artists shows the blocked list and its scopes
 - [ ] Nowhere in the app still says "pin" or "pinned"
+
+## 26. Crate as a list (2.9.44)
+
+- [ ] Crate on a phone: about eight artists a screen, each a single row
+- [ ] Long names cut off with "…" and never push the buttons off
+- [ ] Star, ↑ and × still work, and tapping the photo or name opens
+      the artist
+- [ ] Artists with no photo show their initial in the thumbnail
+- [ ] Up next and Everyone else sections still split the list
+- [ ] Search and the four sorts still work
+- [ ] Desktop: rows sit two across, not stretched edge to edge
 
 ## 25. Mix blocks everywhere (2.9.43)
 

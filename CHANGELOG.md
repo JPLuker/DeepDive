@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.44
+- Changed: the crate is a list now, not a grid of square photos. Two
+  artists per phone screen made a crate of 74 thirty-odd screens long.
+  Each artist is a row: a small photo, their name, when you dived them,
+  and the star, move-to-top and remove buttons on the right. About
+  eight fit on a phone. On a wide screen the rows sit two across.
+
 ## 2.9.43
 - Fixed: blocking an artist from mixes didn't keep them out of
   Recommended. "If you like Eminem" still appeared with Eminem blocked,

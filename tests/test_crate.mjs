@@ -41,7 +41,17 @@ check('photos load as they scroll in', /loading="lazy" class="crate-art"/.test(s
 check('search repaints the list only', /search\.addEventListener\("input", \(\) => \{ _crateQuery = search\.value; paint\(\); \}\)/.test(src));
 check('one listener for the whole list', /body\.addEventListener\("click", \(ev\) => \{/.test(src));
 check('tiles can move to the top', /data-top="\$\{esc\(e\.name\)\}"/.test(src));
-check('the grid widens with the screen', /\.crate-grid \{[\s\S]{0,120}auto-fill, minmax\(150px, 1fr\)/.test(shell));
+// Rows, not square photo tiles: two tiles a screen made a big crate
+// unusable on a phone.
+{
+  const rule = (sel) => { const m = shell.match(new RegExp('\\n  ' + sel.replace('.', '\\.') + ' \\{([^}]*)\\}')); return m ? m[1] : ''; };
+  check('crate entries are rows', /display:flex/.test(rule('.crate-tile')) && /align-items:center/.test(rule('.crate-tile')) && !/flex-direction:column/.test(rule('.crate-tile')));
+  check('crate photos are thumbnails', /width:52px/.test(rule('.crate-art')) && !/aspect-ratio/.test(rule('.crate-art')));
+  check('names truncate instead of pushing buttons off', /min-width:0/.test(rule('.crate-open')) && /text-overflow:ellipsis/.test(rule('.crate-name')));
+  check('buttons keep their size', /flex:0 0 auto/.test(rule('.crate-actions')));
+  check('rows go two-up on a wide screen, and never overflow a narrow one', /auto-fill, minmax\(min\(340px, 100%\), 1fr\)/.test(rule('.crate-grid')));
+  check('no mobile override reshapes the crate', !/@media[^{]*\{[^@]*\.crate-(tile|art|grid)\b/.test(shell));
+}
 
 // --- blocked moved out ---
 // Blocking changes what the app does, not what you're listening to.
