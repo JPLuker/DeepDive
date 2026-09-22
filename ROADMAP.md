@@ -253,11 +253,14 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.70
+## Shipped since — build 2.9.71
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Mobile dive results now use a compact one-row action dock. The redundant
+  “Back to home” row is hidden on phones because the Home tab is directly
+  below it, and the bottom clearance was tightened to match (2.9.71)
 - Demo result rows now show the real Spotify album art. Search-track
   responses carry `album.images[]`, so the demo path now normalizes them
   to the `album.image_url` shape used by the real catalogue renderer

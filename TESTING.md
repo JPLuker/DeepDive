@@ -35,6 +35,16 @@
 >    session
 
 
+## 40. Mobile result actions (2.9.71)
+
+- [ ] On a phone, finished results show one compact row: Like Songs,
+      Create Playlist and Both
+- [ ] There is no second “Back to home” row on mobile; Home remains visible
+      in the app tab bar directly below the actions
+- [ ] The action dock sits above the tab bar rather than overlapping it,
+      and the final result row can still scroll fully clear of both bars
+- [ ] Desktop still shows Back to home
+
 ## 39. Demo result album artwork (2.9.70)
 
 - [ ] Open `?demo=results`: every visible duplicate and new-track row with

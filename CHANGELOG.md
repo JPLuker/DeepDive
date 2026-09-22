@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.71
+- Simplified the mobile result actions. The fixed bar now contains only
+  Like Songs, Create Playlist and Both; the redundant full-width “Back to
+  home” row is hidden because Home is already directly beneath it in the
+  tab bar.
+- Reduced the mobile result-bottom clearance to match the shorter action
+  bar, so it no longer reads as a large sheet covering the page/navigation.
+
 ## 2.9.70
 - Demo result tracks now carry album artwork into the shared result-row
   renderer. Spotify search returns album images as `album.images[]`, while

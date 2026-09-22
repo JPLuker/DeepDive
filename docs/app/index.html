@@ -1245,8 +1245,12 @@
     .dive-bar { bottom:calc(60px + env(safe-area-inset-bottom)); }
     body.diving .wrap { padding-bottom:calc(148px + env(safe-area-inset-bottom)); }
     #flash-slot .flash { margin-bottom:calc(84px + env(safe-area-inset-bottom)); }
+    /* The tab bar already contains Home, so a second full-width "Back to
+       home" row made the result actions look like a sheet sitting on top
+       of the navigation. Keep only the three result actions on phones. */
     .results-actions { bottom:calc(60px + env(safe-area-inset-bottom)); padding-bottom:12px; }
-    .results-body { padding-bottom:190px; }
+    .results-actions .btn-back { display:none; }
+    .results-body { padding-bottom:132px; }
     .results-hero { margin:0 -18px 0; }
     .results-hero-text { padding:0 18px 16px; }
   }

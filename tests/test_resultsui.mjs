@@ -70,6 +70,7 @@ check('hero fades on scroll', /function attachHeroFade/.test(src));
 check('fade is rAF-throttled', /requestAnimationFrame\(apply\)/.test(src));
 check('scroll listener is passive', /\{ passive: true \}/.test(src));
 check('actions clear the mobile tab bar', /\.results-actions \{ bottom:calc\(60px \+ env\(safe-area-inset-bottom\)\)/.test(html));
+check('mobile hides redundant back-home action', /\.results-actions \.btn-back \{ display:none; \}/.test(html));
 check('body clears the docked actions', /\.results-body \{ padding-bottom:132px; \}/.test(html));
 
 console.log(`\n${pass} passed, ${fail} failed`);
