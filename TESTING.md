@@ -274,6 +274,9 @@ the demo Settings list should appear.
 - [ ] "Shuffle assignments" changes which approved artist fills each slot
 - [ ] `?demo=results` shows a finished dive — this is how to judge the
       2.8.1 redesign right now
+- [ ] The results hero uses the selected artist's real full-size photo
+- [ ] Results visibly include 3 duplicates, 7 new and 11 already liked;
+      the example should not read like an artificial 50/50 split
 - [ ] `?demo=home`, `?demo=sampler`, `?demo=scan` each render
 - [ ] No artist outside the approved list appears anywhere in demo mode
 - [ ] Suggested has no refresh button and Settings' library Refresh is

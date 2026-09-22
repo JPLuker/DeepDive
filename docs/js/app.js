@@ -9,7 +9,7 @@
  */
 
 import * as auth from "./auth.js";
-import { SpotifyClient, limitedUntil } from "./spotify.js";
+import { SpotifyClient, limitedUntil, normaliseArtist } from "./spotify.js";
 import * as search from "./search.js";
 import * as watchlist from "./watchlist.js";
 import { LibraryCache } from "./library-cache.js";
@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.65";
+export const BUILD = "2.9.66";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -6087,7 +6087,12 @@ async function demoResolveArtist(name) {
   if (!key) return null;
   if (!_demoArtistData.has(key)) {
     const approved = demo.approvedArtist(name);
-    const p = (approved && approved.id ? Promise.resolve(approved) : client.findArtist(name)).then((a) => {
+    // Fetch the chosen Spotify identity rather than trusting the thumbnail
+    // saved with the whitelist. Besides preventing same-name mismatches,
+    // this gives full-size current artwork to the results hero.
+    const p = (approved && approved.id
+      ? client.get(`artists/${approved.id}`).then(normaliseArtist)
+      : client.findArtist(name)).then((a) => {
       if (!a) throw new Error(`Spotify couldn't find ${name}.`);
       _artistLookups.set(key, Promise.resolve(a));
       return a;
@@ -6144,6 +6149,8 @@ async function renderDemo(screen) {
   try {
     if (screen === "results") {
       const [group] = await demoGroupsFor("results", 1, 10);
+      const photo = group.artist.image_url_large || group.artist.image_url;
+      if (photo) await preloadPhoto(photo);
       return renderResults(demo.resultsFrom(group.artist, group.tracks));
     }
     if (screen === "scan") {

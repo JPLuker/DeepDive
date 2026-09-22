@@ -4,6 +4,12 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.66
+- Demo results fetch and preload the selected artist's full Spotify image
+  before rendering, fixing the blank gradient hero.
+- The staged result is deliberately uneven and now visibly includes three
+  duplicate candidates alongside seven new tracks and eleven already liked.
+
 ## 2.9.65
 - Crate, Multi-Dip and Full library scan now open their staged versions
   from the demo Dives screen instead of falling through to live state.

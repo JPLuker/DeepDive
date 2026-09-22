@@ -154,17 +154,21 @@ export function suggestionsFrom(artists) {
 }
 
 export function resultsFrom(artist, tracks) {
-  const usable = (tracks || []).slice(0, 9);
+  const usable = (tracks || []).slice(0, 10);
   const dups = usable.slice(0, 3).map((t, i) => ({
     track: t,
-    matched_liked_track: { id: `demo-liked-${i}`, name: t.name },
+    matched_liked_track: {
+      id: `demo-liked-${i}`,
+      name: i === 0 ? `${t.name} (Album Version)` : (i === 1 ? `${t.name} — Remastered` : t.name),
+    },
     match_basis: i === 1 ? "96% title match" : "ISRC",
   }));
+  const photo = artist.image_url_large || artist.image_url || (artist.images && artist.images[0] && artist.images[0].url) || null;
   return {
-    artist: { ...artist, images: artist.image_url_large || artist.image_url ? [{ url: artist.image_url_large || artist.image_url }] : [] },
-    already_liked_count: 24,
-    excluded_count: 12,
-    collapsed_count: 6,
+    artist: { ...artist, image_url_large: photo, images: photo ? [{ url: photo }] : [] },
+    already_liked_count: 11,
+    excluded_count: 4,
+    collapsed_count: 2,
     duplicate_candidates: dups,
     new_tracks: usable.slice(3),
   };

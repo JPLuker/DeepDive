@@ -33,6 +33,8 @@ check('index lists every screen', DEMO_SCREENS.every(([id]) => typeof id === 'st
 
 // --- real renderers ---------------------------------------------------
 check('results uses the real renderer', /return renderResults\(demo\.resultsFrom\(group\.artist, group\.tracks\)\)/.test(src));
+check('results preloads full Spotify artist artwork', /client\.get\(`artists\/\$\{approved\.id\}`\)\.then\(normaliseArtist\)/.test(src) && /if \(photo\) await preloadPhoto\(photo\)/.test(src));
+check('results stage uneven counts and visible duplicates', /already_liked_count: 11/.test(dsrc) && /usable\.slice\(0, 3\)/.test(dsrc) && /new_tracks: usable\.slice\(3\)/.test(dsrc));
 check('scan uses the real renderer', /return renderScrubResults\(demo\.scanFrom\(groups\)\)/.test(src));
 check('sampler uses the real dialog', /openCardModal\(card\)/.test(src));
 check('home uses the real suggestion row', /renderSuggestionRow\(el, demo\.pinsFrom\(pins\), demo\.suggestionsFrom\(suggestions\)\)/.test(src));
