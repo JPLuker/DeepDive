@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.59";
+export const BUILD = "2.9.60";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -456,9 +456,9 @@ function searchShellHtml({ options = true } = {}) {
  * interpolate, so `id="go-scrub"` still appears in the source and the
  * getElementById orphan audit can see it.
  */
-function navRow(idAttr, title, detail, { disabled = false } = {}) {
+function navRow(idAttr, title, detail, { disabled = false, featured = false } = {}) {
   return `
-    <button class="set-row set-row-nav" ${idAttr}${disabled ? " disabled" : ""}>
+    <button class="set-row set-row-nav${featured ? " dive-feature" : ""}" ${idAttr}${disabled ? " disabled" : ""}>
       <span class="set-row-text">
         <span class="set-row-title">${title}</span>
         <span class="set-row-detail">${esc(detail)}</span>
@@ -506,8 +506,11 @@ async function renderHome() {
 }
 
 /**
- * Everything about diving in one place: search, the full pin and
- * suggestion lists, a whole-library scan, history and pins.
+ * Everything about diving in one place. The things that start listening
+ * come first: one artist through search, then a whole bill through
+ * Multi-Dip, then the artists waiting in the suggestion list. Crate and
+ * history are places to resume or look back; the hours-long library scan
+ * is deliberately last rather than presented as the first alternative.
  */
 async function renderDives() {
   setTitle("DeepDive · Dives");
@@ -517,14 +520,21 @@ async function renderDives() {
     ${scopeBanner()}
     <div id="api-banner">${apiBannerHtml()}</div>
     ${searchShellHtml({ options: false })}
+    <div class="set-group dive-feature-group">
+      <div class="set-group-label">For the whole bill</div>
+      ${lastfm.hasKey()
+        ? navRow('id="go-show"', "Multi-Dip", "Build one playlist in show order, with more time for the acts you care about.", { featured: true })
+        : navRow('id="go-show"', "Multi-Dip", NEEDS_LASTFM_FULL, { disabled: true, featured: true })}
+    </div>
     <div id="suggestions-row"></div>
     <div class="set-group set-group-spaced">
-      ${navRow('id="go-scrub"', "Full library scan", "Crawls every artist you've liked. Thorough, and slow — one request per release.")}
-      ${lastfm.hasKey()
-        ? navRow('id="go-show"', "Multi-Dip", "Everyone on the bill, weighted by billing and ordered like the night runs.")
-        : navRow('id="go-show"', "Multi-Dip", NEEDS_LASTFM_FULL, { disabled: true })}
-      ${navRow('id="go-history"', "Dive history", "What you've dived, what DeepDive built, and how to undo it.")}
+      <div class="set-group-label">Your dives</div>
       ${navRow('id="go-pins"', "Crate", "Everyone you've put aside to get to, with Up next at the top.")}
+      ${navRow('id="go-history"', "Dive history", "What you've dived, what DeepDive built, and how to undo it.")}
+    </div>
+    <div class="set-group">
+      <div class="set-group-label">Go further</div>
+      ${navRow('id="go-scrub"', "Full library scan", "Check every artist you've liked for music you missed. Thorough, and slow — this can take hours.")}
     </div>`;
 
   wireSearchBar();

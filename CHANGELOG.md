@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.60
+- Reordered the Dives page around intent instead of treating every
+  destination alike. Multi-Dip now sits directly below artist search as
+  the featured whole-bill action, before the artist suggestion list.
+- The remaining destinations now read Crate, Dive history, then Full
+  library scan. The scan is separated under "Go further," placed last,
+  and says plainly that it can take hours.
+
 ## 2.9.59
 - With no Last.fm key, Mixes opens directly into its only available grid
   instead of spending the top of the page on a redundant section heading.

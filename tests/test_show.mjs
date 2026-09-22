@@ -170,7 +170,7 @@ check('the inline search still refuses duplicates', /!_showBill\.some\(\(a\) => 
 // One name for one feature: it was "Concert prep" on Dives and would
 // have been "Multi-Dip" in the popup.
 check('one name everywhere', !/Concert prep/.test(src));
-check('and that name is Multi-Dip', /<h2>Multi-Dip<\/h2>/.test(src) && /"Multi-Dip", "Everyone on the bill/.test(src));
+check('and that name is Multi-Dip', /<h2>Multi-Dip<\/h2>/.test(src) && /"Multi-Dip", "Build one playlist in show order/.test(src));
 // One spelling, or the app and its docs drift apart.
 check('no unhyphenated spelling remains', !/Multidip/.test(src) && !/Multidip/.test(shell));
 

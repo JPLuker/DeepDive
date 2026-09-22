@@ -42,6 +42,9 @@ const dives = src.slice(src.indexOf('async function renderDives()'), src.indexOf
 check('dives shows every pin', /loadSuggestions\(\{ showAllPins: true \}\)/.test(dives));
 check('dives owns the library scan', /id="go-scrub"/.test(dives));
 check('dives owns history and pins', /id="go-history"/.test(dives) && /id="go-pins"/.test(dives));
+check('multi-dip comes before the suggestions', dives.indexOf('id="go-show"') < dives.indexOf('id="suggestions-row"'));
+check('crate comes before history', dives.indexOf('id="go-pins"') < dives.indexOf('id="go-history"'));
+check('the slow scan comes last', dives.indexOf('id="go-history"') < dives.indexOf('id="go-scrub"'));
 
 // Mixes: the renamed Playlists, with the sampler.
 const mixes = src.slice(src.indexOf('async function renderMixes()'), src.indexOf('async function loadPlaylistCards'));
@@ -78,8 +81,8 @@ check('old library heading is gone', !/<h2>From your library<\/h2>/.test(src));
 // floating above all of them, so the most expensive action in the app
 // looked exactly like opening a list of pins. Each row carries its own
 // description now, which is where the cost belongs.
-check('dive destinations are rows', /function navRow\(idAttr, title, detail, \{ disabled = false \} = \{\}\)/.test(src));
-check('the scan explains its cost', /one request per release/.test(dives));
+check('dive destinations are rows', /function navRow\(idAttr, title, detail, \{ disabled = false, featured = false \} = \{\}\)/.test(src));
+check('the scan explains its cost', /this can take hours/.test(dives));
 check('history explains itself', /how to undo it/.test(dives));
 // Pins became the Crate, and Blocked moved to Settings: blocking
 // changes what the app does, not what you're listening to.
@@ -88,7 +91,8 @@ check('no loose pill row left', !/<div class="actions">\s*\n\s*<button class="bt
 // Ids stay literal, or the orphan audit stops seeing them — the same
 // mistake the settings helpers made an hour earlier.
 check('nav row ids are literal', src.includes('id="go-scrub"') && src.includes('id="go-history"'));
-check('rows share the settings shape', /class="set-row set-row-nav"/.test(src));
+check('rows share the settings shape', /class="set-row set-row-nav/.test(src));
+check('multi-dip is visually featured', /featured: true/.test(dives) && /\.set-row-nav\.dive-feature/.test(h));
 
 // The chooser floated mid-screen while the search bar that produced it
 // sits near the top, so picking an artist threw your eye somewhere

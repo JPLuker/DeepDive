@@ -233,7 +233,7 @@ clean before anything is built on it.
 
 ---
 
-## Stopping point, 22 Sept (build 2.9.59)
+## Stopping point, 22 Sept (build 2.9.60)
 
 Picking up next session:
 
@@ -252,11 +252,13 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.59
+## Shipped since — build 2.9.60
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Dives hierarchy: Multi-Dip featured directly below search; Crate before
+  history; the hours-long Full Library Scan separated and last (2.9.60)
 - Mixes hides its lone section heading without Last.fm; with a key, the
   grid is "Mix ideas — dates, artists and albums" rather than the
   misleading "From your library" (2.9.59)

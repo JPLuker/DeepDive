@@ -716,6 +716,17 @@ With a Last.fm key:
 - [ ] The generated card grid is headed "Mix ideas — dates, artists and
       albums"
 
+## 35. Dives hierarchy (2.9.60)
+
+- [ ] Multi-Dip is directly below search, visually distinct, and above
+      the artist suggestions
+- [ ] Below the artist list, the order is Crate, Dive history, then Full
+      library scan
+- [ ] Full library scan sits under "Go further" and warns that it can
+      take hours
+- [ ] Without a Last.fm key, the featured Multi-Dip row is dimmed and
+      does nothing
+
 Always:
 
 - [ ] Mixes grid: in every row the titles line up under the icons, with

@@ -1038,6 +1038,7 @@
   /* Following a tile grid rather than another group, so it needs real
      clearance — it was sitting hard against the tiles above. */
   .set-group-spaced { margin-top:34px; }
+  .dive-feature-group { margin-top:18px; }
   .set-group-label {
     font-size:12px; font-weight:600; letter-spacing:0.02em;
     color:var(--muted-soft); margin:0 0 8px 2px;
@@ -1063,6 +1064,17 @@
     transition:background .15s ease;
   }
   .set-row-nav:hover { background:var(--tile-hover); }
+  .set-row-nav.dive-feature {
+    border:1px solid color-mix(in srgb, var(--accent) 44%, var(--line));
+    background:linear-gradient(135deg,
+      color-mix(in srgb, var(--accent) 17%, var(--tile)),
+      color-mix(in srgb, var(--teal) 10%, var(--tile)));
+  }
+  .set-row-nav.dive-feature:hover {
+    background:linear-gradient(135deg,
+      color-mix(in srgb, var(--accent) 24%, var(--tile)),
+      color-mix(in srgb, var(--teal) 14%, var(--tile)));
+  }
   .set-row-nav:disabled { opacity:0.5; cursor:default; }
   .set-row-nav:disabled:hover { background:var(--tile); }
   .show-needs { margin:0; font-size:13px; color:var(--muted); text-align:center; }
