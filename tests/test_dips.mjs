@@ -100,5 +100,33 @@ check('the warning follows the step', /!heavy \|\| !diveStepShowing\(\)/.test(sr
 check('leaving the options hides it', /if \(!on\) document\.getElementById\("intent-warning"\)\?\.classList\.add\("hidden"\);/.test(src));
 check('entering them re-evaluates it', /else paint\(\);/.test(src));
 
+// --- The chooser shows the artist (2.9.50) ---
+check('chooser has a photo header', /id="intent-hero"[^>]*><img id="intent-photo"/.test(shell));
+check('it is painted when the chooser opens', /paintIntentHero\(artistName\);/.test(src));
+check('it bleeds to the edges on desktop', /\.intent-hero \{[^}]*margin:-26px -26px 0/.test(shell));
+{
+  // The phone chooser has different padding; the photo must follow it.
+  const m = shell.match(/#intent-modal \.modal, #card-modal \.modal \{[^}]*padding:(\d+)px (\d+)px/);
+  const o = shell.match(/#intent-modal \.intent-hero \{ margin:-(\d+)px -(\d+)px 0/);
+  check('and on a phone, matching the phone padding', !!m && !!o && m[1] === o[1] && m[2] === o[2]);
+}
+check('a slow answer for another artist is ignored', /const current = \(\) => _pendingArtist === artistName;/.test(src) && (src.match(/if \(!current\(\)\) return;|if \(current\(\)\)/g) || []).length >= 3);
+check('no photo falls back to the plain chooser', /if \(!url\) \{ plain\(\); return; \}/.test(src));
+check('the dive reuses the chooser\'s lookup', /artist = await lookupArtist\(artistName\);/.test(src));
+{
+  // lookupArtist: one request per name, and failures are not kept.
+  const i = src.indexOf('const _artistLookups'); const j = src.indexOf('\n}\n', src.indexOf('function lookupArtist')) + 3;
+  let calls = 0, failNext = false;
+  const client = { findArtist: async (n) => { calls++; if (failNext) { failNext = false; throw new Error('x'); } return { name: n }; } };
+  const lookupArtist = new Function('client', src.slice(i, j) + '; return lookupArtist;')(client);
+  await lookupArtist('Purity Ring'); await lookupArtist('purity ring ');
+  check('one lookup per artist', calls === 1);
+  failNext = true;
+  try { await lookupArtist('VIAL'); } catch (e) {}
+  await new Promise((r) => setTimeout(r, 0));
+  await lookupArtist('VIAL');
+  check('a failed lookup is retried', calls === 3);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

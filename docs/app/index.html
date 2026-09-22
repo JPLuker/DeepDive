@@ -678,6 +678,30 @@
   /* The two things you can do, side by side, as the first thing in the
      dialog. They were buttons in a footer below a page of options,
      which made Dip read as a setting rather than a choice. */
+  /* The artist across the top of the chooser. It bleeds to the modal's
+     edges (the negative margins match its padding, and the phone rule
+     below matches the phone padding), fades into the panel, and the
+     name sits over the fade. Space is held while the photo loads so
+     nothing jumps; with no photo the chooser is the plain one. */
+  .intent-hero {
+    position:relative; margin:-26px -26px 0; height:200px;
+    background:var(--surface); overflow:hidden;
+  }
+  .intent-hero img {
+    width:100%; height:100%; object-fit:cover; object-position:center 30%;
+    display:block; opacity:0; transition:opacity .3s ease;
+  }
+  .intent-hero img.loaded { opacity:1; }
+  .intent-hero::after {
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(to bottom, transparent 35%, var(--paper) 100%);
+  }
+  .modal.has-hero #intent-title {
+    position:relative; z-index:1; margin-top:-46px;
+    font-size:30px; letter-spacing:-0.02em;
+    text-shadow:0 2px 14px rgba(0,0,0,0.55);
+  }
+  @media (prefers-reduced-motion: reduce) { .intent-hero img { transition:none; } }
   .intent-choices { display:flex; flex-direction:column; gap:10px; margin:16px 0 4px; }
   /* Dip, Multi-Dip and Dive are not three unrelated options — they are
      one scale, from a handful of songs to a whole catalogue. The gauge
@@ -1194,6 +1218,9 @@
       overflow-y:auto;
     }
     #intent-modal .modal-actions { position:static; }
+    /* Matches the phone padding above; without it the photo would stop
+       short of the edges. */
+    #intent-modal .intent-hero { margin:-20px -18px 0; height:180px; }
     .modal { width:100%; max-height:92vh; border-radius:var(--radius-lg) var(--radius-lg) 0 0; padding:22px 18px calc(22px + env(safe-area-inset-bottom)); }
     .modal-actions { position:sticky; bottom:0; background:var(--paper); padding-top:14px; margin-top:18px; }
     /* Don't stretch every action to equal width: with three buttons
@@ -1263,6 +1290,7 @@
 
   <div class="modal-backdrop hidden" id="intent-modal">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="intent-title">
+      <div class="intent-hero hidden" id="intent-hero" aria-hidden="true"><img id="intent-photo" alt=""></div>
       <h2 id="intent-title">How far in?</h2>
       <p class="modal-sub" id="intent-artist"></p>
 

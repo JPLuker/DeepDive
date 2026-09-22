@@ -698,6 +698,19 @@ All three need a Last.fm key in Settings.
 - [ ] Settings → Blocked artists shows the blocked list and its scopes
 - [ ] Nowhere in the app still says "pin" or "pinned"
 
+## 30. Artist photo on the chooser (2.9.50)
+
+- [ ] Search an artist: the chooser opens straight away, and their photo
+      fades in across the top with the name over it
+- [ ] The photo reaches the panel's edges on a phone, with no gap at
+      the sides or top
+- [ ] Choose Dive: the dive screen appears at least as fast as before
+- [ ] Search someone obscure with no Spotify photo: plain chooser, no
+      empty grey block left behind
+- [ ] Search one artist, cancel, search another quickly: the second
+      chooser never shows the first artist's photo
+- [ ] Settings → dive defaults (no artist): no photo header
+
 ## 29. Landing panels (2.9.49)
 
 - [ ] Four panels, alternating sides: Mixes, What a dive finds

@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.49";
+export const BUILD = "2.9.50";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1486,6 +1486,56 @@ function diveStepShowing() {
   return !!el && !el.classList.contains("hidden");
 }
 
+// One artist lookup per name per session. The chooser starts it so the
+// photo can show, and the dive picks up the same answer instead of
+// searching again. A failed lookup isn't kept, so a retry really retries.
+const _artistLookups = new Map();
+function lookupArtist(name) {
+  const key = (name || "").trim().toLowerCase();
+  if (!_artistLookups.has(key)) {
+    const p = Promise.resolve().then(() => client.findArtist(name));
+    p.catch(() => _artistLookups.delete(key));
+    _artistLookups.set(key, p);
+  }
+  return _artistLookups.get(key);
+}
+
+/**
+ * The artist's photo across the top of the chooser.
+ *
+ * The chooser is the first thing you see after naming someone, and it
+ * was a panel of text. The dive needs this lookup anyway, so starting
+ * it here costs nothing extra; the photo fades in when it arrives. If
+ * there is no photo, or the lookup fails, the plain chooser remains.
+ */
+function paintIntentHero(artistName) {
+  const hero = document.getElementById("intent-hero");
+  const img = document.getElementById("intent-photo");
+  const box = hero && hero.closest(".modal");
+  if (!hero || !img || !box) return;
+  const plain = () => {
+    hero.classList.add("hidden");
+    box.classList.remove("has-hero");
+    img.removeAttribute("src");
+  };
+  img.classList.remove("loaded");
+  img.onload = img.onerror = null;
+  if (!artistName) { plain(); return; }
+  hero.classList.remove("hidden");
+  box.classList.add("has-hero");
+  // Only for the artist still being asked about: a slow answer for the
+  // previous search must not land on this one.
+  const current = () => _pendingArtist === artistName;
+  lookupArtist(artistName).then((a) => {
+    if (!current()) return;
+    const url = a && (a.image_url_large || a.image_url);
+    if (!url) { plain(); return; }
+    img.onload = () => { if (current()) img.classList.add("loaded"); };
+    img.onerror = () => { if (current()) plain(); };
+    img.src = url;
+  }).catch(() => { if (current()) plain(); });
+}
+
 function openIntentModal(artistName, { force = false } = {}) {
   // "Don't ask again" used to make sense: this dialog only chose how
   // deep a dive went, so skipping it meant accepting a default. Now it
@@ -1521,6 +1571,7 @@ function openIntentModal(artistName, { force = false } = {}) {
   // The heading says what you're choosing about; the subtitle says who.
   const titleEl = document.getElementById("intent-title");
   if (titleEl) titleEl.textContent = artistName || "How should DeepDive search?";
+  paintIntentHero(artistName);
   sub.textContent = artistName
     ? "A few songs, a night of them, or everything they've released."
     : "Pick what a dive does by default. You can change it any time.";
@@ -2338,7 +2389,8 @@ async function runSearchWithOptions(artistName, opts) {
   let artist = null;
   try {
     await preflight();
-    artist = await client.findArtist(artistName);
+    // Usually already answered: the chooser asked, for its photo.
+    artist = await lookupArtist(artistName);
     if (!artist) {
       throw new Error(`No Spotify artist found matching "${artistName}".`);
     }

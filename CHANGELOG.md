@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.50
+- The artist chooser shows the artist. Their photo runs across the top
+  of the panel, fading into it, with their name over the fade. It fades
+  in once loaded, and the space is held so nothing jumps. If there's no
+  photo, the chooser looks as it did before.
+- No extra cost to a dive: the chooser starts the artist lookup, and the
+  dive uses the same answer instead of searching again. Cancelling the
+  chooser does spend that one search.
+
 ## 2.9.49
 - Landing page, Joseph's second pass:
   - The Houseghost panel now explains what a dive does: matching
