@@ -19,14 +19,14 @@ import { bestStore } from "./storage.js";
 import * as history from "./history.js";
 // Version the demo module independently. Mobile browsers were reloading
 // app.js while continuing to execute an older cached demo.js.
-import * as demo from "./demo.js?v=2.9.67";
+import * as demo from "./demo.js?v=2.9.68";
 import * as lastfm from "./lastfm.js";
 import * as cover from "./cover.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.67";
+export const BUILD = "2.9.68";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -3125,27 +3125,6 @@ function renderProgressError(msgOrErr, err) {
 // ============================================================
 // Results (like + playlist)
 // ============================================================
-/**
- * The line under the artist's name.
- *
- * Was "12 already liked · 3 to confirm · 48 new" — a meta string of
- * counts joined by middle dots, which reads as a status bar rather than
- * an answer. This says what was found, in sentences.
- */
-function resultsSummary(r, dupCount, newCount) {
-  const parts = [];
-  const liked = r.already_liked_count || 0;
-  if (liked) parts.push(`You already have ${liked} of these.`);
-  if (dupCount) {
-    parts.push(dupCount === 1
-      ? "1 more is a recording you own under a different release."
-      : `${dupCount} more are recordings you own under different releases.`);
-  }
-  parts.push(newCount === 1 ? "1 track is new to you." : `${newCount} tracks are new to you.`);
-  if (r.excluded_count) parts.push(`${r.excluded_count} were filtered out.`);
-  return parts.join(" ");
-}
-
 /** A track already in the library under some other release. */
 function dupRow(d) {
   const matched = d.matched_liked_track ? d.matched_liked_track.name : "";
@@ -3282,9 +3261,6 @@ function renderResults(r) {
       </div>
     </div>
     <div class="results-body">
-      <p class="muted">${resultsSummary(r, dups.length, news.length)}</p>
-      ${r.collapsed_count ? `<p class="crate-note">${r.collapsed_count} duplicate recording${r.collapsed_count === 1 ? "" : "s"} collapsed — the same track appeared on more than one release.</p>` : ""}
-
       ${dups.length ? `
         <div class="crate-header"><span class="label">Already yours, elsewhere</span></div>
         <p class="crate-note">Same recording as something in your Liked Songs, under a different release. Checked = will be liked.</p>

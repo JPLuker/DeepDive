@@ -253,11 +253,14 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.67
+## Shipped since — build 2.9.68
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Dive results now go straight from the hero count badges to the track
+  sections; the repeated prose summary and duplicate-collapse explanation
+  were removed at Joseph's request (2.9.68)
 - Demo artist interactions now stay staged instead of running a real dive;
   demo.js is cache-versioned; Home leads with a library-wide random mix
   rather than another artist card (2.9.67)

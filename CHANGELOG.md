@@ -4,6 +4,11 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.68
+- Dive results no longer repeat the hero counts in explanatory paragraphs
+  before the track lists. The result goes straight from the count badges to
+  “Already yours, elsewhere” or “New to you”.
+
 ## 2.9.67
 - Tapping or searching an artist in demo mode now opens the staged result
   for that exact approved artist. It can no longer run a real library dive,

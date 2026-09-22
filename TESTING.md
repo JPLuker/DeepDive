@@ -35,6 +35,13 @@
 >    session
 
 
+## 37. Dive results trim (2.9.68)
+
+- [ ] On a finished dive, the hero count badges are followed directly by
+      “Already yours, elsewhere” when duplicates exist, otherwise “New to you”
+- [ ] The old prose summary (“You already have…”) and duplicate-collapse note
+      are gone, with no blank gap left behind
+
 Everything from **2.6.6 to 2.8.0** shipped without a run against a real
 Spotify account, because the quota locked partway through. This is the
 list to work through once it clears.
