@@ -16,6 +16,11 @@
   there is no in-library duplicate check. Setup now says Spotify
   Premium is required.
 - Fixed: the crate's first row sat flush against the sampler button.
+- Follow-up commit: 2.9.45 was pushed with one failing test. The new
+  class `crate-sampler-row` tripped an old guard against a removed
+  `sampler-row` style. Renamed to `crate-sampler-actions`. The push
+  command had gated on `tail`'s exit status rather than the suite's;
+  it now checks the suite's result before pushing.
 
 ## 2.9.44
 - Changed: the crate is a list now, not a grid of square photos. Two

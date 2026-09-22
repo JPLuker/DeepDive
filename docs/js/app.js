@@ -5465,7 +5465,7 @@ function renderCrate() {
           ${CRATE_SORTS.map(([v, l]) => `<option value="${v}"${v === _crateSort ? " selected" : ""}>${l}</option>`).join("")}
         </select>
       </div>
-      <div class="actions crate-sampler-row">
+      <div class="actions crate-sampler-actions">
         <button class="btn btn-ghost btn-small" id="crate-sampler">Sampler from your crate</button>
       </div>
       <div id="crate-body"></div>`
