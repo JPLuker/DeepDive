@@ -25,7 +25,7 @@ check('two of them are UI, not a photograph', /app-home\.jpg/.test(html) && /app
 // The page never said what it was.
 check('the page identifies itself', /<div class="topline">[\s\S]{0,200}wordmark/.test(html));
 check('feature list, not cards', /<ul class="listing-items">/.test(html));
-check('alternating panels', /panel panel-flip/.test(html));
+check('screens shown in a panel', /<section class="panel">[\s\S]{0,600}device-still/.test(html));
 check('closing panel', /<section class="closing">/.test(html));
 check('a real footer', /<footer class="foot">/.test(html) && /foot-cols/.test(html));
 
@@ -78,7 +78,7 @@ for (const f of new Set(refs)) {
   check(`${f} is web-sized`, existsSync(path) && statSync(path).size < 120 * 1024);
 }
 check('images are sized to avoid reflow', (html.match(/width="640" height="\d+"/g) || []).length >= 4);
-check('below-fold images load lazily', (html.match(/loading="lazy"/g) || []).length >= 2);
+check('below-fold images load lazily', (html.match(/loading="lazy"/g) || []).length >= 1);
 
 // Stylesheet integrity — a stray brace silently kills everything below.
 const css = html.slice(html.indexOf('<style>') + 7, html.indexOf('</style>'));
@@ -116,8 +116,9 @@ for (const m of html.matchAll(/img\/shots\/([a-z-]+\.jpg)" alt="[^"]*" width="(\
 // the features that were on screen in the device row and never in the
 // copy.
 check('recommendations are advertised', /<h3>If you like…<\/h3>/.test(html));
-check('with their own panel', /If you like them, you'll like these/.test(html));
-check('the duplicate check is mentioned', /liked twice without noticing/.test(html));
+check('and done for you', /<h3>Recommended<\/h3>/.test(html));
+// The PWA has no in-library duplicate check. The page claimed one until 2.9.45.
+check('no claim of a duplicate check that no longer exists', !/liked twice/.test(html));
 
 // The hero claimed "no account, nothing installed". A Spotify Client ID
 // is required, and the setup screen is the worst place to learn that.
@@ -143,9 +144,23 @@ for (const [label, re] of [
   ['build your own', /<h3>Build your own<\/h3>/],
   ['the sampler', /<h3>The sampler<\/h3>/],
   ['genres', /<h3>Genres, properly<\/h3>/],
-  ['the crate', /<h3>Your crate<\/h3>/],
+  ['the crate', /<h2>Your crate<\/h2>/],
+  ['suggestions', /<h3>Suggested for you<\/h3>/],
+  ['blocking', /<h3>Leave someone out<\/h3>/],
+  ['the library scan', /<h3>Your whole library at once<\/h3>/],
+  ['confirm before writing, and reruns', /<h3>Nothing without asking<\/h3>[\s\S]{0,300}skipping what's already there/],
+  ['history and undo', /<h3>Take it back<\/h3>/],
+  ['dive filters and guest records', /live takes, radio edits, instrumentals and a cappellas[\s\S]{0,160}only guest on/],
   ['covers', /A cover for every playlist/],
 ]) check(`the page covers ${label}`, re.test(html));
+// Mixes shuffle; the page said you choose the order.
+check('no claim that mixes can be reordered', !/choose the order/.test(html));
+check('premium is stated up front', /lead-note">[^<]*Spotify Premium/.test(html));
+// Each feature is described once. Headings are the proxy: no h2/h3 twice.
+{
+  const heads = [...html.matchAll(/<h[23][^>]*>([\s\S]*?)<\/h[23]>/g)].map((m) => m[1].replace(/<[^>]+>/g, '').trim().toLowerCase());
+  check('no feature heading appears twice', new Set(heads).size === heads.length);
+}
 // A dip no longer reads the catalogue; the page shouldn't say it does.
 check('a dip is not described as a catalogue read', !/A dip takes one artist and gives you their best hour[\s\S]{0,120}reads everything/.test(html));
 // The same gauge as the app's chooser, so both describe depth alike.

@@ -50,6 +50,7 @@ check('tiles can move to the top', /data-top="\$\{esc\(e\.name\)\}"/.test(src));
   check('names truncate instead of pushing buttons off', /min-width:0/.test(rule('.crate-open')) && /text-overflow:ellipsis/.test(rule('.crate-name')));
   check('buttons keep their size', /flex:0 0 auto/.test(rule('.crate-actions')));
   check('rows go two-up on a wide screen, and never overflow a narrow one', /auto-fill, minmax\(min\(340px, 100%\), 1fr\)/.test(rule('.crate-grid')));
+  check('sampler button has room beneath it', /class="actions crate-sampler-row"/.test(src) && /margin:4px 0 16px/.test(rule('.crate-sampler-row')));
   check('no mobile override reshapes the crate', !/@media[^{]*\{[^@]*\.crate-(tile|art|grid)\b/.test(shell));
 }
 

@@ -698,6 +698,14 @@ All three need a Last.fm key in Settings.
 - [ ] Settings → Blocked artists shows the blocked list and its scopes
 - [ ] Nowhere in the app still says "pin" or "pinned"
 
+## 27. Landing page, every feature once (2.9.45)
+
+- [ ] Read it top to bottom on a phone: nothing said twice
+- [ ] The setup note mentions Spotify Premium
+- [ ] One panel near the end, the crate, with its screenshot
+- [ ] Footer credits Leisure Hour only by name
+- [ ] Crate in the app: a gap between the sampler button and the first row
+
 ## 26. Crate as a list (2.9.44)
 
 - [ ] Crate on a phone: about eight artists a screen, each a single row

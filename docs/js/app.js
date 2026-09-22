@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.44";
+export const BUILD = "2.9.45";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -5465,7 +5465,7 @@ function renderCrate() {
           ${CRATE_SORTS.map(([v, l]) => `<option value="${v}"${v === _crateSort ? " selected" : ""}>${l}</option>`).join("")}
         </select>
       </div>
-      <div class="actions" style="margin-top:4px;">
+      <div class="actions crate-sampler-row">
         <button class="btn btn-ghost btn-small" id="crate-sampler">Sampler from your crate</button>
       </div>
       <div id="crate-body"></div>`

@@ -28,9 +28,11 @@ actively mislead.
 
 ## Artist photography — provisional
 
-The landing page shows three artist photographs — Leisure Hour in the
-device row, VIAL in the second panel, Houseghost in the results panel — plus the thumbnails
-that appear inside the app's own Home and Mixes screens.
+The landing page shows Leisure Hour in the device row, plus the
+thumbnails inside the app's own Home, Mixes and Crate screens. VIAL and
+Houseghost came off in 2.9.45 when their panels were cut. The crate
+shot added then shows thumbnails of other artists, Dolly Parton's
+Dumplin' cover among them, under the same footer credit.
 
 **Joseph's position, 7 Sept:** acceptable as examples for now, nothing
 beyond that, and he will email the artists for permission.
@@ -229,7 +231,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.44
+## Shipped since — build 2.9.45
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -242,6 +244,7 @@ sessions below:
   "Remove all" was added for playlist cleanup
 - Playlist cleanup finds DeepDive playlists by name, including ones
   created before it kept records
+- Landing page covers every feature once; three repeating panels cut (2.9.45)
 - Crate is a compact list rather than photo tiles (2.9.44)
 - Mix blocks apply to every mix, Recommended included, through one filter (2.9.43)
 - List rows wrap on a phone, so names no longer sit under their controls (2.9.42)

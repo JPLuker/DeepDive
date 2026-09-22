@@ -4,6 +4,19 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.45
+- Landing page: every feature now appears once. Added Recommended,
+  Suggested, blocking, the full library scan, history and undo, the dive
+  filters, guest records, and playlists being added to rather than
+  duplicated. The crate moved into its own panel with a screenshot.
+- Cut three panels: "What you had, and what you missed" and "If you
+  like them" repeated the lists above them, and "It runs on your
+  machine" wasn't needed for a web app. Their screenshots are deleted.
+- Fixed claims that were no longer true: mixes can't be reordered, and
+  there is no in-library duplicate check. Setup now says Spotify
+  Premium is required.
+- Fixed: the crate's first row sat flush against the sampler button.
+
 ## 2.9.44
 - Changed: the crate is a list now, not a grid of square photos. Two
   artists per phone screen made a crate of 74 thirty-odd screens long.
