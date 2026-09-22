@@ -35,6 +35,15 @@
 >    session
 
 
+## 41. Inline mobile result actions (2.9.72)
+
+- [ ] Scroll a finished result on a phone: no Like/Create/Both bar floats
+      over the track rows
+- [ ] The three actions appear after the result content in normal flow
+- [ ] The Home/Dives/Mixes/Settings tab bar remains the only fixed bottom bar
+- [ ] The final track and the action row can both scroll fully above the tab bar
+- [ ] Desktop keeps its existing fixed results action treatment
+
 ## 40. Mobile result actions (2.9.71)
 
 - [ ] On a phone, finished results show one compact row: Like Songs,

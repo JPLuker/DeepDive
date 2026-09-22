@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.72
+- Mobile result actions are no longer fixed above the app navigation.
+  They now sit in normal document flow after the result lists, so they do
+  not cover tracks while scrolling or visually stack on the tab bar.
+- Removed the mobile dock backdrop, border and reserved bottom clearance;
+  the regular app tab bar remains fixed and unobstructed.
+
 ## 2.9.71
 - Simplified the mobile result actions. The fixed bar now contains only
   Like Songs, Create Playlist and Both; the redundant full-width “Back to

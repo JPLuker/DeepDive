@@ -253,11 +253,14 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.71
+## Shipped since — build 2.9.72
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Mobile result actions no longer float over the track list or stack
+  against the tab bar. They now live after the results in normal document
+  flow; the app navigation remains the only fixed bottom UI (2.9.72)
 - Mobile dive results now use a compact one-row action dock. The redundant
   “Back to home” row is hidden on phones because the Home tab is directly
   below it, and the bottom clearance was tightened to match (2.9.71)
