@@ -701,9 +701,8 @@ All three need a Last.fm key in Settings.
 ## 31. Two depths, Multi-Dip in the corner (2.9.51)
 
 - [ ] Search an artist: Dip and Dive only, each with a two-rung gauge
-- [ ] Cancel bottom left, "Multi-Dip with [artist]" bottom right, on a
-      phone and on desktop
-- [ ] A long name cuts off with "…" rather than wrapping the button
+- [ ] Cancel bottom left, "Multi-Dip" bottom right, on a phone and on
+      desktop (the artist's name was dropped in 2.9.52)
 - [ ] Multi-Dip opens the bill with that artist already on it
 - [ ] Choose Dive: the options step has no Multi-Dip button
 - [ ] The subtitle under the name is fully visible, not clipped by the

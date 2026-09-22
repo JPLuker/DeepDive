@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.51";
+export const BUILD = "2.9.52";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1696,8 +1696,6 @@ function openIntentModal(artistName, { force = false } = {}) {
   if (multiEl) {
     const freshMulti = multiEl.cloneNode(true);
     multiEl.replaceWith(freshMulti);
-    freshMulti.textContent = artistName ? `Multi-Dip with ${artistName}` : "Multi-Dip";
-    freshMulti.title = freshMulti.textContent;
     freshMulti.classList.toggle("hidden", !artistName || diveStepShowing());
     freshMulti.addEventListener("click", () => {
       const artist = _pendingArtist;

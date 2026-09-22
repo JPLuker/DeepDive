@@ -4,6 +4,11 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.52
+- The chooser's corner button just says "Multi-Dip". With the artist's
+  name it truncated on a phone, and the photo above already says who
+  the bill starts with.
+
 ## 2.9.51
 - The chooser offers two depths, Dip and Dive, with a two-rung gauge.
   Multi-Dip was the middle rung, which presented it as a depth when

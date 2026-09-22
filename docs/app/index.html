@@ -735,11 +735,8 @@
   .intent-choice[data-depth="1"] .intent-depth i:nth-child(1),
   .intent-choice[data-depth="2"] .intent-depth i { background:var(--accent); }
   /* Bottom right, and it has to stay there on a phone, where the
-     spacer is switched off. Long names cut off rather than wrap. */
-  .intent-multi {
-    margin-left:auto; max-width:60%;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block;
-  }
+     spacer is switched off. */
+  .intent-multi { margin-left:auto; }
 
   .intent-choice-title { font-size:15.5px; font-weight:650; letter-spacing:-0.01em; }
   .intent-choice-sub { font-size:12.5px; color:var(--muted); line-height:1.4; }
