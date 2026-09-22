@@ -707,6 +707,9 @@ All three need a Last.fm key in Settings.
 - [ ] Tag the second artist More: the name on the cover changes to them
 - [ ] Less and More read as one control; tapping the lit one turns it off
 - [ ] Choose Two hours, then add an artist: still Two hours
+- [ ] The two dropdowns are the same width (2.9.54)
+- [ ] Length offers an hour to six hours, with no "festival day"
+- [ ] Build a six-hour night: it comes out near six hours
 - [ ] A long name gets the full width of the row, with the controls on
       the line below
 - [ ] Drag a row while photos are still loading: the drag isn't cut off

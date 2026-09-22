@@ -4,6 +4,12 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.54
+- Multi-Dip: the two setting dropdowns are the same width. Each was
+  sized to its own options, so they came out different.
+- Length of the night now runs from an hour to six hours, in eight
+  steps. "Four hours, a festival day" is just "Four hours".
+
 ## 2.9.53
 - Multi-Dip, visual overhaul:
   - The cover the night will get sits beside the title and redraws as

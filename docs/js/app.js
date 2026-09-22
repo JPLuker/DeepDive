@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.53";
+export const BUILD = "2.9.54";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -4295,8 +4295,9 @@ let _showBill = [];
 // quietly undid a choice of two.
 let _showMins = 180;
 const SHOW_LENGTHS = [
-  [90, "An hour and a half"], [120, "Two hours"],
-  [180, "Three hours"], [240, "Four hours, a festival day"],
+  [60, "An hour"], [90, "An hour and a half"], [120, "Two hours"],
+  [150, "Two and a half hours"], [180, "Three hours"], [240, "Four hours"],
+  [300, "Five hours"], [360, "Six hours"],
 ];
 
 async function renderShow() {
@@ -4329,7 +4330,7 @@ async function renderShow() {
     </div>`).join("");
 
   const n = _showBill.length;
-  const lengthName = (SHOW_LENGTHS.find(([m]) => m === _showMins) || [0, ""])[1].split(",")[0].toLowerCase();
+  const lengthName = (SHOW_LENGTHS.find(([m]) => m === _showMins) || [0, ""])[1].toLowerCase();
   root.innerHTML = `
     <div class="show-hero">
       <div class="show-cover" id="show-cover" aria-hidden="true">

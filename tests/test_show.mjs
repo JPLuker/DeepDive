@@ -316,5 +316,15 @@ check('no em dash in the options', !/Four hours —/.test(src));
 // already the open state of Home's tiles. Its rules must stay scoped.
 check('show-actions is only ever the tiles\' open state', [...shell.matchAll(/[^\n{}]*\.show-actions\b[^{]*\{/g)].every((m) => /\.tile-wrap\.show-actions/.test(m[0])));
 
+// 2.9.54: both selects one width, no "festival day", more lengths.
+check('both settings selects are one fixed width', /\.show-setting \.sort-select \{ flex:0 0 50%; width:50%; \}/.test(shell));
+check('no festival day', !/festival day/.test(src));
+{
+  const m = src.match(/const SHOW_LENGTHS = \[([\s\S]*?)\];/);
+  const mins = m ? [...m[1].matchAll(/\[(\d+),/g)].map((x) => +x[1]) : [];
+  check('lengths from an hour to six', mins[0] === 60 && mins[mins.length - 1] === 360 && mins.length === 8);
+  check('in order, and three hours still offered as the default', mins.every((v, i) => !i || v > mins[i - 1]) && mins.includes(180) && /let _showMins = 180;/.test(src));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
