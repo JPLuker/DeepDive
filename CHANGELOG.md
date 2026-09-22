@@ -4,6 +4,21 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.49
+- Landing page, Joseph's second pass:
+  - The Houseghost panel now explains what a dive does: matching
+    recordings, the three results, filters, liking and playlists, and
+    reruns adding to the same playlist. The Dive entry under "How far
+    in" is one line pointing down to it.
+  - The VIAL panel is now the privacy panel: everything starts from
+    your library, and it stays in your browser with no DeepDive server.
+    It says plainly that requests go to Spotify and Last.fm. "Around
+    it" is gone; Suggested for you is folded in here.
+  - Mixes is a panel like the others, with a new screenshot of the app's
+    Mixes page. Every mix feature is still named. Joseph plans to redo
+    this section, so the copy is interim.
+  - Panels now run: Mixes, dive, privacy, crate, alternating sides.
+
 ## 2.9.48
 - Landing page, Joseph's marked-up pass:
   - Rewrote the hero line. It's about what every playlist is made of

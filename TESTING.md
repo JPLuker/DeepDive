@@ -698,12 +698,20 @@ All three need a Last.fm key in Settings.
 - [ ] Settings → Blocked artists shows the blocked list and its scopes
 - [ ] Nowhere in the app still says "pin" or "pinned"
 
+## 29. Landing panels (2.9.49)
+
+- [ ] Four panels, alternating sides: Mixes, What a dive finds
+      (Houseghost), Your library, your browser (VIAL), Your crate
+- [ ] No "Around it" heading anywhere
+- [ ] The Mixes screenshot shows the app's Mixes grid, cropped cleanly
+      top and bottom
+- [ ] "How far in" → Dive is a single line
+
 ## 28. Landing page trim (2.9.48)
 
 - [ ] Hero reads: "DeepDive knows what's already in your Spotify
       library…", with no note under the buttons
 - [ ] No figures band between the devices and "How far in"
-- [ ] "Around it" has Suggested for you only
 - [ ] No gaps or stray borders where the cut parts were, on a phone
       and on desktop
 

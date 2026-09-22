@@ -27,8 +27,14 @@ check('the page identifies itself', /<div class="topline">[\s\S]{0,200}wordmark/
 check('feature list, not cards', /<ul class="listing-items">/.test(html));
 check('alternating panels', /panel panel-flip/.test(html));
 // Removed by mistake in 2.9.45: these two stay while permission is sought.
-check('houseghost shows off results', /Nothing without asking<\/h2>[\s\S]{0,700}app-results\.jpg/.test(html));
-check('vial shows off a dive in progress', /panel panel-flip[\s\S]{0,700}app-vial\.jpg/.test(html));
+// 2.9.49: each panel shows off what its screenshot shows.
+const panelFor = (shot) => { const i = html.indexOf(`img/shots/${shot}`); const a = html.lastIndexOf('<section class="panel', i); return i > -1 && a > -1 ? html.slice(a, i) : ''; };
+check('houseghost panel explains a dive', /<h2>What a dive finds<\/h2>/.test(panelFor('app-results.jpg')) && /matches recordings, not titles/.test(panelFor('app-results.jpg')));
+check('vial panel is the privacy panel', /DeepDive has no server/.test(panelFor('app-vial.jpg')) && /stored on your device/.test(panelFor('app-vial.jpg')));
+check('and says what does leave the browser', /only requests that leave it are the ones to Spotify and Last\.fm/.test(panelFor('app-vial.jpg')));
+check('around it is folded into the privacy panel', !/>Around it</.test(html) && /Home suggests artists/.test(panelFor('app-vial.jpg')));
+check('mixes are a panel with their own screenshot', /<h2>Mixes from what you've saved<\/h2>/.test(panelFor('app-library-mixes.jpg')));
+check('no list section left but how far in', (html.match(/<section class="listing"/g) || []).length === 1);
 check('and both are credited', /Artists pictured: Leisure Hour, VIAL, Houseghost/.test(html));
 check('closing panel', /<section class="closing">/.test(html));
 check('a real footer', /<footer class="foot">/.test(html) && /foot-cols/.test(html));
@@ -118,8 +124,8 @@ for (const m of html.matchAll(/img\/shots\/([a-z-]+\.jpg)" alt="[^"]*" width="(\
 // The page described DeepDive as it was two sessions ago. These are
 // the features that were on screen in the device row and never in the
 // copy.
-check('recommendations are advertised', /<h3>If you like…<\/h3>/.test(html));
-check('and done for you', /<h3>Recommended<\/h3>/.test(html));
+check('recommendations are advertised', /Name any artist, even one you don't own/.test(html));
+check('and done for you', /Recommended does the same unasked/.test(html));
 // The PWA has no in-library duplicate check. The page claimed one until 2.9.45.
 check('no claim of a duplicate check that no longer exists', !/liked twice/.test(html));
 
@@ -142,13 +148,13 @@ for (const [label, re] of [
   ['dips', /<h3>[\s\S]{0,160}Dip<\/h3>/],
   ['multi-dips', /Multi-Dip<\/h3>/],
   ['dives', /Dive<\/h3>/],
-  ['library mixes', /Forty ways to slice it/],
-  ['build your own', /<h3>Build your own<\/h3>/],
-  ['the sampler', /<h3>The sampler<\/h3>/],
-  ['genres', /<h3>Genres, properly<\/h3>/],
+  ['library mixes', /cuts forty-odd from it/],
+  ['build your own', /Build your own from an era, a length and an artist/],
+  ['the sampler', /sampler of artists you saved once and barely heard/],
+  ['genres', /Genres come from Last\.fm/],
   ['the crate', /<h2>Your crate<\/h2>/],
-  ['suggestions', /<h3>Suggested for you<\/h3>/],
-  ['confirm before writing, and reruns', /<h2>Nothing without asking<\/h2>[\s\S]{0,400}skipping what's already there/],
+  ['suggestions', /Home suggests artists/],
+  ['confirm before writing, and reruns', /Untick anything[\s\S]{0,400}skipping what's already there/],
   ['dive filters and guest records', /live takes, radio edits, instrumentals and a cappellas[\s\S]{0,160}only guest on/],
 ]) check(`the page covers ${label}`, re.test(html));
 // Mixes shuffle; the page said you choose the order.
