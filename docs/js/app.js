@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.64";
+export const BUILD = "2.9.65";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -523,7 +523,7 @@ async function renderDives() {
     ${searchShellHtml({ options: false })}
     <div class="set-group dive-feature-group">
       <div class="set-group-label">For the whole bill</div>
-      ${lastfm.hasKey()
+      ${lastfm.hasKey() || demo.demoActive()
         ? navRow('id="go-show"', "Multi-Dip", "Build one playlist in show order, with more time for the acts you care about.", { tone: "blue" })
         : navRow('id="go-show"', "Multi-Dip", NEEDS_LASTFM_FULL, { disabled: true, tone: "blue" })}
     </div>
@@ -541,12 +541,12 @@ async function renderDives() {
   wireSearchBar();
   wireApiBanner();
   wireScopeBanner();
+  document.getElementById("go-scrub")?.addEventListener("click", () => demo.demoActive() ? renderDemo("scan") : renderScrubForm());
+  document.getElementById("go-show")?.addEventListener("click", () => demo.demoActive() ? renderDemo("multidip") : renderShow());
+  document.getElementById("go-history")?.addEventListener("click", () => renderHistory());
+  document.getElementById("go-pins")?.addEventListener("click", () => demo.demoActive() ? renderDemo("crate") : renderCrate());
   if (demo.demoActive()) return;
   loadSuggestions({ showAllPins: true });
-  document.getElementById("go-scrub")?.addEventListener("click", () => renderScrubForm());
-  document.getElementById("go-show")?.addEventListener("click", () => renderShow());
-  document.getElementById("go-history")?.addEventListener("click", () => renderHistory());
-  document.getElementById("go-pins")?.addEventListener("click", () => renderCrate());
 }
 
 /** Mixes — what Playlists were called — with the sampler alongside. */
@@ -4571,8 +4571,8 @@ async function renderShow() {
       </label>
     </div>
     <div class="show-footer">
-      ${lastfm.hasKey() ? "" : `<p class="show-needs">${NEEDS_LASTFM_FULL}</p>`}
-      <button class="btn btn-primary show-go" id="show-go"${n && lastfm.hasKey() ? "" : " disabled"}>Build the night</button>
+      ${lastfm.hasKey() || demo.demoActive() ? "" : `<p class="show-needs">${NEEDS_LASTFM_FULL}</p>`}
+      <button class="btn btn-primary show-go" id="show-go"${n && (lastfm.hasKey() || demo.demoActive()) ? "" : " disabled"}>Build the night</button>
       <button class="btn-link" data-tab="dives">Back to Dives</button>
     </div>
     <div id="show-progress"></div>`;
@@ -6190,21 +6190,26 @@ async function renderDemoMixes() {
   const groups = await demoGroupsFor("mixes", 9, 4);
   _samplerPool = groups.map((g) => g.artist);
   root.innerHTML = `<div id="demo-featured"></div><div id="demo-mix-ideas"></div>`;
-  _cards = groups.slice(0, 3).map((g, i) => ({
-    id: `demo-feature-${i}`,
-    title: i === 0 ? `If you like ${g.artist.name}` : (i === 1 ? `More from ${g.artist.name}` : `${g.artist.name} deep cuts`),
-    subtitle: i === 0 ? "similar artists already in your library" : "built from music you've saved",
-    count: g.tracks.length, tracks: g.tracks,
-  }));
+  const tracks = (i) => groups[i] ? groups[i].tracks : [];
+  _cards = [
+    { id: "demo-feature-similar", title: `If you like ${groups[0].artist.name}`, subtitle: "similar artists already in your library", tracks: tracks(0).concat(tracks(1)) },
+    { id: "demo-feature-year", title: "Your 2024", subtitle: "what you added that year", tracks: tracks(2) },
+    { id: "demo-feature-albums", title: "Albums that landed", subtitle: "records you liked three or more from", tracks: tracks(3).concat(tracks(4)) },
+  ].map((c) => ({ ...c, count: c.tracks.length }));
   const featured = document.getElementById("demo-featured");
   featured._cardLimit = 4;
   featured._cardHead = `<div class="row-head"><h2>Recommended</h2><span class="qual">from across your mixes</span></div>`;
   renderCardRow(featured);
-  _cards = groups.slice(3).map((g, i) => ({
-    id: `demo-idea-${i}`, title: i % 2 ? `All your ${g.artist.name}` : `${g.artist.name}, rediscovered`,
-    subtitle: i % 2 ? `every ${g.artist.name} track you've saved` : "music you haven't reached for lately",
-    count: g.tracks.length, tracks: g.tracks,
-  }));
+  _cards = [
+    { id: "demo-idea-2023", title: "Released in 2023", subtitle: "whenever you got to it", tracks: tracks(3) },
+    { id: "demo-idea-late", title: "Took your time", subtitle: "found more than a decade after release", tracks: tracks(4) },
+    { id: "demo-idea-random", title: "Surprise me", subtitle: "50 at random from your library", tracks: tracks(5).concat(tracks(6)) },
+    { id: "demo-idea-2024", title: "Your 2024", subtitle: "what you added that year", tracks: tracks(6) },
+    { id: "demo-idea-first", title: "Your first 50", subtitle: "the earliest things you liked", tracks: tracks(7) },
+    { id: "demo-idea-albums", title: "Albums that landed", subtitle: "records you liked three or more from", tracks: tracks(7).concat(tracks(8)) },
+    { id: "demo-idea-2021", title: "Your 2021", subtitle: "what you added that year", tracks: tracks(8) },
+    { id: "demo-idea-regulars", title: "Your regulars", subtitle: "a few each from the artists you like most", tracks: tracks(0).concat(tracks(2)) },
+  ].map((c) => ({ ...c, count: c.tracks.length }));
   const ideas = document.getElementById("demo-mix-ideas");
   ideas._cardLimit = 0;
   ideas._cardHead = `<div class="row-head"><h2>Mix ideas</h2><span class="qual">dates, artists and albums</span></div>`;

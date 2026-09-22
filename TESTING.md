@@ -278,6 +278,10 @@ the demo Settings list should appear.
 - [ ] No artist outside the approved list appears anywhere in demo mode
 - [ ] Suggested has no refresh button and Settings' library Refresh is
       disabled while demo mode is active
+- [ ] From the demo Dives tab, Crate, Multi-Dip and Full library scan all
+      open populated staged screens rather than live or empty data
+- [ ] Demo Mixes includes year, album, early-library, random and regulars
+      cards alongside artist-based ideas
 - [ ] "Leave demo mode" returns to the real app
 
 ## 4g. Results screen, second pass (2.8.4)

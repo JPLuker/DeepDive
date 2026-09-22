@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.64.** If the build in `js/app.js` is well
+**Last updated at build 2.9.65.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -143,7 +143,7 @@ confirms them.
 ./tests/run.sh
 ```
 
-1,526 assertions, 57 suites at 2.9.64, plus a syntax check and a boot
+1,528 assertions, 57 suites at 2.9.65, plus a syntax check and a boot
 check. It takes seconds.
 
 **Gate the push on the suite's own result.** `run.sh ... | tail -2 &&
@@ -586,7 +586,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.64**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.65**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.

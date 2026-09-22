@@ -44,6 +44,8 @@ check('demo refreshes cannot read outside the whitelist', /demo\.demoActive\(\) 
 check('assignments can be shuffled', /id="set-demo-shuffle"/.test(src) && /demo\.reshuffle\(\)/.test(src));
 check('demo search never escapes the whitelist', /demo\.searchNames\(query, limit\)/.test(src));
 check('crate and multi-dip use approved artists', /demoArtistsFor\("crate"/.test(src) && /demoArtistsFor\("multidip"/.test(src));
+check('Dives buttons open staged crate and multi-dip', /go-show"\)\?\.addEventListener\("click", \(\) => demo\.demoActive\(\) \? renderDemo\("multidip"\)/.test(src) && /go-pins"\)\?\.addEventListener\("click", \(\) => demo\.demoActive\(\) \? renderDemo\("crate"\)/.test(src));
+check('demo mixes include date album and library recipes', /title: "Released in 2023"/.test(src) && /title: "Albums that landed"/.test(src) && /title: "Your first 50"/.test(src));
 
 // --- session handling --------------------------------------------------
 check('demoScreen tolerates no window', typeof demoScreen() === 'object' || demoScreen() === null || typeof demoScreen() === 'string');

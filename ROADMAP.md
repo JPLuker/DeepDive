@@ -234,7 +234,7 @@ clean before anything is built on it.
 
 ---
 
-## Stopping point, 22 Sept (build 2.9.64)
+## Stopping point, 22 Sept (build 2.9.65)
 
 Picking up next session:
 
@@ -253,11 +253,14 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.64
+## Shipped since — build 2.9.65
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Demo Dives now routes Crate, Multi-Dip and the library scan into their
+  staged data. Demo Mixes stages the real mix of date, album, discovery,
+  random and artist-based recipes instead of an artist-only grid (2.9.65)
 - Demo whitelist entries now come from a real Spotify artist search and
   retain the selected Spotify id. Refresh controls that could escape the
   whitelist are disabled in demo mode (2.9.64)
