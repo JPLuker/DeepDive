@@ -253,11 +253,15 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.69
+## Shipped since — build 2.9.70
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Demo result rows now show the real Spotify album art. Search-track
+  responses carry `album.images[]`, so the demo path now normalizes them
+  to the `album.image_url` shape used by the real catalogue renderer
+  (2.9.70)
 - Results spacing tightened after the prose summary was removed: the first
   section no longer stacks its normal top margin onto the results-body
   padding (2.9.69)

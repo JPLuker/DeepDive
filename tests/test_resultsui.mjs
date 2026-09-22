@@ -31,9 +31,11 @@ check('preview rows opt out of that', /\.track-row\.is-static \{ cursor:default;
 check('match line is not monospace', !/\.track-match \{[^\n]*IBM Plex Mono/.test(html));
 
 // --- copy -------------------------------------------------------------
-// A meta string of counts joined by middle dots reads as a status bar.
-check('summary is sentences, not a meta string', /function resultsSummary/.test(src));
+// The hero badges already state the counts, so the body should not repeat
+// them in a prose summary before the actual result sections.
+check('hero counts are not repeated in body copy', !/function resultsSummary/.test(src) && !/\$\{resultsSummary\(/.test(src));
 check('old meta string is gone', !/already liked · \$\{dups\.length\} to confirm/.test(src));
+check('first results heading does not stack a second top margin', /\.results-body > \.crate-header:first-child \{ margin-top:0; \}/.test(html));
 check('sort label is not uppercase mono', !/\.sort-row label \{[^\n]*IBM Plex Mono/.test(html));
 check('playlist field label is not uppercase mono', !/\.playlist-name-field label \{[^\n]*IBM Plex Mono/.test(html));
 

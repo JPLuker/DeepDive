@@ -35,6 +35,14 @@
 >    session
 
 
+## 39. Demo result album artwork (2.9.70)
+
+- [ ] Open `?demo=results`: every visible duplicate and new-track row with
+      Spotify album art shows the actual cover instead of the music-note
+      placeholder
+- [ ] Search or tap a different approved artist in demo mode and confirm the
+      covers change with that artist's real releases
+
 ## 38. Dive results spacing (2.9.69)
 
 - [ ] On a phone, the first results heading sits about one normal content

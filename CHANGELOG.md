@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.70
+- Demo result tracks now carry album artwork into the shared result-row
+  renderer. Spotify search returns album images as `album.images[]`, while
+  the real catalogue path uses `album.image_url`; demo tracks now normalize
+  to that same shape instead of showing the music-note placeholder.
+- Updated the demo and results UI regression checks to cover the artwork fix
+  and the 2.9.68/2.9.69 result-copy changes.
+
 ## 2.9.69
 - Tightened the top of dive results after the summary copy was removed.
   The first results section no longer adds its normal section margin on top

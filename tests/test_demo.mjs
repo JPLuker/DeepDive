@@ -25,6 +25,7 @@ check('sections receive stable random assignments', namesFor('home', 4).join('|'
 check('search is spoofed from the whitelist', searchNames('definitely-no-match', 4).length === 4);
 check('spotify resolves only approved names', /demo\.namesFor\(section, count\)/.test(src) && /client\.findArtist\(name\)/.test(src));
 check('real tracks and albums come from Spotify', /type: "track"/.test(src) && /demoTracksFor/.test(src));
+check('demo search tracks normalize album artwork for result rows', /const images = album\.images \|\| \[\];/.test(src) && /image_url: imageUrl/.test(src));
 
 // --- routing ----------------------------------------------------------
 check('demo runs before any auth check', /const screen = demo\.demoScreen\(\);\s*\n\s*if \(screen\) return renderDemo\(screen\);/.test(src));
@@ -37,7 +38,7 @@ check('results preloads full Spotify artist artwork', /client\.get\(`artists\/\$
 check('results stage uneven counts and visible duplicates', /already_liked_count: 11/.test(dsrc) && /usable\.slice\(0, 3\)/.test(dsrc) && /new_tracks: usable\.slice\(3\)/.test(dsrc));
 check('demo artist taps cannot start a live dive', /function startSearch\(artistName\) \{\s*if \(demo\.demoActive\(\)\) return renderDemoResults\(artistName\)/.test(src) && /onChoose: \(it\) => demo\.demoActive\(\) \? renderDemoResults\(it\.name\)/.test(src));
 check('home preview leads with a library-wide recipe', /id: "demo-home-random", title: "Surprise me"/.test(src) && !/id: `demo-mix-\$\{i\}`/.test(src));
-check('demo module import is cache-versioned', /import \* as demo from "\.\/demo\.js\?v=2\.9\.67"/.test(src));
+check('demo module import is cache-versioned', /import \* as demo from "\.\/demo\.js\?v=2\.9\.70"/.test(src));
 check('scan uses the real renderer', /return renderScrubResults\(demo\.scanFrom\(groups\)\)/.test(src));
 check('sampler uses the real dialog', /openCardModal\(card\)/.test(src));
 check('home uses the real suggestion row', /renderSuggestionRow\(el, demo\.pinsFrom\(pins\), demo\.suggestionsFrom\(suggestions\)\)/.test(src));
