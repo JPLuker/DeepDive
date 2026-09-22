@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.63";
+export const BUILD = "2.9.64";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -2387,9 +2387,9 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
 
   const suggHtml = suggestions.length ? `
     <div class="row-head"><h2>Suggested</h2><span class="qual">for you</span>
-      <button class="row-icon" id="sugg-refresh" title="Show a different set" aria-label="Refresh suggestions">
+      ${demo.demoActive() ? "" : `<button class="row-icon" id="sugg-refresh" title="Show a different set" aria-label="Refresh suggestions">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
-      </button>
+      </button>`}
       <button class="row-icon" id="sugg-random" title="Dive one of these at random" aria-label="Random dive">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.4" fill="currentColor"/></svg>
       </button>
@@ -5302,9 +5302,13 @@ function renderSettings() {
       <div class="set-row set-row-block">
         <div class="set-row-text">
           <div class="set-row-title">Approved artists</div>
-          <div class="set-row-detail">One per line. Demo screens and search results use only these artists, resolved live through Spotify.</div>
+          <div class="set-row-detail">Search Spotify and choose the exact artists allowed to appear in screenshots.</div>
         </div>
-        <textarea id="set-demo-artists" class="nav-input demo-artist-list" rows="8" spellcheck="false">${esc(demo.artistNames().join("\n"))}</textarea>
+        <div class="demo-artist-search">
+          <input id="set-demo-artist-search" class="nav-input" type="search" placeholder="Search Spotify artists" autocomplete="off">
+          <div class="autofill-list" id="set-demo-artist-results"></div>
+        </div>
+        <div id="set-demo-artists" class="demo-artist-list"></div>
       </div>
       <div class="set-row-actions demo-setting-actions">
         <button class="btn btn-ghost btn-small" id="set-demo-shuffle">Shuffle assignments</button>
@@ -5342,8 +5346,8 @@ function renderSettings() {
       <div class="set-group-label">Spotify</div>
       ${settingRow({
         title: "Refresh library",
-        detail: "Re-read your Liked Songs. DeepDive does this on its own daily.",
-        control: `<button class="btn btn-ghost btn-small" id="set-refresh">Refresh</button>`,
+        detail: demo.demoActive() ? "Unavailable in demo mode so unapproved library artists cannot enter staged screens." : "Re-read your Liked Songs. DeepDive does this on its own daily.",
+        control: `<button class="btn btn-ghost btn-small" id="set-refresh"${demo.demoActive() ? " disabled" : ""}>Refresh</button>`,
       })}
       ${settingRow({
         title: "Tidy up playlists",
@@ -5446,9 +5450,40 @@ function renderSettings() {
   const msg = document.getElementById("settings-msg");
   const say = (t, err) => { msg.textContent = t; msg.classList.remove("hidden"); msg.classList.toggle("error", !!err); };
 
+  let demoArtists = demo.demoActive() ? demo.approvedArtists() : [];
+  const paintDemoArtists = () => {
+    const list = document.getElementById("set-demo-artists");
+    if (!list) return;
+    list.innerHTML = demoArtists.map((a, i) => `<div class="demo-approved-artist">
+      ${a.image_url ? `<img src="${esc(a.image_url)}" alt="">` : `<span class="demo-approved-placeholder">${esc(a.name.slice(0, 1))}</span>`}
+      <span>${esc(a.name)}</span>
+      <button type="button" data-demo-remove="${i}" aria-label="Remove ${esc(a.name)}">&times;</button>
+    </div>`).join("");
+    list.querySelectorAll("[data-demo-remove]").forEach((btn) => btn.addEventListener("click", () => {
+      demoArtists.splice(+btn.dataset.demoRemove, 1);
+      paintDemoArtists();
+    }));
+  };
+  paintDemoArtists();
+  if (demo.demoActive()) wireArtistSearch({
+    inputId: "set-demo-artist-search",
+    listId: "set-demo-artist-results",
+    source: (q) => client.searchArtists(q, 8),
+    onChoose: (artist) => {
+      if (demoArtists.some((a) => a.id && a.id === artist.id)) {
+        return flash(`${artist.name} is already approved.`);
+      }
+      const unresolved = demoArtists.findIndex((a) => !a.id && a.name.toLowerCase() === artist.name.toLowerCase());
+      if (unresolved >= 0) demoArtists.splice(unresolved, 1, artist);
+      else demoArtists.push(artist);
+      paintDemoArtists();
+      document.getElementById("set-demo-artist-search").value = "";
+    },
+  });
+
   document.getElementById("set-demo-save")?.addEventListener("click", () => {
     try {
-      demo.setArtistNames(document.getElementById("set-demo-artists").value);
+      demo.setApprovedArtists(demoArtists);
       clearDemoSpotifyCache();
       flash("Demo artists saved.");
     } catch (e) { flash(e.message || "Couldn't save those artists.", true); }
@@ -5485,7 +5520,9 @@ function renderSettings() {
   });
   document.getElementById("go-pins")?.addEventListener("click", () => renderCrate());
   document.getElementById("go-history")?.addEventListener("click", () => renderHistory());
-  document.getElementById("set-refresh")?.addEventListener("click", () => refreshLibrary());
+  document.getElementById("set-refresh")?.addEventListener("click", () => {
+    if (!demo.demoActive()) refreshLibrary();
+  });
   document.getElementById("set-disconnect")?.addEventListener("click", () => { auth.logout(); render(); });
 
   const bmc = document.getElementById("set-show-bmc");
@@ -6049,7 +6086,8 @@ async function demoResolveArtist(name) {
   const key = String(name || "").trim().toLowerCase();
   if (!key) return null;
   if (!_demoArtistData.has(key)) {
-    const p = client.findArtist(name).then((a) => {
+    const approved = demo.approvedArtist(name);
+    const p = (approved && approved.id ? Promise.resolve(approved) : client.findArtist(name)).then((a) => {
       if (!a) throw new Error(`Spotify couldn't find ${name}.`);
       _artistLookups.set(key, Promise.resolve(a));
       return a;

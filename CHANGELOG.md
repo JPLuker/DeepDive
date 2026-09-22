@@ -4,6 +4,12 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.64
+- Demo Settings now searches Spotify directly and saves the selected
+  artist identities, so same-name artists cannot resolve to the wrong act.
+- Suggestion and library refresh controls are unavailable in demo mode;
+  neither can pull an unapproved artist into a staged screenshot.
+
 ## 2.9.63
 - Demo mode now has an approved-artist list in Settings. Every staged
   screen draws only from that list, with assignments held steady until

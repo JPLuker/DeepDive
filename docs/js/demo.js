@@ -55,14 +55,39 @@ export function exitDemo() {
   try { sessionStorage.removeItem(KEY); } catch (e) {}
 }
 
-/** Names are the only demo setting kept long-term. Spotify data remains
- * session-only and is resolved by app.js when a staged screen needs it. */
-export function artistNames() {
+/** The approved Spotify identities are kept long-term. Older builds stored
+ * bare names; accept those so an existing demo list migrates in place. */
+export function approvedArtists() {
   try {
     const saved = JSON.parse(localStorage.getItem(ARTISTS_KEY) || "null");
-    if (Array.isArray(saved) && saved.length) return saved;
+    if (Array.isArray(saved) && saved.length) return saved.map((a) =>
+      typeof a === "string" ? { id: null, name: a } : a
+    ).filter((a) => a && a.name);
   } catch (e) {}
-  return DEFAULT_ARTISTS.slice();
+  return DEFAULT_ARTISTS.map((name) => ({ id: null, name }));
+}
+
+export function artistNames() {
+  return approvedArtists().map((a) => a.name);
+}
+
+export function setApprovedArtists(value) {
+  const raw = Array.isArray(value) ? value : [];
+  const seen = new Set();
+  const artists = raw.map((a) => typeof a === "string" ? { id: null, name: a } : a)
+    .map((a) => ({
+      id: a && a.id ? String(a.id) : null,
+      name: String(a && a.name || "").trim(),
+      image_url: a && a.image_url ? String(a.image_url) : null,
+      image_url_large: a && a.image_url_large ? String(a.image_url_large) : null,
+    })).filter((a) => {
+      const key = a.id || a.name.toLowerCase();
+      if (!a.name || seen.has(key)) return false;
+      seen.add(key); return true;
+    });
+  if (artists.length < 4) throw new Error("Add at least four artists so each screen has some variety.");
+  try { localStorage.setItem(ARTISTS_KEY, JSON.stringify(artists)); } catch (e) {}
+  return artists;
 }
 
 export function setArtistNames(value) {
@@ -73,9 +98,13 @@ export function setArtistNames(value) {
     if (!key || seen.has(key)) return false;
     seen.add(key); return true;
   });
-  if (names.length < 4) throw new Error("Add at least four artists so each screen has some variety.");
-  try { localStorage.setItem(ARTISTS_KEY, JSON.stringify(names)); } catch (e) {}
+  setApprovedArtists(names);
   return names;
+}
+
+export function approvedArtist(name) {
+  const key = String(name || "").trim().toLowerCase();
+  return approvedArtists().find((a) => a.name.toLowerCase() === key) || null;
 }
 
 function demoSeed() {

@@ -8,7 +8,7 @@
 // have advertised the wrong product. The rule now: demo screens go
 // through the real renderers, never a second copy of the markup.
 import { readFileSync } from 'fs';
-import { demoScreen, DEMO_SCREENS, artistNames, namesFor, searchNames, setArtistNames } from '../docs/js/demo.js';
+import { demoScreen, DEMO_SCREENS, approvedArtists, artistNames, namesFor, searchNames, setApprovedArtists, setArtistNames } from '../docs/js/demo.js';
 const src = readFileSync(new URL('../docs/js/app.js', import.meta.url), 'utf8');
 const dsrc = readFileSync(new URL('../docs/js/demo.js', import.meta.url), 'utf8');
 
@@ -18,6 +18,9 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
 // --- whitelist and live Spotify data ----------------------------------
 check('artist names are configurable', artistNames().length >= 4 && /deepdive_demo_artists/.test(dsrc));
 check('bad duplicates are removed', setArtistNames('A\nB\na\nC\nD').join('') === 'ABCD');
+check('Spotify artist identities are saved', setApprovedArtists([
+  { id: '1', name: 'A' }, { id: '2', name: 'B' }, { id: '3', name: 'C' }, { id: '4', name: 'D' },
+])[0].id === '1' && /localStorage\.setItem\(ARTISTS_KEY, JSON\.stringify\(artists\)\)/.test(dsrc));
 check('sections receive stable random assignments', namesFor('home', 4).join('|') === namesFor('home', 4).join('|'));
 check('search is spoofed from the whitelist', searchNames('definitely-no-match', 4).length === 4);
 check('spotify resolves only approved names', /demo\.namesFor\(section, count\)/.test(src) && /client\.findArtist\(name\)/.test(src));
@@ -36,7 +39,8 @@ check('home uses the real suggestion row', /renderSuggestionRow\(el, demo\.pinsF
 check('no second copy of tile markup in demo.js', !/class="tile"/.test(dsrc));
 check('the old pill markup is gone', !/class=\\?"pill\\?"/.test(src.slice(src.indexOf('async function loadSuggestions'), src.indexOf('async function loadSuggestions') + 900)));
 
-check('settings exposes the whitelist', /id="set-demo-artists"/.test(src) && /id="set-demo-save"/.test(src));
+check('settings exposes Spotify whitelist search', /id="set-demo-artist-search"/.test(src) && /client\.searchArtists\(q, 8\)/.test(src) && /id="set-demo-save"/.test(src));
+check('demo refreshes cannot read outside the whitelist', /demo\.demoActive\(\) \? "" : `<button class="row-icon" id="sugg-refresh"/.test(src) && /if \(!demo\.demoActive\(\)\) refreshLibrary\(\)/.test(src));
 check('assignments can be shuffled', /id="set-demo-shuffle"/.test(src) && /demo\.reshuffle\(\)/.test(src));
 check('demo search never escapes the whitelist', /demo\.searchNames\(query, limit\)/.test(src));
 check('crate and multi-dip use approved artists', /demoArtistsFor\("crate"/.test(src) && /demoArtistsFor\("multidip"/.test(src));

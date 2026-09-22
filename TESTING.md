@@ -264,8 +264,10 @@ the demo Settings list should appear.
 - [ ] `…/DeepDive/app/?demo=index` lists the demo screens
 - [ ] The index lists all nine: Home, Dives, Mixes, results, Sampler,
       full scan, Crate, Multi-Dip and Settings
-- [ ] In `?demo=settings`, enter at least four approved artist names and
-      Save; reload another demo screen and see only those artists
+- [ ] In `?demo=settings`, search for and select at least four approved
+      artists, then Save; reload another demo screen and see only those artists
+- [ ] The approved-artist field searches Spotify with artwork; choosing a
+      result adds that exact artist rather than trusting typed text
 - [ ] Real Spotify photos, albums and tracks appear for the approved names
 - [ ] Search results are convincing but contain only approved artists
 - [ ] Artist assignments stay unchanged while moving between screens
@@ -274,6 +276,8 @@ the demo Settings list should appear.
       2.8.1 redesign right now
 - [ ] `?demo=home`, `?demo=sampler`, `?demo=scan` each render
 - [ ] No artist outside the approved list appears anywhere in demo mode
+- [ ] Suggested has no refresh button and Settings' library Refresh is
+      disabled while demo mode is active
 - [ ] "Leave demo mode" returns to the real app
 
 ## 4g. Results screen, second pass (2.8.4)

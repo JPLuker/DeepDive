@@ -1088,7 +1088,13 @@
   .set-row-chevron svg { width:18px; height:18px; }
 
   .set-row-actions { display:flex; justify-content:flex-end; margin:-2px 0 6px; }
-  .demo-artist-list { width:100%; resize:vertical; min-height:150px; line-height:1.45; }
+  .demo-artist-search { position:relative; width:100%; }
+  .demo-artist-search .autofill-list { left:0; right:0; }
+  .demo-artist-list { width:100%; display:grid; gap:7px; }
+  .demo-approved-artist { display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); }
+  .demo-approved-artist img, .demo-approved-placeholder { width:30px; height:30px; border-radius:50%; object-fit:cover; background:var(--tile); display:grid; place-items:center; font-weight:700; }
+  .demo-approved-artist span:nth-child(2) { flex:1; min-width:0; font-weight:600; }
+  .demo-approved-artist button { border:0; background:none; color:var(--muted); font-size:22px; cursor:pointer; }
   .demo-setting-actions { gap:8px; flex-wrap:wrap; }
   .set-note { font-size:12.5px; color:var(--muted-soft); margin:8px 2px 0; line-height:1.5; }
   .set-switch { display:inline-flex; align-items:center; cursor:pointer; }
