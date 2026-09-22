@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.73
+- Corrected the mobile results treatment: the contextual result controls
+  now replace/cover the app tab bar instead of moving into document flow.
+  Their dock is fixed at the bottom with a higher stacking level than the
+  Home/Dives/Mixes/Settings bar.
+- Restored Back to home inside that contextual dock so the covered global
+  navigation does not trap the user on results.
+
 ## 2.9.72
 - Mobile result actions are no longer fixed above the app navigation.
   They now sit in normal document flow after the result lists, so they do

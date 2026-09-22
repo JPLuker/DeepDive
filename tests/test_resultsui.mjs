@@ -69,10 +69,10 @@ check('hero fades on scroll', /function attachHeroFade/.test(src));
 // handler doing layout is a jank generator.
 check('fade is rAF-throttled', /requestAnimationFrame\(apply\)/.test(src));
 check('scroll listener is passive', /\{ passive: true \}/.test(src));
-check('mobile result actions are inline, not a covering dock', /\.results-actions \{\s*\n\s*position:static;/.test(html));
-check('mobile result actions drop dock backdrop and border', /background:none;[\s\S]*?backdrop-filter:none;[\s\S]*?border-top:none;/.test(html));
-check('mobile hides redundant back-home action', /\.results-actions \.btn-back \{ display:none; \}/.test(html));
-check('mobile results body no longer reserves dock clearance', /\.results-body \{ padding-bottom:0; \}/.test(html));
+check('mobile result actions replace the tab bar', /\.results-actions \{\s*\n\s*position:fixed; left:0; right:0; bottom:0; z-index:45;/.test(html));
+check('mobile result actions sit above the tab bar stacking order', /bottom:0; z-index:45;/.test(html) && /\.tabbar \{[\s\S]*?z-index:40;/.test(html));
+check('mobile keeps back-home inside the contextual dock', /\.results-actions \.btn-back \{ display:flex; \}/.test(html));
+check('mobile results body reserves contextual dock clearance', /\.results-body \{ padding-bottom:132px; \}/.test(html));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

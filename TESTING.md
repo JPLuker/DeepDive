@@ -35,6 +35,16 @@
 >    session
 
 
+## 42. Result actions replace mobile navigation (2.9.73)
+
+- [ ] On a phone, finished results keep the Like/Create/Both controls fixed
+      at the bottom
+- [ ] The contextual dock visually covers/replaces Home/Dives/Mixes/Settings
+      instead of sitting above a second fixed bar
+- [ ] Back to home remains available inside the contextual dock
+- [ ] Track rows scroll fully clear of the dock
+- [ ] Leaving results restores the normal app navigation
+
 ## 41. Inline mobile result actions (2.9.72)
 
 - [ ] Scroll a finished result on a phone: no Like/Create/Both bar floats

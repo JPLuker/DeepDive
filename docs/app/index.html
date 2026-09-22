@@ -1245,15 +1245,15 @@
     .dive-bar { bottom:calc(60px + env(safe-area-inset-bottom)); }
     body.diving .wrap { padding-bottom:calc(148px + env(safe-area-inset-bottom)); }
     #flash-slot .flash { margin-bottom:calc(84px + env(safe-area-inset-bottom)); }
-    /* Results actions belong to the result, not to the app chrome. A fixed
-       dock sat above the tab bar and covered track rows while scrolling.
-       On phones it now follows the lists in normal document flow. */
+    /* On result screens the contextual actions replace the global tab bar.
+       They sit in the same bottom space, above it in the stacking order,
+       instead of creating two separate fixed bars. */
     .results-actions {
-      position:static; padding:18px 0 6px; background:none;
-      backdrop-filter:none; -webkit-backdrop-filter:none; border-top:none;
+      position:fixed; left:0; right:0; bottom:0; z-index:45;
+      padding:12px 16px calc(14px + env(safe-area-inset-bottom));
     }
-    .results-actions .btn-back { display:none; }
-    .results-body { padding-bottom:0; }
+    .results-actions .btn-back { display:flex; }
+    .results-body { padding-bottom:132px; }
     .results-hero { margin:0 -18px 0; }
     .results-hero-text { padding:0 18px 16px; }
   }

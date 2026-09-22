@@ -253,11 +253,14 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.72
+## Shipped since — build 2.9.73
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Mobile result controls now replace the bottom app navigation while a
+  finished result is open, rather than stacking above it or disappearing
+  into the page. Back to home remains in the contextual dock (2.9.73)
 - Mobile result actions no longer float over the track list or stack
   against the tab bar. They now live after the results in normal document
   flow; the app navigation remains the only fixed bottom UI (2.9.72)
