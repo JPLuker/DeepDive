@@ -4,6 +4,21 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.58
+- Welcome screen explains the whole setup in two short paragraphs:
+  make a free Spotify app, paste its Client ID, sign in with a Premium
+  account; Last.fm optional, and what it adds.
+- Mix cards read from the top. Their text was pushed to the foot of the
+  card, so beside a taller neighbour a card with a one-line subtitle
+  opened a gap under its icon.
+- Features that need Last.fm are off without a key, dimmed with the
+  reason rather than hidden:
+  - Dip, in the chooser. Without a key it had been quietly reading the
+    whole catalogue in catalogue order, which isn't a Dip.
+  - Multi-Dip, in the chooser, the Dives menu, and on its own screen.
+  - Genres has no section at all without a key, since there would be
+    nothing under the heading. Recommended already worked this way.
+
 ## 2.9.57
 - The bottom tab bar, and the top navigation on desktop, are hidden
   during onboarding. Every tab needs a Spotify connection that doesn't

@@ -76,7 +76,7 @@ check('library row is named for its contents', /<h2>From your library<\/h2>/.tes
 // floating above all of them, so the most expensive action in the app
 // looked exactly like opening a list of pins. Each row carries its own
 // description now, which is where the cost belongs.
-check('dive destinations are rows', /function navRow\(idAttr, title, detail\)/.test(src));
+check('dive destinations are rows', /function navRow\(idAttr, title, detail, \{ disabled = false \} = \{\}\)/.test(src));
 check('the scan explains its cost', /one request per release/.test(dives));
 check('history explains itself', /how to undo it/.test(dives));
 // Pins became the Crate, and Blocked moved to Settings: blocking
@@ -119,6 +119,10 @@ check('the description updates in place', /modeDesc\.textContent = current \? cu
 // screen with nothing to scroll.
 check('the chooser stays on screen', /max-height:calc\(100vh - clamp/.test(shellSrc));
 check('and scrolls when it has to', /#card-modal \.modal \{[\s\S]{0,240}overflow-y:auto/.test(shellSrc));
+
+// 2.9.58: mix cards read from the top. With the text pushed to the
+// foot, a card beside a taller one opened a gap under its icon.
+check('mix cards start at the top', /\.pcard \{[\s\S]{0,120}justify-content:flex-start/.test(h) && /\.pcard-icon \{ opacity:0\.85; margin-bottom:10px; \}/.test(h));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

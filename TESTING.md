@@ -698,6 +698,24 @@ All three need a Last.fm key in Settings.
 - [ ] Settings → Blocked artists shows the blocked list and its scopes
 - [ ] Nowhere in the app still says "pin" or "pinned"
 
+## 34. Last.fm gating, mix cards, welcome copy (2.9.58)
+
+With no Last.fm key (Settings → remove it):
+
+- [ ] Chooser: Dip is dimmed, reads "needs a Last.fm key, added in
+      Settings", and does nothing when tapped; Dive works
+- [ ] Chooser: Multi-Dip button is dimmed and does nothing
+- [ ] Dives menu: Multi-Dip row dimmed with the same reason
+- [ ] Mixes: no Genres heading, no Recommended section
+- [ ] Add the key back: all of the above return without a reload
+
+Always:
+
+- [ ] Mixes grid: in every row the titles line up under the icons, with
+      any spare space at the bottom of the shorter card
+- [ ] Welcome (private window): two short paragraphs covering the whole
+      setup, Premium in bold
+
 ## 33. Onboarding (2.9.56)
 
 Test in a private window, or clear site data, so it's a first visit.

@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.57";
+export const BUILD = "2.9.58";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -328,7 +328,7 @@ function renderLastfmStep() {
   setTitle("DeepDive · Set up");
   root.innerHTML = onboardShell("lastfm", `
     <h1 class="onboard-title">Add Last.fm <span class="onboard-optional">optional</span></h1>
-    <p class="onboard-lede">Spotify no longer says what's popular or who sounds like whom. Last.fm does, and with a key you get Dips, recommendations and genre mixes.</p>
+    <p class="onboard-lede">Spotify no longer says what's popular or who sounds like whom. Last.fm does, and with a key you get Dips, Multi-Dips, recommendations and genre mixes.</p>
     <p class="onboard-hint">Create an API account at <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener">last.fm/api</a> and copy the API key. It's approved straight away. You can add it later in Settings.</p>
     <label class="onboard-field">
       <span>Last.fm API key</span>
@@ -456,9 +456,9 @@ function searchShellHtml({ options = true } = {}) {
  * interpolate, so `id="go-scrub"` still appears in the source and the
  * getElementById orphan audit can see it.
  */
-function navRow(idAttr, title, detail) {
+function navRow(idAttr, title, detail, { disabled = false } = {}) {
   return `
-    <button class="set-row set-row-nav" ${idAttr}>
+    <button class="set-row set-row-nav" ${idAttr}${disabled ? " disabled" : ""}>
       <span class="set-row-text">
         <span class="set-row-title">${title}</span>
         <span class="set-row-detail">${esc(detail)}</span>
@@ -520,7 +520,9 @@ async function renderDives() {
     <div id="suggestions-row"></div>
     <div class="set-group set-group-spaced">
       ${navRow('id="go-scrub"', "Full library scan", "Crawls every artist you've liked. Thorough, and slow — one request per release.")}
-      ${navRow('id="go-show"', "Multi-Dip", "Everyone on the bill, weighted by billing and ordered like the night runs.")}
+      ${lastfm.hasKey()
+        ? navRow('id="go-show"', "Multi-Dip", "Everyone on the bill, weighted by billing and ordered like the night runs.")
+        : navRow('id="go-show"', "Multi-Dip", NEEDS_LASTFM_FULL, { disabled: true })}
       ${navRow('id="go-history"', "Dive history", "What you've dived, what DeepDive built, and how to undo it.")}
       ${navRow('id="go-pins"', "Crate", "Everyone you've put aside to get to, with Up next at the top.")}
     </div>`;
@@ -1646,6 +1648,11 @@ function paintIntentHero(artistName) {
   }).catch(() => { if (current()) plain(); });
 }
 
+// What a feature that needs Last.fm says instead of what it does.
+const DIP_SUB = "their best hour, most played first";
+const NEEDS_LASTFM = "needs a Last.fm key, added in Settings";
+const NEEDS_LASTFM_FULL = "Needs a Last.fm key, added in Settings.";
+
 function openIntentModal(artistName, { force = false } = {}) {
   // "Don't ask again" used to make sense: this dialog only chose how
   // deep a dive went, so skipping it meant accepting a default. Now it
@@ -1807,6 +1814,8 @@ function openIntentModal(artistName, { force = false } = {}) {
     const freshMulti = multiEl.cloneNode(true);
     multiEl.replaceWith(freshMulti);
     freshMulti.classList.toggle("hidden", !artistName || diveStepShowing());
+    freshMulti.disabled = !lastfm.hasKey();
+    freshMulti.title = lastfm.hasKey() ? "" : NEEDS_LASTFM_FULL;
     freshMulti.addEventListener("click", () => {
       const artist = _pendingArtist;
       close();
@@ -1820,6 +1829,13 @@ function openIntentModal(artistName, { force = false } = {}) {
   if (dipEl) {
     const freshDip = dipEl.cloneNode(true);
     dipEl.replaceWith(freshDip);
+    // A Dip is Last.fm's idea of an artist's best hour. Without a key it
+    // quietly became a catalogue read in catalogue order, which isn't a
+    // Dip. Shown, but off, with the reason in place of the description.
+    const dipOn = lastfm.hasKey();
+    freshDip.disabled = !dipOn;
+    const dipSub = freshDip.querySelector(".intent-choice-sub");
+    if (dipSub) dipSub.textContent = dipOn ? DIP_SUB : NEEDS_LASTFM;
     freshDip.addEventListener("click", () => confirm({ dip: true }));
   }
   freshCancel.addEventListener("click", () => { _pendingArtist = null; close(); });
@@ -3684,13 +3700,9 @@ async function renderGenreSection() {
   const el = document.getElementById("genre-section");
   if (!el) return;
 
-  if (!lastfm.hasKey()) {
-    el.innerHTML = `
-      <div class="crate-header"><span class="label">Genres</span><span class="qual">needs Last.fm</span></div>
-      <p class="nav-hint" style="margin-top:0;">Spotify doesn't say what a track sounds like beyond a broad artist genre. Last.fm does, in far more detail — shoegaze, midwest emo, riot grrrl rather than "rock". Add a free API key in Settings and DeepDive can build mixes from it.</p>
-      <div class="actions"><button class="btn btn-ghost btn-small" data-tab="settings">Add a key</button></div>`;
-    return;
-  }
+  // Without a key there are no genres to show, so no heading either.
+  // The Last.fm setting says what a key adds; this page doesn't need to.
+  if (!lastfm.hasKey()) { el.innerHTML = ""; return; }
 
   let cached = [];
   let cacheErr = null;
@@ -4469,7 +4481,8 @@ async function renderShow() {
       </label>
     </div>
     <div class="show-footer">
-      <button class="btn btn-primary show-go" id="show-go"${n ? "" : " disabled"}>Build the night</button>
+      ${lastfm.hasKey() ? "" : `<p class="show-needs">${NEEDS_LASTFM_FULL}</p>`}
+      <button class="btn btn-primary show-go" id="show-go"${n && lastfm.hasKey() ? "" : " disabled"}>Build the night</button>
       <button class="btn-link" data-tab="dives">Back to Dives</button>
     </div>
     <div id="show-progress"></div>`;
@@ -5884,9 +5897,9 @@ function renderLanding() {
     <div class="onboard onboard-welcome">
       <h1 class="onboard-hero">Hear it all.</h1>
       <p class="onboard-lede">DeepDive knows what's already in your Spotify library, so every playlist it builds is made of the songs you missed.</p>
-      <div class="onboard-needs">
-        <div><strong>Spotify Premium</strong><span>Spotify only runs apps like this for Premium accounts.</span></div>
-        <div><strong>About two minutes</strong><span>You'll make a free Spotify app and paste in one code.</span></div>
+      <div class="onboard-process">
+        <p>Setting up takes about two minutes. You make a free app on Spotify's developer site, paste its Client ID here, and sign in with your Spotify account, which has to be <strong>Premium</strong>: Spotify only runs apps like this for Premium accounts.</p>
+        <p>A free Last.fm key is optional. It turns on Dips, Multi-Dips, recommendations and genre mixes, and you can add it later.</p>
       </div>
       <div class="onboard-actions onboard-actions-center">
         <button class="btn btn-primary" id="landing-start">Get started</button>

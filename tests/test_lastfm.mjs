@@ -7,6 +7,7 @@
 import { readFileSync } from 'fs';
 import { normalizeTag, tagLabel, _internals } from '../docs/js/lastfm.js';
 const lfm = readFileSync(new URL('../docs/js/lastfm.js', import.meta.url), 'utf8');
+const shell = readFileSync(new URL('../docs/app/index.html', import.meta.url), 'utf8');
 const src = readFileSync(new URL('../docs/js/app.js', import.meta.url), 'utf8');
 
 let pass = 0, fail = 0;
@@ -102,8 +103,15 @@ check('cost is stated before spending it', /one request per artist/.test(src));
 check('a rejected key stops the run', /if \(e && e\.suspended\) throw e;/.test(src));
 check('one artist failing does not stop the rest', /_genreTags\.set\(key, \[\]\);/.test(src));
 // Without a key the section explains rather than breaking.
-check('no key is explained, not errored', /needs Last\.fm<\/span>/.test(src));
-check('and points at settings', /data-tab="settings">Add a key/.test(src));
+// 2.9.58, Joseph's call: without a key there's nothing under Genres,
+// so no heading. Features that need a key are dimmed with the reason.
+check('no key, no genres section', /if \(!lastfm\.hasKey\(\)\) \{ el\.innerHTML = ""; return; \}/.test(src) && !/<span class="qual">needs Last\.fm<\/span>/.test(src));
+check('dip is off without a key, with the reason', /freshDip\.disabled = !dipOn;/.test(src) && /dipSub\.textContent = dipOn \? DIP_SUB : NEEDS_LASTFM;/.test(src));
+check('multi-dip in the chooser is off too', /freshMulti\.disabled = !lastfm\.hasKey\(\);/.test(src));
+check('and in the Dives menu', /navRow\('id="go-show"', "Multi-Dip", NEEDS_LASTFM_FULL, \{ disabled: true \}\)/.test(src));
+check('and building a night is refused', /id="show-go"\$\{n && lastfm\.hasKey\(\) \? "" : " disabled"\}/.test(src));
+check('the reason is said the same way everywhere', (src.match(/Needs a Last\.fm key, added in Settings\./g) || []).length === 1 && (src.match(/needs a Last\.fm key, added in Settings"/g) || []).length === 1);
+check('dimmed, not hidden', /\.intent-choice:disabled \{ opacity:0\.5;/.test(shell) && /\.set-row-nav:disabled \{ opacity:0\.5;/.test(shell));
 
 // Recommendations: similar artists crossed with what you own.
 import { recommendationCards } from '../docs/js/insights.js';

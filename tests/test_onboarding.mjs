@@ -13,7 +13,10 @@ for (const f of ['renderLanding', 'renderSetup', 'renderClientStep', 'renderLast
 check('each step says where you are', /Step \$\{n\} of \$\{ONBOARD_STEPS\.length\}/.test(src));
 
 // Premium was never mentioned. It's the first thing someone needs to know.
-check('the welcome says Premium is needed', /<strong>Spotify Premium<\/strong>/.test(src));
+// 2.9.58: the whole process in two sentences, Premium included.
+check('the welcome says Premium is needed', /has to be <strong>Premium<\/strong>/.test(src));
+check('and walks through the whole process', /make a free app on Spotify's developer site, paste its Client ID here, and sign in/.test(src));
+check('and what Last.fm adds', /Last\.fm key is optional\. It turns on Dips, Multi-Dips/.test(src));
 check('and uses the landing page\'s words', /class="onboard-hero">Hear it all\.<\/h1>/.test(src));
 check('the old welcome and its feature cards are gone', !/const FEATURES = \[/.test(src) && !/landing-grid|landing-card/.test(src + shell));
 

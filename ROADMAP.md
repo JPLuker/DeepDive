@@ -233,7 +233,26 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.57
+## Stopping point, 22 Sept (build 2.9.58)
+
+Picking up next session:
+
+- **Landing page screenshots.** Joseph is retaking every one. Slots, in
+  order: 1 Home, 2 dive in progress (hero centre), 3 Mixes top, 4 Mixes
+  "From your library" grid, 5 finished dive results (Houseghost),
+  6 dive in progress (VIAL), 7 Crate with Up next showing, 8 Multi-Dip
+  with three or four artists (new panel, not yet on the page). Ask for
+  them one at a time. Crop to the app only, 640 wide, JPEG under 120 KB.
+  If other artists replace VIAL, Houseghost or Leisure Hour, update the
+  footer credit and the photography note above.
+- **Landing Multi-Dip section**: add once shot 8 exists.
+- **Mixes section of the landing page**: interim copy. Joseph has an
+  idea for it and hasn't said what yet. Ask.
+- **Not yet checked on a phone**: 2.9.53 Multi-Dip overhaul (partly
+  seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
+  sections 32 to 34.
+
+## Shipped since — build 2.9.58
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -246,6 +265,7 @@ sessions below:
   "Remove all" was added for playlist cleanup
 - Playlist cleanup finds DeepDive playlists by name, including ones
   created before it kept records
+- Last.fm features dimmed without a key; Genres hidden; mix cards top-aligned; welcome explains setup (2.9.58)
 - Onboarding rebuilt as four steps, with Premium stated up front (2.9.56)
 - Multi-Dip overhaul: live cover preview, photo rows, compact settings; length no longer resets (2.9.53). Landing section for it next, once there's a screenshot
 - Chooser is Dip and Dive; Multi-Dip moved to a footer button (2.9.51)
