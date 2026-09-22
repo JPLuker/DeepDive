@@ -4,6 +4,16 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.76
+- Rebuilt the landing page around Joseph's final nine screenshot set.
+  Home, a dive and Mixes lead the page; the artist chooser now explains
+  Dip / Dive / Multi-Dip visually instead of through a text list.
+- Replaced the repeated alternating-panel layout with two-up feature cards
+  and a wider Multi-Dip section. Mix ideas, finished results, privacy and
+  the Crate each use the screen that demonstrates that feature.
+- Added the missing dedicated Multi-Dip marketing section and rewrote the
+  landing regression checks around the final assets.
+
 ## 2.9.75
 - Added the missing staged Dive chooser to demo mode. `?demo=chooser`
   opens the real Dip / Dive / Multi-Dip chooser over a whitelist-safe

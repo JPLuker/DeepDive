@@ -35,6 +35,24 @@
 >    session
 
 
+## 45. Landing page rebuild (2.9.76)
+
+- [ ] Phone: hero shows Home / Leisure Hour dive / Mixes without horizontal
+      page overflow; the centre dive remains the visual focus
+- [ ] Desktop: the page uses the available width and does not collapse back
+      into the old narrow 760px marketing column
+- [ ] “How far in?” shows the Maciann chooser clearly enough to read Dip,
+      Dive and Multi-Dip without zooming
+- [ ] Mix ideas, Houseghost results, Multi-Dip, VIAL and Crate each appear
+      once and beside copy that describes that exact screen
+- [ ] All nine screenshots load; no stale old screenshot appears
+- [ ] Multi-Dip has its own marketing section
+- [ ] Footer still credits Spotify / Last.fm, states photo ownership and
+      disclaims endorsement
+- [ ] Light theme and dark theme both keep readable contrast around the
+      screenshot frames and CTA
+- [ ] The Mixes copy is still interim; Joseph has a separate idea for it
+
 ## 44. Demo artist chooser (2.9.75)
 
 - [ ] Open `?demo=chooser`: the normal artist chooser appears over staged

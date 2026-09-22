@@ -28,13 +28,13 @@ actively mislead.
 
 ## Artist photography — provisional
 
-The landing page shows three artist photographs — Leisure Hour in the
-device row, VIAL in the dive-in-progress panel, Houseghost in the
-results panel — plus the thumbnails inside the app's own Home, Mixes
-and Crate screens. VIAL and Houseghost were removed by mistake in
-2.9.45 and restored in 2.9.47. The crate shot shows thumbnails of other
-artists, Dolly Parton's Dumplin' cover among them, under the same
-footer credit.
+The landing page now uses Joseph's approved nine-shot set: Home, the
+Maciann artist chooser, Leisure Hour dive progress, Mixes top, Mix ideas,
+Houseghost results, VIAL dive progress, Crate and Multi-Dip. Artist
+photography and album art appear only inside those app screenshots, never
+as free-standing page imagery. The footer names the principal full-frame
+artists and covers the additional artists and artwork visible inside the
+app screens.
 
 **Joseph's position, 7 Sept:** acceptable as examples for now, nothing
 beyond that, and he will email the artists for permission.
@@ -238,27 +238,21 @@ clean before anything is built on it.
 
 Picking up next session:
 
-- **Landing page screenshots.** Joseph is retaking every one. Slots, in
-  order: 1 Home, 2 artist chooser (Dip / Dive / Multi-Dip), 3 dive in
-  progress (hero centre), 4 Mixes top, 5 Mixes "Mix ideas" grid,
-  6 finished dive results (Houseghost), 7 dive in progress (VIAL),
-  8 Crate with Up next showing, 9 Multi-Dip with three or four artists
-  (new panel, not yet on the page). Ask for
-  them one at a time. Crop to the app only, 640 wide, JPEG under 120 KB.
-  If other artists replace VIAL, Houseghost or Leisure Hour, update the
-  footer credit and the photography note above.
-- **Landing Multi-Dip section**: add once shot 8 exists.
 - **Mixes section of the landing page**: interim copy. Joseph has an
   idea for it and hasn't said what yet. Ask.
 - **Not yet checked on a phone**: 2.9.53 Multi-Dip overhaul (partly
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.75
+## Shipped since — build 2.9.76
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Landing page rebuilt around the final nine approved screenshots: a
+  three-screen hero, real artist chooser, Mix ideas, finished results,
+  dedicated Multi-Dip section, VIAL privacy example and Crate. The old
+  repeating alternating-panel template is gone (2.9.76)
 - Demo mode now includes the real artist chooser as a dedicated screenshot
   route, with Dip, Dive and Multi-Dip all staged safely. Demo artist
   searches open the chooser just like the live app (2.9.75)
@@ -517,11 +511,11 @@ marketing page, and consider it for the app shell and the manifest
 description too so they don't say three different things.
 
 
-**Stopping point A — marketing page overhaul** — *started in 2.8.53:
-hero rebuilt around real screenshots, tagline applied to the page
-title, link preview and manifest. Still to do: the feature cards below
-the fold still read as a generic three-up, and there are no shots of
-Mixes, genres or a dip.*
+**Stopping point A — marketing page overhaul** — *rebuilt in 2.9.76
+around the final nine screenshot set. The generic repeated panels are
+gone, the chooser and Multi-Dip have dedicated treatment, and Mixes,
+results, privacy and Crate each use their own representative screen.
+The Mixes wording is still explicitly interim pending Joseph's idea.*
 
 **Original note:**
 - The treatment the app got: artwork-led, tiles, gradient cards, with

@@ -396,104 +396,13 @@
   .bmc-link svg { width:17px; height:17px; }
   .bmc-link:hover { color:var(--accent); border-color:var(--accent); }
 
-  /* ---- landing page ---- */
-  .landing { padding-top:24px; }
-  .landing-cta { margin:26px 0 10px; }
-  .landing-note { font-size:12.5px; color:var(--muted-soft); margin:0; }
-
-  /* ---- landing ----
-     After stats.fm: a text-led hero with the devices beneath it, a
-     plain feature list, alternating panels, a closing
-     panel, then a real footer. Their green becomes DeepDive's blue —
-     borrowing the structure, not the identity.
-
-     No artist photograph is used as page imagery. They appear only
-     inside device frames, as examples of the app running. */
-  .lead { padding:12px 0 0; text-align:center; }
-  .lead-title {
-    font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
-    font-size:clamp(50px, 13vw, 112px); line-height:0.9;
-    letter-spacing:-0.025em; margin:0;
+  /* ---- landing page ------------------------------------------------
+     The app itself is the visual argument. Artist photography and album
+     art stay inside screenshot frames rather than becoming page imagery. */
+  .landing {
+    max-width:1180px; padding:20px clamp(18px,4vw,48px) 56px;
+    overflow:hidden;
   }
-  .lead-sub {
-    font-size:17px; line-height:1.55; color:var(--muted);
-    max-width:52ch; margin:20px auto 0;
-  }
-  .lead-cta {
-    display:flex; flex-wrap:wrap; gap:14px;
-    justify-content:center; align-items:center; margin:28px 0 0;
-  }
-  .lead-link { color:var(--accent); font-weight:600; font-size:14.5px; text-decoration:none; }
-  .lead-link:hover { text-decoration:underline; }
-
-  /* Devices: three screens, the middle one forward. stats.fm overlaps
-     theirs and lets the outer two fall behind; the same arrangement
-     reads as one product rather than three pictures. */
-  .devices {
-    display:flex; justify-content:center; align-items:flex-end;
-    margin:44px 0 0; padding-bottom:8px;
-  }
-  .device { margin:0; }
-  .device img {
-    display:block; width:100%; height:auto;
-    border-radius:14px; border:1px solid rgba(255,255,255,0.08);
-  }
-  .device-l, .device-r { width:min(30vw, 210px); }
-  .device-c { width:min(38vw, 260px); z-index:2; }
-  .device-l { transform:translateX(14%) scale(0.92); opacity:0.55; }
-  .device-r { transform:translateX(-14%) scale(0.92); opacity:0.55; }
-  .device-c img { box-shadow:0 26px 60px rgba(0,0,0,0.55); }
-
-  .listing { margin:72px 0 0; }
-  .listing-title, .panel-words h2, .closing h2 {
-    font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
-    font-size:clamp(26px,5vw,38px); line-height:1.02;
-    letter-spacing:-0.015em; margin:0 0 14px;
-  }
-  .listing-intro { color:var(--muted); line-height:1.6; max-width:58ch; margin:0 0 34px; }
-  .listing-items { list-style:none; margin:0; padding:0; display:grid; gap:28px; }
-  .listing-items h3 { font-size:17px; margin:0 0 7px; letter-spacing:-0.01em; }
-  .listing-items p { margin:0; color:var(--muted); line-height:1.6; max-width:56ch; }
-  /* The same three-rung gauge the app uses in its artist chooser, so
-     the page and the app describe depth the same way. */
-  .listing-items .depth {
-    display:inline-flex; flex-direction:column; gap:3px;
-    width:16px; margin-right:12px; vertical-align:middle;
-  }
-  .listing-items .depth i { display:block; height:3px; border-radius:2px; background:var(--line); }
-  .listing-items .depth i.on { background:var(--accent); }
-  .listing + .listing { margin-top:56px; }
-
-  @media (min-width:760px) { .listing-items { grid-template-columns:1fr 1fr; gap:34px 48px; } }
-
-  /* Alternating panels on a raised surface, as stats.fm does. */
-  .panel {
-    display:grid; grid-template-columns:1fr; gap:26px;
-    align-items:center; margin:28px 0 0; padding:32px 24px;
-    background:var(--surface); border-radius:var(--radius-lg);
-  }
-  .panel:first-of-type { margin-top:72px; }
-  .panel-words p { color:var(--muted); line-height:1.62; max-width:52ch; margin:0 0 12px; }
-  .device-still { width:min(240px, 62vw); justify-self:center; }
-  .device-still img { box-shadow:0 18px 44px rgba(0,0,0,0.45); }
-  @media (min-width:820px) {
-    .panel { grid-template-columns:minmax(0,1fr) 280px; gap:48px; padding:48px; }
-    .panel-flip .panel-words { order:2; }
-    .panel-flip .device-still { order:1; }
-  }
-
-  .closing {
-    text-align:center; margin:56px 0 0; padding:48px 24px;
-    background:var(--accent-gradient); border-radius:var(--radius-lg);
-    color:#fff;
-  }
-  .closing h2 { color:#fff; }
-  .closing p { color:rgba(255,255,255,0.85); margin:0 0 22px; }
-  .closing .btn-primary { background:#fff; color:#0b0b0f; }
-  .closing-note { font-size:13px; margin:16px 0 0 !important; }
-
-  /* The page had no wordmark at all: a first-time visitor arrived with
-     nothing telling them what this is. */
   .topline {
     display:flex; align-items:center; justify-content:space-between;
     gap:16px; padding:6px 0 10px;
@@ -504,19 +413,140 @@
   }
   .topline-cta:hover { border-color:var(--accent); color:var(--accent); }
 
+  .lead { text-align:center; padding:44px 0 0; }
+  .lead-title {
+    font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
+    font-size:clamp(58px,11vw,124px); line-height:.88;
+    letter-spacing:-.025em; margin:0;
+  }
+  .lead-sub {
+    font-size:clamp(16px,2vw,19px); line-height:1.58; color:var(--muted);
+    max-width:58ch; margin:22px auto 0;
+  }
+  .lead-cta {
+    display:flex; flex-wrap:wrap; gap:14px; justify-content:center;
+    align-items:center; margin:28px 0 0;
+  }
+  .lead-link {
+    color:var(--accent); font-weight:600; font-size:14.5px;
+    text-decoration:none;
+  }
+  .lead-link:hover { text-decoration:underline; }
+
+  .hero-screens {
+    max-width:820px; margin:50px auto 0; display:grid;
+    grid-template-columns:minmax(0,.82fr) minmax(0,1fr) minmax(0,.82fr);
+    align-items:end; justify-content:center;
+  }
+  .screen { margin:0; min-width:0; }
+  .screen img {
+    display:block; width:100%; height:auto; background:var(--paper);
+    border:1px solid var(--line); border-radius:18px;
+    box-shadow:0 22px 60px rgba(0,0,0,.34);
+  }
+  .hero-screen-side { opacity:.68; transform:scale(.91); }
+  .hero-screen-left { transform-origin:right bottom; margin-right:-10%; }
+  .hero-screen-right { transform-origin:left bottom; margin-left:-10%; }
+  .hero-screen-main { position:relative; z-index:2; }
+
+  .landing-section { margin-top:96px; }
+  .section-eyebrow {
+    font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:500;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--accent);
+    margin:0 0 12px;
+  }
+  .section-title, .feature-card h2, .feature-band h2, .closing h2 {
+    font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
+    font-size:clamp(30px,5vw,48px); line-height:.98;
+    letter-spacing:-.015em; margin:0;
+  }
+  .section-copy, .feature-card p, .feature-band p {
+    color:var(--muted); line-height:1.62; font-size:15.5px;
+  }
+
+  .choice-section {
+    display:grid; grid-template-columns:minmax(0,.9fr) minmax(340px,1.1fr);
+    align-items:center; gap:clamp(34px,7vw,88px);
+  }
+  .choice-section .section-copy { max-width:52ch; margin:18px 0 0; }
+  .choice-shot { width:min(100%,520px); justify-self:end; }
+  .choice-shot img { border-radius:24px; }
+
+  .feature-grid {
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:18px; margin-top:96px;
+  }
+  .feature-card {
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--radius-lg); padding:clamp(22px,4vw,38px);
+    overflow:hidden; display:flex; flex-direction:column; min-width:0;
+  }
+  .feature-card .section-eyebrow { margin-bottom:10px; }
+  .feature-card h2 { font-size:clamp(27px,4vw,38px); }
+  .feature-card p { margin:16px 0 24px; max-width:48ch; }
+  .feature-card .screen { width:min(100%,390px); margin:auto auto 0; }
+  .feature-card-results .screen { width:min(100%,410px); }
+
+  .feature-band {
+    display:grid; grid-template-columns:minmax(0,1fr) minmax(320px,.8fr);
+    gap:clamp(34px,7vw,84px); align-items:center;
+    margin-top:18px; padding:clamp(28px,5vw,58px);
+    border-radius:var(--radius-lg);
+    background:
+      radial-gradient(circle at 12% 10%, color-mix(in srgb,var(--accent) 16%, transparent), transparent 42%),
+      var(--surface);
+    border:1px solid var(--line);
+  }
+  .feature-band p { max-width:50ch; margin:18px 0 0; }
+  .feature-band .screen { width:min(100%,390px); justify-self:end; }
+
+  .closing {
+    text-align:center; margin:72px 0 0; padding:54px 24px;
+    background:var(--accent-gradient); border-radius:var(--radius-lg);
+    color:#fff;
+  }
+  .closing h2 { color:#fff; }
+  .closing p { color:rgba(255,255,255,.86); margin:12px 0 24px; }
+  .closing .btn-primary { background:#fff; color:#0b0b0f; }
+
   .foot { margin:64px 0 0; padding:36px 0 8px; border-top:1px solid var(--line); }
-  .foot-cols { display:grid; grid-template-columns:1fr; gap:26px; margin-bottom:30px; }
+  .foot-cols { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; margin-bottom:30px; }
   .foot-cols h4 { font-size:13px; margin:0 0 10px; color:var(--muted-soft); font-weight:600; }
   .foot-cols a { display:block; font-size:14px; color:var(--ink); text-decoration:none; padding:4px 0; }
   .foot-cols a:hover { color:var(--accent); }
-  @media (min-width:640px) { .foot-cols { grid-template-columns:repeat(3,1fr); gap:32px; } }
-
   .landing-legal {
     font-size:12px; line-height:1.6; color:var(--muted-soft);
-    max-width:64ch; margin:18px auto 0;
+    max-width:72ch; margin:18px auto 0; text-align:center;
   }
 
-  .landing-foot { text-align:center; border-top:1px solid var(--line); padding-top:28px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+  @media (max-width:760px) {
+    .landing { padding:14px 18px 42px; }
+    .lead { padding-top:34px; }
+    .hero-screens { margin-top:38px; width:116%; margin-left:-8%; }
+    .hero-screen-side { opacity:.48; }
+    .landing-section { margin-top:70px; }
+    .choice-section { grid-template-columns:1fr; gap:30px; }
+    .choice-shot { width:100%; justify-self:center; }
+    .feature-grid { grid-template-columns:1fr; margin-top:70px; gap:14px; }
+    .feature-card { padding:24px 20px; }
+    .feature-card .screen { width:min(100%,430px); }
+    .feature-band {
+      grid-template-columns:1fr; gap:30px; padding:28px 20px; margin-top:14px;
+    }
+    .feature-band .screen { justify-self:center; width:min(100%,430px); }
+    .foot-cols { grid-template-columns:1fr; gap:24px; }
+  }
+
+  @media (max-width:430px) {
+    .topline .wordmark { font-size:18px; }
+    .topline-cta { padding:7px 13px; font-size:13px; }
+    .lead-title { font-size:54px; }
+    .lead-sub { font-size:15.5px; }
+    .hero-screens { width:126%; margin-left:-13%; gap:0; }
+    .screen img { border-radius:14px; }
+    .choice-shot img { border-radius:18px; }
+    .feature-card h2, .feature-band h2 { font-size:29px; }
+  }
 
   .settings-build { margin:26px 0 0; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; color:var(--muted-soft); }
 
@@ -721,15 +751,6 @@
 </head>
 <body>
   <div class="wrap landing">
-    <!-- Structure follows stats.fm: a text-led hero, devices below it,
-         a feature list, alternating panels, a closing
-         panel, then a real footer.
-         
-         One deliberate departure: no artist photograph is used as page
-         imagery. The photographs belong to the artists, not to Spotify
-         and not to us, so they appear only inside device frames as
-         examples of the app running — which is how stats.fm shows
-         album artwork too. -->
     <div class="topline">
       <span class="wordmark"><img src="assets/dd-logo.png" alt="" class="wordmark-icon">DeepDive</span>
       <a class="topline-cta" href="app/">Open the app</a>
@@ -737,121 +758,82 @@
 
     <header class="lead">
       <h1 class="lead-title">Hear it all.</h1>
-      <p class="lead-sub">DeepDive knows what's already in your Spotify library, so every playlist it builds is made of the songs you missed. Start from an artist, or from the music you've already saved.</p>
+      <p class="lead-sub">DeepDive knows what's already in your Spotify library, finds the tracks you missed, and turns the music you've saved into mixes built around how you listen.</p>
       <div class="lead-cta">
         <a class="btn btn-primary" href="app/">Open DeepDive</a>
-        <a class="lead-link" href="#how">How it works</a>
+        <a class="lead-link" href="#how">See how it works</a>
       </div>
-
-      <div class="devices" aria-hidden="true">
-        <figure class="device device-l"><img src="img/shots/app-home.jpg" alt="" width="640" height="1229" loading="eager"></figure>
-        <figure class="device device-c"><img src="img/shots/app-dive.jpg" alt="" width="640" height="1231" fetchpriority="high"></figure>
-        <figure class="device device-r"><img src="img/shots/app-mixes.jpg" alt="" width="640" height="1236" loading="eager"></figure>
+      <div class="hero-screens" aria-hidden="true">
+        <figure class="screen hero-screen-side hero-screen-left"><img src="img/shots/app-home.svg" alt="" width="640" height="1007" loading="eager"></figure>
+        <figure class="screen hero-screen-main"><img src="img/shots/app-dive.svg" alt="" width="640" height="1240" fetchpriority="high"></figure>
+        <figure class="screen hero-screen-side hero-screen-right"><img src="img/shots/app-mixes.svg" alt="" width="640" height="905" loading="eager"></figure>
       </div>
     </header>
 
-    <section class="listing" id="how">
-      <h2 class="listing-title">How far in</h2>
-      <p class="listing-intro">Name an artist and pick how deep to go: a few of their songs, or everything they have ever released. Going to a show? Multi-Dip covers the whole bill.</p>
-      <ul class="listing-items">
-        <li>
-          <h3><span class="depth" aria-hidden="true"><i class=on></i><i></i></span>Dip</h3>
-          <p>Their best hour, most played first, built in seconds. If there isn't an hour of well-known songs, you get the whole discography instead, best known at the top.</p>
-        </li>
-        <li>
-          <h3><span class="depth" aria-hidden="true"><i class=on></i><i class=on></i></span>Dive</h3>
-          <p>Everything they've ever released, read against your library. What that turns up is further down.</p>
-        </li>
-        <li>
-          <h3>Multi-Dip</h3>
-          <p>Everyone playing the show, in one playlist. They share the night evenly unless you say otherwise: mark the band you're there for as More, the opener you've never heard as Less, or give someone an exact number of songs.</p>
-        </li>
-      </ul>
-    </section>
-
-    <section class="panel">
-      <div class="panel-words">
-        <h2>Mixes from what you've saved</h2>
-        <p>Your library already holds more playlists than you've made. DeepDive cuts forty-odd from it: one-hit wonders, albums you went deep on, everything released in a given year. Build your own from an era, a length and an artist, or play a sampler of artists you saved once and barely heard.</p>
-        <p>Name any artist, even one you don't own, and it finds the ones in your library who sound like them. Similar artists does the same unasked, starting from who you play most. Genres come from Last.fm, since Spotify stopped saying. Pick how many tracks, look through them, then build it.</p>
+    <section class="landing-section choice-section" id="how">
+      <div>
+        <p class="section-eyebrow">Start with an artist</p>
+        <h2 class="section-title">How far in?</h2>
+        <p class="section-copy">Dip gives you their best hour, most played first. Dive checks the whole catalogue against your library. Multi-Dip takes a whole bill and builds one playlist in the order they play.</p>
       </div>
-      <figure class="device device-still">
-        <img src="img/shots/app-library-mixes.jpg" alt="The Mixes page, a grid of mixes cut from the listener's own library" width="640" height="1237" loading="lazy">
-      </figure>
+      <figure class="screen choice-shot"><img src="img/shots/app-chooser.svg" alt="DeepDive's artist chooser showing Dip, Dive and Multi-Dip for Maciann" width="640" height="687" loading="lazy"></figure>
     </section>
 
-    <section class="panel panel-flip">
-      <div class="panel-words">
-        <h2>What a dive finds</h2>
-        <p>A dive reads every album, single and EP an artist has put out and checks each recording against your Liked Songs. It matches recordings, not titles, so the album cut you saved still counts when the single turns up.</p>
-        <p>You see what you already have, the songs you own under another release, and what you've never heard. Untick anything, then like them, make a playlist, or both. Leave out live takes, radio edits, instrumentals and a cappellas, or widen it to compilations and records they only guest on. Dive the same artist later and it adds to the playlist it made, skipping what's already there.</p>
+    <div class="feature-grid">
+      <section class="feature-card">
+        <p class="section-eyebrow">From what you've saved</p>
+        <h2>Mixes with a reason</h2>
+        <p>Your library becomes dozens of useful cuts: years, albums you went deep on, songs you found late, your regulars, and more. Build your own from an era, a length and an artist, or use Sampler to revisit artists you barely touched. Add Last.fm for similar-artist and genre mixes.</p>
+        <figure class="screen"><img src="img/shots/app-mixes-ideas.svg" alt="DeepDive Mix ideas showing Build your own, Sampler, year, album and listening-history mixes" width="640" height="1009" loading="lazy"></figure>
+      </section>
+
+      <section class="feature-card feature-card-results">
+        <p class="section-eyebrow">A real catalogue check</p>
+        <h2>Know what you missed</h2>
+        <p>A Dive reads every album, single and EP, then checks the recordings against your Liked Songs. It catches the same recording under another release instead of trusting titles alone. Review the split, uncheck anything you don't want, then like songs, make a playlist, or both.</p>
+        <figure class="screen"><img src="img/shots/app-results.svg" alt="A finished Houseghost dive showing duplicate recordings and tracks new to the listener" width="640" height="953" loading="lazy"></figure>
+      </section>
+    </div>
+
+    <section class="feature-band">
+      <div>
+        <p class="section-eyebrow">Going to a show?</p>
+        <h2>One playlist for the whole bill</h2>
+        <p>Multi-Dip keeps the artists in show order and fits them to the length of your night. Leave the split even, mark someone More or Less, or give an artist an exact number of songs.</p>
       </div>
-      <figure class="device device-still">
-        <img src="img/shots/app-results.jpg" alt="A finished dive, showing tracks already owned under a different release alongside tracks new to the listener" width="640" height="1078" loading="lazy">
-      </figure>
+      <figure class="screen"><img src="img/shots/app-multidip.svg" alt="Multi-Dip with Maciann, ValkenWolf and Moonside arranged into a three-hour playlist" width="640" height="1006" loading="lazy"></figure>
     </section>
 
-    <section class="panel">
-      <div class="panel-words">
+    <div class="feature-grid">
+      <section class="feature-card">
+        <p class="section-eyebrow">Private by design</p>
         <h2>Your library, your browser</h2>
-        <p>Everything DeepDive makes starts from your own Spotify library. The mixes are cut from it, the recommendations are checked against it, and Home suggests artists from it and from what you've been playing lately.</p>
-        <p>DeepDive has no server. Your library is read by your browser and stored on your device, and the only requests that leave it are the ones to Spotify and Last.fm. There's nowhere for your listening to be collected.</p>
-      </div>
-      <figure class="device device-still">
-        <img src="img/shots/app-vial.jpg" alt="A dive in progress, with the artist filling the screen and a progress bar beneath" width="640" height="1204" loading="lazy">
-      </figure>
-    </section>
+        <p>DeepDive has no server. Your Spotify library is read in the browser and stored on your device. The only requests that leave it are the ones needed for Spotify and Last.fm. Your listening history isn't pooled into a DeepDive account.</p>
+        <figure class="screen"><img src="img/shots/app-vial.svg" alt="A VIAL dive in progress with the artist photo filling the screen" width="640" height="1211" loading="lazy"></figure>
+      </section>
 
-    <section class="panel panel-flip">
-      <div class="panel-words">
-        <h2>Your crate</h2>
-        <p>Put aside the artists you mean to get round to, a hundred of them if you like. Star the few you'll do next and Home shows those. When a playlist is done, it asks whether you're finished with them.</p>
-        <p>Search it, sort it by who you haven't dived yet, or build a sampler from the whole crate.</p>
-      </div>
-      <figure class="device device-still">
-        <img src="img/shots/app-crate.jpg" alt="The crate, a list of artists put aside to dive, each with a star for Up next" width="640" height="1103" loading="lazy">
-      </figure>
-    </section>
+      <section class="feature-card">
+        <p class="section-eyebrow">Don't lose the next one</p>
+        <h2>Keep a crate</h2>
+        <p>Put aside artists you mean to get to. Star a few for Up next so Home keeps them in sight, then search, sort and sample everyone else when you're ready.</p>
+        <figure class="screen"><img src="img/shots/app-crate.svg" alt="The Crate with an Up next section and more saved artists below" width="640" height="1020" loading="lazy"></figure>
+      </section>
+    </div>
 
     <section class="closing">
       <h2>Start with one artist</h2>
       <p>Pick someone you think you know well. That's usually where the surprise is.</p>
       <a class="btn btn-primary" href="app/">Open DeepDive</a>
-      <p class="closing-note">Two minutes to set up. Nothing to install.</p>
     </section>
 
     <footer class="foot">
       <div class="foot-cols">
-        <div>
-          <h4>DeepDive</h4>
-          <a href="app/">Open the app</a>
-          <a href="https://github.com/JPLuker/DeepDive">Source on GitHub</a>
-        </div>
-        <div>
-          <h4>Getting started</h4>
-          <a href="app/">Set up in two minutes</a>
-          <a href="https://developer.spotify.com/dashboard">Spotify developer dashboard</a>
-          <a href="https://www.last.fm/api/account/create">Last.fm API key</a>
-        </div>
-        <div>
-          <h4>Made by Joseph Luker</h4>
-          <a href="https://github.com/JPLuker">GitHub</a>
-          <a href="https://www.linkedin.com/in/josephluker">LinkedIn</a>
-          <a href="https://buymeacoffee.com/OSJoseph">Buy me a coffee</a>
-        </div>
+        <div><h4>DeepDive</h4><a href="app/">Open the app</a><a href="https://github.com/JPLuker/DeepDive">Source on GitHub</a></div>
+        <div><h4>Getting started</h4><a href="app/">Set up DeepDive</a><a href="https://developer.spotify.com/dashboard">Spotify developer dashboard</a><a href="https://www.last.fm/api/account/create">Last.fm API key</a></div>
+        <div><h4>Made by Joseph Luker</h4><a href="https://github.com/JPLuker">GitHub</a><a href="https://www.linkedin.com/in/josephluker">LinkedIn</a><a href="https://buymeacoffee.com/OSJoseph">Buy me a coffee</a></div>
       </div>
-
-      <p class="landing-legal">
-        Music metadata and artwork are provided by Spotify. DeepDive is not
-        affiliated with Spotify AB. Tag and popularity data are provided by
-        Last.fm. All copyrighted content — album artwork and artist
-        photography — remains the property of its respective owners.
-      </p>
-      <p class="landing-legal">
-        Artists pictured: Leisure Hour, VIAL, Houseghost, and the artists and album artwork shown inside the app's own screens. Their
-        photographs appear here only as examples of the app in use and imply
-        no endorsement.
-      </p>
+      <p class="landing-legal">Music metadata and artwork are provided by Spotify. DeepDive is not affiliated with Spotify AB. Tag and popularity data are provided by Last.fm. All copyrighted content, including album artwork and artist photography, remains the property of its respective owners.</p>
+      <p class="landing-legal">Artists pictured include Leisure Hour, VIAL, Houseghost and Maciann, plus artists shown inside the app's Home, Crate and Multi-Dip screens. Their photographs appear here only as examples of the app in use and imply no endorsement.</p>
       <p class="landing-legal">&copy; 2026 Joseph Luker.</p>
     </footer>
   </div>

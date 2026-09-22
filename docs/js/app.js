@@ -19,14 +19,14 @@ import { bestStore } from "./storage.js";
 import * as history from "./history.js";
 // Version the demo module independently. Mobile browsers were reloading
 // app.js while continuing to execute an older cached demo.js.
-import * as demo from "./demo.js?v=2.9.75";
+import * as demo from "./demo.js?v=2.9.76";
 import * as lastfm from "./lastfm.js";
 import * as cover from "./cover.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.75";
+export const BUILD = "2.9.76";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only

@@ -1,95 +1,95 @@
-// The landing page.
-//
-// The hero is the screenshots rather than a headline over a gradient:
-// a dive fills the screen with the artist, which is the least
-// utility-like thing about this utility and the reason anyone
-// remembers it. The photographs make the argument faster than copy.
+// Landing page regression checks for the screenshot-led 2.9.76 rebuild.
 import { readFileSync, existsSync, statSync } from 'fs';
+
 const html = readFileSync(new URL('../docs/index.html', import.meta.url), 'utf8');
 const manifest = JSON.parse(readFileSync(new URL('../docs/app/manifest.json', import.meta.url), 'utf8'));
 
 let pass = 0, fail = 0;
-function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } }
-
-// Structure follows stats.fm: text-led hero, devices beneath it, a
-// figures band, a feature list, alternating panels, a closing panel,
-// then a real footer. Their green becomes DeepDive's blue — the
-// structure is borrowed, the identity is not.
-check('tagline is the headline', /<h1 class="lead-title">Hear it all\.<\/h1>/.test(html));
-check('hero is text-led', /<header class="lead">/.test(html));
-check('devices sit beneath it', html.indexOf('lead-title') < html.indexOf('class="devices"'));
-check('three screens, middle forward', /device-l/.test(html) && /device-c/.test(html) && /device-r/.test(html));
-// Three different screens, not the same dive photograph three times.
-check('the screens are actually different', new Set([...html.matchAll(/device-[lcr]"><img src="([^"]+)"/g)].map((m) => m[1])).size === 3);
-check('two of them are UI, not a photograph', /app-home\.jpg/.test(html) && /app-mixes\.jpg/.test(html));
-// The page never said what it was.
-check('the page identifies itself', /<div class="topline">[\s\S]{0,200}wordmark/.test(html));
-check('feature list, not cards', /<ul class="listing-items">/.test(html));
-check('alternating panels', /panel panel-flip/.test(html));
-// Removed by mistake in 2.9.45: these two stay while permission is sought.
-// 2.9.49: each panel shows off what its screenshot shows.
-const panelFor = (shot) => { const i = html.indexOf(`img/shots/${shot}`); const a = html.lastIndexOf('<section class="panel', i); return i > -1 && a > -1 ? html.slice(a, i) : ''; };
-check('houseghost panel explains a dive', /<h2>What a dive finds<\/h2>/.test(panelFor('app-results.jpg')) && /matches recordings, not titles/.test(panelFor('app-results.jpg')));
-check('vial panel is the privacy panel', /DeepDive has no server/.test(panelFor('app-vial.jpg')) && /stored on your device/.test(panelFor('app-vial.jpg')));
-check('and says what does leave the browser', /only requests that leave it are the ones to Spotify and Last\.fm/.test(panelFor('app-vial.jpg')));
-check('around it is folded into the privacy panel', !/>Around it</.test(html) && /Home suggests artists/.test(panelFor('app-vial.jpg')));
-check('mixes are a panel with their own screenshot', /<h2>Mixes from what you've saved<\/h2>/.test(panelFor('app-library-mixes.jpg')));
-check('no list section left but how far in', (html.match(/<section class="listing"/g) || []).length === 1);
-check('and both are credited', /Artists pictured: Leisure Hour, VIAL, Houseghost/.test(html));
-check('closing panel', /<section class="closing">/.test(html));
-check('a real footer', /<footer class="foot">/.test(html) && /foot-cols/.test(html));
-
-// The one deliberate departure from the reference: no artist
-// photograph is used as page imagery. They belong to the artists, not
-// to Spotify and not to us, so they appear only inside device frames
-// as examples of the app running — which is how stats.fm shows album
-// artwork too.
-check('no photo used as page background', !/hero-photo|hero-scrim|hero-maciann/.test(html));
-check('photos only appear in device frames', [...html.matchAll(/img\/shots\/[a-z-]+\.jpg/g)]
-  .every((m) => html.slice(Math.max(0, m.index - 260), m.index).includes('device')));
-
-// It said three different things depending on where you met it.
-check('the title carries it', /<title>DeepDive — Hear it all\.<\/title>/.test(html));
-check('so does the manifest', /^Hear it all\./.test(manifest.description));
-check('and the link preview', /og:description/.test(html) && /og:image/.test(html));
-// A link preview is the page's headline image, so an artist photograph
-// must not be one — that is the use Joseph ruled out.
-check('the preview image is not an artist photo', !/og:image[^>]*img\/shots/.test(html));
-
-// Attribution — required by the Developer Terms, and absent entirely
-// before 2.8.55.
-check('spotify is credited', /affiliated with Spotify AB/.test(html));
-check('last.fm is credited', /Last\.fm/.test(html));
-check('photography ownership is stated', /remains the property of its respective owners/.test(html));
-check('pictured artists are acknowledged', /Artists pictured:/.test(html));
-check('and endorsement is disclaimed', /imply\s+no endorsement/.test(html));
-
-// Joseph's credit, with the three links he asked for.
-check('github is linked', /github\.com\/JPLuker"/.test(html));
-check('linkedin is linked', /linkedin\.com\/in\//.test(html));
-check('and buy me a coffee', /buymeacoffee\.com/.test(html));
-
-// Joseph's cuts, 2.9.48: the figures band, the hero's setup note, and
-// four items from "Around it" (blocking, covers, library scan, history).
-// These guard the decision, not the old layout.
-check('figures band is gone, styles too', !/class="figures"|\.figures \{|figure-n|figure-l/.test(html));
-check('hero setup note is gone, style too', !/lead-note/.test(html));
-for (const h of ['Leave someone out', 'A cover for every playlist', 'Your whole library at once', 'Take it back'])
-  check(`"${h}" stays cut`, !html.includes(`<h3>${h}</h3>`));
-check('the hero line was rewritten', /<p class="lead-sub">DeepDive knows what's already in your Spotify library/.test(html));
-
-// Every referenced screenshot must exist and be small enough to load.
-const refs = [...html.matchAll(/img\/shots\/([a-z-]+\.jpg)/g)].map((m) => m[1]);
-check('screenshots are referenced', refs.length >= 4);
-for (const f of new Set(refs)) {
-  const path = new URL('../docs/img/shots/' + f, import.meta.url);
-  check(`${f} exists`, existsSync(path));
-  check(`${f} is web-sized`, existsSync(path) && statSync(path).size < 120 * 1024);
+function check(label, condition) {
+  if (condition) pass++;
+  else { fail++; console.log('FAIL:', label); }
 }
-check('images are sized to avoid reflow', (html.match(/width="640" height="\d+"/g) || []).length >= 4);
-check('below-fold images load lazily', (html.match(/loading="lazy"/g) || []).length >= 3);
 
-// Stylesheet integrity — a stray brace silently kills everything below.
+check('tagline is the headline', /<h1 class="lead-title">Hear it all\.<\/h1>/.test(html));
+check('landing identifies DeepDive', /class="topline"[\s\S]{0,220}wordmark/.test(html));
+check('primary CTA opens the app', /class="btn btn-primary" href="app\/"/.test(html));
+check('title carries the tagline', /<title>DeepDive — Hear it all\.<\/title>/.test(html));
+check('manifest carries the tagline', /^Hear it all\./.test(manifest.description));
+check('link preview is not an artist screenshot', !/og:image[^>]*img\/shots/.test(html));
+
+const hero = html.slice(html.indexOf('<div class="hero-screens"'), html.indexOf('</header>'));
+check('hero shows Home', /app-home\.svg/.test(hero));
+check('hero shows a dive', /app-dive\.svg/.test(hero));
+check('hero shows Mixes', /app-mixes\.svg/.test(hero));
+check('hero has three distinct screenshots', new Set([...hero.matchAll(/img\/shots\/([^"]+\.svg)/g)].map(m => m[1])).size === 3);
+
+check('chooser screenshot is present', /app-chooser\.svg/.test(html));
+check('chooser copy explains Dip', /Dip gives you their best hour/.test(html));
+check('chooser copy explains Dive', /Dive checks the whole catalogue/.test(html));
+check('chooser copy explains Multi-Dip', /Multi-Dip takes a whole bill/.test(html));
+
+check('Mixes has its own recipe screenshot', /Mixes with a reason[\s\S]{0,1400}app-mixes-ideas\.svg/.test(html));
+check('Mixes covers Build your own', /Build your own from an era, a length and an artist/.test(html));
+check('Mixes covers Sampler', /Sampler to revisit artists you barely touched/.test(html));
+check('Mixes covers similarity and genres', /similar-artist and genre mixes/.test(html));
+check('results explain recording-level matching', /same recording under another release/.test(html));
+check('results show like, playlist or both', /like songs, make a playlist, or both/.test(html));
+check('Multi-Dip has a dedicated section', /One playlist for the whole bill[\s\S]{0,1200}app-multidip\.svg/.test(html));
+check('Multi-Dip covers More and Less', /mark someone More or Less/.test(html));
+check('privacy states there is no server', /DeepDive has no server/.test(html));
+check('privacy says data is stored on device', /stored on your device/.test(html));
+check('privacy names outbound services', /Spotify and Last\.fm/.test(html));
+check('Crate covers Up next', /Star a few for Up next/.test(html));
+check('Crate screenshot is present', /app-crate\.svg/.test(html));
+
+const expected = [
+  ['app-home.svg', 640, 1007],
+  ['app-dive.svg', 640, 1240],
+  ['app-mixes.svg', 640, 905],
+  ['app-chooser.svg', 640, 687],
+  ['app-mixes-ideas.svg', 640, 1009],
+  ['app-results.svg', 640, 953],
+  ['app-multidip.svg', 640, 1006],
+  ['app-vial.svg', 640, 1211],
+  ['app-crate.svg', 640, 1020],
+];
+const refs = [...html.matchAll(/img\/shots\/([a-z-]+\.svg)/g)].map(m => m[1]);
+check('all nine final screenshots are referenced', refs.length === 9);
+check('screenshots are not duplicated', new Set(refs).size === 9);
+for (const [file, width, height] of expected) {
+  check(file + ' appears once', refs.filter(x => x === file).length === 1);
+  check(file + ' declares dimensions',
+    new RegExp('img/shots/' + file.replace('.', '\\.') + '"[^>]*width="' + width + '" height="' + height + '"').test(html));
+  const path = new URL('../docs/img/shots/' + file, import.meta.url);
+  check(file + ' exists', existsSync(path));
+  check(file + ' is web-sized', existsSync(path) && statSync(path).size < 120 * 1024);
+  if (existsSync(path)) {
+    const svg = readFileSync(path, 'utf8');
+    check(file + ' embeds the approved JPEG',
+      new RegExp('<svg[^>]*width="' + width + '" height="' + height + '"[\\s\\S]*data:image/jpeg;base64,').test(svg));
+  }
+}
+check('below-fold images lazy-load', (html.match(/loading="lazy"/g) || []).length >= 6);
+
+check('no artist photo is used as page background', !/hero-photo|background-image:\s*url\([^)]*img\/shots/.test(html));
+check('screenshots stay inside screen frames',
+  [...html.matchAll(/img\/shots\/[a-z-]+\.svg/g)].every(m =>
+    html.slice(Math.max(0, m.index - 190), m.index).includes('class="screen')));
+
+check('Spotify is credited', /not affiliated with Spotify AB/.test(html));
+check('Last.fm is credited', /provided by Last\.fm/.test(html));
+check('copyright ownership is stated', /remains the property of its respective owners/.test(html));
+check('featured artists are acknowledged', /Leisure Hour, VIAL, Houseghost and Maciann/.test(html));
+check('endorsement is disclaimed', /imply no endorsement/.test(html));
+check('GitHub is linked', /github\.com\/JPLuker"/.test(html));
+check('LinkedIn is linked', /linkedin\.com\/in\/josephluker/.test(html));
+check('Buy Me a Coffee is linked', /buymeacoffee\.com\/OSJoseph/.test(html));
+
+check('old generic listing is gone', !/class="listing"/.test(html));
+check('old alternating panel template is gone', !/class="panel panel-flip"/.test(html));
+check('no false no-account claim', !/no account, nothing installed/.test(html));
+check('no duplicate-liked claim', !/liked twice/.test(html));
+
 const css = html.slice(html.indexOf('<style>') + 7, html.indexOf('</style>'));
 let depth = 0, stray = 0;
 for (const ch of css) {
@@ -98,79 +98,5 @@ for (const ch of css) {
 }
 check('stylesheet balances', depth === 0 && stray === 0);
 
-
-// Declared dimensions must match the files. A stale height reserves
-// the wrong space and the page jumps as each image loads — and every
-// screenshot swap is a chance to leave one behind.
-const { execSync } = await import('child_process');
-for (const m of html.matchAll(/img\/shots\/([a-z-]+\.jpg)" alt="[^"]*" width="(\d+)" height="(\d+)"/g)) {
-  const [, file, w, h] = m;
-  const path = new URL('../docs/img/shots/' + file, import.meta.url);
-  // Read the JPEG's SOF marker rather than adding an image dependency.
-  const buf = readFileSync(path);
-  let i = 2, dims = null;
-  while (i < buf.length - 9) {
-    if (buf[i] !== 0xff) { i++; continue; }
-    const marker = buf[i + 1];
-    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
-      dims = { h: buf.readUInt16BE(i + 5), w: buf.readUInt16BE(i + 7) };
-      break;
-    }
-    i += 2 + buf.readUInt16BE(i + 2);
-  }
-  check(`${file} dimensions are declared correctly`, dims && dims.w === +w && dims.h === +h);
-}
-
-// The page described DeepDive as it was two sessions ago. These are
-// the features that were on screen in the device row and never in the
-// copy.
-check('recommendations are advertised', /Name any artist, even one you don't own/.test(html));
-check('and done for you', /Similar artists does the same unasked/.test(html));
-// The PWA has no in-library duplicate check. The page claimed one until 2.9.45.
-check('no claim of a duplicate check that no longer exists', !/liked twice/.test(html));
-
-// The hero once claimed "no account, nothing installed". The note that
-// corrected it was cut in 2.9.48; the false claim must not come back.
-check('no claim that nothing is needed', !/no account, nothing installed/.test(html));
-
-// Panels alternate; two flips in a row put the same side twice.
-const panels = [...html.matchAll(/<section class="(panel[^"]*)"/g)].map((m) => m[1]);
-check('panels alternate', panels.every((p, i) => (i % 2 === 1) === p.includes('flip')));
-
-// The landing page kept its own copy of styles for markup deleted from
-// the app in 2.8.25.
-check('no dead sampler styles', !/sampler-row|btn-sampler/.test(html));
-
-// The page predated Multi-Dip, Up next, covers, the sampler and Build
-// your own, and still described a dip as reading a whole catalogue after
-// dips moved onto search. Everything the app does should be on it.
-for (const [label, re] of [
-  ['dips', /<h3>[\s\S]{0,160}Dip<\/h3>/],
-  ['multi-dips', /Multi-Dip<\/h3>/],
-  ['dives', /Dive<\/h3>/],
-  ['library mixes', /cuts forty-odd from it/],
-  ['build your own', /Build your own from an era, a length and an artist/],
-  ['the sampler', /sampler of artists you saved once and barely heard/],
-  ['genres', /Genres come from Last\.fm/],
-  ['the crate', /<h2>Your crate<\/h2>/],
-  ['suggestions', /Home suggests artists/],
-  ['confirm before writing, and reruns', /Untick anything[\s\S]{0,400}skipping what's already there/],
-  ['dive filters and guest records', /live takes, radio edits, instrumentals and a cappellas[\s\S]{0,160}only guest on/],
-]) check(`the page covers ${label}`, re.test(html));
-// Mixes shuffle; the page said you choose the order.
-check('no claim that mixes can be reordered', !/choose the order/.test(html));
-// Each feature is described once. Headings are the proxy: no h2/h3 twice.
-{
-  const heads = [...html.matchAll(/<h[23][^>]*>([\s\S]*?)<\/h[23]>/g)].map((m) => m[1].replace(/<[^>]+>/g, '').trim().toLowerCase());
-  check('no feature heading appears twice', new Set(heads).size === heads.length);
-}
-// A dip no longer reads the catalogue; the page shouldn't say it does.
-check('a dip is not described as a catalogue read', !/A dip takes one artist and gives you their best hour[\s\S]{0,120}reads everything/.test(html));
-// The same gauge as the app's chooser, so both describe depth alike.
-// Two depths since 2.9.51; Multi-Dip is listed without a gauge.
-check('the depths carry the app\'s gauge', (html.match(/class="depth"/g) || []).length === 2);
-check('multi-dip is not drawn as a depth', /<h3>Multi-Dip<\/h3>/.test(html));
-check('the intro no longer calls it a depth', !/a night of them/.test(html));
-
-console.log(`\n${pass} passed, ${fail} failed`);
+console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

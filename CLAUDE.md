@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.75.** If the build in `js/app.js` is well
+**Last updated at build 2.9.76.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -94,6 +94,10 @@ batch of notes mixing both; sort them and say which went where.
 - **A screenshot sent to show a bug is not a landing-page asset.** One
   was put on the landing page without asking. When the plan says "I'll
   ask for screenshots", ask for them.
+  **2.9.76:** Joseph supplied and approved the complete nine-shot landing
+  set: Home, chooser, Leisure Hour dive, Mixes top, Mix ideas, Houseghost
+  results, VIAL dive, Crate and Multi-Dip. Those are now the marketing
+  assets; don't substitute a debugging screenshot without asking.
 - **Don't delete what you didn't create without asking.** Cutting two
   landing panels also deleted the VIAL and Houseghost photos, which are
   in deliberate use while Joseph seeks the artists' permission.
