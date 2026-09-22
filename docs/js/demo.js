@@ -20,7 +20,8 @@
  *   sampler      the sampler results dialog
  *   scan         full library scan results
  *   index        a menu of all of the above
- * Persists for the session.
+ * Demo mode exists only while the URL contains `?demo`. Removing the
+ * parameter must always return to the live app.
  */
 
 const KEY = "deepdive_demo_screen";
@@ -36,12 +37,14 @@ const DEFAULT_ARTISTS = [
 export function demoScreen() {
   try {
     const p = new URLSearchParams(window.location.search).get("demo");
-    if (p !== null) {
-      const screen = (p === "" || p === "1") ? "home" : p.trim().toLowerCase();
-      sessionStorage.setItem(KEY, screen);
-      return screen;
+    // Demo is deliberately URL-scoped. An older build persisted this in
+    // sessionStorage, which meant visiting ?demo once silently converted
+    // the normal /app/ URL into demo mode for the rest of the tab.
+    if (p === null) {
+      try { sessionStorage.removeItem(KEY); } catch (e) {}
+      return null;
     }
-    return sessionStorage.getItem(KEY);
+    return (p === "" || p === "1") ? "home" : p.trim().toLowerCase();
   } catch (e) {
     return null;
   }
@@ -53,6 +56,11 @@ export function demoActive() {
 
 export function exitDemo() {
   try { sessionStorage.removeItem(KEY); } catch (e) {}
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("demo");
+    window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+  } catch (e) {}
 }
 
 /** The approved Spotify identities are kept long-term. Older builds stored

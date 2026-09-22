@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.74
+- Fixed a demo-mode isolation bug that could contaminate the live app in
+  the same browser tab. Demo mode is now active only when the current URL
+  explicitly contains `?demo`; it is never restored from sessionStorage.
+- Loading the normal `/app/` URL clears the legacy persisted demo flag,
+  so tabs affected by older builds recover automatically after refresh.
+- “Leave demo mode” now removes the `demo` query parameter before
+  rendering the live app.
+
 ## 2.9.73
 - Corrected the mobile results treatment: the contextual result controls
   now replace/cover the app tab bar instead of moving into document flow.

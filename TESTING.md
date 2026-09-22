@@ -35,6 +35,18 @@
 >    session
 
 
+## 43. Demo/live isolation (2.9.74)
+
+- [ ] Open `/app/?demo=home`, then manually load plain `/app/` in the
+      same tab: the real library appears, not staged demo data
+- [ ] Refresh plain `/app/`: it stays live
+- [ ] Open `?demo=index`, press Leave demo mode: the URL loses `demo`
+      and the live app renders immediately
+- [ ] While `?demo` remains in the URL, Home/Dives/Mixes/Settings still
+      use staged demo data
+- [ ] A tab that previously visited demo mode under an older build recovers
+      after loading plain `/app/`
+
 ## 42. Result actions replace mobile navigation (2.9.73)
 
 - [ ] On a phone, finished results keep the Like/Create/Both controls fixed

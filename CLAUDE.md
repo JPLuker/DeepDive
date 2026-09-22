@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.73.** If the build in `js/app.js` is well
+**Last updated at build 2.9.74.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -37,6 +37,18 @@ tidy-up afterwards:
 Before finishing a session, re-read both and check they still describe
 reality. If something here contradicts the code, the code is right and
 this file needs fixing.
+
+---
+
+## Demo isolation
+
+**Demo mode must never persist beyond a `?demo` URL.** Build 2.9.73 and
+earlier stored the active demo screen in sessionStorage, so visiting a
+screenshot URL once could make the ordinary `/app/` route keep using
+staged data. That broke the live app in the same tab. The query parameter
+is now the entire activation boundary. Do not reintroduce persistence for
+demo activation; only harmless demo configuration such as the whitelist
+and shuffle seed may persist.
 
 ---
 

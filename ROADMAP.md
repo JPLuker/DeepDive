@@ -253,11 +253,14 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.73
+## Shipped since — build 2.9.74
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Demo activation is now strictly URL-scoped. Visiting a `?demo` screenshot
+  route can no longer leave staged data active on the ordinary live app;
+  old session-persisted demo flags are cleared on normal loads (2.9.74)
 - Mobile result controls now replace the bottom app navigation while a
   finished result is open, rather than stacking above it or disappearing
   into the page. Back to home remains in the contextual dock (2.9.73)
