@@ -239,10 +239,11 @@ clean before anything is built on it.
 Picking up next session:
 
 - **Landing page screenshots.** Joseph is retaking every one. Slots, in
-  order: 1 Home, 2 dive in progress (hero centre), 3 Mixes top, 4 Mixes
-  "Mix ideas" grid, 5 finished dive results (Houseghost),
-  6 dive in progress (VIAL), 7 Crate with Up next showing, 8 Multi-Dip
-  with three or four artists (new panel, not yet on the page). Ask for
+  order: 1 Home, 2 artist chooser (Dip / Dive / Multi-Dip), 3 dive in
+  progress (hero centre), 4 Mixes top, 5 Mixes "Mix ideas" grid,
+  6 finished dive results (Houseghost), 7 dive in progress (VIAL),
+  8 Crate with Up next showing, 9 Multi-Dip with three or four artists
+  (new panel, not yet on the page). Ask for
   them one at a time. Crop to the app only, 640 wide, JPEG under 120 KB.
   If other artists replace VIAL, Houseghost or Leisure Hour, update the
   footer credit and the photography note above.
@@ -253,11 +254,14 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.74
+## Shipped since — build 2.9.75
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Demo mode now includes the real artist chooser as a dedicated screenshot
+  route, with Dip, Dive and Multi-Dip all staged safely. Demo artist
+  searches open the chooser just like the live app (2.9.75)
 - Demo activation is now strictly URL-scoped. Visiting a `?demo` screenshot
   route can no longer leave staged data active on the ordinary live app;
   old session-persisted demo flags are cleared on normal loads (2.9.74)

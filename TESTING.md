@@ -35,6 +35,19 @@
 >    session
 
 
+## 44. Demo artist chooser (2.9.75)
+
+- [ ] Open `?demo=chooser`: the normal artist chooser appears over staged
+      Home data, with only approved artists visible behind it
+- [ ] The chooser has a real approved artist photo plus Dip, Dive and
+      Multi-Dip
+- [ ] Search/select an approved artist from another demo screen: it opens
+      the chooser instead of jumping straight to results
+- [ ] Tap Dive: a staged dive-progress screen opens, with no real catalogue
+      job
+- [ ] Tap Dip: staged results open, with no real library work
+- [ ] Tap Multi-Dip: the staged Multi-Dip bill opens
+
 ## 43. Demo/live isolation (2.9.74)
 
 - [ ] Open `/app/?demo=home`, then manually load plain `/app/` in the

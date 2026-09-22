@@ -204,6 +204,7 @@ export function scanFrom(groups) {
 /** The screens worth photographing, for the ?demo=index menu. */
 export const DEMO_SCREENS = [
   ["home", "Home", "Pins, suggestions and the search field"],
+  ["chooser", "Dive chooser", "Dip, Dive and Multi-Dip for an approved artist"],
   ["dive", "Dive in progress", "Full-screen progress with an approved artist"],
   ["mixes", "Mixes", "Recommended and Mix ideas with approved artists"],
   ["results", "Dive results", "A finished dive, with matches and new tracks"],

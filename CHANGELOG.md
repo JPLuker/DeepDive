@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.75
+- Added the missing staged Dive chooser to demo mode. `?demo=chooser`
+  opens the real Dip / Dive / Multi-Dip chooser over a whitelist-safe
+  staged Home screen with a real approved Spotify artist and photo.
+- Selecting an artist while already in demo mode now opens that chooser,
+  matching the live app instead of jumping directly to fake results.
+- Dip, Dive and Multi-Dip actions from the demo chooser remain staged and
+  cannot fall through into live library work.
+
 ## 2.9.74
 - Fixed a demo-mode isolation bug that could contaminate the live app in
   the same browser tab. Demo mode is now active only when the current URL

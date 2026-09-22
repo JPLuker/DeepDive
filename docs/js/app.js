@@ -19,14 +19,14 @@ import { bestStore } from "./storage.js";
 import * as history from "./history.js";
 // Version the demo module independently. Mobile browsers were reloading
 // app.js while continuing to execute an older cached demo.js.
-import * as demo from "./demo.js?v=2.9.74";
+import * as demo from "./demo.js?v=2.9.75";
 import * as lastfm from "./lastfm.js";
 import * as cover from "./cover.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.74";
+export const BUILD = "2.9.75";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1844,6 +1844,10 @@ function openIntentModal(artistName, { force = false } = {}) {
     if (_pendingArtist) {
       const artist = _pendingArtist;
       _pendingArtist = null;
+      if (demo.demoActive()) {
+        if (dip) return renderDemoResults(artist);
+        return renderDemoDiveProgress(artist);
+      }
       runSearchWithOptions(artist, { ...optionsForIntent(selected, customOpts), dip });
     }
   };
@@ -1904,13 +1908,15 @@ function openIntentModal(artistName, { force = false } = {}) {
     const freshMulti = multiEl.cloneNode(true);
     multiEl.replaceWith(freshMulti);
     freshMulti.classList.toggle("hidden", !artistName || diveStepShowing());
-    freshMulti.disabled = !lastfm.hasKey();
-    freshMulti.title = lastfm.hasKey() ? "" : NEEDS_LASTFM_FULL;
+    const multiOn = demo.demoActive() || lastfm.hasKey();
+    freshMulti.disabled = !multiOn;
+    freshMulti.title = multiOn ? "" : NEEDS_LASTFM_FULL;
     freshMulti.addEventListener("click", () => {
       const artist = _pendingArtist;
       close();
-      _showBill = artist ? [{ id: null, name: artist }] : [];
       _pendingArtist = null;
+      if (demo.demoActive()) return renderDemo("multidip");
+      _showBill = artist ? [{ id: null, name: artist }] : [];
       renderShow();
     });
   }
@@ -1922,7 +1928,7 @@ function openIntentModal(artistName, { force = false } = {}) {
     // A Dip is Last.fm's idea of an artist's best hour. Without a key it
     // quietly became a catalogue read in catalogue order, which isn't a
     // Dip. Shown, but off, with the reason in place of the description.
-    const dipOn = lastfm.hasKey();
+    const dipOn = demo.demoActive() || lastfm.hasKey();
     freshDip.disabled = !dipOn;
     const dipSub = freshDip.querySelector(".intent-choice-sub");
     if (dipSub) dipSub.textContent = dipOn ? DIP_SUB : NEEDS_LASTFM;
@@ -2055,7 +2061,6 @@ function wireSearchBar() {
     const n = input.value.trim();
     if (!n) return;
     input.blur();
-    if (demo.demoActive()) { renderDemoResults(n); return; }
     startSearch(n);
   };
   goBtn.addEventListener("click", go);
@@ -2065,7 +2070,7 @@ function wireSearchBar() {
     inputId: "artist-input",
     listId: "autofill-list",
     source: (q) => demo.demoActive() ? demoSearchArtists(q, 6) : client.searchArtists(q, 6),
-    onChoose: (it) => demo.demoActive() ? renderDemoResults(it.name) : startSearch(it.name),
+    onChoose: (it) => startSearch(it.name),
     allowPin: true,
   });
 }
@@ -2593,7 +2598,7 @@ async function preflight() {
  * is ready, so no caller needs to supply artwork.
  */
 function startSearch(artistName) {
-  if (demo.demoActive()) return renderDemoResults(artistName);
+  if (demo.demoActive()) return renderDemoChooser(artistName);
   if (blockedByRateLimit()) return;
   _lastDiveArtist = artistName;
   _haveArtistPhoto = false;
@@ -6120,6 +6125,39 @@ async function demoGroupsFor(section, count, trackCount = 3) {
   return Promise.all(artists.map(async (artist) => ({ artist, tracks: await demoTracksFor(artist, trackCount) })));
 }
 
+async function renderDemoChooser(artistName = null) {
+  renderDemoLoading("Opening the staged artist chooser…");
+  try {
+    const artist = artistName
+      ? await demoResolveArtist(artistName)
+      : (await demoArtistsFor("chooser", 1))[0];
+    if (!artist) throw new Error("Spotify couldn't resolve that approved artist.");
+
+    // Seed the normal chooser's lookup cache, then render the staged Home
+    // behind it so the screenshot is entirely whitelist-safe.
+    _artistLookups.set(artist.name.toLowerCase(), Promise.resolve(artist));
+    await renderDemoHome();
+    const input = document.getElementById("artist-input");
+    if (input) input.value = artist.name;
+    openIntentModal(artist.name);
+  } catch (e) { return renderDemoError(e); }
+}
+
+async function renderDemoDiveProgress(artistName = null) {
+  renderDemoLoading("Opening a staged dive…");
+  try {
+    const artist = artistName
+      ? await demoResolveArtist(artistName)
+      : (await demoArtistsFor("dive-progress", 1))[0];
+    if (!artist) throw new Error("Spotify couldn't resolve that approved artist.");
+    await renderDemoHome();
+    showDiveScreen(`Diving into ${artist.name}…`, null);
+    const photo = artist.image_url_large || artist.image_url;
+    if (photo) addDiveImage(photo);
+    updateDiveScreen(48, `Reading ${artist.name}'s releases…`);
+  } catch (e) { return renderDemoError(e); }
+}
+
 async function renderDemoResults(artistName = null) {
   renderDemoLoading("Building a staged dive…");
   try {
@@ -6167,15 +6205,8 @@ async function renderDemo(screen) {
       await renderDemoHome();
       return openCardModal(card);
     }
-    if (screen === "dive") {
-      const [artist] = await demoArtistsFor("dive-progress", 1);
-      await renderHome();
-      showDiveScreen(`Diving into ${artist.name}`, null);
-      const photo = artist.image_url_large || artist.image_url;
-      if (photo) addDiveImage(photo);
-      updateDiveScreen(48, "Reading releases…");
-      return;
-    }
+    if (screen === "chooser") return renderDemoChooser();
+    if (screen === "dive") return renderDemoDiveProgress();
     if (screen === "crate") {
       const artists = await demoArtistsFor("crate", 9);
       const entries = artists.map((a, i) => ({

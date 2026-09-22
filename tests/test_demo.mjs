@@ -31,16 +31,19 @@ check('demo search tracks normalize album artwork for result rows', /const image
 check('demo is URL-scoped and never restored from sessionStorage', /if \(p === null\) \{[\s\S]*?sessionStorage\.removeItem\(KEY\)[\s\S]*?return null;/.test(dsrc) && !/return sessionStorage\.getItem\(KEY\)/.test(dsrc));
 check('leaving demo removes the URL parameter', /url\.searchParams\.delete\("demo"\)/.test(dsrc) && /history\.replaceState/.test(dsrc));
 check('demo runs before any auth check', /const screen = demo\.demoScreen\(\);\s*\n\s*if \(screen\) return renderDemo\(screen\);/.test(src));
-check('all screenshot screens are reachable', DEMO_SCREENS.length >= 9);
+check('all screenshot screens are reachable', DEMO_SCREENS.length >= 10);
 check('index lists every screen', DEMO_SCREENS.every(([id]) => typeof id === 'string' && id.length));
 
 // --- real renderers ---------------------------------------------------
+check('chooser is a staged screenshot route', /screen === "chooser"\) return renderDemoChooser\(\)/.test(src) && DEMO_SCREENS.some(([id]) => id === 'chooser'));
+check('demo artist selection opens the real chooser', /function startSearch\(artistName\) \{\s*if \(demo\.demoActive\(\)\) return renderDemoChooser\(artistName\)/.test(src));
+check('chooser actions stay staged in demo', /if \(demo\.demoActive\(\)\) \{\s*if \(dip\) return renderDemoResults\(artist\);\s*return renderDemoDiveProgress\(artist\);/.test(src));
 check('results uses the real renderer', /return renderResults\(demo\.resultsFrom\(artist, tracks\)\)/.test(src));
 check('results preloads full Spotify artist artwork', /client\.get\(`artists\/\$\{approved\.id\}`\)\.then\(normaliseArtist\)/.test(src) && /if \(photo\) await preloadPhoto\(photo\)/.test(src));
 check('results stage uneven counts and visible duplicates', /already_liked_count: 11/.test(dsrc) && /usable\.slice\(0, 3\)/.test(dsrc) && /new_tracks: usable\.slice\(3\)/.test(dsrc));
-check('demo artist taps cannot start a live dive', /function startSearch\(artistName\) \{\s*if \(demo\.demoActive\(\)\) return renderDemoResults\(artistName\)/.test(src) && /onChoose: \(it\) => demo\.demoActive\(\) \? renderDemoResults\(it\.name\)/.test(src));
+check('demo artist taps cannot start a live dive', /function startSearch\(artistName\) \{\s*if \(demo\.demoActive\(\)\) return renderDemoChooser\(artistName\)/.test(src) && /onChoose: \(it\) => startSearch\(it\.name\)/.test(src));
 check('home preview leads with a library-wide recipe', /id: "demo-home-random", title: "Surprise me"/.test(src) && !/id: `demo-mix-\$\{i\}`/.test(src));
-check('demo module import is cache-versioned', /import \* as demo from "\.\/demo\.js\?v=2\.9\.74"/.test(src));
+check('demo module import is cache-versioned', /import \* as demo from "\.\/demo\.js\?v=2\.9\.75"/.test(src));
 check('scan uses the real renderer', /return renderScrubResults\(demo\.scanFrom\(groups\)\)/.test(src));
 check('sampler uses the real dialog', /openCardModal\(card\)/.test(src));
 check('home uses the real suggestion row', /renderSuggestionRow\(el, demo\.pinsFrom\(pins\), demo\.suggestionsFrom\(suggestions\)\)/.test(src));
