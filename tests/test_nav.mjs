@@ -64,13 +64,15 @@ check('empty sampler pool is handled', /_samplerPool\.length >= 2/.test(src));
 check('one sampler pool, not two', (src.match(/let _samplerPool/g) || []).length === 1);
 
 // "Playlists" is the old name for this.
-// Mixes is the page. Genres and recommendations are mixes too, so the
-// library-derived row had to say what it actually is.
+// Mixes is the page. When Last.fm adds Recommended and Genres, the
+// generated grid needs a name that distinguishes its recipe rather than
+// claiming it alone comes from the user's library.
 // No page title — recommendations lead, matching Dives.
 const mixesFn = src.slice(src.indexOf('async function renderMixes'), src.indexOf('async function loadPlaylistCards'));
 check('mixes has no title of its own', !/<h2>Mixes<\/h2>/.test(mixesFn));
 check('recommendations come first', mixesFn.indexOf('rec-section') < mixesFn.indexOf('playlist-cards'));
-check('library row is named for its contents', /<h2>From your library<\/h2>/.test(src));
+check('generated row is named for its contents', /<h2>Mix ideas<\/h2>/.test(src));
+check('old library heading is gone', !/<h2>From your library<\/h2>/.test(src));
 
 // "More ways to dive" was three identical pills with one warning
 // floating above all of them, so the most expensive action in the app

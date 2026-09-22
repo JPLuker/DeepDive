@@ -161,6 +161,7 @@ check('then a genre', /take\(oneOf\(insights\.genreCards\(tracks, _genreTags, \{
 // still has to be the width it should be.
 check('gaps are filled from the pool', /for \(const c of insights\.seededPick\(allCards, allCards\.length, seed\)\)/.test(src));
 check('asking Last.fm is not triggered by opening home', /if \(_similarBySeed\.size\)/.test(src) && /if \(_genreTags\.size\)/.test(src));
+check('mix heading only appears with Last.fm groups', /const defaultHead = lastfm\.hasKey\(\)[\s\S]{0,180}<h2>Mix ideas<\/h2>[\s\S]{0,120}: "";/.test(src));
 // The full Mixes page still wants everything.
 check('only the short row is curated', /if \(limit > 0\) \{[\s\S]{0,600}_cards = await mixedRow/.test(src));
 // The maps were only filled on the Mixes page, so Home never had a

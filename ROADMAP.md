@@ -233,13 +233,13 @@ clean before anything is built on it.
 
 ---
 
-## Stopping point, 22 Sept (build 2.9.58)
+## Stopping point, 22 Sept (build 2.9.59)
 
 Picking up next session:
 
 - **Landing page screenshots.** Joseph is retaking every one. Slots, in
   order: 1 Home, 2 dive in progress (hero centre), 3 Mixes top, 4 Mixes
-  "From your library" grid, 5 finished dive results (Houseghost),
+  "Mix ideas" grid, 5 finished dive results (Houseghost),
   6 dive in progress (VIAL), 7 Crate with Up next showing, 8 Multi-Dip
   with three or four artists (new panel, not yet on the page). Ask for
   them one at a time. Crop to the app only, 640 wide, JPEG under 120 KB.
@@ -252,11 +252,14 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.58
+## Shipped since — build 2.9.59
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Mixes hides its lone section heading without Last.fm; with a key, the
+  grid is "Mix ideas — dates, artists and albums" rather than the
+  misleading "From your library" (2.9.59)
 - Settings became a real page; the nav drawer and its gear are gone
 - Bottom tab bar reduced to Home and Settings, dividing evenly
 - Support link moved to the topbar, still disableable

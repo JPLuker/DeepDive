@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.58";
+export const BUILD = "2.9.59";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -731,10 +731,15 @@ function renderCardRow(el) {
   // rest, so its preview doesn't read as the whole set.
   const limit = el._cardLimit || 0;
   const shown = limit ? _cards.slice(0, Math.max(0, limit - (_samplerPool.length >= 2 ? 1 : 0))) : _cards;
-  // "Mixes" is the page. Genres are mixes too, so this row needed to
-  // say what it actually is: patterns found in the library itself.
-  const head = el._cardHead
-    || `<div class="row-head"><h2>From your library</h2><span class="qual">patterns in what you've saved</span></div>`;
+  // With no Last.fm key this grid is the whole page, so a heading only
+  // repeats what the Mixes tab already says. Once Recommended and Genres
+  // are present, name the grid by the kinds of patterns it uses rather
+  // than "From your library" — every section on this page comes from the
+  // user's library in one way or another.
+  const defaultHead = lastfm.hasKey()
+    ? `<div class="row-head"><h2>Mix ideas</h2><span class="qual">dates, artists and albums</span></div>`
+    : "";
+  const head = el._cardHead || defaultHead;
   // The sampler leads. It is a mix like the rest — a few tracks each
   // from artists you've barely heard — and it used to sit below the
   // suggestion row as a full-width strip of its own, which made it look

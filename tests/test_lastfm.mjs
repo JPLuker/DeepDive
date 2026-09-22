@@ -145,8 +145,11 @@ check('recommendations are fetched on demand', /id="rec-go"/.test(src));
 check('cost is stated', /\$\{seeds\.length\} requests, about/.test(src));
 check('a rejected key stops it', /Last\.fm rejected the key/.test(src));
 check('recommendations lead the page', src.indexOf('id="rec-section"') < src.indexOf('id="playlist-cards"'));
-// Genres are mixes too, so the original row had to be renamed.
-check('library row renamed', /<h2>From your library<\/h2>/.test(src));
+// With Last.fm there are three distinct groups, so the generated grid
+// gets a descriptive name that does not imply the other two somehow
+// come from outside the user's library.
+check('generated grid has a useful name', /<h2>Mix ideas<\/h2>/.test(src));
+check('generated grid explains its patterns', /dates, artists and albums/.test(src));
 // The page has no title or description: Dives doesn't either, the tab
 // already says where you are, and each section's own heading said it
 // better than the paragraph above them did.

@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.59
+- With no Last.fm key, Mixes opens directly into its only available grid
+  instead of spending the top of the page on a redundant section heading.
+- With Last.fm connected, that section is now "Mix ideas — dates, artists
+  and albums." "From your library" wrongly implied Recommended and Genres
+  were not also built around the user's saved music.
+
 ## 2.9.58
 - Welcome screen explains the whole setup in two short paragraphs:
   make a free Spotify app, paste its Client ID, sign in with a Premium

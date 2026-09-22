@@ -707,7 +707,14 @@ With no Last.fm key (Settings → remove it):
 - [ ] Chooser: Multi-Dip button is dimmed and does nothing
 - [ ] Dives menu: Multi-Dip row dimmed with the same reason
 - [ ] Mixes: no Genres heading, no Recommended section
+- [ ] Mixes: no heading above the card grid; the first thing on the page
+      is Build your own / Sampler
 - [ ] Add the key back: all of the above return without a reload
+
+With a Last.fm key:
+
+- [ ] The generated card grid is headed "Mix ideas — dates, artists and
+      albums"
 
 Always:
 
