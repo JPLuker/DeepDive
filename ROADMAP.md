@@ -233,7 +233,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.47
+## Shipped since — build 2.9.48
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -246,6 +246,7 @@ sessions below:
   "Remove all" was added for playlist cleanup
 - Playlist cleanup finds DeepDive playlists by name, including ones
   created before it kept records
+- Landing page trimmed to Joseph's mark-up: new hero line; setup note, figures and four list items cut (2.9.48)
 - Landing page covers every feature once; three repeating panels cut (2.9.45)
 - Crate is a compact list rather than photo tiles (2.9.44)
 - Mix blocks apply to every mix, Recommended included, through one filter (2.9.43)

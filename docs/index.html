@@ -403,7 +403,7 @@
 
   /* ---- landing ----
      After stats.fm: a text-led hero with the devices beneath it, a
-     figures band, a plain feature list, alternating panels, a closing
+     plain feature list, alternating panels, a closing
      panel, then a real footer. Their green becomes DeepDive's blue —
      borrowing the structure, not the identity.
 
@@ -425,7 +425,6 @@
   }
   .lead-link { color:var(--accent); font-weight:600; font-size:14.5px; text-decoration:none; }
   .lead-link:hover { text-decoration:underline; }
-  .lead-note { font-size:13px; color:var(--muted-soft); margin:16px 0 0; }
 
   /* Devices: three screens, the middle one forward. stats.fm overlaps
      theirs and lets the outer two fall behind; the same arrangement
@@ -444,17 +443,6 @@
   .device-l { transform:translateX(14%) scale(0.92); opacity:0.55; }
   .device-r { transform:translateX(-14%) scale(0.92); opacity:0.55; }
   .device-c img { box-shadow:0 26px 60px rgba(0,0,0,0.55); }
-
-  .figures {
-    display:grid; grid-template-columns:repeat(2,1fr); gap:26px 20px;
-    margin:56px 0 0; padding:32px 0;
-    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
-  }
-  .figure-n {
-    display:block; font-family:'Martius','Inter',sans-serif;
-    font-size:clamp(30px,7vw,44px); line-height:1; letter-spacing:-0.01em;
-  }
-  .figure-l { display:block; margin-top:8px; font-size:13px; color:var(--muted); line-height:1.45; max-width:22ch; }
 
   .listing { margin:72px 0 0; }
   .listing-title, .panel-words h2, .closing h2 {
@@ -734,7 +722,7 @@
 <body>
   <div class="wrap landing">
     <!-- Structure follows stats.fm: a text-led hero, devices below it,
-         a feature list, a figures band, alternating panels, a closing
+         a feature list, alternating panels, a closing
          panel, then a real footer.
          
          One deliberate departure: no artist photograph is used as page
@@ -749,12 +737,11 @@
 
     <header class="lead">
       <h1 class="lead-title">Hear it all.</h1>
-      <p class="lead-sub">You liked the album version. You missed the single. DeepDive reads an artist's whole catalogue against your Spotify library and finds the recordings you already love but never saved.</p>
+      <p class="lead-sub">DeepDive knows what's already in your Spotify library, so every playlist it builds is made of the songs you missed. Start from an artist, or from the music you've already saved.</p>
       <div class="lead-cta">
         <a class="btn btn-primary" href="app/">Open DeepDive</a>
         <a class="lead-link" href="#how">How it works</a>
       </div>
-      <p class="lead-note">Free, and nothing to install. You'll need Spotify Premium and a Spotify Client ID of your own. Getting the ID takes two minutes, and it's the reason none of your listening is ever pooled with anyone else's.</p>
 
       <div class="devices" aria-hidden="true">
         <figure class="device device-l"><img src="img/shots/app-home.jpg" alt="" width="640" height="1229" loading="eager"></figure>
@@ -762,13 +749,6 @@
         <figure class="device device-r"><img src="img/shots/app-mixes.jpg" alt="" width="640" height="1236" loading="eager"></figure>
       </div>
     </header>
-
-    <section class="figures">
-      <div class="figure"><span class="figure-n">every</span><span class="figure-l">release an artist has put out</span></div>
-      <div class="figure"><span class="figure-n">3</span><span class="figure-l">sources: Spotify, Last.fm, your library</span></div>
-      <div class="figure"><span class="figure-n">40+</span><span class="figure-l">ways to cut what you've saved</span></div>
-      <div class="figure"><span class="figure-n">0</span><span class="figure-l">of it leaves your browser</span></div>
-    </section>
 
     <section class="listing" id="how">
       <h2 class="listing-title">How far in</h2>
@@ -827,22 +807,6 @@
         <li>
           <h3>Suggested for you</h3>
           <p>Home puts forward artists from your library and from what you've been playing lately. Ask for another set, or let it pick one and dive it.</p>
-        </li>
-        <li>
-          <h3>Leave someone out</h3>
-          <p>Block an artist from dives, from mixes, or both. Not wanting to explore someone isn't the same as not wanting the songs of theirs you already saved.</p>
-        </li>
-        <li>
-          <h3>A cover for every playlist</h3>
-          <p>The artist's photo, the kind of mix it is, and the DeepDive mark. A night out gets everyone on the bill.</p>
-        </li>
-        <li>
-          <h3>Your whole library at once</h3>
-          <p>Dive every artist you've liked in one go. It takes a while. Stop it whenever you like and keep what it found.</p>
-        </li>
-        <li>
-          <h3>Take it back</h3>
-          <p>Your dive history lists what you've dived and what DeepDive made. Songs it added to your Liked Songs come off again with one tap.</p>
         </li>
       </ul>
     </section>

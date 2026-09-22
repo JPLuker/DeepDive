@@ -698,10 +698,18 @@ All three need a Last.fm key in Settings.
 - [ ] Settings → Blocked artists shows the blocked list and its scopes
 - [ ] Nowhere in the app still says "pin" or "pinned"
 
+## 28. Landing page trim (2.9.48)
+
+- [ ] Hero reads: "DeepDive knows what's already in your Spotify
+      library…", with no note under the buttons
+- [ ] No figures band between the devices and "How far in"
+- [ ] "Around it" has Suggested for you only
+- [ ] No gaps or stray borders where the cut parts were, on a phone
+      and on desktop
+
 ## 27. Landing page, every feature once (2.9.45)
 
 - [ ] Read it top to bottom on a phone: nothing said twice
-- [ ] The setup note mentions Spotify Premium
 - [ ] Three panels: results (Houseghost), a dive in progress (VIAL), then the crate, alternating sides (2.9.47)
 - [ ] Footer credits Leisure Hour, VIAL and Houseghost by name
 - [ ] Crate in the app: the sampler button sits just under the search row, with a gap before the first row (fixed properly in 2.9.46)

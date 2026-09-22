@@ -4,6 +4,17 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.48
+- Landing page, Joseph's marked-up pass:
+  - Rewrote the hero line. It's about what every playlist is made of
+    (the songs you missed) rather than one album-versus-single case.
+  - Cut the setup note under the hero (Premium, Client ID).
+  - Cut the figures band.
+  - Cut four items from "Around it": blocking, covers, the library
+    scan, and history and undo. Suggested for you stays.
+- Removed the styles those cuts left unused. The tests now guard the
+  cuts rather than the old layout.
+
 ## 2.9.47
 - Landing page: restored the VIAL and Houseghost screenshots, removed
   by mistake in 2.9.45. They're in use while permission is sought. Both

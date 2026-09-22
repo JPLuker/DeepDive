@@ -63,15 +63,14 @@ check('github is linked', /github\.com\/JPLuker"/.test(html));
 check('linkedin is linked', /linkedin\.com\/in\//.test(html));
 check('and buy me a coffee', /buymeacoffee\.com/.test(html));
 
-// Figures: stats.fm counts a platform, DeepDive has none, so these are
-// what one real dive produced and what it costs you in privacy.
-check('figures are shown', /<section class="figures">/.test(html));
-// The figures used to quote one library's numbers off a screenshot,
-// which turns one person's result into the product's claim.
-const figures = html.slice(html.indexOf('<section class="figures">'), html.indexOf('</section>', html.indexOf('<section class="figures">')));
-check('figures make no borrowed claims', !/\b58\b|\b61\b/.test(figures));
-check('and describe the app instead', /release an artist has put out/.test(html));
-check('and the privacy figure is a zero', /of it leaves your browser/.test(html));
+// Joseph's cuts, 2.9.48: the figures band, the hero's setup note, and
+// four items from "Around it" (blocking, covers, library scan, history).
+// These guard the decision, not the old layout.
+check('figures band is gone, styles too', !/class="figures"|\.figures \{|figure-n|figure-l/.test(html));
+check('hero setup note is gone, style too', !/lead-note/.test(html));
+for (const h of ['Leave someone out', 'A cover for every playlist', 'Your whole library at once', 'Take it back'])
+  check(`"${h}" stays cut`, !html.includes(`<h3>${h}</h3>`));
+check('the hero line was rewritten', /<p class="lead-sub">DeepDive knows what's already in your Spotify library/.test(html));
 
 // Every referenced screenshot must exist and be small enough to load.
 const refs = [...html.matchAll(/img\/shots\/([a-z-]+\.jpg)/g)].map((m) => m[1]);
@@ -124,10 +123,9 @@ check('and done for you', /<h3>Recommended<\/h3>/.test(html));
 // The PWA has no in-library duplicate check. The page claimed one until 2.9.45.
 check('no claim of a duplicate check that no longer exists', !/liked twice/.test(html));
 
-// The hero claimed "no account, nothing installed". A Spotify Client ID
-// is required, and the setup screen is the worst place to learn that.
-check('the client id requirement is stated up front', /Client ID of your own/.test(html));
-check('and no longer claims otherwise', !/no account, nothing installed/.test(html));
+// The hero once claimed "no account, nothing installed". The note that
+// corrected it was cut in 2.9.48; the false claim must not come back.
+check('no claim that nothing is needed', !/no account, nothing installed/.test(html));
 
 // Panels alternate; two flips in a row put the same side twice.
 const panels = [...html.matchAll(/<section class="(panel[^"]*)"/g)].map((m) => m[1]);
@@ -150,16 +148,11 @@ for (const [label, re] of [
   ['genres', /<h3>Genres, properly<\/h3>/],
   ['the crate', /<h2>Your crate<\/h2>/],
   ['suggestions', /<h3>Suggested for you<\/h3>/],
-  ['blocking', /<h3>Leave someone out<\/h3>/],
-  ['the library scan', /<h3>Your whole library at once<\/h3>/],
   ['confirm before writing, and reruns', /<h2>Nothing without asking<\/h2>[\s\S]{0,400}skipping what's already there/],
-  ['history and undo', /<h3>Take it back<\/h3>/],
   ['dive filters and guest records', /live takes, radio edits, instrumentals and a cappellas[\s\S]{0,160}only guest on/],
-  ['covers', /A cover for every playlist/],
 ]) check(`the page covers ${label}`, re.test(html));
 // Mixes shuffle; the page said you choose the order.
 check('no claim that mixes can be reordered', !/choose the order/.test(html));
-check('premium is stated up front', /lead-note">[^<]*Spotify Premium/.test(html));
 // Each feature is described once. Headings are the proxy: no h2/h3 twice.
 {
   const heads = [...html.matchAll(/<h[23][^>]*>([\s\S]*?)<\/h[23]>/g)].map((m) => m[1].replace(/<[^>]+>/g, '').trim().toLowerCase());
