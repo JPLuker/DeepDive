@@ -17,14 +17,16 @@ import * as insights from "./insights.js";
 import * as matching from "./matching.js";
 import { bestStore } from "./storage.js";
 import * as history from "./history.js";
-import * as demo from "./demo.js";
+// Version the demo module independently. Mobile browsers were reloading
+// app.js while continuing to execute an older cached demo.js.
+import * as demo from "./demo.js?v=2.9.67";
 import * as lastfm from "./lastfm.js";
 import * as cover from "./cover.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.66";
+export const BUILD = "2.9.67";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -2053,7 +2055,7 @@ function wireSearchBar() {
     const n = input.value.trim();
     if (!n) return;
     input.blur();
-    if (demo.demoActive()) { openIntentModal(n); return; }
+    if (demo.demoActive()) { renderDemoResults(n); return; }
     startSearch(n);
   };
   goBtn.addEventListener("click", go);
@@ -2063,7 +2065,7 @@ function wireSearchBar() {
     inputId: "artist-input",
     listId: "autofill-list",
     source: (q) => demo.demoActive() ? demoSearchArtists(q, 6) : client.searchArtists(q, 6),
-    onChoose: (it) => demo.demoActive() ? openIntentModal(it.name) : startSearch(it.name),
+    onChoose: (it) => demo.demoActive() ? renderDemoResults(it.name) : startSearch(it.name),
     allowPin: true,
   });
 }
@@ -2591,6 +2593,7 @@ async function preflight() {
  * is ready, so no caller needs to supply artwork.
  */
 function startSearch(artistName) {
+  if (demo.demoActive()) return renderDemoResults(artistName);
   if (blockedByRateLimit()) return;
   _lastDiveArtist = artistName;
   _haveArtistPhoto = false;
@@ -6128,6 +6131,20 @@ async function demoGroupsFor(section, count, trackCount = 3) {
   return Promise.all(artists.map(async (artist) => ({ artist, tracks: await demoTracksFor(artist, trackCount) })));
 }
 
+async function renderDemoResults(artistName = null) {
+  renderDemoLoading("Building a staged dive…");
+  try {
+    const artist = artistName
+      ? await demoResolveArtist(artistName)
+      : (await demoArtistsFor("results", 1))[0];
+    if (!artist) throw new Error("Spotify couldn't resolve that approved artist.");
+    const tracks = await demoTracksFor(artist, 10);
+    const photo = artist.image_url_large || artist.image_url;
+    if (photo) await preloadPhoto(photo);
+    return renderResults(demo.resultsFrom(artist, tracks));
+  } catch (e) { return renderDemoError(e); }
+}
+
 async function demoSearchArtists(query, limit = 6) {
   const names = demo.searchNames(query, limit);
   const settled = await Promise.allSettled(names.map(demoResolveArtist));
@@ -6148,10 +6165,7 @@ async function renderDemo(screen) {
   renderDemoLoading();
   try {
     if (screen === "results") {
-      const [group] = await demoGroupsFor("results", 1, 10);
-      const photo = group.artist.image_url_large || group.artist.image_url;
-      if (photo) await preloadPhoto(photo);
-      return renderResults(demo.resultsFrom(group.artist, group.tracks));
+      return renderDemoResults();
     }
     if (screen === "scan") {
       const groups = await demoGroupsFor("scan", 4, 5);
@@ -6233,11 +6247,11 @@ async function renderDemoHome() {
 
   const groups = await demoGroupsFor("home-mixes", 4, 2);
   _samplerPool = groups.map((g) => g.artist);
-  _cards = groups.slice(0, 3).map((g, i) => ({
-    id: `demo-mix-${i}`, title: i ? `More from ${g.artist.name}` : `All your ${g.artist.name}`,
-    subtitle: i ? "tracks you've saved, shuffled" : `everything by ${g.artist.name} in your library`,
-    count: g.tracks.length, tracks: g.tracks,
-  }));
+  _cards = [
+    { id: "demo-home-random", title: "Surprise me", subtitle: "50 at random from your library", tracks: groups.flatMap((g) => g.tracks) },
+    { id: "demo-home-year", title: "Your 2024", subtitle: "what you added that year", tracks: groups[1]?.tracks || [] },
+    { id: "demo-home-albums", title: "Albums that landed", subtitle: "records you liked three or more from", tracks: (groups[2]?.tracks || []).concat(groups[3]?.tracks || []) },
+  ].map((c) => ({ ...c, count: c.tracks.length }));
   const mixes = document.getElementById("home-mixes");
   if (mixes) {
     mixes._cardLimit = columnsAtWidth();

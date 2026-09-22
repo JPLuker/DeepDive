@@ -32,9 +32,12 @@ check('all screenshot screens are reachable', DEMO_SCREENS.length >= 9);
 check('index lists every screen', DEMO_SCREENS.every(([id]) => typeof id === 'string' && id.length));
 
 // --- real renderers ---------------------------------------------------
-check('results uses the real renderer', /return renderResults\(demo\.resultsFrom\(group\.artist, group\.tracks\)\)/.test(src));
+check('results uses the real renderer', /return renderResults\(demo\.resultsFrom\(artist, tracks\)\)/.test(src));
 check('results preloads full Spotify artist artwork', /client\.get\(`artists\/\$\{approved\.id\}`\)\.then\(normaliseArtist\)/.test(src) && /if \(photo\) await preloadPhoto\(photo\)/.test(src));
 check('results stage uneven counts and visible duplicates', /already_liked_count: 11/.test(dsrc) && /usable\.slice\(0, 3\)/.test(dsrc) && /new_tracks: usable\.slice\(3\)/.test(dsrc));
+check('demo artist taps cannot start a live dive', /function startSearch\(artistName\) \{\s*if \(demo\.demoActive\(\)\) return renderDemoResults\(artistName\)/.test(src) && /onChoose: \(it\) => demo\.demoActive\(\) \? renderDemoResults\(it\.name\)/.test(src));
+check('home preview leads with a library-wide recipe', /id: "demo-home-random", title: "Surprise me"/.test(src) && !/id: `demo-mix-\$\{i\}`/.test(src));
+check('demo module import is cache-versioned', /import \* as demo from "\.\/demo\.js\?v=2\.9\.67"/.test(src));
 check('scan uses the real renderer', /return renderScrubResults\(demo\.scanFrom\(groups\)\)/.test(src));
 check('sampler uses the real dialog', /openCardModal\(card\)/.test(src));
 check('home uses the real suggestion row', /renderSuggestionRow\(el, demo\.pinsFrom\(pins\), demo\.suggestionsFrom\(suggestions\)\)/.test(src));

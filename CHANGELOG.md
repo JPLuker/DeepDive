@@ -4,6 +4,15 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.67
+- Tapping or searching an artist in demo mode now opens the staged result
+  for that exact approved artist. It can no longer run a real library dive,
+  which was the source of the persistent 16/16 split.
+- The demo module URL is build-versioned so mobile browsers cannot combine
+  a current app controller with stale demo data.
+- Home's visible mix preview is now Surprise me rather than another
+  artist-specific card.
+
 ## 2.9.66
 - Demo results fetch and preload the selected artist's full Spotify image
   before rendering, fixing the blank gradient hero.

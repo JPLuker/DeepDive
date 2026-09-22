@@ -36,7 +36,7 @@ for (const c of ['INTENTS','INTENT_KEY','BUILD','CARD_LENGTHS','BMC_KEY','LANDIN
 // catch it. Demo mode moved to demo.js in 2.8.3, so the guarded call is
 // gone — what matters now is that the module it moved to is imported
 // and that the screens it routes to all exist.
-check('demo module is imported', /import \* as demo from "\.\/demo\.js";/.test(src));
+check('demo module is imported', /import \* as demo from "\.\/demo\.js(?:\?v=[^"]+)?";/.test(src));
 // Scoped to render(): getClientId is called from several other places,
 // so comparing first occurrences across the whole file proves nothing.
 const renderFn = src.slice(src.indexOf('async function render() {'), src.indexOf('// ---- support link visibility ----'));

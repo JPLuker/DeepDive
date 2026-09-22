@@ -277,6 +277,10 @@ the demo Settings list should appear.
 - [ ] The results hero uses the selected artist's real full-size photo
 - [ ] Results visibly include 3 duplicates, 7 new and 11 already liked;
       the example should not read like an artificial 50/50 split
+- [ ] Tap an approved artist from Home: the staged 3/7/11 result opens;
+      it must not run a real dive against the connected library
+- [ ] Home's two visible Mixes cards are Sampler and Surprise me, not
+      Sampler plus another artist-only recipe
 - [ ] `?demo=home`, `?demo=sampler`, `?demo=scan` each render
 - [ ] No artist outside the approved list appears anywhere in demo mode
 - [ ] Suggested has no refresh button and Settings' library Refresh is

@@ -24,7 +24,7 @@ check('cleared on any success', /if \(resp\.status < 400\) \{[\s\S]{0,120}remove
 check('reader exported', /export function limitedUntil\(\)/.test(sp));
 check('expired entries clear themselves', /if \(v <= Date\.now\(\)\) \{ localStorage\.removeItem/.test(sp));
 
-check('dives are blocked', /function startSearch\(artistName\) \{\s*if \(blockedByRateLimit\(\)\) return;/.test(src));
+check('real dives are blocked', /function startSearch\(artistName\) \{\s*if \(demo\.demoActive\(\)\)[^\n]+\s*if \(blockedByRateLimit\(\)\) return;/.test(src));
 // The guard used to sit directly above showDiveScreen. The sampler now
 // preloads photos behind a spinner first, so the two are no longer
 // adjacent — the guard must still be the first thing runSampler does.

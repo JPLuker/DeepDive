@@ -234,7 +234,7 @@ clean before anything is built on it.
 
 ---
 
-## Stopping point, 22 Sept (build 2.9.66)
+## Stopping point, 22 Sept (build 2.9.67)
 
 Picking up next session:
 
@@ -253,11 +253,14 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.66
+## Shipped since — build 2.9.67
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Demo artist interactions now stay staged instead of running a real dive;
+  demo.js is cache-versioned; Home leads with a library-wide random mix
+  rather than another artist card (2.9.67)
 - Demo results now preload full Spotify artist artwork and show an uneven,
   three-category outcome with visible duplicate candidates (2.9.66)
 - Demo Dives now routes Crate, Multi-Dip and the library scan into their
