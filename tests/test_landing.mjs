@@ -77,13 +77,12 @@ check('screenshots stay inside screen frames',
   [...html.matchAll(/img\/shots\/[a-z-]+\.svg/g)].every(m =>
     html.slice(Math.max(0, m.index - 190), m.index).includes('class="screen')));
 
-check('feature screenshots use deliberate crop windows',
-  (html.match(/class="screen shot-crop shot-(?:ideas|results|multidip|vial|crate)"/g) || []).length === 5);
-check('crop windows clip screenshots cleanly',
-  /\.shot-crop\s*\{[^}]*overflow:hidden/.test(css) &&
-  /\.shot-crop img\s*\{[^}]*height:100%[^}]*object-fit:cover/.test(css));
+check('feature screenshots keep their complete approved framing',
+  !/class="screen shot-crop/.test(html));
+check('screenshots are not forced through destructive cover crops',
+  !/\.shot-crop img\s*\{[^}]*object-fit:cover/.test(css));
 for (const shot of ['ideas', 'results', 'multidip', 'vial', 'crate']) {
-  check(shot + ' has its own editorial crop', new RegExp('\\.shot-' + shot + '\\s*\\{[^}]*aspect-ratio:').test(css));
+  check(shot + ' has no forced crop ratio', !new RegExp('\\.shot-' + shot + '\\s*\\{[^}]*aspect-ratio:').test(css));
 }
 
 check('Spotify is credited', /not affiliated with Spotify AB/.test(html));

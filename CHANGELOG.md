@@ -4,6 +4,11 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.78
+- Removed the landing page's forced cover crops. The approved captures
+  were already tightly framed; preserving their natural proportions keeps
+  headers, artist imagery, controls and action buttons visible.
+
 ## 2.9.77
 - Tightened the landing page's feature screenshots into deliberate
   viewport crops. Mix ideas, results, Multi-Dip, VIAL and Crate now keep
