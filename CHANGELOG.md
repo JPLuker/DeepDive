@@ -4,6 +4,26 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.53
+- Multi-Dip, visual overhaul:
+  - The cover the night will get sits beside the title and redraws as
+    the bill fills. It's the real cover code, split between everyone,
+    named for whoever is tagged More, otherwise the first act. Under
+    the title: how many artists, and how long the night is.
+  - Bill rows have the artist's photo, or their initial while it loads.
+    The name gets the full width, with the controls on a line beneath
+    it. Less and More are one two-way control. Artists added from the
+    chooser get their photo from the lookup the chooser already made,
+    patched into the row without redrawing, so a drag isn't cut off.
+  - The two settings are one compact card, without the explanations.
+  - "Build the night" is the one full-width button. Back is a quiet
+    "Back to Dives" link beneath it.
+  - Shorter intro, and the search bar no longer touches the first row.
+- Fixed: the length of the night reset to three hours whenever the
+  page redrew, such as when adding an artist. It's now kept.
+- Building a night reuses the shared artist lookup, so an artist
+  started from the chooser isn't searched for twice.
+
 ## 2.9.52
 - The chooser's corner button just says "Multi-Dip". With the artist's
   name it truncated on a phone, and the photo above already says who

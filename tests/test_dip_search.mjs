@@ -27,7 +27,9 @@ check('it scopes the query to both fields', /track:"\$\{title[\s\S]{0,80}artist:
 // back with a track by a band the user had never searched for.
 check('the artist is matched by id', /\(t\.artists \|\| \[\]\)\.some\(\(a\) => a\.id === artistId\)/.test(sp));
 check('and a name match is only a fallback', /const pool = byId\.length \? byId : \(artistId \? \[\] : byName\)/.test(sp));
-check('a bill resolves ids before searching', /const resolved = await client\.findArtist\(a\.name\)/.test(src));
+// Through the shared lookup since 2.9.53, so a bill started from the
+// chooser doesn't search for its first artist twice.
+check('a bill resolves ids before searching', /if \(!a\.id\) \{\s*\n\s*const resolved = await lookupArtist\(a\.name\)/.test(src));
 // An hour is the target, not a promise: seven tracks is seventeen
 // minutes, and calling that "in an hour" is just wrong.
 check('nothing claims an hour', !/in an hour/.test(src));

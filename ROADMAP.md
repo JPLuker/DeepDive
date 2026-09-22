@@ -233,7 +233,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.52
+## Shipped since — build 2.9.53
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -246,6 +246,7 @@ sessions below:
   "Remove all" was added for playlist cleanup
 - Playlist cleanup finds DeepDive playlists by name, including ones
   created before it kept records
+- Multi-Dip overhaul: live cover preview, photo rows, compact settings; length no longer resets (2.9.53). Landing section for it next, once there's a screenshot
 - Chooser is Dip and Dive; Multi-Dip moved to a footer button (2.9.51)
 - Artist chooser shows the artist's photo; the dive reuses its lookup (2.9.50)
 - Landing panels: dive explained (Houseghost), privacy (VIAL), Mixes as a panel; Around it folded in (2.9.49). Mixes copy interim, Joseph has an idea for it

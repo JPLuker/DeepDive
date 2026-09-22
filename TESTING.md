@@ -698,6 +698,22 @@ All three need a Last.fm key in Settings.
 - [ ] Settings → Blocked artists shows the blocked list and its scopes
 - [ ] Nowhere in the app still says "pin" or "pinned"
 
+## 32. Multi-Dip overhaul (2.9.53)
+
+- [ ] Open Multi-Dip from the chooser: the cover beside the title shows
+      that artist's photo with "Multi-Dip" on it within a second or two
+- [ ] Add two more: the cover splits between them, and the row photos
+      appear
+- [ ] Tag the second artist More: the name on the cover changes to them
+- [ ] Less and More read as one control; tapping the lit one turns it off
+- [ ] Choose Two hours, then add an artist: still Two hours
+- [ ] A long name gets the full width of the row, with the controls on
+      the line below
+- [ ] Drag a row while photos are still loading: the drag isn't cut off
+- [ ] Home tiles: "…" still opens a tile's actions (a class name nearly
+      clashed with them)
+- [ ] Build the night: the playlist cover matches the preview
+
 ## 31. Two depths, Multi-Dip in the corner (2.9.51)
 
 - [ ] Search an artist: Dip and Dive only, each with a two-rung gauge

@@ -545,11 +545,67 @@
   .star-btn.on { color:#f5c451; border-color:#f5c451; }
   .star-btn.on svg { fill:currentColor; }
 
+  /* ---- Multi-Dip ----
+     The cover the night will get, drawn as the bill fills, beside the
+     title. Rows follow the crate: photo, name, and the controls on a
+     second line so a long name has the whole width. */
+  .show-hero { display:flex; gap:16px; align-items:center; margin:4px 0 18px; }
+  .show-cover {
+    position:relative; flex:0 0 auto; width:112px; aspect-ratio:1;
+    border-radius:12px; overflow:hidden;
+    background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 45%, var(--surface)), var(--surface));
+    box-shadow:0 10px 26px rgba(0,0,0,0.4);
+  }
+  .show-cover img { width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity .3s ease; }
+  .show-cover.has-art img { opacity:1; }
+  .show-cover-blank {
+    position:absolute; left:10px; bottom:9px; font-size:12px; font-weight:650;
+    color:rgba(255,255,255,0.85);
+  }
+  .show-cover.has-art .show-cover-blank { display:none; }
+  .show-hero-text { min-width:0; }
+  .show-hero-text h2 { margin:0 0 4px; }
+  .show-sub { margin:0; font-size:13.5px; color:var(--muted); line-height:1.45; }
+  .show-count { margin:8px 0 0; font-size:12.5px; font-weight:600; color:var(--accent); }
+  #show-bill { margin-top:12px; }
+
   .bill-row {
     display:flex; align-items:center; gap:10px;
     background:var(--tile); border-radius:var(--radius-tile);
-    padding:10px 10px 10px 14px; margin-bottom:6px;
+    padding:8px 8px 8px 6px; margin-bottom:6px;
   }
+  .bill-art {
+    flex:0 0 auto; width:48px; height:48px; border-radius:8px;
+    object-fit:cover; display:block; background:var(--surface);
+  }
+  .bill-art-blank {
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; font-weight:700; color:var(--muted);
+  }
+  .bill-body { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:6px; }
+  .bill-seg { display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; }
+  .bill-seg .bill-tag-btn { border:none; border-radius:0; }
+  .bill-seg .bill-tag-btn + .bill-tag-btn { border-left:1px solid var(--line); }
+  .bill-rm { flex:0 0 auto; align-self:center; }
+  .bill-actions .bill-btn { width:30px; height:30px; font-size:14px; }
+
+  .show-settings {
+    background:var(--tile); border-radius:var(--radius-tile);
+    margin:22px 0 0; padding:4px 14px;
+  }
+  .show-setting {
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:10px 0; font-size:14px;
+  }
+  .show-setting + .show-setting { border-top:1px solid var(--line); }
+  .show-setting .sort-select { flex:0 1 auto; max-width:58%; }
+  .show-footer { margin-top:22px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .show-footer .show-go { width:100%; justify-content:center; }
+  .btn-link {
+    border:none; background:none; color:var(--muted); font:inherit; font-size:13.5px;
+    padding:6px 10px; cursor:pointer;
+  }
+  .btn-link:hover { color:var(--ink); }
   .bill-pos {
     flex:0 0 auto; width:22px; height:22px; border-radius:50%;
     background:var(--surface); color:var(--muted);
@@ -578,7 +634,7 @@
     color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, transparent);
     padding:3px 8px; border-radius:999px;
   }
-  .bill-actions { flex:0 0 auto; display:flex; align-items:center; gap:6px; }
+  .bill-actions { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
   .bill-tag-btn {
     font-family:inherit; font-size:12.5px; font-weight:600;
     padding:6px 11px; border-radius:999px; cursor:pointer;

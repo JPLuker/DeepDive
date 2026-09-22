@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.52";
+export const BUILD = "2.9.53";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -4290,51 +4290,97 @@ async function wholeDiscographyDip(artist, artistName, built, likedIds, opts) {
 // without it.
 let _showBill = [];
 
+// The night's length, kept across redraws. The select was rebuilt with
+// three hours selected every time the page redrew, so adding an artist
+// quietly undid a choice of two.
+let _showMins = 180;
+const SHOW_LENGTHS = [
+  [90, "An hour and a half"], [120, "Two hours"],
+  [180, "Three hours"], [240, "Four hours, a festival day"],
+];
+
 async function renderShow() {
   setTitle("DeepDive · Multi-Dip");
   setActiveTab("dives");
+  const thumb = (a) => {
+    const url = a.image_url || a.image_url_large;
+    return url
+      ? `<img class="bill-art" src="${esc(url)}" alt="" loading="lazy">`
+      : `<span class="bill-art bill-art-blank">${esc((a.name || "?").charAt(0).toUpperCase())}</span>`;
+  };
   const rows = _showBill.map((a, i) => `
     <div class="bill-row" data-idx="${i}">
       <button class="bill-handle" data-drag aria-label="Drag to reorder ${esc(a.name)}, or use the arrow keys" title="Drag to reorder">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
       </button>
-      <span class="bill-name">${esc(a.name)}</span>
-      <span class="bill-actions">
-        <button class="bill-tag-btn${a.emphasis === "less" ? " on" : ""}" data-show-emph="${i}" data-emph="less">Less</button>
-        <button class="bill-tag-btn${a.emphasis === "more" ? " on" : ""}" data-show-emph="${i}" data-emph="more">More</button>
-        ${a.songs ? `<button class="bill-tag-btn on" data-show-songs-open="${i}">${a.songs} songs</button>` : ""}
-        <button class="bill-btn" data-show-songs-open="${i}" aria-label="Set a song count for ${esc(a.name)}" title="Set a song count">#</button>
-        <button class="bill-btn" data-show-rm="${i}" aria-label="Remove ${esc(a.name)}">&times;</button>
+      ${thumb(a)}
+      <span class="bill-body">
+        <span class="bill-name">${esc(a.name)}</span>
+        <span class="bill-actions">
+          <span class="bill-seg" role="group" aria-label="Share of the night for ${esc(a.name)}">
+            <button class="bill-tag-btn${a.emphasis === "less" ? " on" : ""}" data-show-emph="${i}" data-emph="less" aria-pressed="${a.emphasis === "less"}">Less</button><button class="bill-tag-btn${a.emphasis === "more" ? " on" : ""}" data-show-emph="${i}" data-emph="more" aria-pressed="${a.emphasis === "more"}">More</button>
+          </span>
+          ${a.songs
+            ? `<button class="bill-tag-btn on" data-show-songs-open="${i}">${a.songs} songs</button>`
+            : `<button class="bill-btn" data-show-songs-open="${i}" aria-label="Set a song count for ${esc(a.name)}" title="Set a song count">#</button>`}
+        </span>
       </span>
+      <button class="bill-btn bill-rm" data-show-rm="${i}" aria-label="Remove ${esc(a.name)}">&times;</button>
     </div>`).join("");
 
+  const n = _showBill.length;
+  const lengthName = (SHOW_LENGTHS.find(([m]) => m === _showMins) || [0, ""])[1].split(",")[0].toLowerCase();
   root.innerHTML = `
-    <div class="row-head"><h2>Multi-Dip</h2></div>
-    <p class="nav-hint" style="margin-top:0;">Add everyone playing, and drag them into the order they'll go on — openers first. They share the night evenly unless you tag the one you're there for as More, or someone you barely know as Less.</p>
-    ${searchShellHtml({ options: false })}
-    <div id="show-bill">${rows || `<p class="empty-note">Nobody added yet.</p>`}</div>
-    <div class="set-group set-group-spaced">
-      <div class="set-row set-row-block">
-        <div class="set-row-text"><div class="set-row-title">Songs you already own</div>
-          <div class="set-row-detail">Before a show, the ones you don't know are the ones that need the work.</div></div>
-        ${familiarSelect('id="show-familiar"', savedFamiliar())}
+    <div class="show-hero">
+      <div class="show-cover" id="show-cover" aria-hidden="true">
+        <img id="show-cover-img" alt="">
+        <span class="show-cover-blank">Your night</span>
       </div>
-      <div class="set-row set-row-block">
-        <div class="set-row-text"><div class="set-row-title">How long is the night</div>
-          <div class="set-row-detail">Doors to lights up, near enough.</div></div>
-        <select id="show-length" class="sort-select">
-          <option value="90">An hour and a half</option>
-          <option value="120">Two hours</option>
-          <option value="180" selected>Three hours</option>
-          <option value="240">Four hours — a festival day</option>
-        </select>
+      <div class="show-hero-text">
+        <h2>Multi-Dip</h2>
+        <p class="show-sub">One playlist for the whole bill, in the order they play.</p>
+        <p class="show-count">${n ? `${n} artist${n === 1 ? "" : "s"} · ${esc(lengthName)}` : "Nobody on the bill yet"}</p>
       </div>
     </div>
-    <div class="actions">
-      <button class="btn btn-primary" id="show-go"${_showBill.length ? "" : " disabled"}>Build the night</button>
-      <button class="btn btn-ghost" data-tab="dives">Back</button>
+    ${searchShellHtml({ options: false })}
+    <div id="show-bill">${rows || `<p class="empty-note">Search for everyone playing. Drag them into running order, and tag who you're there for as More.</p>`}</div>
+    <div class="show-settings">
+      <label class="show-setting">
+        <span>Songs you already own</span>
+        ${familiarSelect('id="show-familiar"', savedFamiliar())}
+      </label>
+      <label class="show-setting">
+        <span>Length of the night</span>
+        <select id="show-length" class="sort-select">
+          ${SHOW_LENGTHS.map(([m, l]) => `<option value="${m}"${m === _showMins ? " selected" : ""}>${l}</option>`).join("")}
+        </select>
+      </label>
+    </div>
+    <div class="show-footer">
+      <button class="btn btn-primary show-go" id="show-go"${n ? "" : " disabled"}>Build the night</button>
+      <button class="btn-link" data-tab="dives">Back to Dives</button>
     </div>
     <div id="show-progress"></div>`;
+
+  // Photos: artists added from the chooser arrive as a bare name. The
+  // lookup is shared with the chooser and the dive, so it's usually
+  // already answered. Rows are patched in place rather than redrawn, so
+  // a drag in progress isn't interrupted.
+  for (const a of _showBill) {
+    if (a.image_url || a.image_url_large || a._artTried) continue;
+    a._artTried = true;
+    lookupArtist(a.name).then((r) => {
+      if (!r) return;
+      if (!a.id) a.id = r.id;
+      a.image_url = r.image_url; a.image_url_large = r.image_url_large;
+      const i = _showBill.indexOf(a);
+      const row = root.querySelector(`.bill-row[data-idx="${i}"]`);
+      const blank = row && row.querySelector(".bill-art-blank");
+      if (blank && (a.image_url || a.image_url_large)) blank.outerHTML = thumb(a);
+      updateShowCover();
+    }).catch(() => { /* the initial stays */ });
+  }
+  updateShowCover();
 
   wireArtistSearch({
     inputId: "artist-input",
@@ -4377,7 +4423,40 @@ async function renderShow() {
   }));
 
   document.getElementById("show-familiar")?.addEventListener("change", (e) => setFamiliar(e.target.value));
+  document.getElementById("show-length")?.addEventListener("change", (e) => {
+    _showMins = parseInt(e.target.value, 10) || 180;
+    renderShow();
+  });
   document.getElementById("show-go")?.addEventListener("click", buildShowNow);
+}
+
+/**
+ * The cover the night will get, drawn as the bill is put together.
+ *
+ * Built by the same code as the real one, with the same rule for the
+ * name on it: whoever is tagged More, otherwise the first act. Only
+ * redrawn when the photos or that name change, and a slow draw for an
+ * older bill never replaces a newer one.
+ */
+let _showCoverKey = "";
+async function updateShowCover() {
+  const img = document.getElementById("show-cover-img");
+  const box = document.getElementById("show-cover");
+  if (!img || !box) return;
+  const urls = _showBill.map((a) => a.image_url_large || a.image_url).filter(Boolean).slice(0, 4);
+  const lead = _showBill.find((a) => a.emphasis === "more") || _showBill[0];
+  const key = urls.join("|") + "#" + (lead ? lead.name : "");
+  if (!urls.length) { _showCoverKey = key; box.classList.remove("has-art"); img.removeAttribute("src"); return; }
+  if (key === _showCoverKey && img.getAttribute("src")) { box.classList.add("has-art"); return; }
+  _showCoverKey = key;
+  try {
+    const data = await cover.buildCover(urls, { title: lead ? lead.name : "", kind: "Multi-Dip", split: urls.length > 1 });
+    if (!data || key !== _showCoverKey) return;
+    const live = document.getElementById("show-cover-img");
+    if (!live) return;
+    live.src = data;
+    document.getElementById("show-cover")?.classList.add("has-art");
+  } catch (e) { /* the blank square stays */ }
 }
 
 /**
@@ -4497,7 +4576,7 @@ function wireBillDrag() {
 
 async function buildShowNow() {
   const prog = document.getElementById("show-progress");
-  const mins = parseInt(document.getElementById("show-length").value, 10) || 180;
+  const mins = _showMins;
   document.getElementById("show-go").disabled = true;
 
   // One catalogue read per artist, which is a dive each. Said plainly
@@ -4537,7 +4616,7 @@ async function buildShowNow() {
 
     try {
       if (!a.id) {
-        const resolved = await client.findArtist(a.name);
+        const resolved = await lookupArtist(a.name);
         if (resolved) {
           a.id = resolved.id;
           a.image_url_large = a.image_url_large || resolved.image_url_large || resolved.image_url;

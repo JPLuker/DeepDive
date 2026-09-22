@@ -284,5 +284,37 @@ check('it drops into place on release', /\.finished\.then\(settle, settle\)/.tes
 check('the redraw waits for it to land', /const settle = \(\) => \{\s*\n\s*row\.classList\.remove\("dragging"\);\s*\n\s*if \(moved\) commit\(\);/.test(src));
 check('reduced motion is honoured', /prefers-reduced-motion: reduce\)"\)\.matches/.test(src));
 
+// --- Visual overhaul (2.9.53) ---
+check('a cover preview heads the screen', /<div class="show-cover" id="show-cover"/.test(src) && /updateShowCover\(\);/.test(src));
+check('drawn by the real cover code, as a Multi-Dip', /cover\.buildCover\(urls, \{ title: lead \? lead\.name : "", kind: "Multi-Dip", split: urls\.length > 1 \}\)/.test(src));
+check('named for the same artist the real cover is', /const lead = _showBill\.find\(\(a\) => a\.emphasis === "more"\) \|\| _showBill\[0\];/.test(src));
+check('a stale draw never replaces a newer bill', /if \(!data \|\| key !== _showCoverKey\) return;/.test(src));
+check('rows carry a photo, or an initial', /class="bill-art"/.test(src) && /bill-art-blank/.test(src));
+check('bare names get their photo from the shared lookup', /lookupArtist\(a\.name\)\.then\(\(r\) =>/.test(src));
+check('patched in place, not redrawn mid-drag', /blank\.outerHTML = thumb\(a\)/.test(src));
+check('less and more are one control', /class="bill-seg" role="group"/.test(src));
+check('and say which is on', /aria-pressed="\$\{a\.emphasis === "less"\}"/.test(src));
+check('search bar no longer touches the first row', /#show-bill \{ margin-top:12px; \}/.test(shell));
+check('settings are one card', /class="show-settings"/.test(src) && !/How long is the night/.test(src));
+check('one main button, full width', /\.show-footer \.show-go \{ width:100%;/.test(shell));
+check('the length survives a redraw', /\$\{m === _showMins \? " selected" : ""\}/.test(src) && /const mins = _showMins;/.test(src) && !/<option value="180" selected>/.test(src));
+check('no em dash in the options', !/Four hours —/.test(src));
+{
+  // Nothing on this screen may be undone by a phone rule.
+  // Only what's inside the phone blocks, matched brace by brace.
+  let phone = '';
+  for (let at = shell.indexOf('@media (max-width: 640px)'); at > -1; at = shell.indexOf('@media (max-width: 640px)', at + 1)) {
+    let i = shell.indexOf('{', at), depth = 0, j = i;
+    for (; j < shell.length; j++) { if (shell[j] === '{') depth++; else if (shell[j] === '}' && --depth === 0) break; }
+    phone += shell.slice(i, j + 1);
+  }
+  check('found the phone blocks', phone.length > 500);
+  check('no phone rule reshapes the bill or its settings', !/\.(bill-row|bill-body|bill-art|show-hero|show-cover|show-settings|show-footer)\b/.test(phone));
+}
+
+// 2.9.53 nearly shipped a .show-actions footer rule, and that name is
+// already the open state of Home's tiles. Its rules must stay scoped.
+check('show-actions is only ever the tiles\' open state', [...shell.matchAll(/[^\n{}]*\.show-actions\b[^{]*\{/g)].every((m) => /\.tile-wrap\.show-actions/.test(m[0])));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
