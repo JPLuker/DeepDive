@@ -4,6 +4,10 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.55
+- Multi-Dip lengths are whole hours, one to six. The half hours are
+  gone.
+
 ## 2.9.54
 - Multi-Dip: the two setting dropdowns are the same width. Each was
   sized to its own options, so they came out different.

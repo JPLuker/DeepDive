@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.54";
+export const BUILD = "2.9.55";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -4294,10 +4294,11 @@ let _showBill = [];
 // three hours selected every time the page redrew, so adding an artist
 // quietly undid a choice of two.
 let _showMins = 180;
+// Whole hours, stopping at six. Past about eight a single night costs
+// as many requests as the dives known to trip Spotify's limit.
 const SHOW_LENGTHS = [
-  [60, "An hour"], [90, "An hour and a half"], [120, "Two hours"],
-  [150, "Two and a half hours"], [180, "Three hours"], [240, "Four hours"],
-  [300, "Five hours"], [360, "Six hours"],
+  [60, "An hour"], [120, "Two hours"], [180, "Three hours"],
+  [240, "Four hours"], [300, "Five hours"], [360, "Six hours"],
 ];
 
 async function renderShow() {

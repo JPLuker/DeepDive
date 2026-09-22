@@ -322,7 +322,8 @@ check('no festival day', !/festival day/.test(src));
 {
   const m = src.match(/const SHOW_LENGTHS = \[([\s\S]*?)\];/);
   const mins = m ? [...m[1].matchAll(/\[(\d+),/g)].map((x) => +x[1]) : [];
-  check('lengths from an hour to six', mins[0] === 60 && mins[mins.length - 1] === 360 && mins.length === 8);
+  // 2.9.55: whole hours only.
+  check('lengths from an hour to six, whole hours', mins.join() === '60,120,180,240,300,360');
   check('in order, and three hours still offered as the default', mins.every((v, i) => !i || v > mins[i - 1]) && mins.includes(180) && /let _showMins = 180;/.test(src));
 }
 
