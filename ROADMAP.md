@@ -233,7 +233,7 @@ clean before anything is built on it.
 
 ---
 
-## Stopping point, 22 Sept (build 2.9.60)
+## Stopping point, 22 Sept (build 2.9.61)
 
 Picking up next session:
 
@@ -252,11 +252,15 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.60
+## Shipped since — build 2.9.61
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Recommended became a mixed shelf across Sampler, Similar artists, Mix
+  ideas and Genres; the old recommendation group is now Similar artists.
+  All four Dives destinations share coordinated gradient treatments
+  rather than Multi-Dip being the only decorated row (2.9.61)
 - Dives hierarchy: Multi-Dip featured directly below search; Crate before
   history; the hours-long Full Library Scan separated and last (2.9.60)
 - Mixes hides its lone section heading without Last.fm; with a key, the

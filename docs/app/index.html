@@ -1064,17 +1064,21 @@
     transition:background .15s ease;
   }
   .set-row-nav:hover { background:var(--tile-hover); }
-  .set-row-nav.dive-feature {
-    border:1px solid color-mix(in srgb, var(--accent) 44%, var(--line));
+  .set-row-nav.dive-option {
+    --dive-tone:var(--accent);
+    border:1px solid color-mix(in srgb, var(--dive-tone) 44%, var(--line));
     background:linear-gradient(135deg,
-      color-mix(in srgb, var(--accent) 17%, var(--tile)),
-      color-mix(in srgb, var(--teal) 10%, var(--tile)));
+      color-mix(in srgb, var(--dive-tone) 17%, var(--tile)),
+      color-mix(in srgb, var(--dive-tone) 8%, var(--tile)));
   }
-  .set-row-nav.dive-feature:hover {
+  .set-row-nav.dive-option:hover {
     background:linear-gradient(135deg,
-      color-mix(in srgb, var(--accent) 24%, var(--tile)),
-      color-mix(in srgb, var(--teal) 14%, var(--tile)));
+      color-mix(in srgb, var(--dive-tone) 24%, var(--tile)),
+      color-mix(in srgb, var(--dive-tone) 12%, var(--tile)));
   }
+  .set-row-nav.dive-teal { --dive-tone:var(--teal); }
+  .set-row-nav.dive-purple { --dive-tone:#8b5cf6; }
+  .set-row-nav.dive-gold { --dive-tone:var(--gold); }
   .set-row-nav:disabled { opacity:0.5; cursor:default; }
   .set-row-nav:disabled:hover { background:var(--tile); }
   .show-needs { margin:0; font-size:13px; color:var(--muted); text-align:center; }

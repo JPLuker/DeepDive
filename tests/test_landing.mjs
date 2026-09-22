@@ -125,7 +125,7 @@ for (const m of html.matchAll(/img\/shots\/([a-z-]+\.jpg)" alt="[^"]*" width="(\
 // the features that were on screen in the device row and never in the
 // copy.
 check('recommendations are advertised', /Name any artist, even one you don't own/.test(html));
-check('and done for you', /Recommended does the same unasked/.test(html));
+check('and done for you', /Similar artists does the same unasked/.test(html));
 // The PWA has no in-library duplicate check. The page claimed one until 2.9.45.
 check('no claim of a duplicate check that no longer exists', !/liked twice/.test(html));
 

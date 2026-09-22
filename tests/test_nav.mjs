@@ -73,7 +73,8 @@ check('one sampler pool, not two', (src.match(/let _samplerPool/g) || []).length
 // No page title — recommendations lead, matching Dives.
 const mixesFn = src.slice(src.indexOf('async function renderMixes'), src.indexOf('async function loadPlaylistCards'));
 check('mixes has no title of its own', !/<h2>Mixes<\/h2>/.test(mixesFn));
-check('recommendations come first', mixesFn.indexOf('rec-section') < mixesFn.indexOf('playlist-cards'));
+check('featured recommendations come first', mixesFn.indexOf('featured-mixes') < mixesFn.indexOf('rec-section'));
+check('similar artists come before mix ideas', mixesFn.indexOf('rec-section') < mixesFn.indexOf('playlist-cards'));
 check('generated row is named for its contents', /<h2>Mix ideas<\/h2>/.test(src));
 check('old library heading is gone', !/<h2>From your library<\/h2>/.test(src));
 
@@ -81,7 +82,7 @@ check('old library heading is gone', !/<h2>From your library<\/h2>/.test(src));
 // floating above all of them, so the most expensive action in the app
 // looked exactly like opening a list of pins. Each row carries its own
 // description now, which is where the cost belongs.
-check('dive destinations are rows', /function navRow\(idAttr, title, detail, \{ disabled = false, featured = false \} = \{\}\)/.test(src));
+check('dive destinations are rows', /function navRow\(idAttr, title, detail, \{ disabled = false, tone = "" \} = \{\}\)/.test(src));
 check('the scan explains its cost', /this can take hours/.test(dives));
 check('history explains itself', /how to undo it/.test(dives));
 // Pins became the Crate, and Blocked moved to Settings: blocking
@@ -92,7 +93,8 @@ check('no loose pill row left', !/<div class="actions">\s*\n\s*<button class="bt
 // mistake the settings helpers made an hour earlier.
 check('nav row ids are literal', src.includes('id="go-scrub"') && src.includes('id="go-history"'));
 check('rows share the settings shape', /class="set-row set-row-nav/.test(src));
-check('multi-dip is visually featured', /featured: true/.test(dives) && /\.set-row-nav\.dive-feature/.test(h));
+check('every dive destination has a tone', ['blue', 'teal', 'purple', 'gold'].every((tone) => dives.includes(`tone: "${tone}"`)));
+check('dive destinations share the gradient treatment', /\.set-row-nav\.dive-option/.test(h));
 
 // The chooser floated mid-screen while the search bar that produced it
 // sits near the top, so picking an artist threw your eye somewhere

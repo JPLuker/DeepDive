@@ -4,6 +4,16 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.61
+- Recommended is now a real top-of-page shelf: Sampler plus a changing
+  selection drawn from Similar artists, Mix ideas and Genres. It uses
+  data already cached on the device and starts no Last.fm fetches.
+- The former Recommended section is now "Similar artists — already in
+  your library," which describes what those cards actually are.
+- Every Dives destination now shares the tinted-gradient card treatment.
+  Multi-Dip is blue, Crate teal, history purple and the long full-library
+  scan gold, so Multi-Dip no longer looks like the lone designed control.
+
 ## 2.9.60
 - Reordered the Dives page around intent instead of treating every
   destination alike. Multi-Dip now sits directly below artist search as

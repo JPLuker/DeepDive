@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.60";
+export const BUILD = "2.9.61";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -456,9 +456,9 @@ function searchShellHtml({ options = true } = {}) {
  * interpolate, so `id="go-scrub"` still appears in the source and the
  * getElementById orphan audit can see it.
  */
-function navRow(idAttr, title, detail, { disabled = false, featured = false } = {}) {
+function navRow(idAttr, title, detail, { disabled = false, tone = "" } = {}) {
   return `
-    <button class="set-row set-row-nav${featured ? " dive-feature" : ""}" ${idAttr}${disabled ? " disabled" : ""}>
+    <button class="set-row set-row-nav${tone ? ` dive-option dive-${tone}` : ""}" ${idAttr}${disabled ? " disabled" : ""}>
       <span class="set-row-text">
         <span class="set-row-title">${title}</span>
         <span class="set-row-detail">${esc(detail)}</span>
@@ -523,18 +523,18 @@ async function renderDives() {
     <div class="set-group dive-feature-group">
       <div class="set-group-label">For the whole bill</div>
       ${lastfm.hasKey()
-        ? navRow('id="go-show"', "Multi-Dip", "Build one playlist in show order, with more time for the acts you care about.", { featured: true })
-        : navRow('id="go-show"', "Multi-Dip", NEEDS_LASTFM_FULL, { disabled: true, featured: true })}
+        ? navRow('id="go-show"', "Multi-Dip", "Build one playlist in show order, with more time for the acts you care about.", { tone: "blue" })
+        : navRow('id="go-show"', "Multi-Dip", NEEDS_LASTFM_FULL, { disabled: true, tone: "blue" })}
     </div>
     <div id="suggestions-row"></div>
     <div class="set-group set-group-spaced">
       <div class="set-group-label">Your dives</div>
-      ${navRow('id="go-pins"', "Crate", "Everyone you've put aside to get to, with Up next at the top.")}
-      ${navRow('id="go-history"', "Dive history", "What you've dived, what DeepDive built, and how to undo it.")}
+      ${navRow('id="go-pins"', "Crate", "Everyone you've put aside to get to, with Up next at the top.", { tone: "teal" })}
+      ${navRow('id="go-history"', "Dive history", "What you've dived, what DeepDive built, and how to undo it.", { tone: "purple" })}
     </div>
     <div class="set-group">
       <div class="set-group-label">Go further</div>
-      ${navRow('id="go-scrub"', "Full library scan", "Check every artist you've liked for music you missed. Thorough, and slow — this can take hours.")}
+      ${navRow('id="go-scrub"', "Full library scan", "Check every artist you've liked for music you missed. Thorough, and slow — this can take hours.", { tone: "gold" })}
     </div>`;
 
   wireSearchBar();
@@ -554,11 +554,13 @@ async function renderMixes() {
   root.innerHTML = `
     ${rateLimitBanner()}
     ${scopeBanner()}
+    <div id="featured-mixes"></div>
     <div id="rec-section"></div>
     <div id="playlist-cards"></div>
     <div id="genre-section"></div>`;
 
   wireScopeBanner();
+  renderFeaturedMixes();
   loadPlaylistCards();
   renderRecommendations();
   renderGenreSection();
@@ -571,6 +573,7 @@ async function renderMixes() {
 // someone's Spotify account on a single click would be presumptuous.
 let _cards = [];
 let _allCards = [];
+const _featuredMixSeed = (Date.now() >>> 0) ^ Math.floor(Math.random() * 0xffffffff);
 
 // Shown per load. Small enough to scan, with a much larger pool behind
 // it so refreshing is worth doing.
@@ -651,6 +654,71 @@ async function mixedRow(allCards, tracks, seed, limit) {
     take(c);
   }
   return picked.slice(0, limit);
+}
+
+/**
+ * The first shelf on Mixes is the page's actual recommendation surface:
+ * one place to sample the different ways DeepDive can build something.
+ * The sections below remain complete catalogues of their own kind.
+ *
+ * It uses cached Last.fm data only. Opening Mixes must never quietly
+ * launch the hundreds of requests needed to create that data.
+ */
+async function renderFeaturedMixes() {
+  const el = document.getElementById("featured-mixes");
+  if (!el) return;
+  // Without Last.fm there is only one category to draw from, so a
+  // cross-section shelf would merely repeat the Mix ideas directly below.
+  if (!lastfm.hasKey()) { el.innerHTML = ""; return; }
+
+  let cached = [];
+  try { cached = await libraryCache.peek(); } catch (e) { cached = []; }
+  if (!cached || !cached.length) { el.innerHTML = ""; return; }
+  cached = withoutMixBlocked(cached);
+
+  try {
+    await hydrateFromCache("similar", _similarBySeed);
+    await hydrateFromCache("tags", _genreTags);
+  } catch (e) { /* available categories can still make the shelf */ }
+
+  if (!_samplerPool.length) {
+    try {
+      const mixBlocked = watchlist.blockedNameSet("mixes");
+      _samplerPool = insights.artistsBarelyExplored(cached, { maxTracks: 3, limit: 500 })
+        .filter((a) => !mixBlocked.has((a.name || "").trim().toLowerCase()));
+    } catch (e) { /* sampler is optional */ }
+  }
+
+  const libraryCards = insights.playlistCards(cached, { seed: _featuredMixSeed });
+  const cards = await mixedRow(libraryCards, cached, _featuredMixSeed, 3);
+  const sampler = _samplerPool.length >= 2 ? `
+    <button class="pcard is-sampler" data-featured-sampler>
+      <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg></span>
+      <span class="pcard-title">Sampler</span>
+      <span class="pcard-sub">a few tracks each from artists you've barely heard</span>
+    </button>` : "";
+
+  if (!sampler && !cards.length) { el.innerHTML = ""; return; }
+  el.innerHTML = `
+    <div class="row-head"><h2>Recommended</h2><span class="qual">a little of everything</span></div>
+    <div class="card-row featured-mix-row">
+      ${sampler}
+      ${cards.map((c, i) => `
+        <button class="pcard" data-featured-card="${esc(c.id)}" style="--h:${(225 + i * 61) % 360};">
+          <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${c.isGenre
+            ? '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'
+            : c.isRecommendation
+              ? '<path d="M12 3v3"/><path d="M12 18v3"/><path d="M5 12H2"/><path d="M22 12h-3"/><circle cx="12" cy="12" r="5"/>'
+              : '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>'}</svg></span>
+          <span class="pcard-title">${esc(c.title)}</span>
+          <span class="pcard-sub">${esc(c.subtitle)}</span>
+        </button>`).join("")}
+    </div>`;
+
+  el.querySelector("[data-featured-sampler]")?.addEventListener("click", () => openSampler(samplerSourceArtists()));
+  el.querySelectorAll("[data-featured-card]").forEach((btn) =>
+    btn.addEventListener("click", () =>
+      openCardModal(cards.find((c) => c.id === btn.dataset.featuredCard))));
 }
 
 async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml = "" } = {}) {
@@ -4057,7 +4125,8 @@ async function renderAskSimilar() {
 let _similarBySeed = new Map();
 
 /**
- * Recommendations lead the Mixes page.
+ * Similar-artist mixes: one complete category below the mixed
+ * Recommended shelf.
  *
  * Last.fm's similar-artist data on its own produces names you can't
  * play. Crossed with your own library it produces the opposite: music
@@ -4088,7 +4157,7 @@ async function renderRecommendations() {
     if (!seeds.length) { el.innerHTML = ""; return; }
     const secs = Math.ceil((seeds.length * 250) / 1000);
     el.innerHTML = `
-      <div class="crate-header"><span class="label">Recommended</span></div>
+      <div class="crate-header"><span class="label">Similar artists</span></div>
       <p class="nav-hint" style="margin-top:0;">DeepDive can ask Last.fm which artists resemble the ones you play most, then build mixes from the ones you already own but rarely reach for. ${seeds.length} requests, about ${secs} seconds.</p>
       <div class="actions"><button class="btn btn-ghost btn-small" id="rec-go">Find recommendations</button></div>
       <div id="rec-progress"></div>`;
@@ -4123,7 +4192,7 @@ async function renderRecommendations() {
   }
 
   el.innerHTML = `
-    <div class="row-head"><h2>Recommended</h2><span class="qual">similar to what you play most</span></div>
+    <div class="row-head"><h2>Similar artists</h2><span class="qual">already in your library</span></div>
     <div class="card-row" id="rec-cards"></div>`;
   const row = document.getElementById("rec-cards");
   // Ask about anyone, not just the twelve DeepDive picked. Leads the

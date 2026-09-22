@@ -727,6 +727,18 @@ With a Last.fm key:
 - [ ] Without a Last.fm key, the featured Multi-Dip row is dimmed and
       does nothing
 
+## 36. Mixed recommendations and Dives cards (2.9.61)
+
+- [ ] Dives: Multi-Dip, Crate, Dive history and Full library scan all
+      have coordinated tinted cards; none looks like a plain Settings row
+- [ ] Mixes with a Last.fm key: Recommended leads with four cards drawn
+      across Sampler, Similar artists, Mix ideas and Genres
+- [ ] Reloading does not make that shelf reshuffle while it is on screen
+- [ ] The complete similarity section below is titled "Similar artists —
+      already in your library"
+- [ ] Mixes without a Last.fm key: the Recommended and Similar artists
+      sections are absent rather than duplicating Mix ideas
+
 Always:
 
 - [ ] Mixes grid: in every row the titles line up under the icons, with

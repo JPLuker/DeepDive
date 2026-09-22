@@ -108,7 +108,7 @@ check('one artist failing does not stop the rest', /_genreTags\.set\(key, \[\]\)
 check('no key, no genres section', /if \(!lastfm\.hasKey\(\)\) \{ el\.innerHTML = ""; return; \}/.test(src) && !/<span class="qual">needs Last\.fm<\/span>/.test(src));
 check('dip is off without a key, with the reason', /freshDip\.disabled = !dipOn;/.test(src) && /dipSub\.textContent = dipOn \? DIP_SUB : NEEDS_LASTFM;/.test(src));
 check('multi-dip in the chooser is off too', /freshMulti\.disabled = !lastfm\.hasKey\(\);/.test(src));
-check('and in the Dives menu', /navRow\('id="go-show"', "Multi-Dip", NEEDS_LASTFM_FULL, \{ disabled: true, featured: true \}\)/.test(src));
+check('and in the Dives menu', /navRow\('id="go-show"', "Multi-Dip", NEEDS_LASTFM_FULL, \{ disabled: true, tone: "blue" \}\)/.test(src));
 check('and building a night is refused', /id="show-go"\$\{n && lastfm\.hasKey\(\) \? "" : " disabled"\}/.test(src));
 check('the reason is said the same way everywhere', (src.match(/Needs a Last\.fm key, added in Settings\./g) || []).length === 1 && (src.match(/needs a Last\.fm key, added in Settings"/g) || []).length === 1);
 check('dimmed, not hidden', /\.intent-choice:disabled \{ opacity:0\.5;/.test(shell) && /\.set-row-nav:disabled \{ opacity:0\.5;/.test(shell));
@@ -144,7 +144,10 @@ check('too few tracks is not a mix', recommendationCards(recTracks, sim, { minTr
 check('recommendations are fetched on demand', /id="rec-go"/.test(src));
 check('cost is stated', /\$\{seeds\.length\} requests, about/.test(src));
 check('a rejected key stops it', /Last\.fm rejected the key/.test(src));
-check('recommendations lead the page', src.indexOf('id="rec-section"') < src.indexOf('id="playlist-cards"'));
+check('mixed recommendations lead the page', src.indexOf('id="featured-mixes"') < src.indexOf('id="rec-section"'));
+check('recommended draws across categories', /async function renderFeaturedMixes/.test(src) && /mixedRow\(libraryCards, cached, _featuredMixSeed, 3\)/.test(src));
+check('recommended includes the sampler', /data-featured-sampler/.test(src));
+check('old recommendation section is now similar artists', /<h2>Similar artists<\/h2>/.test(src) && /already in your library/.test(src));
 // With Last.fm there are three distinct groups, so the generated grid
 // gets a descriptive name that does not imply the other two somehow
 // come from outside the user's library.
@@ -153,7 +156,7 @@ check('generated grid explains its patterns', /dates, artists and albums/.test(s
 // The page has no title or description: Dives doesn't either, the tab
 // already says where you are, and each section's own heading said it
 // better than the paragraph above them did.
-check('mixes opens straight into recommendations', /<div id="rec-section"><\/div>/.test(src));
+check('mixes opens into the mixed recommendation shelf', /<div id="featured-mixes"><\/div>/.test(src));
 
 // Caching is required, not optional. Last.fm's terms, clause 4.4:
 // "You agree to cache similar artist and any chart data (top tracks,
