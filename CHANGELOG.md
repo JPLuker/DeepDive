@@ -4,6 +4,11 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.57
+- The bottom tab bar, and the top navigation on desktop, are hidden
+  during onboarding. Every tab needs a Spotify connection that doesn't
+  exist yet. They come back on the first screen of the app proper.
+
 ## 2.9.56
 - Onboarding rebuilt. It was the oldest part of the app: a welcome
   screen still in the v1 voice, one long setup page, and a connect

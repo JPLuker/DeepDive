@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.56";
+export const BUILD = "2.9.57";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -229,7 +229,17 @@ function navigate(view) {
 const ONBOARD_STEPS = ["spotify", "client", "lastfm", "connect"];
 const CLIENT_ID_RE = /^[0-9a-f]{32}$/i;
 
+/**
+ * Onboarding hides the app's navigation: every tab leads somewhere that
+ * needs a connection that doesn't exist yet. Any screen that sets a tab
+ * (every screen of the app proper does) takes the class off again.
+ */
+function setOnboarding(on) {
+  document.body.classList.toggle("onboarding", !!on);
+}
+
 function onboardShell(step, body) {
+  setOnboarding(true);
   const n = ONBOARD_STEPS.indexOf(step) + 1;
   return `
     <div class="onboard">
@@ -5869,6 +5879,7 @@ function markLandingSeen() {
  */
 function renderLanding() {
   setTitle("DeepDive");
+  setOnboarding(true);
   root.innerHTML = `
     <div class="onboard onboard-welcome">
       <h1 class="onboard-hero">Hear it all.</h1>
@@ -6004,6 +6015,7 @@ let _currentTab = "home";
 
 function setActiveTab(name) {
   _currentTab = name;
+  setOnboarding(false);
   // Two sets of navigation share one active state: the bottom tab bar
   // on mobile and the top-bar links on desktop. Only one is visible at
   // a time, but both are always in the DOM.

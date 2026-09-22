@@ -857,6 +857,13 @@
   .bmc-link svg { width:17px; height:17px; }
   .bmc-link:hover { color:var(--accent); border-color:var(--accent); }
 
+  /* No navigation while onboarding: nothing behind the tabs works yet.
+     Two classes and an element, so it outranks the phone bar's
+     display:grid, the desktop nav's display:flex and the phone padding
+     held for the bar, from outside their media blocks. */
+  body.onboarding .tabbar, body.onboarding .topnav { display:none; }
+  body.onboarding .wrap { padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
+
   /* ---- onboarding ----
      One step per screen, one main button, a line of dots for where you
      are. Same surfaces as everything else: tiles, pill buttons, muted

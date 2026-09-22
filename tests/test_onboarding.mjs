@@ -60,5 +60,17 @@ check('and the invalid redirect case is named before the button', /Invalid redir
   check('no phone rule reshapes onboarding', phone.length > 500 && !/\.onboard/.test(phone));
 }
 
+// 2.9.57: no tab bar or desktop nav during onboarding.
+check('onboarding screens hide the navigation', /function onboardShell\(step, body\) \{\s*\n\s*setOnboarding\(true\);/.test(src) && /function renderLanding\(\) \{[\s\S]{0,80}setOnboarding\(true\);/.test(src));
+check('and any tabbed screen brings it back', /function setActiveTab\(name\) \{[\s\S]{0,80}setOnboarding\(false\);/.test(src));
+check('onboarding never sets a tab', !/setActiveTab\(/.test(src.slice(src.indexOf('// Onboarding'), src.indexOf('// Home (search + autofill'))));
+{
+  // Must win over the bar's own rules: more specific, and not trapped
+  // inside a media block where the desktop nav's rule wouldn't see it.
+  const rule = shell.match(/\n  body\.onboarding \.tabbar, body\.onboarding \.topnav \{ display:none; \}/);
+  check('the bar and desktop nav are hidden by a top-level rule', !!rule);
+  check('and the space held for the bar is given back', /\n  body\.onboarding \.wrap \{ padding-bottom:/.test(shell));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -715,6 +715,10 @@ Test in a private window, or clear site data, so it's a first visit.
       "access was not allowed"
 - [ ] Back on step 2 returns to step 1; the dots and "Step n of 4"
       match each screen
+- [ ] No bottom tab bar on any onboarding screen, and no top nav on
+      desktop; both are back on Home after connecting (2.9.57)
+- [ ] Nothing at the bottom of an onboarding screen is cut off or
+      leaves a tall empty gap
 
 ## 32. Multi-Dip overhaul (2.9.53)
 
