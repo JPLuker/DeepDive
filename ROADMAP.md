@@ -62,9 +62,10 @@ imagery, not as the link-preview image, not in a store listing or a
 social post. The link preview used one until 2.8.56, which is a
 headline use by any reasonable reading.
 
-**If permission doesn't come:** demo mode was built to stage every
-screen without real data and uses gradient placeholders instead of
-artwork. Screenshots from it are ours outright.
+**If permission doesn't come:** demo mode can constrain every staged
+screen to an explicit approved-artist list. It now uses connected Spotify
+data for polished screenshots, so approval still matters for every artist
+entered there.
 
 ---
 
@@ -233,7 +234,7 @@ clean before anything is built on it.
 
 ---
 
-## Stopping point, 22 Sept (build 2.9.62)
+## Stopping point, 22 Sept (build 2.9.63)
 
 Picking up next session:
 
@@ -252,11 +253,15 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.62
+## Shipped since — build 2.9.63
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Demo mode now uses an approved-artist whitelist configured in Settings,
+  resolves real Spotify artwork and tracks, stages whitelist-only search,
+  and covers nine screenshot routes. Assignments stay stable until
+  explicitly shuffled (2.9.63)
 - Recommended qualifier changed from the vague "a little of everything"
   to "from across your mixes" (2.9.62)
 - Recommended became a mixed shelf across Sampler, Similar artists, Mix
@@ -486,23 +491,17 @@ Mixes, genres or a dip.*
   stats.fm as the reference
 
 **Stopping point B — screenshots**
-- ~~Extend demo mode~~ — *done in 2.8.3. `?demo=home|results|sampler|
-  scan|index` stages every screen from fixed data, ahead of auth, with
-  no Spotify calls. Screens render through the real renderers, so they
-  can't drift from the app.*
+- ~~Extend demo mode~~ — *done in 2.8.3 and reworked in 2.9.63.
+  `?demo=index` now links nine staged screens. Their shape is controlled,
+  but artists, artwork and tracks resolve through the connected Spotify
+  account from the approved list in Settings.*
 - Use demo mode to produce a clean screenshot per advertised feature
 - Place them on the marketing page
 
-**Open: demo mode may want real calls after all.** 2.8.3 made it fully
-offline, which is what makes it useful with the quota locked and what
-makes the staged results screen safe to photograph. But screenshots of
-real artwork and real library data look better than gradient-initial
-tiles, so Joseph is reconsidering a mode that keeps the fixed *shape*
-while fetching real content. That is a larger change than it sounds —
-it reintroduces auth, quota, and whatever happens to be in the library
-at the time, which is the exposure demo mode was built to avoid. Parked
-until the results screen has been reviewed; it may turn out the staged
-version is good enough for the page.
+**Resolved in 2.9.63:** demo mode does make real Spotify calls. The
+approved-artist list prevents unrelated library artists appearing, while
+real metadata makes the screenshots representative. It therefore needs a
+connected Spotify account and deliberate image permissions.
 
 **Stopping point C — housekeeping**
 - Rename existing GitHub releases to match the song-title convention

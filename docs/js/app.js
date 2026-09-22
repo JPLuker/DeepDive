@@ -24,7 +24,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.62";
+export const BUILD = "2.9.63";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -498,6 +498,7 @@ async function renderHome() {
   wireSearchBar();
   wireApiBanner();
   wireScopeBanner();
+  if (demo.demoActive()) return;
   loadSuggestions({ compact: true });
   // One row of cards, whatever a row holds at this width — the sampler
   // card takes the first slot.
@@ -540,6 +541,7 @@ async function renderDives() {
   wireSearchBar();
   wireApiBanner();
   wireScopeBanner();
+  if (demo.demoActive()) return;
   loadSuggestions({ showAllPins: true });
   document.getElementById("go-scrub")?.addEventListener("click", () => renderScrubForm());
   document.getElementById("go-show")?.addEventListener("click", () => renderShow());
@@ -853,7 +855,10 @@ function renderCardRow(el) {
   el.querySelectorAll("[data-card]").forEach((b) =>
     b.addEventListener("click", () => {
       const id = b.dataset.card;
-      const card = _cards.find((c) => c.id === id) || _allCards.find((c) => c.id === id);
+      // Capture the row's own cards. Demo mode deliberately paints two
+      // rows from different pools; consulting the later global pool made
+      // every card in the first row stop opening once the second drew.
+      const card = shown.find((c) => c.id === id) || _allCards.find((c) => c.id === id);
       if (card) openCardModal(card);
     }));
 }
@@ -2048,6 +2053,7 @@ function wireSearchBar() {
     const n = input.value.trim();
     if (!n) return;
     input.blur();
+    if (demo.demoActive()) { openIntentModal(n); return; }
     startSearch(n);
   };
   goBtn.addEventListener("click", go);
@@ -2056,8 +2062,8 @@ function wireSearchBar() {
   wireArtistSearch({
     inputId: "artist-input",
     listId: "autofill-list",
-    source: (q) => client.searchArtists(q, 6),
-    onChoose: (it) => startSearch(it.name),
+    source: (q) => demo.demoActive() ? demoSearchArtists(q, 6) : client.searchArtists(q, 6),
+    onChoose: (it) => demo.demoActive() ? openIntentModal(it.name) : startSearch(it.name),
     allowPin: true,
   });
 }
@@ -4042,7 +4048,7 @@ async function renderAskSimilar() {
     listId: "autofill-list",
     // Spotify's search rather than the library, so any artist can be
     // named — that is the whole point of this screen.
-    source: (q) => client.searchArtists(q, 6),
+    source: (q) => demo.demoActive() ? demoSearchArtists(q, 6) : client.searchArtists(q, 6),
     onChoose: (it) => build(it.name, it),
   });
   document.getElementById("search-go-btn")?.addEventListener("click", () => {
@@ -4594,7 +4600,7 @@ async function renderShow() {
   wireArtistSearch({
     inputId: "artist-input",
     listId: "autofill-list",
-    source: (q) => client.searchArtists(q, 6),
+    source: (q) => demo.demoActive() ? demoSearchArtists(q, 6) : client.searchArtists(q, 6),
     onChoose: (it) => {
       if (!_showBill.some((a) => a.id === it.id)) _showBill.push(it);
       renderShow();
@@ -5290,6 +5296,23 @@ function renderSettings() {
   root.innerHTML = `
     <div class="row-head"><h2>Settings</h2></div>
 
+    ${demo.demoActive() ? `
+    <div class="set-group demo-settings">
+      <div class="set-group-label">Demo mode</div>
+      <div class="set-row set-row-block">
+        <div class="set-row-text">
+          <div class="set-row-title">Approved artists</div>
+          <div class="set-row-detail">One per line. Demo screens and search results use only these artists, resolved live through Spotify.</div>
+        </div>
+        <textarea id="set-demo-artists" class="nav-input demo-artist-list" rows="8" spellcheck="false">${esc(demo.artistNames().join("\n"))}</textarea>
+      </div>
+      <div class="set-row-actions demo-setting-actions">
+        <button class="btn btn-ghost btn-small" id="set-demo-shuffle">Shuffle assignments</button>
+        <button class="btn btn-primary btn-small" id="set-demo-save">Save artists</button>
+      </div>
+      <p class="set-note">Spotify data is kept only for this demo session. Shuffle changes which approved artists appear in each screen without changing the list.</p>
+    </div>` : ""}
+
     <div class="set-group">
       <div class="set-group-label">Appearance</div>
       <div class="set-row set-row-block">
@@ -5422,6 +5445,19 @@ function renderSettings() {
 
   const msg = document.getElementById("settings-msg");
   const say = (t, err) => { msg.textContent = t; msg.classList.remove("hidden"); msg.classList.toggle("error", !!err); };
+
+  document.getElementById("set-demo-save")?.addEventListener("click", () => {
+    try {
+      demo.setArtistNames(document.getElementById("set-demo-artists").value);
+      clearDemoSpotifyCache();
+      flash("Demo artists saved.");
+    } catch (e) { flash(e.message || "Couldn't save those artists.", true); }
+  });
+  document.getElementById("set-demo-shuffle")?.addEventListener("click", () => {
+    demo.reshuffle();
+    clearDemoSpotifyCache();
+    flash("Demo assignments shuffled.");
+  });
 
   document.getElementById("go-scrub")?.addEventListener("click", () => renderScrubForm());
 
@@ -5792,11 +5828,14 @@ function crateTile(e, dived) {
     </div>`;
 }
 
+let _demoCrateEntries = null;
+let _demoCrateUpNext = null;
+
 function renderCrate() {
   setTitle("DeepDive · Crate");
   setActiveTab("dives");
-  const all = watchlist.crateInOrder();
-  const upNext = watchlist.listUpNext();
+  const all = (demo.demoActive() && _demoCrateEntries) || watchlist.crateInOrder();
+  const upNext = (demo.demoActive() && _demoCrateUpNext) || watchlist.listUpNext();
 
   root.innerHTML = `
     <div class="row-head"><h2>Crate</h2><span class="qual">${all.length} artist${all.length === 1 ? "" : "s"}</span></div>
@@ -5994,35 +6033,175 @@ function renderLanding() {
 }
 
 // ---- demo screens ----
-// Staged from fixed data in demo.js. No Spotify calls, no auth, no
-// cache. Each renders the real screen through the real renderer, so a
-// screenshot can't drift from what the app actually looks like — the
-// previous demo mode drew its own markup and ended up advertising a UI
-// that had been replaced.
-async function renderDemo(screen) {
-  switch (screen) {
-    case "results":
-      return renderResults(demo.DEMO_RESULTS);
-    case "scan":
-      return renderScrubResults(demo.DEMO_SCAN);
-    case "sampler":
-      _cards = _cards.filter((c) => c.id !== "sampler").concat(demo.DEMO_SAMPLER_CARD);
-      await renderDemoHome();
-      return openCardModal(demo.DEMO_SAMPLER_CARD);
-    case "index":
-      return renderDemoIndex();
-    case "home":
-    default:
-      return renderDemoHome();
+// The artist list is the safety boundary: every name shown in demo mode
+// comes from it. Names are resolved live through the connected Spotify
+// account so marketing shots get real photography, albums and tracks;
+// the resolved data stays in memory for this session only.
+const _demoArtistData = new Map();
+const _demoTrackData = new Map();
+
+function clearDemoSpotifyCache() {
+  _demoArtistData.clear();
+  _demoTrackData.clear();
+}
+
+async function demoResolveArtist(name) {
+  const key = String(name || "").trim().toLowerCase();
+  if (!key) return null;
+  if (!_demoArtistData.has(key)) {
+    const p = client.findArtist(name).then((a) => {
+      if (!a) throw new Error(`Spotify couldn't find ${name}.`);
+      _artistLookups.set(key, Promise.resolve(a));
+      return a;
+    });
+    p.catch(() => _demoArtistData.delete(key));
+    _demoArtistData.set(key, p);
   }
+  return _demoArtistData.get(key);
+}
+
+async function demoTracksFor(artist, limit = 10) {
+  if (!artist) return [];
+  const key = artist.id || artist.name.toLowerCase();
+  if (!_demoTrackData.has(key)) {
+    const p = client.get("search", {
+      q: `artist:"${artist.name.replace(/"/g, "")}"`, type: "track", limit: Math.min(10, limit),
+    }).then((r) => ((r.tracks && r.tracks.items) || []).filter((t) =>
+      (t.artists || []).some((a) => a.id === artist.id || a.name.toLowerCase() === artist.name.toLowerCase())));
+    p.catch(() => _demoTrackData.delete(key));
+    _demoTrackData.set(key, p);
+  }
+  return (await _demoTrackData.get(key)).slice(0, limit);
+}
+
+async function demoArtistsFor(section, count) {
+  const names = demo.namesFor(section, count);
+  const settled = await Promise.allSettled(names.map(demoResolveArtist));
+  return settled.filter((r) => r.status === "fulfilled" && r.value).map((r) => r.value);
+}
+
+async function demoGroupsFor(section, count, trackCount = 3) {
+  const artists = await demoArtistsFor(section, count);
+  return Promise.all(artists.map(async (artist) => ({ artist, tracks: await demoTracksFor(artist, trackCount) })));
+}
+
+async function demoSearchArtists(query, limit = 6) {
+  const names = demo.searchNames(query, limit);
+  const settled = await Promise.allSettled(names.map(demoResolveArtist));
+  return settled.filter((r) => r.status === "fulfilled" && r.value).map((r) => r.value);
+}
+
+function renderDemoLoading(label = "Loading approved artists…") {
+  root.innerHTML = `<div class="card"><h1>Demo mode</h1><p class="muted">${esc(label)}</p></div>`;
+}
+
+function renderDemoError(e) {
+  root.innerHTML = `<div class="card"><h1>Demo mode couldn't load</h1><p class="muted">${esc(e && e.message ? e.message : String(e))}</p><div class="actions"><button class="btn btn-ghost" data-tab="settings">Demo settings</button></div></div>`;
+}
+
+async function renderDemo(screen) {
+  if (screen === "index") return renderDemoIndex();
+  if (screen === "settings") return renderSettings();
+  renderDemoLoading();
+  try {
+    if (screen === "results") {
+      const [group] = await demoGroupsFor("results", 1, 10);
+      return renderResults(demo.resultsFrom(group.artist, group.tracks));
+    }
+    if (screen === "scan") {
+      const groups = await demoGroupsFor("scan", 4, 5);
+      return renderScrubResults(demo.scanFrom(groups));
+    }
+    if (screen === "sampler") {
+      const groups = await demoGroupsFor("sampler", 6, 2);
+      const card = demo.samplerFrom(groups);
+      _cards = _cards.filter((c) => c.id !== "sampler").concat(card);
+      await renderDemoHome();
+      return openCardModal(card);
+    }
+    if (screen === "dive") {
+      const [artist] = await demoArtistsFor("dive-progress", 1);
+      await renderHome();
+      showDiveScreen(`Diving into ${artist.name}`, null);
+      const photo = artist.image_url_large || artist.image_url;
+      if (photo) addDiveImage(photo);
+      updateDiveScreen(48, "Reading releases…");
+      return;
+    }
+    if (screen === "crate") {
+      const artists = await demoArtistsFor("crate", 9);
+      const entries = artists.map((a, i) => ({
+        id: a.id, name: a.name, image_url: a.image_url, image_url_large: a.image_url_large,
+        added_at: new Date(Date.now() - i * 86400000).toISOString(),
+      }));
+      _demoCrateEntries = entries;
+      _demoCrateUpNext = entries.slice(0, 3);
+      return renderCrate();
+    }
+    if (screen === "multidip") {
+      const artists = await demoArtistsFor("multidip", 4);
+      _showBill = artists.map((a, i) => ({ ...a, emphasis: i === artists.length - 1 ? "more" : (i === 0 ? "less" : ""), songs: i === 1 ? 5 : 0 }));
+      return renderShow();
+    }
+    if (screen === "mixes") return renderDemoMixes();
+    return renderDemoHome();
+  } catch (e) { return renderDemoError(e); }
+}
+
+async function renderDemoMixes() {
+  const groups = await demoGroupsFor("mixes", 9, 4);
+  _samplerPool = groups.map((g) => g.artist);
+  root.innerHTML = `<div id="demo-featured"></div><div id="demo-mix-ideas"></div>`;
+  _cards = groups.slice(0, 3).map((g, i) => ({
+    id: `demo-feature-${i}`,
+    title: i === 0 ? `If you like ${g.artist.name}` : (i === 1 ? `More from ${g.artist.name}` : `${g.artist.name} deep cuts`),
+    subtitle: i === 0 ? "similar artists already in your library" : "built from music you've saved",
+    count: g.tracks.length, tracks: g.tracks,
+  }));
+  const featured = document.getElementById("demo-featured");
+  featured._cardLimit = 4;
+  featured._cardHead = `<div class="row-head"><h2>Recommended</h2><span class="qual">from across your mixes</span></div>`;
+  renderCardRow(featured);
+  _cards = groups.slice(3).map((g, i) => ({
+    id: `demo-idea-${i}`, title: i % 2 ? `All your ${g.artist.name}` : `${g.artist.name}, rediscovered`,
+    subtitle: i % 2 ? `every ${g.artist.name} track you've saved` : "music you haven't reached for lately",
+    count: g.tracks.length, tracks: g.tracks,
+  }));
+  const ideas = document.getElementById("demo-mix-ideas");
+  ideas._cardLimit = 0;
+  ideas._cardHead = `<div class="row-head"><h2>Mix ideas</h2><span class="qual">dates, artists and albums</span></div>`;
+  renderCardRow(ideas);
+  setActiveTab("mixes");
 }
 
 async function renderDemoHome() {
   await renderHome();
+  const pins = await demoArtistsFor("home-pins", 3);
+  const suggestions = await demoArtistsFor("home-suggestions", 6);
   const el = document.getElementById("suggestions-row");
-  // The real renderer, given fixed data — not a second copy of the
-  // markup that can fall behind it.
-  if (el) renderSuggestionRow(el, demo.DEMO_PINS, demo.DEMO_SUGGESTIONS);
+  if (el) renderSuggestionRow(el, demo.pinsFrom(pins), demo.suggestionsFrom(suggestions));
+
+  const groups = await demoGroupsFor("home-mixes", 4, 2);
+  _samplerPool = groups.map((g) => g.artist);
+  _cards = groups.slice(0, 3).map((g, i) => ({
+    id: `demo-mix-${i}`, title: i ? `More from ${g.artist.name}` : `All your ${g.artist.name}`,
+    subtitle: i ? "tracks you've saved, shuffled" : `everything by ${g.artist.name} in your library`,
+    count: g.tracks.length, tracks: g.tracks,
+  }));
+  const mixes = document.getElementById("home-mixes");
+  if (mixes) {
+    mixes._cardLimit = columnsAtWidth();
+    mixes._cardHead = sectionHead("Mixes", "made from what you've saved", "mixes", "All mixes");
+    renderCardRow(mixes);
+  }
+}
+
+async function renderDemoDives() {
+  await renderDives();
+  const pins = await demoArtistsFor("dives-pins", 3);
+  const suggestions = await demoArtistsFor("dives-suggestions", 9);
+  const el = document.getElementById("suggestions-row");
+  if (el) renderSuggestionRow(el, demo.pinsFrom(pins), demo.suggestionsFrom(suggestions));
 }
 
 function renderDemoIndex() {
@@ -6030,7 +6209,7 @@ function renderDemoIndex() {
   root.innerHTML = `
     <div class="card">
       <h1>Demo screens</h1>
-      <p class="muted">Staged from fixed data. Nothing here touches Spotify, so these work with the quota locked or with no account at all.</p>
+      <p class="muted">Only artists in your demo whitelist can appear. Their photography, albums and tracks are resolved live through your connected Spotify account.</p>
       <div class="tile-grid" style="margin-top:18px;">
         ${demo.DEMO_SCREENS.map(([id, name, desc]) => `
           <button class="tile" data-demo="${esc(id)}">
@@ -6054,9 +6233,10 @@ function renderDemoIndex() {
 }
 
 async function render() {
-  // Demo screens are staged from fixed data and make no Spotify calls,
-  // so they run ahead of every auth check — the point is to be able to
-  // photograph the app without an account, or with the quota locked.
+  // Demo mode owns its routing before onboarding. It still uses the
+  // connected Spotify token to resolve the approved artist whitelist;
+  // keeping the route here prevents the normal library from painting
+  // first and leaking into a screenshot.
   const screen = demo.demoScreen();
   if (screen) return renderDemo(screen);
 
@@ -6126,6 +6306,12 @@ function setActiveTab(name) {
     if (!tab) return;
     const name = tab.dataset.tab;
     setActiveTab(name);
+    if (demo.demoActive()) {
+      if (name === "home") return renderDemo("home");
+      if (name === "dives") return renderDemoDives();
+      if (name === "mixes") return renderDemo("mixes");
+      if (name === "settings") return renderDemo("settings");
+    }
     if (name === "home") return renderHome();
     if (name === "dives") return renderDives();
     if (name === "mixes") return renderMixes();

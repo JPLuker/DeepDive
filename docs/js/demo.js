@@ -1,19 +1,18 @@
 /**
- * Demo mode — staged screens with no Spotify calls.
+ * Demo mode — staged screens from an approved Spotify artist list.
  *
  * Screenshots of the real app expose whoever's library happens to be
- * loaded, and can't be taken at all while the quota is locked. This
- * substitutes fixed data so any screen can be photographed on demand.
+ * loaded. This resolves only explicitly approved names so any screen can
+ * be photographed with real Spotify artwork and metadata on demand.
  *
  * The previous version only swapped artist names into the suggestion
  * row, and did it with the pre-2.2 `pill` markup — so it rendered a UI
  * the app no longer has. Anything shot from it would have advertised
  * the wrong product.
  *
- * No artwork URLs anywhere. Tiles and rows fall back to the app's own
- * gradient-initial treatment, which keeps the screens self-contained,
- * avoids putting other people's album covers on a marketing page, and
- * means nothing here breaks when a CDN URL rots.
+ * Artist names are controlled locally; app.js resolves only that
+ * whitelist through the user's connected Spotify account. This keeps
+ * screenshots approved while retaining real photography and metadata.
  *
  * Undocumented on purpose. Enable with `?demo=<screen>`:
  *   1 | home     the home screen
@@ -25,6 +24,14 @@
  */
 
 const KEY = "deepdive_demo_screen";
+const ARTISTS_KEY = "deepdive_demo_artists";
+const SEED_KEY = "deepdive_demo_seed";
+
+const DEFAULT_ARTISTS = [
+  "Fiona Apple", "Talking Heads", "Big Thief", "Wednesday",
+  "MJ Lenderman", "Alvvays", "The Beths", "Sharon Van Etten",
+  "Japanese Breakfast", "St. Vincent", "Mitski", "Soccer Mommy",
+];
 
 export function demoScreen() {
   try {
@@ -48,106 +55,120 @@ export function exitDemo() {
   try { sessionStorage.removeItem(KEY); } catch (e) {}
 }
 
-// Names are real artists; everything attached to them is invented. A
-// reason line on every suggestion, because that's how the row actually
-// behaves and a screenshot without them oversells the feature.
-export const DEMO_PINS = [
-  { id: "p1", name: "Fiona Apple", image_url: null },
-  { id: "p2", name: "Talking Heads", image_url: null },
-  { id: "p3", name: "Big Thief", image_url: null },
-];
+/** Names are the only demo setting kept long-term. Spotify data remains
+ * session-only and is resolved by app.js when a staged screen needs it. */
+export function artistNames() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ARTISTS_KEY) || "null");
+    if (Array.isArray(saved) && saved.length) return saved;
+  } catch (e) {}
+  return DEFAULT_ARTISTS.slice();
+}
 
-export const DEMO_SUGGESTIONS = [
-  { id: "s1", name: "Wednesday", image_url: null, reason: "1 song liked" },
-  { id: "s2", name: "MJ Lenderman", image_url: null, reason: "last added 2023" },
-  { id: "s3", name: "Alvvays", image_url: null, reason: "you've been playing them" },
-  { id: "s4", name: "The Beths", image_url: null, reason: "2 songs liked" },
-  { id: "s5", name: "Sharon Van Etten", image_url: null, reason: "last added 2019" },
-  { id: "s6", name: "Japanese Breakfast", image_url: null, reason: "1 song liked" },
-];
+export function setArtistNames(value) {
+  const raw = Array.isArray(value) ? value : String(value || "").split(/[\n,]+/);
+  const seen = new Set();
+  const names = raw.map((n) => String(n || "").trim()).filter((n) => {
+    const key = n.toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+  if (names.length < 4) throw new Error("Add at least four artists so each screen has some variety.");
+  try { localStorage.setItem(ARTISTS_KEY, JSON.stringify(names)); } catch (e) {}
+  return names;
+}
 
-const track = (id, name, album, ms, year) => ({
-  id,
-  name,
-  duration_ms: ms,
-  album: { id: `al-${id}`, name: album, release_date: `${year}-01-01`, image_url: null },
-  artists: [{ id: "a1", name: "Fiona Apple" }],
-});
+function demoSeed() {
+  try {
+    let seed = parseInt(sessionStorage.getItem(SEED_KEY) || "0", 10);
+    if (!seed) { seed = Date.now() >>> 0; sessionStorage.setItem(SEED_KEY, String(seed)); }
+    return seed;
+  } catch (e) { return 24681357; }
+}
 
-export const DEMO_RESULTS = {
-  artist: { id: "a1", name: "Fiona Apple", images: [] },
-  already_liked_count: 24,
-  excluded_count: 12,
-  collapsed_count: 6,
-  duplicate_candidates: [
-    {
-      track: track("d1", "Shameika", "Fetch the Bolt Cutters", 260000, 2020),
-      matched_liked_track: { id: "x1", name: "Shameika" },
-      match_basis: "ISRC",
-    },
-    {
-      track: track("d2", "Paper Bag", "When the Pawn… (Reissue)", 219000, 2000),
-      matched_liked_track: { id: "x2", name: "Paper Bag" },
-      match_basis: "96% title match",
-    },
-    {
-      track: track("d3", "Criminal", "Tidal — 25th Anniversary", 343000, 2021),
-      matched_liked_track: { id: "x3", name: "Criminal" },
-      match_basis: "ISRC",
-    },
-  ],
-  new_tracks: [
-    track("n1", "Fast As You Can", "When the Pawn…", 278000, 1999),
-    track("n2", "I Know", "When the Pawn…", 295000, 1999),
-    track("n3", "Werewolf", "The Idler Wheel…", 227000, 2012),
-    track("n4", "Hot Knife", "The Idler Wheel…", 180000, 2012),
-    track("n5", "Under the Table", "Fetch the Bolt Cutters", 221000, 2020),
-    track("n6", "Ladies", "Fetch the Bolt Cutters", 202000, 2020),
-  ],
-};
+export function reshuffle() {
+  try { sessionStorage.setItem(SEED_KEY, String((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0)); } catch (e) {}
+}
 
-const mixTrack = (id, name, artist, album, ms) => ({
-  id, name, duration_ms: ms,
-  artists: [{ id: `ar-${id}`, name: artist }],
-  album: { id: `al-${id}`, name: album, image_url: null },
-});
+function hash(s) {
+  let h = 2166136261;
+  for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
 
-export const DEMO_SAMPLER_CARD = {
-  id: "sampler",
-  title: "Sampler",
-  subtitle: "a few tracks each from 6 artists you've barely heard",
-  simple: true,
-  name: "DeepDive · Sampler 2026-09-04",
-  count: 9,
-  tracks: [
-    mixTrack("m1", "Chosen to Deserve", "Wednesday", "Rat Saw God", 262000),
-    mixTrack("m2", "Bull Believer", "Wednesday", "Rat Saw God", 508000),
-    mixTrack("m3", "Formula One", "MJ Lenderman", "Manning Fireworks", 214000),
-    mixTrack("m4", "She's Leaving You", "MJ Lenderman", "Manning Fireworks", 254000),
-    mixTrack("m5", "Archie, Marry Me", "Alvvays", "Alvvays", 199000),
-    mixTrack("m6", "Belinda Says", "Alvvays", "Blue Rev", 262000),
-    mixTrack("m7", "Expert in a Dying Field", "The Beths", "Expert in a Dying Field", 216000),
-    mixTrack("m8", "Seventeen", "Sharon Van Etten", "Remind Me Tomorrow", 285000),
-    mixTrack("m9", "Be Sweet", "Japanese Breakfast", "Jubilee", 205000),
-  ],
-};
+/** Stable within a session, different for each screen/section. */
+export function namesFor(section, count = 6) {
+  const names = artistNames();
+  let state = (demoSeed() ^ hash(section)) >>> 0;
+  const ranked = names.map((name) => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return { name, rank: state };
+  }).sort((a, b) => a.rank - b.rank).map((x) => x.name);
+  return ranked.slice(0, Math.min(count, ranked.length));
+}
 
-export const DEMO_SCAN = {
-  artists_scanned: 214,
-  artists_total: 214,
-  duplicate_candidates: DEMO_RESULTS.duplicate_candidates,
-  new_tracks: DEMO_RESULTS.new_tracks,
-  per_artist_summary: [
-    { name: "Fiona Apple", matches: 3, new: 6 },
-    { name: "Talking Heads", matches: 1, new: 4 },
-    { name: "Big Thief", matches: 2, new: 11 },
-  ],
-};
+export function searchNames(query, limit = 6) {
+  const q = String(query || "").trim().toLowerCase();
+  const names = artistNames();
+  const matching = q ? names.filter((n) => n.toLowerCase().includes(q)) : [];
+  const rest = namesFor(`search:${q}`, names.length).filter((n) => !matching.includes(n));
+  return matching.concat(rest).slice(0, limit);
+}
+
+export function pinsFrom(artists) {
+  return artists.slice(0, 3).map((a, i) => ({ ...a, id: a.id || `demo-pin-${i}` }));
+}
+
+const REASONS = ["1 song liked", "last added 2023", "played recently", "2 songs liked", "last added 2019"];
+export function suggestionsFrom(artists) {
+  return artists.map((a, i) => ({ ...a, id: a.id || `demo-suggestion-${i}`, reason: REASONS[i % REASONS.length] }));
+}
+
+export function resultsFrom(artist, tracks) {
+  const usable = (tracks || []).slice(0, 9);
+  const dups = usable.slice(0, 3).map((t, i) => ({
+    track: t,
+    matched_liked_track: { id: `demo-liked-${i}`, name: t.name },
+    match_basis: i === 1 ? "96% title match" : "ISRC",
+  }));
+  return {
+    artist: { ...artist, images: artist.image_url_large || artist.image_url ? [{ url: artist.image_url_large || artist.image_url }] : [] },
+    already_liked_count: 24,
+    excluded_count: 12,
+    collapsed_count: 6,
+    duplicate_candidates: dups,
+    new_tracks: usable.slice(3),
+  };
+}
+
+export function samplerFrom(groups) {
+  const tracks = groups.flatMap((g) => (g.tracks || []).slice(0, 2));
+  return {
+    id: "sampler", title: "Sampler",
+    subtitle: `a few tracks each from ${groups.length} artists you've barely heard`,
+    simple: true, name: "DeepDive · Sampler", count: tracks.length, tracks,
+  };
+}
+
+export function scanFrom(groups) {
+  const results = resultsFrom(groups[0]?.artist || { name: "Demo artist" }, groups.flatMap((g) => g.tracks || []));
+  return {
+    artists_scanned: 214, artists_total: 214,
+    duplicate_candidates: results.duplicate_candidates,
+    new_tracks: results.new_tracks,
+    per_artist_summary: groups.slice(0, 3).map((g, i) => ({ name: g.artist.name, matches: i + 1, new: (g.tracks || []).length })),
+  };
+}
 
 /** The screens worth photographing, for the ?demo=index menu. */
 export const DEMO_SCREENS = [
   ["home", "Home", "Pins, suggestions and the search field"],
+  ["dive", "Dive in progress", "Full-screen progress with an approved artist"],
+  ["mixes", "Mixes", "Recommended and Mix ideas with approved artists"],
   ["results", "Dive results", "A finished dive, with matches and new tracks"],
   ["sampler", "Sampler", "The mix dialog, with preview and naming"],
   ["scan", "Library scan", "Results across the whole library"],
+  ["crate", "Crate", "Approved artists with an Up next section"],
+  ["multidip", "Multi-Dip", "A staged bill with four approved artists"],
+  ["settings", "Demo settings", "Edit the whitelist and shuffle assignments"],
 ];

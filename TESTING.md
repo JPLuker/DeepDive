@@ -255,16 +255,25 @@ so it was designed by reading the stylesheet, not by looking at it.
 - [ ] **Settings, History and Pins also changed** — the heading style is
       shared. Check those still look right
 
-## 4f. Demo mode (2.8.3)
+## 4f. Demo mode (2.8.3, reworked 2.9.63)
 
-**This one needs no quota and no account** — it's the way to check
-section 4e and most of section 1 without waiting.
+**This now uses the connected Spotify account** so screenshots have real
+artist photos, metadata and tracks. Only artists explicitly entered in
+the demo Settings list should appear.
 
 - [ ] `…/DeepDive/app/?demo=index` lists the demo screens
+- [ ] The index lists all nine: Home, Dives, Mixes, results, Sampler,
+      full scan, Crate, Multi-Dip and Settings
+- [ ] In `?demo=settings`, enter at least four approved artist names and
+      Save; reload another demo screen and see only those artists
+- [ ] Real Spotify photos, albums and tracks appear for the approved names
+- [ ] Search results are convincing but contain only approved artists
+- [ ] Artist assignments stay unchanged while moving between screens
+- [ ] "Shuffle assignments" changes which approved artist fills each slot
 - [ ] `?demo=results` shows a finished dive — this is how to judge the
       2.8.1 redesign right now
 - [ ] `?demo=home`, `?demo=sampler`, `?demo=scan` each render
-- [ ] None of them prompt to connect Spotify or hit the API
+- [ ] No artist outside the approved list appears anywhere in demo mode
 - [ ] "Leave demo mode" returns to the real app
 
 ## 4g. Results screen, second pass (2.8.4)

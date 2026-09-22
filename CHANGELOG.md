@@ -4,6 +4,16 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.63
+- Demo mode now has an approved-artist list in Settings. Every staged
+  screen draws only from that list, with assignments held steady until
+  "Shuffle assignments" is pressed.
+- Demo artists, photos, albums and tracks come from the connected Spotify
+  account instead of placeholders. Search is staged too: it stays inside
+  the approved list while retaining real Spotify presentation data.
+- The demo index now covers Home, Dives, Mixes, finished results, Sampler,
+  full scan, Crate, Multi-Dip and Settings.
+
 ## 2.9.62
 - Recommended now reads "from across your mixes." The original "a
   little of everything" was vague and did not explain the shelf.
