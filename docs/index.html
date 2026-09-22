@@ -487,6 +487,28 @@
   .feature-card .screen { width:min(100%,390px); margin:auto auto 0; }
   .feature-card-results .screen { width:min(100%,410px); }
 
+  /* Marketing shots are windows into the app, not full-page documents.
+     Feature-specific crops keep the useful UI in frame and give paired
+     cards a deliberate visual baseline despite different source heights. */
+  .shot-crop {
+    overflow:hidden; background:var(--paper); border:1px solid var(--line);
+    border-radius:18px; box-shadow:0 22px 60px rgba(0,0,0,.34);
+  }
+  .shot-crop img {
+    width:100%; height:100%; object-fit:cover; border:0; border-radius:0;
+    box-shadow:none;
+  }
+  .shot-ideas { aspect-ratio:640 / 850; }
+  .shot-ideas img { object-position:center top; }
+  .shot-results { aspect-ratio:640 / 860; }
+  .shot-results img { object-position:center center; }
+  .shot-multidip { aspect-ratio:640 / 870; }
+  .shot-multidip img { object-position:center bottom; }
+  .shot-vial { aspect-ratio:640 / 940; }
+  .shot-vial img { object-position:center center; }
+  .shot-crate { aspect-ratio:640 / 870; }
+  .shot-crate img { object-position:center top; }
+
   .feature-band {
     display:grid; grid-template-columns:minmax(0,1fr) minmax(320px,.8fr);
     gap:clamp(34px,7vw,84px); align-items:center;
@@ -784,14 +806,14 @@
         <p class="section-eyebrow">From what you've saved</p>
         <h2>Mixes with a reason</h2>
         <p>Your library becomes dozens of useful cuts: years, albums you went deep on, songs you found late, your regulars, and more. Build your own from an era, a length and an artist, or use Sampler to revisit artists you barely touched. Add Last.fm for similar-artist and genre mixes.</p>
-        <figure class="screen"><img src="img/shots/app-mixes-ideas.svg" alt="DeepDive Mix ideas showing Build your own, Sampler, year, album and listening-history mixes" width="640" height="1009" loading="lazy"></figure>
+        <figure class="screen shot-crop shot-ideas"><img src="img/shots/app-mixes-ideas.svg" alt="DeepDive Mix ideas showing Build your own, Sampler, year, album and listening-history mixes" width="640" height="1009" loading="lazy"></figure>
       </section>
 
       <section class="feature-card feature-card-results">
         <p class="section-eyebrow">A real catalogue check</p>
         <h2>Know what you missed</h2>
         <p>A Dive reads every album, single and EP, then checks the recordings against your Liked Songs. It catches the same recording under another release instead of trusting titles alone. Review the split, uncheck anything you don't want, then like songs, make a playlist, or both.</p>
-        <figure class="screen"><img src="img/shots/app-results.svg" alt="A finished Houseghost dive showing duplicate recordings and tracks new to the listener" width="640" height="953" loading="lazy"></figure>
+        <figure class="screen shot-crop shot-results"><img src="img/shots/app-results.svg" alt="A finished Houseghost dive showing duplicate recordings and tracks new to the listener" width="640" height="953" loading="lazy"></figure>
       </section>
     </div>
 
@@ -801,7 +823,7 @@
         <h2>One playlist for the whole bill</h2>
         <p>Multi-Dip keeps the artists in show order and fits them to the length of your night. Leave the split even, mark someone More or Less, or give an artist an exact number of songs.</p>
       </div>
-      <figure class="screen"><img src="img/shots/app-multidip.svg" alt="Multi-Dip with Maciann, ValkenWolf and Moonside arranged into a three-hour playlist" width="640" height="1006" loading="lazy"></figure>
+      <figure class="screen shot-crop shot-multidip"><img src="img/shots/app-multidip.svg" alt="Multi-Dip with Maciann, ValkenWolf and Moonside arranged into a three-hour playlist" width="640" height="1006" loading="lazy"></figure>
     </section>
 
     <div class="feature-grid">
@@ -809,14 +831,14 @@
         <p class="section-eyebrow">Private by design</p>
         <h2>Your library, your browser</h2>
         <p>DeepDive has no server. Your Spotify library is read in the browser and stored on your device. The only requests that leave it are the ones needed for Spotify and Last.fm. Your listening history isn't pooled into a DeepDive account.</p>
-        <figure class="screen"><img src="img/shots/app-vial.svg" alt="A VIAL dive in progress with the artist photo filling the screen" width="640" height="1211" loading="lazy"></figure>
+        <figure class="screen shot-crop shot-vial"><img src="img/shots/app-vial.svg" alt="A VIAL dive in progress with the artist photo filling the screen" width="640" height="1211" loading="lazy"></figure>
       </section>
 
       <section class="feature-card">
         <p class="section-eyebrow">Don't lose the next one</p>
         <h2>Keep a crate</h2>
         <p>Put aside artists you mean to get to. Star a few for Up next so Home keeps them in sight, then search, sort and sample everyone else when you're ready.</p>
-        <figure class="screen"><img src="img/shots/app-crate.svg" alt="The Crate with an Up next section and more saved artists below" width="640" height="1020" loading="lazy"></figure>
+        <figure class="screen shot-crop shot-crate"><img src="img/shots/app-crate.svg" alt="The Crate with an Up next section and more saved artists below" width="640" height="1020" loading="lazy"></figure>
       </section>
     </div>
 

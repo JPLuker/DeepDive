@@ -3,6 +3,7 @@ import { readFileSync, existsSync, statSync } from 'fs';
 
 const html = readFileSync(new URL('../docs/index.html', import.meta.url), 'utf8');
 const manifest = JSON.parse(readFileSync(new URL('../docs/app/manifest.json', import.meta.url), 'utf8'));
+const css = html.slice(html.indexOf('<style>') + 7, html.indexOf('</style>'));
 
 let pass = 0, fail = 0;
 function check(label, condition) {
@@ -76,6 +77,15 @@ check('screenshots stay inside screen frames',
   [...html.matchAll(/img\/shots\/[a-z-]+\.svg/g)].every(m =>
     html.slice(Math.max(0, m.index - 190), m.index).includes('class="screen')));
 
+check('feature screenshots use deliberate crop windows',
+  (html.match(/class="screen shot-crop shot-(?:ideas|results|multidip|vial|crate)"/g) || []).length === 5);
+check('crop windows clip screenshots cleanly',
+  /\.shot-crop\s*\{[^}]*overflow:hidden/.test(css) &&
+  /\.shot-crop img\s*\{[^}]*height:100%[^}]*object-fit:cover/.test(css));
+for (const shot of ['ideas', 'results', 'multidip', 'vial', 'crate']) {
+  check(shot + ' has its own editorial crop', new RegExp('\\.shot-' + shot + '\\s*\\{[^}]*aspect-ratio:').test(css));
+}
+
 check('Spotify is credited', /not affiliated with Spotify AB/.test(html));
 check('Last.fm is credited', /provided by Last\.fm/.test(html));
 check('copyright ownership is stated', /remains the property of its respective owners/.test(html));
@@ -90,7 +100,6 @@ check('old alternating panel template is gone', !/class="panel panel-flip"/.test
 check('no false no-account claim', !/no account, nothing installed/.test(html));
 check('no duplicate-liked claim', !/liked twice/.test(html));
 
-const css = html.slice(html.indexOf('<style>') + 7, html.indexOf('</style>'));
 let depth = 0, stray = 0;
 for (const ch of css) {
   if (ch === '{') depth++;

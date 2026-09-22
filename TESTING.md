@@ -45,6 +45,11 @@
       Dive and Multi-Dip without zooming
 - [ ] Mix ideas, Houseghost results, Multi-Dip, VIAL and Crate each appear
       once and beside copy that describes that exact screen
+- [ ] The five feature screenshots are intentionally cropped around the
+      relevant UI; paired cards no longer end at visibly unrelated heights
+- [ ] Crops retain the useful focal point: Mix cards, Houseghost duplicate
+      results, the Multi-Dip bill and build button, VIAL progress, and the
+      Crate's Up next section
 - [ ] All nine screenshots load; no stale old screenshot appears
 - [ ] Multi-Dip has its own marketing section
 - [ ] Footer still credits Spotify / Last.fm, states photo ownership and
