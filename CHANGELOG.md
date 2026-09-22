@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.47
+- Landing page: restored the VIAL and Houseghost screenshots, removed
+  by mistake in 2.9.45. They're in use while permission is sought. Both
+  are back in their original places: Houseghost shows a finished dive,
+  VIAL a dive in progress. Their panels have new copy, and the
+  "Nothing without asking" item moved out of the list into the results
+  panel, so nothing is said twice. Both artists are credited again.
+
 ## 2.9.46
 - Fixed: the crate's sampler button floated in a 32px gap below the
   search row. Its own margin rule lost to the general `.actions` rule,

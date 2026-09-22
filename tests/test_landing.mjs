@@ -25,7 +25,11 @@ check('two of them are UI, not a photograph', /app-home\.jpg/.test(html) && /app
 // The page never said what it was.
 check('the page identifies itself', /<div class="topline">[\s\S]{0,200}wordmark/.test(html));
 check('feature list, not cards', /<ul class="listing-items">/.test(html));
-check('screens shown in a panel', /<section class="panel">[\s\S]{0,600}device-still/.test(html));
+check('alternating panels', /panel panel-flip/.test(html));
+// Removed by mistake in 2.9.45: these two stay while permission is sought.
+check('houseghost shows off results', /Nothing without asking<\/h2>[\s\S]{0,700}app-results\.jpg/.test(html));
+check('vial shows off a dive in progress', /panel panel-flip[\s\S]{0,700}app-vial\.jpg/.test(html));
+check('and both are credited', /Artists pictured: Leisure Hour, VIAL, Houseghost/.test(html));
 check('closing panel', /<section class="closing">/.test(html));
 check('a real footer', /<footer class="foot">/.test(html) && /foot-cols/.test(html));
 
@@ -78,7 +82,7 @@ for (const f of new Set(refs)) {
   check(`${f} is web-sized`, existsSync(path) && statSync(path).size < 120 * 1024);
 }
 check('images are sized to avoid reflow', (html.match(/width="640" height="\d+"/g) || []).length >= 4);
-check('below-fold images load lazily', (html.match(/loading="lazy"/g) || []).length >= 1);
+check('below-fold images load lazily', (html.match(/loading="lazy"/g) || []).length >= 3);
 
 // Stylesheet integrity — a stray brace silently kills everything below.
 const css = html.slice(html.indexOf('<style>') + 7, html.indexOf('</style>'));
@@ -148,7 +152,7 @@ for (const [label, re] of [
   ['suggestions', /<h3>Suggested for you<\/h3>/],
   ['blocking', /<h3>Leave someone out<\/h3>/],
   ['the library scan', /<h3>Your whole library at once<\/h3>/],
-  ['confirm before writing, and reruns', /<h3>Nothing without asking<\/h3>[\s\S]{0,300}skipping what's already there/],
+  ['confirm before writing, and reruns', /<h2>Nothing without asking<\/h2>[\s\S]{0,400}skipping what's already there/],
   ['history and undo', /<h3>Take it back<\/h3>/],
   ['dive filters and guest records', /live takes, radio edits, instrumentals and a cappellas[\s\S]{0,160}only guest on/],
   ['covers', /A cover for every playlist/],

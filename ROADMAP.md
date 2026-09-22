@@ -28,11 +28,13 @@ actively mislead.
 
 ## Artist photography — provisional
 
-The landing page shows Leisure Hour in the device row, plus the
-thumbnails inside the app's own Home, Mixes and Crate screens. VIAL and
-Houseghost came off in 2.9.45 when their panels were cut. The crate
-shot added then shows thumbnails of other artists, Dolly Parton's
-Dumplin' cover among them, under the same footer credit.
+The landing page shows three artist photographs — Leisure Hour in the
+device row, VIAL in the dive-in-progress panel, Houseghost in the
+results panel — plus the thumbnails inside the app's own Home, Mixes
+and Crate screens. VIAL and Houseghost were removed by mistake in
+2.9.45 and restored in 2.9.47. The crate shot shows thumbnails of other
+artists, Dolly Parton's Dumplin' cover among them, under the same
+footer credit.
 
 **Joseph's position, 7 Sept:** acceptable as examples for now, nothing
 beyond that, and he will email the artists for permission.
@@ -231,7 +233,7 @@ clean before anything is built on it.
 
 ---
 
-## Shipped since — build 2.9.46
+## Shipped since — build 2.9.47
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:

@@ -702,8 +702,8 @@ All three need a Last.fm key in Settings.
 
 - [ ] Read it top to bottom on a phone: nothing said twice
 - [ ] The setup note mentions Spotify Premium
-- [ ] One panel near the end, the crate, with its screenshot
-- [ ] Footer credits Leisure Hour only by name
+- [ ] Three panels: results (Houseghost), a dive in progress (VIAL), then the crate, alternating sides (2.9.47)
+- [ ] Footer credits Leisure Hour, VIAL and Houseghost by name
 - [ ] Crate in the app: the sampler button sits just under the search row, with a gap before the first row (fixed properly in 2.9.46)
 
 ## 26. Crate as a list (2.9.44)
