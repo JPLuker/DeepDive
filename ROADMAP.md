@@ -234,7 +234,7 @@ clean before anything is built on it.
 
 ---
 
-## Stopping point, 22 Sept (build 2.9.80)
+## Stopping point, 22 Sept (build 2.9.81)
 
 Picking up next session:
 
@@ -244,11 +244,13 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.80
+## Shipped since — build 2.9.81
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- The Dip/Dive/Multi-Dip explanation now uses the complete transparent
+  chooser capture without an artificial outer frame (2.9.81)
 - Removed the colored side-edge artifact from the VIAL landing capture
   (2.9.80)
 - Seven final user-cropped landing captures now replace the uneven source

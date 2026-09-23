@@ -25,7 +25,7 @@ check('hero shows a dive', /app-dive-crop\.jpg/.test(hero));
 check('hero shows Mixes', /app-mixes\.svg/.test(hero));
 check('hero has three distinct screenshots', new Set([...hero.matchAll(/img\/shots\/([^"]+\.(?:svg|jpg))/g)].map(m => m[1])).size === 3);
 
-check('chooser screenshot is present', /app-chooser\.svg/.test(html));
+check('chooser screenshot is present', /app-chooser-crop\.png/.test(html));
 check('chooser copy explains Dip', /Dip gives you their best hour/.test(html));
 check('chooser copy explains Dive', /Dive checks the whole catalogue/.test(html));
 check('chooser copy explains Multi-Dip', /Multi-Dip takes a whole bill/.test(html));
@@ -48,14 +48,14 @@ const expected = [
   ['app-home-crop.jpg', 490, 724],
   ['app-dive-crop.jpg', 490, 724],
   ['app-mixes.svg', 640, 905],
-  ['app-chooser.svg', 640, 687],
+  ['app-chooser-crop.png', 490, 724],
   ['app-mixes-crop.jpg', 490, 724],
   ['app-results-crop.jpg', 490, 724],
   ['app-multidip-crop.jpg', 490, 724],
   ['app-vial-crop.jpg', 490, 724],
   ['app-crate-crop.jpg', 490, 724],
 ];
-const refs = [...html.matchAll(/img\/shots\/([a-z-]+\.(?:svg|jpg))/g)].map(m => m[1]);
+const refs = [...html.matchAll(/img\/shots\/([a-z-]+\.(?:svg|jpg|png))/g)].map(m => m[1]);
 check('all nine final screenshots are referenced', refs.length === 9);
 check('screenshots are not duplicated', new Set(refs).size === 9);
 for (const [file, width, height] of expected) {
@@ -64,12 +64,14 @@ for (const [file, width, height] of expected) {
     new RegExp('img/shots/' + file.replace('.', '\\.') + '"[^>]*width="' + width + '" height="' + height + '"').test(html));
   const path = new URL('../docs/img/shots/' + file, import.meta.url);
   check(file + ' exists', existsSync(path));
-  check(file + ' is web-sized', existsSync(path) && statSync(path).size < 120 * 1024);
+  check(file + ' is web-sized', existsSync(path) && statSync(path).size < 140 * 1024);
   const payload = existsSync(path) ? readFileSync(path) : Buffer.alloc(0);
-  check(file + ' contains an approved JPEG',
+  check(file + ' contains the approved image payload',
     file.endsWith('.svg')
       ? new RegExp('<svg[^>]*width="' + width + '" height="' + height + '"[\\s\\S]*data:image/jpeg;base64,').test(payload.toString('utf8'))
-      : payload.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff])));
+      : file.endsWith('.png')
+        ? payload.subarray(1, 4).toString('ascii') === 'PNG'
+        : payload.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff])));
 }
 const vialBytes = readFileSync(new URL('../docs/img/shots/app-vial-crop.jpg', import.meta.url));
 check('VIAL crop has clean side edges', createHash('sha256').update(vialBytes).digest('hex') === '413f0e948e73148c3bb66722dfe9e2fd63aabc948009650f4670627120dff4a6');
@@ -77,8 +79,10 @@ check('below-fold images lazy-load', (html.match(/loading="lazy"/g) || []).lengt
 
 check('no artist photo is used as page background', !/hero-photo|background-image:\s*url\([^)]*img\/shots/.test(html));
 check('screenshots stay inside screen frames',
-  [...html.matchAll(/img\/shots\/[a-z-]+\.(?:svg|jpg)/g)].every(m =>
+  [...html.matchAll(/img\/shots\/[a-z-]+\.(?:svg|jpg|png)/g)].every(m =>
     html.slice(Math.max(0, m.index - 190), m.index).includes('class="screen')));
+check('transparent chooser does not inherit an outer screenshot frame',
+  /\.choice-shot img\s*\{[^}]*background:transparent[^}]*border:0[^}]*box-shadow:none/.test(css));
 
 check('feature screenshots keep their complete approved framing',
   !/class="screen shot-crop/.test(html));

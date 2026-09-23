@@ -4,6 +4,11 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.81
+- Replaced the Dip/Dive/Multi-Dip chooser capture with Joseph's complete
+  transparent 490×724 version and removed the generic screenshot frame
+  around it so the modal floats cleanly on the landing page.
+
 ## 2.9.80
 - Removed the stray colored side-edge pixels baked into the VIAL landing
   capture while preserving its 490×724 framing.

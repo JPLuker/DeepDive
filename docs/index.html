@@ -470,7 +470,11 @@
   }
   .choice-section .section-copy { max-width:52ch; margin:18px 0 0; }
   .choice-shot { width:min(100%,520px); justify-self:end; }
-  .choice-shot img { border-radius:24px; }
+  /* The chooser capture includes transparent breathing room around the
+     modal, so it must not inherit the generic full-image frame. */
+  .choice-shot img {
+    background:transparent; border:0; border-radius:0; box-shadow:none;
+  }
 
   .feature-grid {
     display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
@@ -776,7 +780,7 @@
         <h2 class="section-title">How far in?</h2>
         <p class="section-copy">Dip gives you their best hour, most played first. Dive checks the whole catalogue against your library. Multi-Dip takes a whole bill and builds one playlist in the order they play.</p>
       </div>
-      <figure class="screen choice-shot"><img src="img/shots/app-chooser.svg" alt="DeepDive's artist chooser showing Dip, Dive and Multi-Dip for Maciann" width="640" height="687" loading="lazy"></figure>
+      <figure class="screen choice-shot"><img src="img/shots/app-chooser-crop.png" alt="DeepDive's artist chooser showing Dip, Dive and Multi-Dip for Maciann" width="490" height="724" loading="lazy"></figure>
     </section>
 
     <div class="feature-grid">
