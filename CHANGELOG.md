@@ -4,6 +4,12 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.82
+- Replaced the VIAL progress capture with Joseph's corrected image.
+- Reordered the landing page around the product journey: choose a depth,
+  watch the Dive, review results, use Mixes and Crate, build a Multi-Dip,
+  then close with the browser-only privacy explanation.
+
 ## 2.9.81
 - Replaced the Dip/Dive/Multi-Dip chooser capture with Joseph's complete
   transparent 490×724 version and removed the generic screenshot frame

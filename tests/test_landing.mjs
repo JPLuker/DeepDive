@@ -74,7 +74,7 @@ for (const [file, width, height] of expected) {
         : payload.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff])));
 }
 const vialBytes = readFileSync(new URL('../docs/img/shots/app-vial-crop.jpg', import.meta.url));
-check('VIAL crop has clean side edges', createHash('sha256').update(vialBytes).digest('hex') === '413f0e948e73148c3bb66722dfe9e2fd63aabc948009650f4670627120dff4a6');
+check('VIAL crop is the approved replacement', createHash('sha256').update(vialBytes).digest('hex') === '3b5232e3a117031f532dbb7901adf5b8ce4d3b1c80efe29419e3ad6aa47b0d5e');
 check('below-fold images lazy-load', (html.match(/loading="lazy"/g) || []).length >= 6);
 
 check('no artist photo is used as page background', !/hero-photo|background-image:\s*url\([^)]*img\/shots/.test(html));
@@ -83,6 +83,10 @@ check('screenshots stay inside screen frames',
     html.slice(Math.max(0, m.index - 190), m.index).includes('class="screen')));
 check('transparent chooser does not inherit an outer screenshot frame',
   /\.choice-shot img\s*\{[^}]*background:transparent[^}]*border:0[^}]*box-shadow:none/.test(css));
+check('sections follow the listening journey',
+  ['How far in?', 'See the Dive happen', 'Know what you missed', 'Mixes with a reason', 'Keep a crate', 'One playlist for the whole bill', 'Your library, your browser']
+    .map(label => html.indexOf(label))
+    .every((position, i, positions) => position >= 0 && (i === 0 || position > positions[i - 1])));
 
 check('feature screenshots keep their complete approved framing',
   !/class="screen shot-crop/.test(html));

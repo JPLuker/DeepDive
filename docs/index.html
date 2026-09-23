@@ -504,6 +504,20 @@
   .feature-band p { max-width:50ch; margin:18px 0 0; }
   .feature-band .screen { width:min(100%,390px); justify-self:end; }
 
+  .privacy-note {
+    margin-top:18px; padding:clamp(28px,5vw,48px);
+    border:1px solid var(--line); border-radius:var(--radius-lg);
+    text-align:center; background:var(--surface);
+  }
+  .privacy-note h2 {
+    font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
+    font-size:clamp(27px,4vw,38px); line-height:.98; margin:0;
+  }
+  .privacy-note p {
+    max-width:68ch; margin:16px auto 0; color:var(--muted);
+    line-height:1.62; font-size:15.5px;
+  }
+
   .closing {
     text-align:center; margin:72px 0 0; padding:54px 24px;
     background:var(--accent-gradient); border-radius:var(--radius-lg);
@@ -785,10 +799,10 @@
 
     <div class="feature-grid">
       <section class="feature-card">
-        <p class="section-eyebrow">From what you've saved</p>
-        <h2>Mixes with a reason</h2>
-        <p>Your library becomes dozens of useful cuts: years, albums you went deep on, songs you found late, your regulars, and more. Build your own from an era, a length and an artist, or use Sampler to revisit artists you barely touched. Add Last.fm for similar-artist and genre mixes.</p>
-        <figure class="screen"><img src="img/shots/app-mixes-crop.jpg" alt="DeepDive Mixes showing recommendations, Build your own, Sampler, year, album and listening-history mixes" width="490" height="724" loading="lazy"></figure>
+        <p class="section-eyebrow">While DeepDive reads the catalogue</p>
+        <h2>See the Dive happen</h2>
+        <p>DeepDive works through every release and shows its progress against the artist image. You can see exactly what it is reading instead of waiting on an unexplained loading screen.</p>
+        <figure class="screen"><img src="img/shots/app-vial-crop.jpg" alt="A VIAL dive in progress with the artist photo filling the screen" width="490" height="724" loading="lazy"></figure>
       </section>
 
       <section class="feature-card feature-card-results">
@@ -796,6 +810,22 @@
         <h2>Know what you missed</h2>
         <p>A Dive reads every album, single and EP, then checks the recordings against your Liked Songs. It catches the same recording under another release instead of trusting titles alone. Review the split, uncheck anything you don't want, then like songs, make a playlist, or both.</p>
         <figure class="screen"><img src="img/shots/app-results-crop.jpg" alt="A finished Houseghost dive showing duplicate recordings and tracks new to the listener" width="490" height="724" loading="lazy"></figure>
+      </section>
+    </div>
+
+    <div class="feature-grid">
+      <section class="feature-card">
+        <p class="section-eyebrow">From what you've saved</p>
+        <h2>Mixes with a reason</h2>
+        <p>Your library becomes dozens of useful cuts: years, albums you went deep on, songs you found late, your regulars, and more. Build your own from an era, a length and an artist, or use Sampler to revisit artists you barely touched. Add Last.fm for similar-artist and genre mixes.</p>
+        <figure class="screen"><img src="img/shots/app-mixes-crop.jpg" alt="DeepDive Mixes showing recommendations, Build your own, Sampler, year, album and listening-history mixes" width="490" height="724" loading="lazy"></figure>
+      </section>
+
+      <section class="feature-card">
+        <p class="section-eyebrow">Don't lose the next one</p>
+        <h2>Keep a crate</h2>
+        <p>Put aside artists you mean to get to. Star a few for Up next so Home keeps them in sight, then search, sort and sample everyone else when you're ready.</p>
+        <figure class="screen"><img src="img/shots/app-crate-crop.jpg" alt="The Crate with an Up next section and more saved artists below" width="490" height="724" loading="lazy"></figure>
       </section>
     </div>
 
@@ -808,21 +838,11 @@
       <figure class="screen"><img src="img/shots/app-multidip-crop.jpg" alt="Multi-Dip with Maciann, ValkenWolf and Moonside arranged into a three-hour playlist" width="490" height="724" loading="lazy"></figure>
     </section>
 
-    <div class="feature-grid">
-      <section class="feature-card">
-        <p class="section-eyebrow">Private by design</p>
-        <h2>Your library, your browser</h2>
-        <p>DeepDive has no server. Your Spotify library is read in the browser and stored on your device. The only requests that leave it are the ones needed for Spotify and Last.fm. Your listening history isn't pooled into a DeepDive account.</p>
-        <figure class="screen"><img src="img/shots/app-vial-crop.jpg" alt="A VIAL dive in progress with the artist photo filling the screen" width="490" height="724" loading="lazy"></figure>
-      </section>
-
-      <section class="feature-card">
-        <p class="section-eyebrow">Don't lose the next one</p>
-        <h2>Keep a crate</h2>
-        <p>Put aside artists you mean to get to. Star a few for Up next so Home keeps them in sight, then search, sort and sample everyone else when you're ready.</p>
-        <figure class="screen"><img src="img/shots/app-crate-crop.jpg" alt="The Crate with an Up next section and more saved artists below" width="490" height="724" loading="lazy"></figure>
-      </section>
-    </div>
+    <section class="privacy-note">
+      <p class="section-eyebrow">Private by design</p>
+      <h2>Your library, your browser</h2>
+      <p>DeepDive has no server. Your Spotify library is read in the browser and stored on your device. The only requests that leave it are the ones needed for Spotify and Last.fm. Your listening history isn't pooled into a DeepDive account.</p>
+    </section>
 
     <section class="closing">
       <h2>Start with one artist</h2>
