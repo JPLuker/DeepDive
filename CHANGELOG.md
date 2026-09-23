@@ -4,6 +4,17 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.86
+- Fixed the empty space around the chooser on the landing page. The
+  capture was 490x724 but the modal only filled the middle of it: 149px
+  of transparent frame above and 185px below, which the page drew as
+  gaps. The file is trimmed to the modal and its shadow (450x406).
+- Fixed the gap between the two rows of feature cards. They sat 70px
+  apart on a phone while the cards inside them sat 14px apart, so a
+  band read as two. Rows now use the same gap as the cards.
+- Tests now read a PNG's real size from its header and check the page
+  declares that size, so a capture's dimensions can't drift again.
+
 ## 2.9.85
 - Attribution in the app, not just on the landing page. Settings now
   credits Spotify for metadata and artwork and Last.fm for tags and

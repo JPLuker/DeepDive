@@ -48,7 +48,8 @@ const expected = [
   ['app-home-crop.jpg', 490, 724],
   ['app-dive-crop.jpg', 490, 724],
   ['app-mixes.svg', 640, 905],
-  ['app-chooser-crop.png', 490, 724],
+  // Trimmed to the modal in 2.9.86; the rest of the frame was transparent.
+  ['app-chooser-crop.png', 450, 406],
   ['app-mixes-crop.jpg', 490, 724],
   ['app-results-crop.jpg', 490, 724],
   ['app-multidip-crop.jpg', 490, 724],
@@ -56,6 +57,14 @@ const expected = [
   ['app-crate-crop.jpg', 490, 724],
 ];
 const refs = [...html.matchAll(/img\/shots\/([a-z-]+\.(?:svg|jpg|png))/g)].map(m => m[1]);
+
+// A PNG's real size, from its header, so a declared size can't drift
+// from the file. The chooser capture carried 334px of transparent
+// padding that the page drew as empty space above and below it.
+function pngSize(path) {
+  const b = readFileSync(path);
+  return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) };
+}
 check('all nine final screenshots are referenced', refs.length === 9);
 check('screenshots are not duplicated', new Set(refs).size === 9);
 for (const [file, width, height] of expected) {
@@ -64,6 +73,10 @@ for (const [file, width, height] of expected) {
     new RegExp('img/shots/' + file.replace('.', '\\.') + '"[^>]*width="' + width + '" height="' + height + '"').test(html));
   const path = new URL('../docs/img/shots/' + file, import.meta.url);
   check(file + ' exists', existsSync(path));
+  if (file.endsWith('.png') && existsSync(path)) {
+    const real = pngSize(path);
+    check(file + ' is declared at its real size', real.w === width && real.h === height);
+  }
   check(file + ' is web-sized', existsSync(path) && statSync(path).size < 140 * 1024);
   const payload = existsSync(path) ? readFileSync(path) : Buffer.alloc(0);
   check(file + ' contains the approved image payload',

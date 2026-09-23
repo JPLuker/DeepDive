@@ -244,7 +244,7 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.85
+## Shipped since — build 2.9.86
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:

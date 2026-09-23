@@ -877,6 +877,13 @@ Always:
 - [ ] Welcome (private window): two short paragraphs covering the whole
       setup, Premium in bold
 
+## 35. Landing page spacing (2.9.86)
+
+- [ ] "How far in?": the chooser sits close under the text, with no
+      empty band above or below it
+- [ ] The card rows read as one band, not two separated blocks
+- [ ] Same on desktop, and the chooser is still crisp at its new size
+
 ## 34. Attribution and licence (2.9.85)
 
 - [ ] Settings, at the very bottom: the credit paragraph reads clearly

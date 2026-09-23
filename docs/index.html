@@ -470,8 +470,10 @@
   }
   .choice-section .section-copy { max-width:52ch; margin:18px 0 0; }
   .choice-shot { width:min(100%,520px); justify-self:end; }
-  /* The chooser capture includes transparent breathing room around the
-     modal, so it must not inherit the generic full-image frame. */
+  /* The chooser capture is the modal and its shadow, trimmed to them in
+     2.9.86: the file carried 149px of transparent space above the modal
+     and 185px below, which the page drew as empty gaps. It must not
+     inherit the generic full-image frame either. */
   .choice-shot img {
     background:transparent; border:0; border-radius:0; box-shadow:none;
   }
@@ -480,6 +482,9 @@
     display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
     gap:18px; margin-top:96px;
   }
+  /* Two rows of cards are one band. Between them, the gap the cards
+     already use; the 96px above is for the section before it. */
+  .feature-grid + .feature-grid { margin-top:18px; }
   .feature-card {
     background:var(--surface); border:1px solid var(--line);
     border-radius:var(--radius-lg); padding:clamp(22px,4vw,38px);
@@ -546,6 +551,7 @@
     .choice-section { grid-template-columns:1fr; gap:30px; }
     .choice-shot { width:100%; justify-self:center; }
     .feature-grid { grid-template-columns:1fr; margin-top:70px; gap:14px; }
+    .feature-grid + .feature-grid { margin-top:14px; }
     .feature-card { padding:24px 20px; }
     .feature-card .screen { width:min(100%,430px); }
     .feature-band {
@@ -794,7 +800,7 @@
         <h2 class="section-title">How far in?</h2>
         <p class="section-copy">Dip gives you their best hour, most played first. Dive checks the whole catalogue against your library. Multi-Dip takes a whole bill and builds one playlist in the order they play.</p>
       </div>
-      <figure class="screen choice-shot"><img src="img/shots/app-chooser-crop.png" alt="DeepDive's artist chooser showing Dip, Dive and Multi-Dip for Maciann" width="490" height="724" loading="lazy"></figure>
+      <figure class="screen choice-shot"><img src="img/shots/app-chooser-crop.png" alt="DeepDive's artist chooser showing Dip, Dive and Multi-Dip for Maciann" width="450" height="406" loading="lazy"></figure>
     </section>
 
     <div class="feature-grid">
