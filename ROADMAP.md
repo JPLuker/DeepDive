@@ -261,15 +261,13 @@ who has to do it, since the long poles are Joseph's.
 
 **Claude's, on Joseph's word**
 
-6. **Repo cleanup.** The Flask app is still in the root: `app.py`,
-   `matching.py`, `progress.py`, `spotify_client.py`, `watchlist.py`,
-   `templates/`, `static/`, `run.sh`, `requirements.txt`. Nothing in
-   `docs/` or `tests/` references any of it. Also obsolete:
-   `PWA_MIGRATION_PLAN.md` (carried out) and `SETLISTFM_SURFACE.md`
-   (dropped). Keep `regen-app.sh`: it is live tooling.
-7. **The README still sells v1.** Entirely about cross-release
-   duplicates; never mentions Dip, Multi-Dip, Mixes, the Crate or
-   Last.fm.
+6. ~~**Repo cleanup.**~~ *Done in 2.9.89. The Flask app, its templates
+   and static files, its launcher and requirements, and the two
+   obsolete plan documents are out of the tree; they remain at commit
+   `80d4a54` and in the v1.x tags. `regen-app.sh` stayed: live tooling.*
+7. ~~**The README still sells v1.**~~ *Rewritten in 2.9.89, which also
+   fixed the redirect address it gave (`/DeepDive/` rather than
+   `/DeepDive/app/`), a setup-breaking error.*
 8. ~~**The sampler duplicate bug.**~~ *Done in 2.9.88.*
 
 **The release itself**
@@ -297,7 +295,7 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.88
+## Shipped since — build 2.9.89
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:

@@ -4,6 +4,23 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.89
+- Removed the Flask app from the tree: `app.py`, `matching.py`,
+  `progress.py`, `spotify_client.py`, `watchlist.py`, `templates/`,
+  `static/`, `run.sh` and `requirements.txt`, plus
+  `PWA_MIGRATION_PLAN.md` (carried out) and `SETLISTFM_SURFACE.md`
+  (setlist.fm is dropped). Nothing in `docs/` or `tests/` referenced
+  any of it. The modules that say they are a port of one of those files
+  keep their comments; `CLAUDE.md` says the originals are at commit
+  `80d4a54` and in the v1.x tags. `regen-app.sh` stays: live tooling.
+- Rewrote the README around the app as it is. It still sold the v1
+  duplicate finder and never mentioned Dip, Multi-Dip, Mixes, the
+  Crate, covers, history or Last.fm.
+- Fixed a real error in it: the redirect address it told people to
+  register was `.../DeepDive/`. The app is served from `/DeepDive/app/`
+  and sends that, so anyone following the README hit "Invalid redirect
+  URI" at login. It also now states Premium before the steps.
+
 ## 2.9.88
 - Fixed the sampler duplicate from Joseph's 4 Sept notes: a censored
   version of a track already in the mix. The sampler builds one artist

@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.88.** If the build in `js/app.js` is well
+**Last updated at build 2.9.89.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -137,6 +137,15 @@ docs/
 tests/run.sh          runs everything
 regen-app.sh          rebuilds app/index.html's <head> from index.html
 ```
+
+**The Flask app is gone from the tree.** `app.py`, `matching.py`,
+`progress.py`, `spotify_client.py`, `watchlist.py`, `templates/`,
+`static/`, `run.sh` and `requirements.txt` were removed in 2.9.89,
+along with `PWA_MIGRATION_PLAN.md` (carried out) and
+`SETLISTFM_SURFACE.md` (setlist.fm is dropped). Several modules still
+carry comments saying they are a port of one of those files, and those
+comments are worth keeping: the originals are at commit `80d4a54` and
+in the v1.x tags.
 
 **`regen-app.sh` matters.** `app/index.html` shares `index.html`'s head
 with asset paths climbing one level. Editing one without running it has

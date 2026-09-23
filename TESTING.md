@@ -877,6 +877,14 @@ Always:
 - [ ] Welcome (private window): two short paragraphs covering the whole
       setup, Premium in bold
 
+## 37. Repo and README (2.9.89)
+
+- [ ] GitHub's repo page opens on the new README, and the language
+      matches the app
+- [ ] Follow the README's setup steps on a spare Spotify app: the
+      redirect address it gives is accepted and login works
+- [ ] No Python files in the repo root
+
 ## 36. Sampler duplicates (2.9.88)
 
 - [ ] Build a few samplers: no song appears twice, including one clean
