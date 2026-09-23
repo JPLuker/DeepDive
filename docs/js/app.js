@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.87";
+export const BUILD = "2.9.88";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1161,6 +1161,9 @@ async function buildSampler(artists, perArtist, onProgress) {
   const out = [];
   const failures = [];
   const seenTrackIds = new Set();
+  // key -> index in out, so a later uncensored cut can replace an
+  // earlier censored one in place rather than being dropped.
+  const seenRecordings = new Map();
   for (let i = 0; i < picked.length; i++) {
     // Checked between artists rather than mid-request: a run is a dozen
     // separate calls, so stopping at the next boundary is quick enough
@@ -1223,11 +1226,19 @@ async function buildSampler(artists, perArtist, onProgress) {
         if (forArtist.length >= perArtist) break;
         forArtist.push(t);
       }
-      // Also guard across artists — a collaboration can legitimately be
-      // returned for both parties, and the same track twice in one
-      // playlist is a bug either way.
+      // Also guard across artists. Ids alone weren't enough: a
+      // collaboration comes back for both parties, and the two copies
+      // can be different cuts of the same recording with different ids
+      // and different ISRCs, which is how a censored version of a song
+      // already in the mix got through. Compare by song and artists,
+      // and keep the uncensored cut whichever order they arrive in.
       for (const t of forArtist) {
-        if (!seenTrackIds.has(t.id)) { seenTrackIds.add(t.id); out.push(t); }
+        if (seenTrackIds.has(t.id)) continue;
+        seenTrackIds.add(t.id);
+        const key = matching.mixDedupeKey(t);
+        const at = seenRecordings.get(key);
+        if (at === undefined) { seenRecordings.set(key, out.length); out.push(t); continue; }
+        if (matching.isRadioEditOrCensored(out[at]) && !matching.isRadioEditOrCensored(t)) out[at] = t;
       }
     } catch (e) {
       // One artist failing shouldn't sink the sampler — a missing act is

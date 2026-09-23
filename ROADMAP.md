@@ -270,8 +270,7 @@ who has to do it, since the long poles are Joseph's.
 7. **The README still sells v1.** Entirely about cross-release
    duplicates; never mentions Dip, Multi-Dip, Mixes, the Crate or
    Last.fm.
-8. **The sampler duplicate bug.** A censored version of a track already
-   in the mix. The only bug from Joseph's 4 Sept notes never addressed.
+8. ~~**The sampler duplicate bug.**~~ *Done in 2.9.88.*
 
 **The release itself**
 
@@ -298,7 +297,7 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.87
+## Shipped since — build 2.9.88
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -651,9 +650,12 @@ next update, not now.
 2.9.21. The whole mix is still reachable as its real count, and "all"
 stays valid internally for the sampler and built mixes.*
 
-**Duplicate song in a sampler** — a censored version of a track already
-in the mix. *Still open — the only bug from Joseph's notes not yet
-addressed.* The exclusion filters catch censored versions on a dive;
+~~**Duplicate song in a sampler**~~ — a censored version of a track
+already in the mix. *Fixed in 2.9.88.* Not a filter problem: the
+sampler applied `preferUncensored` per artist but deduped across
+artists by track id alone, so a collaboration returned for both parties
+could contribute both cuts. Now compared by song and artists, keeping
+the uncensored one. Original note:* The exclusion filters catch censored versions on a dive;
 the sampler either isn't applying them or isn't de-duplicating across
 artists.
 

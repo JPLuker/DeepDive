@@ -4,6 +4,19 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.88
+- Fixed the sampler duplicate from Joseph's 4 Sept notes: a censored
+  version of a track already in the mix. The sampler builds one artist
+  at a time and only guarded across artists by track id. A
+  collaboration comes back for both parties, and the two copies can be
+  different cuts of the same recording, with different ids and
+  different ISRCs, so both went in. ISRC can't catch this, since a
+  clean edit carries its own by design.
+- Tracks are now compared across artists by song and artists, ignoring
+  the annotations that mark a censored cut (`mixDedupeKey`). Whichever
+  cut arrives first, the uncensored one is what stays, in the running
+  order the first copy held.
+
 ## 2.9.87
 - Recorded the full pre-3.0 checklist in `ROADMAP.md`, ordered by who
   has to do each item. No code change.

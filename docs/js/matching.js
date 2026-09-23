@@ -811,6 +811,23 @@ export function preferUncensored(tracks) {
   return Array.from(best.values());
 }
 
+/**
+ * A key for "the same song by the same people", ignoring the
+ * annotations that mark a censored cut.
+ *
+ * ISRC can't do this job: a clean edit carries its own ISRC, which is
+ * the point of it. Title plus the artists is what catches the pair.
+ * Used where a list must not carry both cuts, such as a sampler, which
+ * assembles per artist and so never compared a collaboration returned
+ * for both parties.
+ */
+export function mixDedupeKey(track) {
+  let n = bracketsToParens((track && track.name) || "").toLowerCase();
+  for (const pat of CENSORED_PATTERNS) n = n.replace(pat, "");
+  const ids = (track && track.artists || []).map((a) => a && a.id).filter(Boolean).sort();
+  return `${normalizeTitle(n)}|${ids.join(",")}`;
+}
+
 export function collapseNeedsIsrc(tracks) {
   const byTitle = new Map();
   for (const t of tracks) {

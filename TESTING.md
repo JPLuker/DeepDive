@@ -877,6 +877,14 @@ Always:
 - [ ] Welcome (private window): two short paragraphs covering the whole
       setup, Premium in bold
 
+## 36. Sampler duplicates (2.9.88)
+
+- [ ] Build a few samplers: no song appears twice, including one clean
+      and one explicit cut of the same track
+- [ ] Where a collaboration turns up, it appears once, and it's the
+      explicit cut if both exist
+- [ ] Samplers still hold a few tracks each from the artists shown
+
 ## 35. Landing page spacing (2.9.86)
 
 - [ ] "How far in?": the chooser sits close under the text, with no
