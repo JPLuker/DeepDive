@@ -47,6 +47,8 @@
       once and beside copy that describes that exact screen
 - [ ] Feature screenshots retain their complete approved framing rather
       than being forced into matching-height cover crops
+- [ ] Home, Dive, Mixes, results, Multi-Dip, VIAL and Crate use the final
+      consistently sized 490×724 captures
 - [ ] Mix cards, Houseghost results, the complete Multi-Dip header and build
       button, VIAL progress, and the Crate's Up next section are all visible
 - [ ] All nine screenshots load; no stale old screenshot appears

@@ -4,6 +4,11 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.79
+- Replaced seven landing captures with Joseph's final, consistently framed
+  490×724 crops for Home, Dive, Mixes, results, Multi-Dip, VIAL and Crate.
+  They are served as optimized JPEGs without any CSS cover cropping.
+
 ## 2.9.78
 - Removed the landing page's forced cover crops. The approved captures
   were already tightly framed; preserving their natural proportions keeps

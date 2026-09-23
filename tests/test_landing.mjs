@@ -19,42 +19,42 @@ check('manifest carries the tagline', /^Hear it all\./.test(manifest.description
 check('link preview is not an artist screenshot', !/og:image[^>]*img\/shots/.test(html));
 
 const hero = html.slice(html.indexOf('<div class="hero-screens"'), html.indexOf('</header>'));
-check('hero shows Home', /app-home\.svg/.test(hero));
-check('hero shows a dive', /app-dive\.svg/.test(hero));
+check('hero shows Home', /app-home-crop\.jpg/.test(hero));
+check('hero shows a dive', /app-dive-crop\.jpg/.test(hero));
 check('hero shows Mixes', /app-mixes\.svg/.test(hero));
-check('hero has three distinct screenshots', new Set([...hero.matchAll(/img\/shots\/([^"]+\.svg)/g)].map(m => m[1])).size === 3);
+check('hero has three distinct screenshots', new Set([...hero.matchAll(/img\/shots\/([^"]+\.(?:svg|jpg))/g)].map(m => m[1])).size === 3);
 
 check('chooser screenshot is present', /app-chooser\.svg/.test(html));
 check('chooser copy explains Dip', /Dip gives you their best hour/.test(html));
 check('chooser copy explains Dive', /Dive checks the whole catalogue/.test(html));
 check('chooser copy explains Multi-Dip', /Multi-Dip takes a whole bill/.test(html));
 
-check('Mixes has its own recipe screenshot', /Mixes with a reason[\s\S]{0,1400}app-mixes-ideas\.svg/.test(html));
+check('Mixes has its own recipe screenshot', /Mixes with a reason[\s\S]{0,1400}app-mixes-crop\.jpg/.test(html));
 check('Mixes covers Build your own', /Build your own from an era, a length and an artist/.test(html));
 check('Mixes covers Sampler', /Sampler to revisit artists you barely touched/.test(html));
 check('Mixes covers similarity and genres', /similar-artist and genre mixes/.test(html));
 check('results explain recording-level matching', /same recording under another release/.test(html));
 check('results show like, playlist or both', /like songs, make a playlist, or both/.test(html));
-check('Multi-Dip has a dedicated section', /One playlist for the whole bill[\s\S]{0,1200}app-multidip\.svg/.test(html));
+check('Multi-Dip has a dedicated section', /One playlist for the whole bill[\s\S]{0,1200}app-multidip-crop\.jpg/.test(html));
 check('Multi-Dip covers More and Less', /mark someone More or Less/.test(html));
 check('privacy states there is no server', /DeepDive has no server/.test(html));
 check('privacy says data is stored on device', /stored on your device/.test(html));
 check('privacy names outbound services', /Spotify and Last\.fm/.test(html));
 check('Crate covers Up next', /Star a few for Up next/.test(html));
-check('Crate screenshot is present', /app-crate\.svg/.test(html));
+check('Crate screenshot is present', /app-crate-crop\.jpg/.test(html));
 
 const expected = [
-  ['app-home.svg', 640, 1007],
-  ['app-dive.svg', 640, 1240],
+  ['app-home-crop.jpg', 490, 724],
+  ['app-dive-crop.jpg', 490, 724],
   ['app-mixes.svg', 640, 905],
   ['app-chooser.svg', 640, 687],
-  ['app-mixes-ideas.svg', 640, 1009],
-  ['app-results.svg', 640, 953],
-  ['app-multidip.svg', 640, 1006],
-  ['app-vial.svg', 640, 1211],
-  ['app-crate.svg', 640, 1020],
+  ['app-mixes-crop.jpg', 490, 724],
+  ['app-results-crop.jpg', 490, 724],
+  ['app-multidip-crop.jpg', 490, 724],
+  ['app-vial-crop.jpg', 490, 724],
+  ['app-crate-crop.jpg', 490, 724],
 ];
-const refs = [...html.matchAll(/img\/shots\/([a-z-]+\.svg)/g)].map(m => m[1]);
+const refs = [...html.matchAll(/img\/shots\/([a-z-]+\.(?:svg|jpg))/g)].map(m => m[1]);
 check('all nine final screenshots are referenced', refs.length === 9);
 check('screenshots are not duplicated', new Set(refs).size === 9);
 for (const [file, width, height] of expected) {
@@ -64,17 +64,17 @@ for (const [file, width, height] of expected) {
   const path = new URL('../docs/img/shots/' + file, import.meta.url);
   check(file + ' exists', existsSync(path));
   check(file + ' is web-sized', existsSync(path) && statSync(path).size < 120 * 1024);
-  if (existsSync(path)) {
-    const svg = readFileSync(path, 'utf8');
-    check(file + ' embeds the approved JPEG',
-      new RegExp('<svg[^>]*width="' + width + '" height="' + height + '"[\\s\\S]*data:image/jpeg;base64,').test(svg));
-  }
+  const payload = existsSync(path) ? readFileSync(path) : Buffer.alloc(0);
+  check(file + ' contains an approved JPEG',
+    file.endsWith('.svg')
+      ? new RegExp('<svg[^>]*width="' + width + '" height="' + height + '"[\\s\\S]*data:image/jpeg;base64,').test(payload.toString('utf8'))
+      : payload.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff])));
 }
 check('below-fold images lazy-load', (html.match(/loading="lazy"/g) || []).length >= 6);
 
 check('no artist photo is used as page background', !/hero-photo|background-image:\s*url\([^)]*img\/shots/.test(html));
 check('screenshots stay inside screen frames',
-  [...html.matchAll(/img\/shots\/[a-z-]+\.svg/g)].every(m =>
+  [...html.matchAll(/img\/shots\/[a-z-]+\.(?:svg|jpg)/g)].every(m =>
     html.slice(Math.max(0, m.index - 190), m.index).includes('class="screen')));
 
 check('feature screenshots keep their complete approved framing',

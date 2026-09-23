@@ -234,7 +234,7 @@ clean before anything is built on it.
 
 ---
 
-## Stopping point, 22 Sept (build 2.9.78)
+## Stopping point, 22 Sept (build 2.9.79)
 
 Picking up next session:
 
@@ -244,11 +244,13 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.78
+## Shipped since — build 2.9.79
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Seven final user-cropped landing captures now replace the uneven source
+  screenshots without destructive browser-side cropping (2.9.79)
 - Removed the destructive forced landing screenshot crops and restored
   each approved capture's complete natural framing (2.9.78)
 - Landing feature screenshots now use deliberate, feature-specific crops
