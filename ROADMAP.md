@@ -234,6 +234,60 @@ clean before anything is built on it.
 
 ---
 
+## Before 3.0 — the checklist (23 Sept, build 2.9.86)
+
+Everything that stands between here and the final release. Ordered by
+who has to do it, since the long poles are Joseph's.
+
+**Joseph's, and nobody else can do them**
+
+1. **The `TESTING.md` pass.** 368 of 392 boxes unchecked, 60 sections.
+   The biggest job and the one that finds things.
+2. **The copy rewrite.** 19 em dashes in strings inside `app.js`, 22 in
+   the app shell, 11 on the landing page. The ~520-string PDF's
+   landing-page and onboarding ids are stale (both rewritten since);
+   ask for short separate PDFs for those two rather than regenerating.
+3. **Artist permission.** Emails to Leisure Hour, VIAL, Houseghost and
+   Maciann. Nine landing screenshots and demo mode depend on it. See
+   "Artist photography — provisional" below: it is a hold, not a
+   decision, and if permission doesn't come the photographs come off.
+4. **The `library-cache.js` decision.** Liked Songs persisted with a
+   24-hour reconcile window. "Immediate use" is arguable at 24 hours.
+   Leave it, shorten it, or make it session-only at a real cost in
+   requests. It should be a decision rather than a default.
+5. **Export/import across two browsers**, never tested. Storage is
+   per-browser, so it is the only thing between a lost cache and
+   starting over.
+
+**Claude's, on Joseph's word**
+
+6. **Repo cleanup.** The Flask app is still in the root: `app.py`,
+   `matching.py`, `progress.py`, `spotify_client.py`, `watchlist.py`,
+   `templates/`, `static/`, `run.sh`, `requirements.txt`. Nothing in
+   `docs/` or `tests/` references any of it. Also obsolete:
+   `PWA_MIGRATION_PLAN.md` (carried out) and `SETLISTFM_SURFACE.md`
+   (dropped). Keep `regen-app.sh`: it is live tooling.
+7. **The README still sells v1.** Entirely about cross-release
+   duplicates; never mentions Dip, Multi-Dip, Mixes, the Crate or
+   Last.fm.
+8. **The sampler duplicate bug.** A censored version of a track already
+   in the mix. The only bug from Joseph's 4 Sept notes never addressed.
+
+**The release itself**
+
+9. **Tags.** The last tag is `v2.5.0`; everything from 2.6 to 2.9.86 is
+   untagged.
+10. **Rename the GitHub releases** to the song-title convention, then
+    cut 3.0 with a title and notes. 3.0's number is Joseph's to take.
+
+**Done, for the record:** attribution inside the app and a licence for
+the repo, both in 2.9.85.
+
+**Not audited, so not claimed:** accessibility, and performance beyond
+the pacing work. Neither has been looked at properly.
+
+---
+
 ## Stopping point, 22 Sept (build 2.9.84)
 
 Picking up next session:
@@ -244,7 +298,7 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.86
+## Shipped since — build 2.9.87
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:

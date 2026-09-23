@@ -4,6 +4,10 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.87
+- Recorded the full pre-3.0 checklist in `ROADMAP.md`, ordered by who
+  has to do each item. No code change.
+
 ## 2.9.86
 - Fixed the empty space around the chooser on the landing page. The
   capture was 490x724 but the modal only filled the middle of it: 149px
