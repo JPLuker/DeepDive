@@ -57,7 +57,9 @@ disclaims endorsement. None of that existed before; it is the minimum,
 not a substitute for asking.
 
 **Where photographs may appear:** inside device frames on the landing
-page, as examples of the app running. Nowhere else — not as page
+page, as examples of the app running. Not in the README either: it uses
+the Mixes screen, which has no artist photography in it, and a test
+keeps the others out. Nowhere else — not as page
 imagery, not as the link-preview image, not in a store listing or a
 social post. The link preview used one until 2.8.56, which is a
 headline use by any reasonable reading.
@@ -295,7 +297,7 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.89
+## Shipped since — build 2.9.90
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:

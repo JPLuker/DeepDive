@@ -4,6 +4,16 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.90
+- README reworked in the landing page's voice but in GitHub's idiom:
+  logo and tagline, the three depths as a table, the Mixes screen, the
+  install table, licence and PWA badges, and setup with GitHub's own
+  callouts. Troubleshooting and a "running it yourself" section are
+  collapsed rather than cut.
+- The only screenshot used is the Mixes grid, which carries no artist
+  photography. The hold in `ROADMAP.md` limits artist shots to the
+  landing page, and a test now fails if one appears in the README.
+
 ## 2.9.89
 - Removed the Flask app from the tree: `app.py`, `matching.py`,
   `progress.py`, `spotify_client.py`, `watchlist.py`, `templates/`,

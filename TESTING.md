@@ -881,6 +881,8 @@ Always:
 
 - [ ] GitHub's repo page opens on the new README, and the language
       matches the app
+- [ ] The README renders properly on GitHub (2.9.90): logo, badges,
+      tables, the Mixes screenshot, and the collapsed sections open
 - [ ] Follow the README's setup steps on a spare Spotify app: the
       redirect address it gives is accepted and login works
 - [ ] No Python files in the repo root
