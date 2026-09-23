@@ -2,16 +2,15 @@
 
 <img src="docs/assets/dd-logo.png" alt="" width="72">
 
-# DeepDive
+# Hear it all.
 
-### Hear it all.
-
-DeepDive knows what's already in your Spotify library, so every playlist
-it builds is made of the songs you missed.
+DeepDive knows what's already in your Spotify library, finds the tracks
+you missed, and turns the music you've saved into mixes built around how
+you listen.
 
 **[Open DeepDive →](https://jpluker.github.io/DeepDive/app/)** ·
-[What it does](https://jpluker.github.io/DeepDive/) ·
-[Setup](#getting-started)
+[See how it works](https://jpluker.github.io/DeepDive/) ·
+[Set it up](#start-with-one-artist)
 
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
 ![Installable PWA](https://img.shields.io/badge/PWA-installable-1DB954)
@@ -21,92 +20,89 @@ it builds is made of the songs you missed.
 
 ---
 
-## Start with an artist
+### Start with an artist
 
-Name anyone and pick how far in to go.
+## How far in?
 
-| | | |
-|---|---|---|
-| **Dip** | their best hour, most played first | a short introduction, or a refresher before a gig |
-| **Dive** | their whole catalogue against your library | every album, single and EP, held up against your Liked Songs |
-| **Multi-Dip** | a whole bill in one playlist | everyone on the lineup, in the order they play |
+Dip gives you their best hour, most played first. Dive checks the whole
+catalogue against your library. Multi-Dip takes a whole bill and builds
+one playlist in the order they play.
 
-A **Dive** matches recordings rather than titles, so the album cut you
-saved still counts when the single turns up. You get back what you
-already own under another release, and what you have never heard.
-Review the split, untick anything, then like the songs, build a
-playlist, or both.
+| | |
+|---|---|
+| **Dip** | their best hour, most played first |
+| **Dive** | their whole catalogue against your library |
+| **Multi-Dip** | everyone on the bill, in the order they play |
 
-A **Multi-Dip** takes the lineup. Drag the acts into running order, tag
-who you are really there for as More and the opener as Less, and say how
-long the night runs. It builds one playlist that plays like the night.
+### While DeepDive reads the catalogue
 
-## Your library, cut dozens of ways
+## See the Dive happen
 
-<div align="center">
-<img src="docs/img/shots/app-mixes-crop.jpg" alt="DeepDive's Mixes screen: Recommended, Sampler, Build your own, and mixes by year, album and listening history" width="330">
-</div>
+DeepDive works through every release and shows its progress against the
+artist image. You can see exactly what it is reading instead of waiting
+on an unexplained loading screen.
 
-Years, albums you went deep on, songs you found a decade late, artists
-you liked exactly one track by. Build your own from an era, a length and
-an artist, or let **Sampler** pull a few songs each from artists you
-barely touched.
+### A real catalogue check
 
-Add a free [Last.fm key](https://www.last.fm/api/account/create) and you
-also get **Dips**, **Multi-Dips**, similar-artist recommendations, and
-genre mixes that go well past "rock".
+## Know what you missed
 
-## The rest of it
+A Dive reads every album, single and EP, then checks the recordings
+against your Liked Songs. It catches the same recording under another
+release instead of trusting titles alone. Review the split, uncheck
+anything you don't want, then like songs, make a playlist, or both.
 
-- **The Crate** — artists you mean to get to, saved for later. Star a
-  few and they lead your home screen. Sort by who you haven't dived
-  yet, or build a sampler from the whole crate.
-- **Album order that means something** — records in chronological
-  sequence, tracks in their intended running order. Press play and hear
-  a catalogue the way it was meant to be heard.
-- **It knows a re-release from a remix** — a live take, an acoustic
-  version, a remaster: different recordings, treated that way. The same
-  recording on a different sleeve is what gets flagged.
-- **Filters** — drop live cuts, radio edits, instrumentals or a cappella
-  versions. Pull in compilations, or go further and include records an
-  artist only guests on.
-- **Your whole library at once** — the full scan crawls every artist
-  you've liked. It takes a while, and you can stop it whenever; it keeps
-  what it found.
-- **A cover for every playlist** — the artist's photo, the kind of mix,
-  and the DeepDive mark. A Multi-Dip splits it between the bill.
-- **Take it back** — dive history lists what you dived and what DeepDive
-  built. Songs it added come off again with one tap.
-- **Dark mode.** Obviously.
+### From what you've saved
 
-Nothing reaches Spotify until you choose it. Build the same playlist
-again later and DeepDive adds to it rather than making a second one.
+## Mixes with a reason
 
-## It can't collect your data
+Your library becomes dozens of useful cuts: years, albums you went deep
+on, songs you found late, your regulars, and more. Build your own from
+an era, a length and an artist, or use Sampler to revisit artists you
+barely touched. Add Last.fm for similar-artist and genre mixes.
 
-There is no DeepDive server, database or account system, so there is
-nowhere for your listening to go. Your library is read by your browser
-and stays on your device. The only requests that leave it are the ones
-to Spotify and Last.fm that fetch what you asked for.
+### Don't lose the next one
+
+## Keep a crate
+
+Put aside artists you mean to get to. Star a few for Up next so Home
+keeps them in sight, then search, sort and sample everyone else when
+you're ready.
+
+### Going to a show?
+
+## One playlist for the whole bill
+
+Multi-Dip keeps the artists in show order and fits them to the length of
+your night. Leave the split even, mark someone More or Less, or give an
+artist an exact number of songs.
+
+### Private by design
+
+## DeepDive cannot collect your data
+
+There is nowhere for it to go. DeepDive has no server, database or
+account system. Your Spotify library stays in your browser and on your
+device, and the only requests that leave it are the ones to Spotify and
+Last.fm that fetch what you asked for.
+
+### Wherever you listen
 
 ## Put it on your home screen
 
-DeepDive installs like a real app, without an app store:
+DeepDive installs like a real app, without an app store.
 
 | iPhone / iPad | Android | Desktop |
 |---|---|---|
 | Share → *Add to Home Screen* | menu → *Install app* | the install icon in the address bar |
 
-Opens fullscreen. Own icon. No one would know it's a website.
-
 ---
 
-## Getting started
+## Start with one artist
 
-Spotify requires every app that touches your library to have its own
-credentials, so there is a one-time step before your first dive. Two
-minutes, and you never do it again. The app walks you through it; this
-is the same thing written down.
+Pick someone you think you know well. That's usually where the surprise
+is. Spotify requires every app that touches your library to have its own
+credentials, so there is a one-time step first. Two minutes, and you
+never do it again.
 
 > [!IMPORTANT]
 > You'll need **Spotify Premium**. Spotify only runs apps like this one

@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.91
+- README is now the landing page in GitHub's form: the same sections in
+  the same order and the same words, from "How far in?" through to
+  "DeepDive cannot collect your data", then setup. No screenshots at
+  all, so nothing depends on the photography hold. Tests check the
+  sections are present and that no screenshot returns.
+
 ## 2.9.90
 - README reworked in the landing page's voice but in GitHub's idiom:
   logo and tagline, the three depths as a table, the Mixes screen, the

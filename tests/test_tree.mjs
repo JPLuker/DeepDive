@@ -39,10 +39,16 @@ for (const keep of ['docs', 'tests', 'README.md', 'LICENSE', 'CLAUDE.md',
   check('and the old one is gone', !/```\nhttps:\/\/jpluker\.github\.io\/DeepDive\/\n```/.test(readme));
   // The app derives it from its own location, so /app/ is what it sends.
   check('which is where the app is served from', /<title>DeepDive/.test(shell));
-  for (const feature of ['Dip', 'Dive', 'Multi-Dip', 'The Crate'])
+  for (const feature of ['Dip', 'Dive', 'Multi-Dip'])
     check(`the README covers ${feature}`, readme.includes(`**${feature}**`));
   // Mixes by their parts, since the section is named for what it does.
-  check('the README covers Mixes', /Sampler/.test(readme) && /Build your own/.test(readme) && /app-mixes-crop\.jpg/.test(readme));
+  check('the README covers Mixes', /Sampler/.test(readme) && /Build your own/.test(readme));
+  // 2.9.91: it follows the landing page's sections, in its words.
+  for (const section of ['How far in?', 'See the Dive happen', 'Know what you missed',
+                         'Mixes with a reason', 'Keep a crate',
+                         'One playlist for the whole bill', 'DeepDive cannot collect your data'])
+    check(`the README has the landing page's "${section}"`, readme.includes(`## ${section}`));
+  check('and no screenshots at all', !/img\/shots\//.test(readme));
   // The photography hold: only the landing page may carry artist shots.
   check('no artist photography in the README', !/(app-(home|dive|vial|results|crate|multidip|chooser)[^)"']*\.(jpg|png|svg))/.test(readme));
   check('the README covers Last.fm', /Last\.fm API key/.test(readme) && /need a Last\.fm key/.test(readme));
