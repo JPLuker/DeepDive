@@ -234,7 +234,7 @@ clean before anything is built on it.
 
 ---
 
-## Stopping point, 22 Sept (build 2.9.82)
+## Stopping point, 22 Sept (build 2.9.83)
 
 Picking up next session:
 
@@ -244,11 +244,13 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.82
+## Shipped since — build 2.9.83
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Landing privacy copy now uses Joseph's exact no-data-collection statement
+  (2.9.83)
 - Landing sections now follow the product journey, and the VIAL progress
   capture uses Joseph's corrected replacement image (2.9.82)
 - The Dip/Dive/Multi-Dip explanation now uses the complete transparent

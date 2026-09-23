@@ -4,6 +4,10 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.83
+- Replaced the landing privacy explanation with Joseph's exact statement:
+  "It is impossible for Deepdive to collect any data".
+
 ## 2.9.82
 - Replaced the VIAL progress capture with Joseph's corrected image.
 - Reordered the landing page around the product journey: choose a depth,

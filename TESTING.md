@@ -54,6 +54,8 @@
 - [ ] The VIAL capture has no purple or cyan line along either side
 - [ ] Sections read in order: choose depth, Dive progress, results, Mixes,
       Crate, Multi-Dip, privacy, then the final call to action
+- [ ] Privacy copy reads exactly "It is impossible for Deepdive to collect
+      any data"
 - [ ] Mix cards, Houseghost results, the complete Multi-Dip header and build
       button, VIAL progress, and the Crate's Up next section are all visible
 - [ ] All nine screenshots load; no stale old screenshot appears
