@@ -49,6 +49,7 @@
       than being forced into matching-height cover crops
 - [ ] Home, Dive, Mixes, results, Multi-Dip, VIAL and Crate use the final
       consistently sized 490×724 captures
+- [ ] The VIAL capture has no purple or cyan line along either side
 - [ ] Mix cards, Houseghost results, the complete Multi-Dip header and build
       button, VIAL progress, and the Crate's Up next section are all visible
 - [ ] All nine screenshots load; no stale old screenshot appears

@@ -1,5 +1,6 @@
 // Landing page regression checks for the screenshot-led 2.9.76 rebuild.
 import { readFileSync, existsSync, statSync } from 'fs';
+import { createHash } from 'crypto';
 
 const html = readFileSync(new URL('../docs/index.html', import.meta.url), 'utf8');
 const manifest = JSON.parse(readFileSync(new URL('../docs/app/manifest.json', import.meta.url), 'utf8'));
@@ -70,6 +71,8 @@ for (const [file, width, height] of expected) {
       ? new RegExp('<svg[^>]*width="' + width + '" height="' + height + '"[\\s\\S]*data:image/jpeg;base64,').test(payload.toString('utf8'))
       : payload.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff])));
 }
+const vialBytes = readFileSync(new URL('../docs/img/shots/app-vial-crop.jpg', import.meta.url));
+check('VIAL crop has clean side edges', createHash('sha256').update(vialBytes).digest('hex') === '413f0e948e73148c3bb66722dfe9e2fd63aabc948009650f4670627120dff4a6');
 check('below-fold images lazy-load', (html.match(/loading="lazy"/g) || []).length >= 6);
 
 check('no artist photo is used as page background', !/hero-photo|background-image:\s*url\([^)]*img\/shots/.test(html));

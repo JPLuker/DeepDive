@@ -4,6 +4,10 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.80
+- Removed the stray colored side-edge pixels baked into the VIAL landing
+  capture while preserving its 490×724 framing.
+
 ## 2.9.79
 - Replaced seven landing captures with Joseph's final, consistently framed
   490×724 crops for Home, Dive, Mixes, results, Multi-Dip, VIAL and Crate.
