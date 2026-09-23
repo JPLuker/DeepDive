@@ -4,6 +4,18 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.85
+- Attribution in the app, not just on the landing page. Settings now
+  credits Spotify for metadata and artwork and Last.fm for tags and
+  popularity, says that artwork and photographs belong to their owners,
+  disclaims affiliation, and links the source and licence. Spotify's
+  Developer Terms require this and the app itself had none.
+- Added a LICENSE: MIT for DeepDive's own code. It states plainly that
+  it covers the code only, claims nothing over content from Spotify or
+  Last.fm, and does not license the artist photographs on the landing
+  page, which are there pending the artists' permission.
+- README has a licence and credits section.
+
 ## 2.9.84
 - Reworked the landing privacy statement into a clear message rather than
   a literal sentence: DeepDive cannot collect user data because it has no

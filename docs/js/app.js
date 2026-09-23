@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.84";
+export const BUILD = "2.9.85";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -5429,6 +5429,8 @@ function renderSettings() {
         <a href="https://www.linkedin.com/in/josephluker" target="_blank" rel="noopener">LinkedIn</a>
       </div>
       <p class="settings-build">DeepDive · build ${esc(BUILD)}</p>
+      <p class="set-legal">Music metadata and artwork are provided by Spotify. Artist tags and popularity are provided by Last.fm. Album artwork and artist photographs remain the property of their owners. DeepDive is not affiliated with Spotify AB or Last.fm.</p>
+      <p class="set-legal"><a href="https://github.com/JPLuker/DeepDive" target="_blank" rel="noopener">Source and licence</a></p>
     </footer>`;
 
   const msg = document.getElementById("settings-msg");

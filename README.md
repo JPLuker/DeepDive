@@ -132,6 +132,17 @@ hundreds, at one request each. Compilations alone are cheap.
 
 ---
 
+## Licence and credits
+
+DeepDive's own source code is under the [MIT licence](LICENSE).
+
+That covers the code and nothing else. Music metadata and artwork come
+from Spotify; artist tags and popularity come from Last.fm. All of it
+belongs to its owners, not to this project, and is subject to their
+terms. DeepDive is not affiliated with Spotify AB or Last.fm.
+
+---
+
 <div align="center">
 
 **[Start digging →](https://jpluker.github.io/DeepDive/)**

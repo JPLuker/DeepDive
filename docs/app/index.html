@@ -1110,6 +1110,15 @@
   .set-links a { font-size:13px; font-weight:600; color:var(--accent); text-decoration:none; }
   .set-links a:hover { text-decoration:underline; }
 
+  /* Attribution. Spotify's Developer Terms require content reached
+     through the API to be attributed; the landing page said so and the
+     app itself never did until 2.9.85. */
+  .set-legal {
+    margin:10px auto 0; max-width:46ch; font-size:11.5px; line-height:1.5;
+    color:var(--muted-soft); text-align:center;
+  }
+  .set-legal a { color:var(--muted); text-decoration:underline; }
+
   .settings-build { margin:26px 0 0; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; color:var(--muted-soft); }
 
   /* Sampler intro: the artists it's about to fetch, so the page shows

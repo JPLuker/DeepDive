@@ -244,7 +244,7 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.84
+## Shipped since — build 2.9.85
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
@@ -714,9 +714,13 @@ than artist tags alone.
 
 ## Compliance — from the API guidance, 4 Sept
 
-- **Attribution is missing.** The Developer Terms require attributing
-  content to Spotify; there is none anywhere in the app shell. Small,
-  cheap, and the clearest gap we have.
+- ~~**Attribution is missing.**~~ *Done in 2.9.85: the Settings footer
+  credits Spotify and Last.fm, states that artwork and photographs
+  belong to their owners, disclaims affiliation, and links the source
+  and licence. Text only. Spotify's design guidelines also describe
+  logo-based attribution; no Spotify logo asset ships with this repo,
+  so if that's wanted it needs the official asset and a decision on
+  where it sits.*
 - **`library-cache.js` needs a decision.** It persists the user's Liked
   Songs with a 24-hour reconcile window. Defensible as the user's own
   data serving an immediate function, but not obviously "immediate

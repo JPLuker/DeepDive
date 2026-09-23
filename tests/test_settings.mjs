@@ -75,9 +75,14 @@ for (const id of ['set-refresh','find-playlists','set-disconnect','set-reset-pac
 // Joseph's note: credit at the bottom of settings.
 check('credited', /Made by Joseph Luker/.test(src));
 // The credit links to Joseph, not the repository — this is a footer
-// crediting a person, not a project link.
-check('github links to the profile', /github\.com\/JPLuker"/.test(src));
-check('not the repo', !/github\.com\/JPLuker\/DeepDive" target/.test(src));
+// crediting a person, not a project link. Scoped to that links block:
+// since 2.9.85 the attribution line below it does link the repo, for
+// the licence, and that is a different thing.
+{
+  const links = src.slice(src.indexOf('<div class="set-links">'), src.indexOf('</div>', src.indexOf('<div class="set-links">')));
+  check('github links to the profile', /github\.com\/JPLuker"/.test(links));
+  check('not the repo', !/github\.com\/JPLuker\/DeepDive/.test(links));
+}
 check('linkedin linked', /linkedin\.com\/in\//.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);

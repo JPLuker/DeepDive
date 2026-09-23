@@ -877,6 +877,13 @@ Always:
 - [ ] Welcome (private window): two short paragraphs covering the whole
       setup, Premium in bold
 
+## 34. Attribution and licence (2.9.85)
+
+- [ ] Settings, at the very bottom: the credit paragraph reads clearly
+      in both light and dark themes, and isn't cramped on a phone
+- [ ] "Source and licence" opens the GitHub repo
+- [ ] GitHub shows "MIT" beside the repo name once LICENSE is pushed
+
 ## 33. Onboarding (2.9.56)
 
 Test in a private window, or clear site data, so it's a first visit.
