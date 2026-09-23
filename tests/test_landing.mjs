@@ -38,9 +38,9 @@ check('results explain recording-level matching', /same recording under another 
 check('results show like, playlist or both', /like songs, make a playlist, or both/.test(html));
 check('Multi-Dip has a dedicated section', /One playlist for the whole bill[\s\S]{0,1200}app-multidip-crop\.jpg/.test(html));
 check('Multi-Dip covers More and Less', /mark someone More or Less/.test(html));
-check('privacy makes the no-collection guarantee verbatim', /<p>It is impossible for Deepdive to collect any data<\/p>/.test(html));
-check('old privacy explanation is gone', !/DeepDive has no server|stored on your device/.test(html));
-check('privacy statement adds no qualification', !/The only requests that leave it|listening history isn't pooled/.test(html));
+check('privacy leads with the no-collection message', /<h2>DeepDive cannot collect your data<\/h2>/.test(html));
+check('privacy explains the technical reason', /no server, database or account system/.test(html));
+check('privacy says the library stays local', /stays in your browser and on your device/.test(html));
 check('Crate covers Up next', /Star a few for Up next/.test(html));
 check('Crate screenshot is present', /app-crate-crop\.jpg/.test(html));
 
@@ -84,7 +84,7 @@ check('screenshots stay inside screen frames',
 check('transparent chooser does not inherit an outer screenshot frame',
   /\.choice-shot img\s*\{[^}]*background:transparent[^}]*border:0[^}]*box-shadow:none/.test(css));
 check('sections follow the listening journey',
-  ['How far in?', 'See the Dive happen', 'Know what you missed', 'Mixes with a reason', 'Keep a crate', 'One playlist for the whole bill', 'Your library, your browser']
+  ['How far in?', 'See the Dive happen', 'Know what you missed', 'Mixes with a reason', 'Keep a crate', 'One playlist for the whole bill', 'DeepDive cannot collect your data']
     .map(label => html.indexOf(label))
     .every((position, i, positions) => position >= 0 && (i === 0 || position > positions[i - 1])));
 

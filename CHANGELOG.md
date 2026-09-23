@@ -4,6 +4,11 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.84
+- Reworked the landing privacy statement into a clear message rather than
+  a literal sentence: DeepDive cannot collect user data because it has no
+  server, database or account system.
+
 ## 2.9.83
 - Replaced the landing privacy explanation with Joseph's exact statement:
   "It is impossible for Deepdive to collect any data".
