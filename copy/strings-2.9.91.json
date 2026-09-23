@@ -1,0 +1,2930 @@
+[
+ {
+  "group": "Landing page",
+  "line": 15,
+  "display": "DeepDive \u2014 Hear it all.",
+  "id": "S001"
+ },
+ {
+  "group": "Landing page",
+  "line": 779,
+  "display": "DeepDive",
+  "id": "S002"
+ },
+ {
+  "group": "Landing page",
+  "line": 780,
+  "display": "Open the app",
+  "id": "S003"
+ },
+ {
+  "group": "Landing page",
+  "line": 784,
+  "display": "Hear it all.",
+  "id": "S004"
+ },
+ {
+  "group": "Landing page",
+  "line": 785,
+  "display": "DeepDive knows what's already in your Spotify library, finds the tracks you missed, and turns the music you've saved into mixes built around how you listen.",
+  "id": "S005"
+ },
+ {
+  "group": "Landing page",
+  "line": 787,
+  "display": "Open DeepDive",
+  "id": "S006"
+ },
+ {
+  "group": "Landing page",
+  "line": 788,
+  "display": "See how it works",
+  "id": "S007"
+ },
+ {
+  "group": "Landing page",
+  "line": 799,
+  "display": "Start with an artist",
+  "id": "S008"
+ },
+ {
+  "group": "Landing page",
+  "line": 800,
+  "display": "How far in?",
+  "id": "S009"
+ },
+ {
+  "group": "Landing page",
+  "line": 801,
+  "display": "Dip gives you their best hour, most played first. Dive checks the whole catalogue against your library. Multi-Dip takes a whole bill and builds one playlist in the order they play.",
+  "id": "S010"
+ },
+ {
+  "group": "Landing page",
+  "line": 803,
+  "display": "DeepDive's artist chooser showing Dip, Dive and Multi-Dip for Maciann",
+  "id": "S011"
+ },
+ {
+  "group": "Landing page",
+  "line": 808,
+  "display": "While DeepDive reads the catalogue",
+  "id": "S012"
+ },
+ {
+  "group": "Landing page",
+  "line": 809,
+  "display": "See the Dive happen",
+  "id": "S013"
+ },
+ {
+  "group": "Landing page",
+  "line": 810,
+  "display": "DeepDive works through every release and shows its progress against the artist image. You can see exactly what it is reading instead of waiting on an unexplained loading screen.",
+  "id": "S014"
+ },
+ {
+  "group": "Landing page",
+  "line": 811,
+  "display": "A VIAL dive in progress with the artist photo filling the screen",
+  "id": "S015"
+ },
+ {
+  "group": "Landing page",
+  "line": 815,
+  "display": "A real catalogue check",
+  "id": "S016"
+ },
+ {
+  "group": "Landing page",
+  "line": 816,
+  "display": "Know what you missed",
+  "id": "S017"
+ },
+ {
+  "group": "Landing page",
+  "line": 817,
+  "display": "A Dive reads every album, single and EP, then checks the recordings against your Liked Songs. It catches the same recording under another release instead of trusting titles alone. Review the split, uncheck anything you don't want, then like songs, make a playlist, or both.",
+  "id": "S018"
+ },
+ {
+  "group": "Landing page",
+  "line": 818,
+  "display": "A finished Houseghost dive showing duplicate recordings and tracks new to the listener",
+  "id": "S019"
+ },
+ {
+  "group": "Landing page",
+  "line": 824,
+  "display": "From what you've saved",
+  "id": "S020"
+ },
+ {
+  "group": "Landing page",
+  "line": 825,
+  "display": "Mixes with a reason",
+  "id": "S021"
+ },
+ {
+  "group": "Landing page",
+  "line": 826,
+  "display": "Your library becomes dozens of useful cuts: years, albums you went deep on, songs you found late, your regulars, and more. Build your own from an era, a length and an artist, or use Sampler to revisit artists you barely touched. Add Last.fm for similar-artist and genre mixes.",
+  "id": "S022"
+ },
+ {
+  "group": "Landing page",
+  "line": 827,
+  "display": "DeepDive Mixes showing recommendations, Build your own, Sampler, year, album and listening-history mixes",
+  "id": "S023"
+ },
+ {
+  "group": "Landing page",
+  "line": 831,
+  "display": "Don't lose the next one",
+  "id": "S024"
+ },
+ {
+  "group": "Landing page",
+  "line": 832,
+  "display": "Keep a crate",
+  "id": "S025"
+ },
+ {
+  "group": "Landing page",
+  "line": 833,
+  "display": "Put aside artists you mean to get to. Star a few for Up next so Home keeps them in sight, then search, sort and sample everyone else when you're ready.",
+  "id": "S026"
+ },
+ {
+  "group": "Landing page",
+  "line": 834,
+  "display": "The Crate with an Up next section and more saved artists below",
+  "id": "S027"
+ },
+ {
+  "group": "Landing page",
+  "line": 840,
+  "display": "Going to a show?",
+  "id": "S028"
+ },
+ {
+  "group": "Landing page",
+  "line": 841,
+  "display": "One playlist for the whole bill",
+  "id": "S029"
+ },
+ {
+  "group": "Landing page",
+  "line": 842,
+  "display": "Multi-Dip keeps the artists in show order and fits them to the length of your night. Leave the split even, mark someone More or Less, or give an artist an exact number of songs.",
+  "id": "S030"
+ },
+ {
+  "group": "Landing page",
+  "line": 844,
+  "display": "Multi-Dip with Maciann, ValkenWolf and Moonside arranged into a three-hour playlist",
+  "id": "S031"
+ },
+ {
+  "group": "Landing page",
+  "line": 848,
+  "display": "Private by design",
+  "id": "S032"
+ },
+ {
+  "group": "Landing page",
+  "line": 849,
+  "display": "DeepDive cannot collect your data",
+  "id": "S033"
+ },
+ {
+  "group": "Landing page",
+  "line": 850,
+  "display": "There is nowhere for it to go. DeepDive has no server, database or account system\u2014your Spotify library stays in your browser and on your device.",
+  "id": "S034"
+ },
+ {
+  "group": "Landing page",
+  "line": 854,
+  "display": "Start with one artist",
+  "id": "S035"
+ },
+ {
+  "group": "Landing page",
+  "line": 855,
+  "display": "Pick someone you think you know well. That's usually where the surprise is.",
+  "id": "S036"
+ },
+ {
+  "group": "Landing page",
+  "line": 861,
+  "display": "Source on GitHub",
+  "id": "S037"
+ },
+ {
+  "group": "Landing page",
+  "line": 862,
+  "display": "Getting started",
+  "id": "S038"
+ },
+ {
+  "group": "Landing page",
+  "line": 862,
+  "display": "Set up DeepDive",
+  "id": "S039"
+ },
+ {
+  "group": "Landing page",
+  "line": 862,
+  "display": "Spotify developer dashboard",
+  "id": "S040"
+ },
+ {
+  "group": "Landing page",
+  "line": 862,
+  "display": "Last.fm API key",
+  "id": "S041"
+ },
+ {
+  "group": "Landing page",
+  "line": 863,
+  "display": "Made by Joseph Luker",
+  "id": "S042"
+ },
+ {
+  "group": "Landing page",
+  "line": 863,
+  "display": "GitHub",
+  "id": "S043"
+ },
+ {
+  "group": "Landing page",
+  "line": 863,
+  "display": "LinkedIn",
+  "id": "S044"
+ },
+ {
+  "group": "Landing page",
+  "line": 863,
+  "display": "Buy me a coffee",
+  "id": "S045"
+ },
+ {
+  "group": "Landing page",
+  "line": 865,
+  "display": "Music metadata and artwork are provided by Spotify. DeepDive is not affiliated with Spotify AB. Tag and popularity data are provided by Last.fm. All copyrighted content, including album artwork and artist photography, remains the property of its respective owners.",
+  "id": "S046"
+ },
+ {
+  "group": "Landing page",
+  "line": 866,
+  "display": "Artists pictured include Leisure Hour, VIAL, Houseghost and Maciann, plus artists shown inside the app's Home, Crate and Multi-Dip screens. Their photographs appear here only as examples of the app in use and imply no endorsement.",
+  "id": "S047"
+ },
+ {
+  "group": "Landing page",
+  "line": 867,
+  "display": "\u00a9 2026 Joseph Luker.",
+  "id": "S048"
+ },
+ {
+  "group": "App shell",
+  "line": 1427,
+  "display": "Home",
+  "id": "S049"
+ },
+ {
+  "group": "App shell",
+  "line": 1428,
+  "display": "Dives",
+  "id": "S050"
+ },
+ {
+  "group": "App shell",
+  "line": 1429,
+  "display": "Mixes",
+  "id": "S051"
+ },
+ {
+  "group": "App shell",
+  "line": 1430,
+  "display": "Settings",
+  "id": "S052"
+ },
+ {
+  "group": "App shell",
+  "line": 1454,
+  "display": "Dip",
+  "id": "S053"
+ },
+ {
+  "group": "App shell",
+  "line": 1455,
+  "display": "their best hour, most played first",
+  "id": "S054"
+ },
+ {
+  "group": "App shell",
+  "line": 1459,
+  "display": "Dive",
+  "id": "S055"
+ },
+ {
+  "group": "App shell",
+  "line": 1460,
+  "display": "their whole catalogue against your library",
+  "id": "S056"
+ },
+ {
+  "group": "App shell",
+  "line": 1467,
+  "display": "Fine-tune",
+  "id": "S057"
+ },
+ {
+  "group": "App shell",
+  "line": 1469,
+  "display": "Exclude live recordings",
+  "id": "S058"
+ },
+ {
+  "group": "App shell",
+  "line": 1470,
+  "display": "Exclude radio edits & censored versions",
+  "id": "S059"
+ },
+ {
+  "group": "App shell",
+  "line": 1471,
+  "display": "Exclude instrumentals",
+  "id": "S060"
+ },
+ {
+  "group": "App shell",
+  "line": 1472,
+  "display": "Exclude a cappella versions",
+  "id": "S061"
+ },
+ {
+  "group": "App shell",
+  "line": 1473,
+  "display": "Count remasters as duplicates",
+  "id": "S062"
+ },
+ {
+  "group": "App shell",
+  "line": 1474,
+  "display": "Include compilations & greatest hits",
+  "id": "S063"
+ },
+ {
+  "group": "App shell",
+  "line": 1475,
+  "display": "Include releases they only guest on",
+  "id": "S064"
+ },
+ {
+  "group": "App shell",
+  "line": 1480,
+  "display": "Songs you already own",
+  "id": "S065"
+ },
+ {
+  "group": "App shell",
+  "line": 1491,
+  "display": "This one is slow, and it has a real cost.",
+  "id": "S066"
+ },
+ {
+  "group": "App shell",
+  "line": 1491,
+  "display": "Compilations and guest appearances can mean hundreds of extra releases, and Spotify allows only one request at a time \u2014 so a prolific artist takes several minutes. Worse, doing this repeatedly can get your Spotify app rate-limited for",
+  "id": "S067"
+ },
+ {
+  "group": "App shell",
+  "line": 1491,
+  "display": "hours",
+  "id": "S068"
+ },
+ {
+  "group": "App shell",
+  "line": 1491,
+  "display": ", which blocks all searches until it lifts. Use it deliberately rather than routinely, and leave the tab open while it runs.",
+  "id": "S069"
+ },
+ {
+  "group": "App shell",
+  "line": 1494,
+  "display": "Back",
+  "id": "S070"
+ },
+ {
+  "group": "App shell",
+  "line": 1495,
+  "display": "Cancel",
+  "id": "S071"
+ },
+ {
+  "group": "App shell",
+  "line": 1498,
+  "display": "Multi-Dip",
+  "id": "S072"
+ },
+ {
+  "group": "App shell",
+  "line": 1499,
+  "display": "Start the dive",
+  "id": "S073"
+ },
+ {
+  "group": "App shell",
+  "line": 1506,
+  "display": "Build playlist",
+  "id": "S074"
+ },
+ {
+  "group": "App shell",
+  "line": 1510,
+  "display": "Playlist name",
+  "id": "S075"
+ },
+ {
+  "group": "App shell",
+  "line": 1514,
+  "display": "Playlist options",
+  "id": "S076"
+ },
+ {
+  "group": "App shell",
+  "line": 1522,
+  "display": "Export",
+  "id": "S077"
+ },
+ {
+  "group": "App shell",
+  "line": 1525,
+  "display": "Create playlist",
+  "id": "S078"
+ },
+ {
+  "group": "App shell",
+  "line": 1536,
+  "display": "Starting\u2026",
+  "id": "S079"
+ },
+ {
+  "group": "App shell",
+  "line": 1554,
+  "display": "Sections",
+  "id": "S080"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 177,
+  "display": "Connect Spotify first.",
+  "id": "S081"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 182,
+  "display": "Refreshing your library from Spotify\u2026",
+  "id": "S082"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 185,
+  "display": "Library refreshed \u2014 [\u2026] liked songs synced.",
+  "id": "S083"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 187,
+  "display": "Couldn't refresh library: [\u2026]",
+  "id": "S084"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 252,
+  "display": "Make a Spotify app",
+  "id": "S085"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 253,
+  "display": "DeepDive runs on an app of your own, so your listening is never pooled with anyone else's. It's a short form, and you only fill it in once.",
+  "id": "S086"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 255,
+  "display": "Open the dashboard and choose",
+  "id": "S087"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 255,
+  "display": "Create app",
+  "id": "S088"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 256,
+  "display": "Under",
+  "id": "S089"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 256,
+  "display": "Redirect URIs",
+  "id": "S090"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 256,
+  "display": ", paste this address, then save.",
+  "id": "S091"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 260,
+  "display": "Copy",
+  "id": "S092"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 262,
+  "display": "It has to match exactly, down to the slash at the end.",
+  "id": "S093"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 264,
+  "display": "Open the dashboard",
+  "id": "S094"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 265,
+  "display": "I've done this",
+  "id": "S095"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 269,
+  "display": "Copied",
+  "id": "S096"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 274,
+  "display": "Selected",
+  "id": "S097"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 285,
+  "display": "Paste your Client ID",
+  "id": "S098"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 286,
+  "display": "It's on your app's page in the dashboard, under Basic Information. You don't need the client secret.",
+  "id": "S099"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 288,
+  "display": "Client ID",
+  "id": "S100"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 289,
+  "display": "32 letters and numbers",
+  "id": "S101"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 294,
+  "display": "Continue",
+  "id": "S102"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 322,
+  "display": "Add Last.fm",
+  "id": "S103"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 322,
+  "display": "optional",
+  "id": "S104"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 323,
+  "display": "Spotify no longer says what's popular or who sounds like whom. Last.fm does, and with a key you get Dips, Multi-Dips, recommendations and genre mixes.",
+  "id": "S105"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 324,
+  "display": "Create an API account at",
+  "id": "S106"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 324,
+  "display": "last.fm/api",
+  "id": "S107"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 324,
+  "display": "and copy the API key. It's approved straight away. You can add it later in Settings.",
+  "id": "S108"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 331,
+  "display": "Skip for now",
+  "id": "S109"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 332,
+  "display": "Save key",
+  "id": "S110"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 370,
+  "display": "Connect Spotify",
+  "id": "S111"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 371,
+  "display": "Spotify will ask you to allow DeepDive into your library and playlists. Nothing is changed without you choosing it.",
+  "id": "S112"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 376,
+  "display": "If Spotify says",
+  "id": "S113"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 376,
+  "display": "Invalid redirect URI",
+  "id": "S114"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 376,
+  "display": "Go back to step 1",
+  "id": "S115"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 380,
+  "display": "Couldn't start login: [\u2026]",
+  "id": "S116"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 423,
+  "display": "Search an artist",
+  "id": "S117"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 424,
+  "display": "Search options",
+  "id": "S118"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 427,
+  "display": "Search",
+  "id": "S119"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 516,
+  "display": "For the whole bill",
+  "id": "S120"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 523,
+  "display": "Your dives",
+  "id": "S121"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 528,
+  "display": "Go further",
+  "id": "S122"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 686,
+  "display": "Sampler",
+  "id": "S123"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 687,
+  "display": "a few tracks each from artists you've barely heard",
+  "id": "S124"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 692,
+  "display": "Recommended",
+  "id": "S125"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 692,
+  "display": "from across your mixes",
+  "id": "S126"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 698,
+  "display": "' : c.isRecommendation ? '",
+  "id": "S127"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 728,
+  "display": "Mixes are built from your Liked Songs, and they haven't been read yet.",
+  "id": "S128"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 729,
+  "display": "Read my library",
+  "id": "S129"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 757,
+  "display": "Nothing to build a mix from yet \u2014 that usually means the cached library is very small.",
+  "id": "S130"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 806,
+  "display": "Mix ideas",
+  "id": "S131"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 806,
+  "display": "dates, artists and albums",
+  "id": "S132"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 818,
+  "display": "Build your own",
+  "id": "S133"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 819,
+  "display": "pick an era, a length, an artist \u2014 any combination",
+  "id": "S134"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 902,
+  "display": "This takes a moment \u2014 one request per artist.",
+  "id": "S135"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 904,
+  "display": "Build sampler",
+  "id": "S136"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 977,
+  "display": "a few tracks each from [\u2026] artists you've barely heard",
+  "id": "S137"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1004,
+  "display": "Album order",
+  "id": "S138"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1005,
+  "display": "Newest first",
+  "id": "S139"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1006,
+  "display": "Oldest first",
+  "id": "S140"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1007,
+  "display": "By artist",
+  "id": "S141"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1008,
+  "display": "Title A\u2013Z",
+  "id": "S142"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1009,
+  "display": "Shuffle",
+  "id": "S143"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1038,
+  "display": "How many tracks",
+  "id": "S144"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1042,
+  "display": "Order",
+  "id": "S145"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1248,
+  "display": "Everything comes from tracks already in your library. Nothing is created until you confirm it.",
+  "id": "S146"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1249,
+  "display": "Reading your library\u2026",
+  "id": "S147"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1257,
+  "display": "Your library hasn't been read yet. Open Home once and it'll cache in the background.",
+  "id": "S148"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1273,
+  "display": "When it came out",
+  "id": "S149"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1275,
+  "display": "Decade",
+  "id": "S150"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1277,
+  "display": "Any",
+  "id": "S151"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1282,
+  "display": "Or a range of years",
+  "id": "S152"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1292,
+  "display": "When you liked it",
+  "id": "S153"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1294,
+  "display": "Year added",
+  "id": "S154"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1303,
+  "display": "Who",
+  "id": "S155"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1305,
+  "display": "Artist",
+  "id": "S156"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1310,
+  "display": "Clear artist",
+  "id": "S157"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1318,
+  "display": "Collaborations only",
+  "id": "S158"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1319,
+  "display": "Tracks credited to more than one artist.",
+  "id": "S159"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1323,
+  "display": "One track per artist",
+  "id": "S160"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1324,
+  "display": "A tour rather than a deep dive.",
+  "id": "S161"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1330,
+  "display": "How long",
+  "id": "S162"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1332,
+  "display": "Track length, in seconds",
+  "id": "S163"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1334,
+  "display": "any",
+  "id": "S164"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1342,
+  "display": "Shuffled",
+  "id": "S165"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1343,
+  "display": "Oldest release first",
+  "id": "S166"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1344,
+  "display": "Newest release first",
+  "id": "S167"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1345,
+  "display": "Longest in your library",
+  "id": "S168"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1346,
+  "display": "Most recently liked",
+  "id": "S169"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1347,
+  "display": "Shortest first",
+  "id": "S170"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1348,
+  "display": "Longest first",
+  "id": "S171"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1353,
+  "display": "The same choices the other mixes offer. Nothing here reads from Spotify \u2014 the mix is built from your cached library.",
+  "id": "S172"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1362,
+  "display": "Preview mix",
+  "id": "S173"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1363,
+  "display": "Back to mixes",
+  "id": "S174"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1407,
+  "display": "Nothing matches that combination. Try loosening one of the filters.",
+  "id": "S175"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1438,
+  "display": "Nothing matches that combination.",
+  "id": "S176"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1441,
+  "display": "Your mix",
+  "id": "S177"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1547,
+  "display": "Nothing to add.",
+  "id": "S178"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1549,
+  "display": "Creating\u2026",
+  "id": "S179"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1577,
+  "display": "Created \"[\u2026]\"",
+  "id": "S180"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1767,
+  "display": "How deep",
+  "id": "S181"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1972,
+  "display": "Add to your crate",
+  "id": "S182"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1972,
+  "display": "Pin [\u2026]",
+  "id": "S183"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 1992,
+  "display": "[\u2026] is in your crate.",
+  "id": "S184"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2075,
+  "display": "Checking\u2026",
+  "id": "S185"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2079,
+  "display": "Still paused \u2014 check again",
+  "id": "S186"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2081,
+  "display": "Spotify is responding again.",
+  "id": "S187"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2235,
+  "display": "Couldn't build suggestions.",
+  "id": "S188"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2339,
+  "display": "More for [\u2026]",
+  "id": "S189"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2350,
+  "display": "Never suggest this artist",
+  "id": "S190"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2351,
+  "display": "Unpin",
+  "id": "S191"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2356,
+  "display": "Suggested",
+  "id": "S192"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2356,
+  "display": "for you",
+  "id": "S193"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2357,
+  "display": "Show a different set",
+  "id": "S194"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2357,
+  "display": "Refresh suggestions",
+  "id": "S195"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2360,
+  "display": "Dive one of these at random",
+  "id": "S196"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2360,
+  "display": "Random dive",
+  "id": "S197"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2363,
+  "display": "All dives",
+  "id": "S198"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2366,
+  "display": "Add to Up next",
+  "id": "S199"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2378,
+  "display": "Some suggestions come from your Liked Songs, which haven't been read yet.",
+  "id": "S200"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2495,
+  "display": "Nothing to pick from yet.",
+  "id": "S201"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2508,
+  "display": "[\u2026] won't be suggested for dives.",
+  "id": "S202"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2648,
+  "display": "Remove pin",
+  "id": "S203"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2652,
+  "display": "[\u2026] is out of your crate.",
+  "id": "S204"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 2988,
+  "display": "Last catalogue read",
+  "id": "S205"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3004,
+  "display": "Last failed request",
+  "id": "S206"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3007,
+  "display": "Retry-After:",
+  "id": "S207"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3007,
+  "display": "No Retry-After header",
+  "id": "S208"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3014,
+  "display": "none",
+  "id": "S209"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3018,
+  "display": "Build",
+  "id": "S210"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3022,
+  "display": "Pacing",
+  "id": "S211"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3040,
+  "display": "Checking what went wrong\u2026",
+  "id": "S212"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3042,
+  "display": "Technical details",
+  "id": "S213"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3046,
+  "display": "Back to search",
+  "id": "S214"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3047,
+  "display": "Try again",
+  "id": "S215"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3062,
+  "display": "Try [\u2026] again",
+  "id": "S216"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3067,
+  "display": "The checks couldn't run either \u2014 that usually means no connection.",
+  "id": "S217"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3161,
+  "display": "Couldn't reach Last.fm \u2014 ordering by catalogue instead.",
+  "id": "S218"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3169,
+  "display": "Couldn't build a dip for [\u2026] \u2014 no tracks came back.",
+  "id": "S219"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3210,
+  "display": "Already yours, elsewhere",
+  "id": "S220"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3211,
+  "display": "Same recording as something in your Liked Songs, under a different release. Checked = will be liked.",
+  "id": "S221"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3216,
+  "display": "New to you",
+  "id": "S222"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3219,
+  "display": "Sort by",
+  "id": "S223"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3221,
+  "display": "Album order (discography)",
+  "id": "S224"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3222,
+  "display": "Release date (newest)",
+  "id": "S225"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3223,
+  "display": "Release date (oldest)",
+  "id": "S226"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3224,
+  "display": "Title (A\u2013Z)",
+  "id": "S227"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3228,
+  "display": "Nothing new \u2014 your library already covers this artist.",
+  "id": "S228"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3241,
+  "display": "Like Songs",
+  "id": "S229"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3242,
+  "display": "Create Playlist",
+  "id": "S230"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3243,
+  "display": "Both",
+  "id": "S231"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3245,
+  "display": "Back to home",
+  "id": "S232"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3299,
+  "display": "Liked [\u2026] track[\u2026] by [\u2026]",
+  "id": "S233"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3351,
+  "display": "Keep them",
+  "id": "S234"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3352,
+  "display": "Take off Up next",
+  "id": "S235"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3356,
+  "display": "Open playlist",
+  "id": "S236"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3357,
+  "display": "Done",
+  "id": "S237"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3389,
+  "display": "Scan your whole library",
+  "id": "S238"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3390,
+  "display": "Crawls every artist in your Liked Songs the same way a single search does \u2014 catches everything, but for a large library this can take a long time. You can cancel any time and keep what was found.",
+  "id": "S239"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3401,
+  "display": "Run full library scrub",
+  "id": "S240"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3429,
+  "display": "Cancel & show what's found",
+  "id": "S241"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3476,
+  "display": "Build a playlist from these",
+  "id": "S242"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3481,
+  "display": "Nothing new found.",
+  "id": "S243"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3511,
+  "display": "Something went wrong: [\u2026]",
+  "id": "S244"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3598,
+  "display": "Spotify has paused this app for about [\u2026] \u2014 until roughly [\u2026]. Nothing will work until then.",
+  "id": "S245"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3621,
+  "display": "Reconnect to get playlist covers",
+  "id": "S246"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3622,
+  "display": "DeepDive makes a cover for each playlist it creates, from the album art inside it. That needs a Spotify permission added after you connected, so it has to be granted once. Everything else works either way.",
+  "id": "S247"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3624,
+  "display": "Reconnect",
+  "id": "S248"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3625,
+  "display": "Not now",
+  "id": "S249"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3626,
+  "display": "DD-SCOPE",
+  "id": "S250"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3636,
+  "display": "Reconnecting\u2026",
+  "id": "S251"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3655,
+  "display": "Check again",
+  "id": "S252"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3723,
+  "display": "Genres",
+  "id": "S253"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3724,
+  "display": "Genres are worked out from your Liked Songs, which haven't been read yet.",
+  "id": "S254"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3750,
+  "display": "DeepDive can ask Last.fm what your artists actually sound like, then build mixes from it. That's one request per artist \u2014",
+  "id": "S255"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3750,
+  "display": "of them, about",
+  "id": "S256"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3750,
+  "display": ", starting with the artists you own the most of. You can stop at any point and keep what's been found.",
+  "id": "S257"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3753,
+  "display": "Find my genres",
+  "id": "S258"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3802,
+  "display": "from Last.fm",
+  "id": "S259"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3805,
+  "display": "Search [\u2026] genres",
+  "id": "S260"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3806,
+  "display": "Clear search",
+  "id": "S261"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3811,
+  "display": "Show fewer",
+  "id": "S262"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3845,
+  "display": "No genre matches that.",
+  "id": "S263"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3907,
+  "display": "Reading\u2026",
+  "id": "S264"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3914,
+  "display": "[\u2026] liked songs read.",
+  "id": "S265"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3919,
+  "display": "Couldn't read your library: [\u2026]",
+  "id": "S266"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3954,
+  "display": "If you like\u2026",
+  "id": "S267"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3955,
+  "display": "Name an artist and DeepDive will ask Last.fm who resembles them, then build a mix from the ones in your library. You don't have to own the artist you name.",
+  "id": "S268"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 3991,
+  "display": "Your library hasn't been read yet.",
+  "id": "S269"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4029,
+  "display": "If you like [\u2026]",
+  "id": "S270"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4030,
+  "display": "[\u2026] similar artist[\u2026] you already own",
+  "id": "S271"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4081,
+  "display": "Similar artists",
+  "id": "S272"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4083,
+  "display": "Find recommendations",
+  "id": "S273"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4103,
+  "display": "Last.fm rejected the key. Check it in Settings.",
+  "id": "S274"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4116,
+  "display": "already in your library",
+  "id": "S275"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4126,
+  "display": "name any artist, even one you don't own",
+  "id": "S276"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4215,
+  "display": "Couldn't build a cover for that one \u2014 DD-COVER.",
+  "id": "S277"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4223,
+  "display": "Playlist made, but the cover didn't upload \u2014 DD-COVER: [\u2026]",
+  "id": "S278"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4436,
+  "display": "Drag to reorder",
+  "id": "S279"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4436,
+  "display": "Drag to reorder [\u2026], or use the arrow keys",
+  "id": "S280"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4443,
+  "display": "Share of the night for [\u2026]",
+  "id": "S281"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4444,
+  "display": "Less",
+  "id": "S282"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4444,
+  "display": "More",
+  "id": "S283"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4448,
+  "display": "Set a song count",
+  "id": "S284"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4448,
+  "display": "Set a song count for [\u2026]",
+  "id": "S285"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4451,
+  "display": "Remove [\u2026]",
+  "id": "S286"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4460,
+  "display": "Your night",
+  "id": "S287"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4464,
+  "display": "One playlist for the whole bill, in the order they play.",
+  "id": "S288"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4469,
+  "display": "Search for everyone playing. Drag them into running order, and tag who you're there for as More.",
+  "id": "S289"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4476,
+  "display": "Length of the night",
+  "id": "S290"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4484,
+  "display": "Build the night",
+  "id": "S291"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4485,
+  "display": "Back to Dives",
+  "id": "S292"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 4926,
+  "display": "Check connection",
+  "id": "S293"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5136,
+  "display": "DeepDive is currently waiting",
+  "id": "S294"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5139,
+  "display": "Every endpoint answered. If a dive still fails, it's the number of requests it makes rather than the endpoints it uses \u2014 try a small artist.",
+  "id": "S295"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5145,
+  "display": "Everything is refused with a quota error. This is a limit on your Spotify credentials and only time refills it.",
+  "id": "S296"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5148,
+  "display": "Everything is rate-limited. That's a burst limit rather than a spent budget \u2014 wait a minute and run this again before concluding anything.",
+  "id": "S297"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5151,
+  "display": "Some endpoints answer while others are refused, which means the budget is per-group rather than app-wide. The refused ones are the ones to avoid until they recover.",
+  "id": "S298"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5153,
+  "display": "Some endpoints failed without a rate limit \u2014 check the status codes above. 403 usually means the endpoint is restricted for this app rather than temporarily unavailable.",
+  "id": "S299"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5192,
+  "display": "Demo mode",
+  "id": "S300"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5195,
+  "display": "Approved artists",
+  "id": "S301"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5196,
+  "display": "Search Spotify and choose the exact artists allowed to appear in screenshots.",
+  "id": "S302"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5199,
+  "display": "Search Spotify artists",
+  "id": "S303"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5205,
+  "display": "Shuffle assignments",
+  "id": "S304"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5206,
+  "display": "Save artists",
+  "id": "S305"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5208,
+  "display": "Spotify data is kept only for this demo session. Shuffle changes which approved artists appear in each screen without changing the list.",
+  "id": "S306"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5212,
+  "display": "Appearance",
+  "id": "S307"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5215,
+  "display": "Theme",
+  "id": "S308"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5216,
+  "display": "System follows your device.",
+  "id": "S309"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5219,
+  "display": "Light",
+  "id": "S310"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5220,
+  "display": "Dark",
+  "id": "S311"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5221,
+  "display": "System",
+  "id": "S312"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5225,
+  "display": "Support link",
+  "id": "S313"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5232,
+  "display": "Suggestions",
+  "id": "S314"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5237,
+  "display": "Spotify",
+  "id": "S315"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5239,
+  "display": "Refresh library",
+  "id": "S316"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5241,
+  "display": "Refresh",
+  "id": "S317"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5244,
+  "display": "Tidy up playlists",
+  "id": "S318"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5246,
+  "display": "Find them",
+  "id": "S319"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5253,
+  "display": "Disconnect",
+  "id": "S320"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5255,
+  "display": "Music metadata and artwork are provided by Spotify. DeepDive is not affiliated with Spotify AB.",
+  "id": "S321"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5259,
+  "display": "Advanced",
+  "id": "S322"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5262,
+  "display": "Speed",
+  "id": "S323"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5264,
+  "display": "Reset pacing",
+  "id": "S324"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5266,
+  "display": "Reset",
+  "id": "S325"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5271,
+  "display": "Diagnostics",
+  "id": "S326"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5273,
+  "display": "Show build number",
+  "id": "S327"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5278,
+  "display": "Test endpoints",
+  "id": "S328"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5280,
+  "display": "Run test",
+  "id": "S329"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5286,
+  "display": "Your data",
+  "id": "S330"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5287,
+  "display": "Pins, history and settings live in this browser only. A backup is the only way to move them elsewhere or recover them after clearing site data.",
+  "id": "S331"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5289,
+  "display": "Backup",
+  "id": "S332"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5292,
+  "display": "Import",
+  "id": "S333"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5298,
+  "display": "Last.fm",
+  "id": "S334"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5299,
+  "display": "Optional but recommended. Powers genre and subgenre mixes and an artist's best hour \u2014 things Spotify no longer exposes. Leave it empty and those features simply don't appear.",
+  "id": "S335"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5302,
+  "display": "API key",
+  "id": "S336"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5303,
+  "display": "Free and instant from last.fm/api/account/create. The key only \u2014 not the shared secret.",
+  "id": "S337"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5305,
+  "display": "not set",
+  "id": "S338"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5311,
+  "display": "Credentials",
+  "id": "S339"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5315,
+  "display": "From your own Spotify app.",
+  "id": "S340"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5317,
+  "display": "paste your Client ID",
+  "id": "S341"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5319,
+  "display": "Save Client ID",
+  "id": "S342"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5322,
+  "display": "Redirect URI",
+  "id": "S343"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5323,
+  "display": "Must match your Spotify app exactly.",
+  "id": "S344"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5339,
+  "display": "Music metadata and artwork are provided by Spotify. Artist tags and popularity are provided by Last.fm. Album artwork and artist photographs remain the property of their owners. DeepDive is not affiliated with Spotify AB or Last.fm.",
+  "id": "S345"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5340,
+  "display": "Source and licence",
+  "id": "S346"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5367,
+  "display": "[\u2026] is already approved.",
+  "id": "S347"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5381,
+  "display": "Demo artists saved.",
+  "id": "S348"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5387,
+  "display": "Demo assignments shuffled.",
+  "id": "S349"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5409,
+  "display": "Enter your Client ID first.",
+  "id": "S350"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5439,
+  "display": "Testing\u2026",
+  "id": "S351"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5450,
+  "display": "Pacing cleared \u2014 the next dive starts at full speed.",
+  "id": "S352"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5466,
+  "display": "Imported: [\u2026] pins, [\u2026] blocked, [\u2026] dives added.",
+  "id": "S353"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5476,
+  "display": "Searching\u2026",
+  "id": "S354"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5479,
+  "display": "No DeepDive playlists found.",
+  "id": "S355"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5486,
+  "display": "Open",
+  "id": "S356"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5487,
+  "display": "Remove",
+  "id": "S357"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5498,
+  "display": "Remove all [\u2026] playlists?",
+  "id": "S358"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5507,
+  "display": "Removing [\u2026]/[\u2026]\u2026",
+  "id": "S359"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5512,
+  "display": "Removed [\u2026] playlist[\u2026].",
+  "id": "S360"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5517,
+  "display": "Removing\u2026",
+  "id": "S361"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5521,
+  "display": "Playlist removed.",
+  "id": "S362"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5532,
+  "display": "Find DeepDive playlists",
+  "id": "S363"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5547,
+  "display": "History",
+  "id": "S364"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5548,
+  "display": "What DeepDive has done, and how to take it back. Stored in this browser only.",
+  "id": "S365"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5551,
+  "display": "Undo",
+  "id": "S366"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5558,
+  "display": "Removes those tracks from your Liked Songs. Playlists aren't undone \u2014 deleting one you may have edited or shared would be worse than leaving it.",
+  "id": "S367"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5559,
+  "display": "Nothing to undo.",
+  "id": "S368"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5562,
+  "display": "Playlists created",
+  "id": "S369"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5576,
+  "display": "Removing takes the playlist out of your Spotify library. Only playlists DeepDive created are listed \u2014 one it merely added to is yours, not ours to remove.",
+  "id": "S370"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5590,
+  "display": "Dive again",
+  "id": "S371"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5592,
+  "display": "No dives yet.",
+  "id": "S372"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5593,
+  "display": "Clear dive history",
+  "id": "S373"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5596,
+  "display": "Pins, blocked artists, dive history and settings. The library cache isn't included \u2014 it rebuilds itself from Spotify in one read, so carrying thousands of tracks around in a file would be a poor trade.",
+  "id": "S374"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5598,
+  "display": "Export backup",
+  "id": "S375"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5599,
+  "display": "Import backup",
+  "id": "S376"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5620,
+  "display": "Undo this?",
+  "id": "S377"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5622,
+  "display": "Undoing\u2026",
+  "id": "S378"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5627,
+  "display": "Undone.",
+  "id": "S379"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5654,
+  "display": "Clear dive history?",
+  "id": "S380"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5753,
+  "display": "Move to the top",
+  "id": "S381"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5753,
+  "display": "Move [\u2026] to the top",
+  "id": "S382"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5754,
+  "display": "Take out",
+  "id": "S383"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5754,
+  "display": "Take [\u2026] out of the crate",
+  "id": "S384"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5769,
+  "display": "Crate",
+  "id": "S385"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5771,
+  "display": "Everyone you've put aside to get to. Star someone to put them on Up next, which is what Home shows.",
+  "id": "S386"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5773,
+  "display": "Search your crate",
+  "id": "S387"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5774,
+  "display": "Sort the crate",
+  "id": "S388"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5779,
+  "display": "Sampler from your crate",
+  "id": "S389"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5782,
+  "display": "Your crate is empty. Add an artist from any tile's menu, or from the search box, and they'll wait here.",
+  "id": "S390"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5798,
+  "display": "Up next",
+  "id": "S391"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5801,
+  "display": "Everyone else",
+  "id": "S392"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5803,
+  "display": "No one in your crate matches that.",
+  "id": "S393"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5826,
+  "display": "[\u2026] moved to the top.",
+  "id": "S394"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5865,
+  "display": "Not enough of your crate could be found on Spotify for a sampler.",
+  "id": "S395"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5887,
+  "display": "Blocked artists",
+  "id": "S396"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5888,
+  "display": "Blocked artists never appear in suggestions or mixes, depending on what you tick.",
+  "id": "S397"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5889,
+  "display": "Blocking is per feature. Not wanting to dive an artist isn't the same as not wanting them in a mix built from tracks you already liked.",
+  "id": "S398"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5898,
+  "display": "Allow again",
+  "id": "S399"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5900,
+  "display": "Nothing blocked. Use the \u2212 button on any artist tile to stop suggesting them.",
+  "id": "S400"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5902,
+  "display": "Back to settings",
+  "id": "S401"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5908,
+  "display": "[\u2026] is no longer blocked.",
+  "id": "S402"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5947,
+  "display": "DeepDive knows what's already in your Spotify library, so every playlist it builds is made of the songs you missed.",
+  "id": "S403"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5949,
+  "display": "Setting up takes about two minutes. You make a free app on Spotify's developer site, paste its Client ID here, and sign in with your Spotify account, which has to be",
+  "id": "S404"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5949,
+  "display": "Premium",
+  "id": "S405"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5949,
+  "display": ": Spotify only runs apps like this for Premium accounts.",
+  "id": "S406"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5950,
+  "display": "A free Last.fm key is optional. It turns on Dips, Multi-Dips, recommendations and genre mixes, and you can add it later.",
+  "id": "S407"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5953,
+  "display": "Get started",
+  "id": "S408"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 5955,
+  "display": "See what DeepDive does",
+  "id": "S409"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6083,
+  "display": "Loading approved artists\u2026",
+  "id": "S410"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6088,
+  "display": "Demo mode couldn't load",
+  "id": "S411"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6088,
+  "display": "Demo settings",
+  "id": "S412"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6138,
+  "display": "similar artists already in your library",
+  "id": "S413"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6139,
+  "display": "Your 2024",
+  "id": "S414"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6139,
+  "display": "what you added that year",
+  "id": "S415"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6140,
+  "display": "Albums that landed",
+  "id": "S416"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6140,
+  "display": "records you liked three or more from",
+  "id": "S417"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6147,
+  "display": "Released in 2023",
+  "id": "S418"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6147,
+  "display": "whenever you got to it",
+  "id": "S419"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6148,
+  "display": "Took your time",
+  "id": "S420"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6148,
+  "display": "found more than a decade after release",
+  "id": "S421"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6149,
+  "display": "Surprise me",
+  "id": "S422"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6149,
+  "display": "50 at random from your library",
+  "id": "S423"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6151,
+  "display": "Your first 50",
+  "id": "S424"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6151,
+  "display": "the earliest things you liked",
+  "id": "S425"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6153,
+  "display": "Your 2021",
+  "id": "S426"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6154,
+  "display": "Your regulars",
+  "id": "S427"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6154,
+  "display": "a few each from the artists you like most",
+  "id": "S428"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6197,
+  "display": "Demo screens",
+  "id": "S429"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6198,
+  "display": "Only artists in your demo whitelist can appear. Their photography, albums and tracks are resolved live through your connected Spotify account.",
+  "id": "S430"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6210,
+  "display": "Leave demo mode",
+  "id": "S431"
+ },
+ {
+  "group": "App \u2014 app.js",
+  "line": 6349,
+  "display": "Connected to Spotify.",
+  "id": "S432"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 226,
+  "display": "Your [\u2026]",
+  "id": "S433"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 266,
+  "display": "One-hit wonders",
+  "id": "S434"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 267,
+  "display": "artists you've liked exactly one song by",
+  "id": "S435"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 282,
+  "display": "Long forgotten",
+  "id": "S436"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 283,
+  "display": "added years ago and buried since",
+  "id": "S437"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 467,
+  "display": "Released in [\u2026]",
+  "id": "S438"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 493,
+  "display": "[\u2026] finds",
+  "id": "S439"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 494,
+  "display": "everything you added in [\u2026], any year",
+  "id": "S440"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 513,
+  "display": "Small hours",
+  "id": "S441"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 514,
+  "display": "saved between eleven and five",
+  "id": "S442"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 522,
+  "display": "= 4); if (heavy.length",
+  "id": "S443"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 532,
+  "display": "One each",
+  "id": "S444"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 533,
+  "display": "a single track from every artist you've collected",
+  "id": "S445"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 549,
+  "display": "= 5) deep.push(...list); if (deep.length",
+  "id": "S446"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 553,
+  "display": "Albums you went deep on",
+  "id": "S447"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 554,
+  "display": "five or more tracks from one record",
+  "id": "S448"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 574,
+  "display": "Loose ends",
+  "id": "S449"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 575,
+  "display": "one track and nothing else from that release",
+  "id": "S450"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 590,
+  "display": "The three-minute rule",
+  "id": "S451"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 591,
+  "display": "classic single length",
+  "id": "S452"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 599,
+  "display": "1); if (list.length",
+  "id": "S453"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 603,
+  "display": "Two names on the label",
+  "id": "S454"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 604,
+  "display": "everything with a featured artist",
+  "id": "S455"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 616,
+  "display": "One name only",
+  "id": "S456"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 617,
+  "display": "no features, no guests",
+  "id": "S457"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 635,
+  "display": "There on day one",
+  "id": "S458"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 636,
+  "display": "liked within a week of release",
+  "id": "S459"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 653,
+  "display": "x.t); if (scored.length",
+  "id": "S460"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 675,
+  "display": "[\u2026], in order",
+  "id": "S461"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 676,
+  "display": "their tracks you own, oldest first",
+  "id": "S462"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 700,
+  "display": "That one afternoon",
+  "id": "S463"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 701,
+  "display": "everything you added on [\u2026]",
+  "id": "S464"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 716,
+  "display": "Fresh additions",
+  "id": "S465"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 717,
+  "display": "the last 50 things you liked",
+  "id": "S466"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 731,
+  "display": "The long ones",
+  "id": "S467"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 732,
+  "display": "six minutes and over",
+  "id": "S468"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 746,
+  "display": "Under two thirty",
+  "id": "S469"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 747,
+  "display": "short and to the point",
+  "id": "S470"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 772,
+  "display": "music released [\u2026]\u2013[\u2026]",
+  "id": "S471"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 950,
+  "display": "Worth another listen",
+  "id": "S472"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 951,
+  "display": "[\u2026] artists you own a little of and rarely play",
+  "id": "S473"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1005,
+  "display": "[\u2026] tracks tagged [\u2026]",
+  "id": "S474"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1068,
+  "display": "= 3) picks.push(...list); if (picks.length",
+  "id": "S475"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1089,
+  "display": "All your [\u2026]",
+  "id": "S476"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1090,
+  "display": "every [\u2026] track you've liked",
+  "id": "S477"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1104,
+  "display": "Every [\u2026]",
+  "id": "S478"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1105,
+  "display": "what you've added this month, across the years",
+  "id": "S479"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1121,
+  "display": "Late to the party",
+  "id": "S480"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1122,
+  "display": "music you found twenty years after it came out",
+  "id": "S481"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1138,
+  "display": "Caught it early",
+  "id": "S482"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1139,
+  "display": "liked the same year it was released",
+  "id": "S483"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1156,
+  "display": "One from every year",
+  "id": "S484"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1157,
+  "display": "a single track from each year you've collected",
+  "id": "S485"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1175,
+  "display": "This time last year",
+  "id": "S486"
+ },
+ {
+  "group": "App \u2014 insights.js",
+  "line": 1176,
+  "display": "and the years before that",
+  "id": "S487"
+ },
+ {
+  "group": "App \u2014 search.js",
+  "line": 183,
+  "display": "Checking [\u2026] possible match[\u2026]\u2026",
+  "id": "S488"
+ }
+]

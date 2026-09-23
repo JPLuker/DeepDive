@@ -244,10 +244,13 @@ who has to do it, since the long poles are Joseph's.
 
 1. **The `TESTING.md` pass.** 368 of 392 boxes unchecked, 60 sections.
    The biggest job and the one that finds things.
-2. **The copy rewrite.** 19 em dashes in strings inside `app.js`, 22 in
-   the app shell, 11 on the landing page. The ~520-string PDF's
-   landing-page and onboarding ids are stale (both rewritten since);
-   ask for short separate PDFs for those two rather than regenerating.
+2. **The copy rewrite.** A fresh PDF of all 488 user-facing strings at
+   build 2.9.91 went to Joseph on 23 Sept; it supersedes the older
+   ~520-string one, whose ids stopped matching when the landing page
+   and onboarding were rewritten. The same strings, with their file and
+   line, are in `copy/strings-2.9.91.json`; `copy/extract-strings.py`
+   regenerates the list. When the filled PDF comes back, map id to line
+   through that file. Empty box means keep the string as it is.
 3. **Artist permission.** Emails to Leisure Hour, VIAL, Houseghost and
    Maciann. Nine landing screenshots and demo mode depend on it. See
    "Artist photography — provisional" below: it is a hold, not a
@@ -296,7 +299,7 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.91
+## Shipped since — build 2.9.92
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:

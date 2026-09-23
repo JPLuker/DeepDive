@@ -4,6 +4,12 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.92
+- Added `copy/strings-2.9.91.json` and `copy/extract-strings.py`: the
+  488 user-facing strings behind the full copy-rewrite PDF, each with
+  its id, file and line. Whoever types Joseph's rewrites back in needs
+  to know which id was which line, and the PDF alone doesn't say.
+
 ## 2.9.91
 - README is now the landing page in GitHub's form: the same sections in
   the same order and the same words, from "How far in?" through to
