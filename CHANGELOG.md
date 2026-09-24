@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.96
+- Demo Settings now has a green-screen chooser capture: search Spotify
+  for any exact artist, then open the real Dip, Dive and Multi-Dip popup
+  over a flat `#00ff00` background for clean cutting.
+- Closing the popup always restores the normal backdrop, and ordinary
+  chooser launches explicitly clear any leftover capture state.
+
 ## 2.9.95
 - Applied the landing page copy rewrite: 15 strings in Joseph's words,
   23 kept, 10 removed. The seven grey labels above the headings are

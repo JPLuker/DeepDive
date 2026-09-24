@@ -19,14 +19,14 @@ import { bestStore } from "./storage.js";
 import * as history from "./history.js";
 // Version the demo module independently. Mobile browsers were reloading
 // app.js while continuing to execute an older cached demo.js.
-import * as demo from "./demo.js?v=2.9.84";
+import * as demo from "./demo.js?v=2.9.96";
 import * as lastfm from "./lastfm.js";
 import * as cover from "./cover.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.95";
+export const BUILD = "2.9.96";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -1754,7 +1754,7 @@ const DIP_SUB = "their best hour, most played first";
 const NEEDS_LASTFM = "needs a Last.fm key, added in Settings";
 const NEEDS_LASTFM_FULL = "Needs a Last.fm key, added in Settings.";
 
-function openIntentModal(artistName, { force = false } = {}) {
+function openIntentModal(artistName, { force = false, chroma = false } = {}) {
   // "Don't ask again" used to make sense: this dialog only chose how
   // deep a dive went, so skipping it meant accepting a default. Now it
   // chooses *what to do* — dip or dive — and skipping it removed Dip
@@ -1770,6 +1770,11 @@ function openIntentModal(artistName, { force = false } = {}) {
   const sub = document.getElementById("intent-artist");
   const custom = document.getElementById("intent-custom");
   if (!modal || !list) return;
+
+  // Demo capture mode keeps the real chooser intact and changes only
+  // the pixels behind it. Exact #00ff00 makes the backdrop a clean key
+  // rather than a themed approximation of green.
+  document.body.classList.toggle("demo-chroma-chooser", !!chroma);
 
   const adjust = document.getElementById("intent-adjust");
   const dipBtn = document.getElementById("intent-dip");
@@ -1841,7 +1846,10 @@ function openIntentModal(artistName, { force = false } = {}) {
 
   modal.classList.remove("hidden");
 
-  const close = () => modal.classList.add("hidden");
+  const close = () => {
+    modal.classList.add("hidden");
+    document.body.classList.remove("demo-chroma-chooser");
+  };
   const confirm = ({ dip = false } = {}) => {
     const customOpts = readCustomOptions();
     try {
@@ -5310,6 +5318,17 @@ function renderSettings() {
         <button class="btn btn-primary btn-small" id="set-demo-save">Save artists</button>
       </div>
       <p class="set-note">Spotify data is kept only for this demo session. Shuffle changes which approved artists appear in each screen without changing the list.</p>
+      <div class="set-row set-row-block demo-capture-setting">
+        <div class="set-row-text">
+          <div class="set-row-title">Green-screen chooser</div>
+          <div class="set-row-detail">Search any Spotify artist and open the Dip, Dive and Multi-Dip popup on solid chroma green.</div>
+        </div>
+        <div class="demo-artist-search">
+          <input id="set-demo-chooser-search" class="nav-input" type="search" placeholder="Search Spotify artists" autocomplete="off">
+          <div class="autofill-list" id="set-demo-chooser-results"></div>
+        </div>
+        <button class="btn btn-primary btn-small" id="set-demo-chooser-open" disabled>Open green screen</button>
+      </div>
     </div>` : ""}
 
     <div class="set-group">
@@ -5476,6 +5495,40 @@ function renderSettings() {
       paintDemoArtists();
       document.getElementById("set-demo-artist-search").value = "";
     },
+  });
+
+  let demoChooserArtist = null;
+  const chooserInput = document.getElementById("set-demo-chooser-search");
+  const chooserOpen = document.getElementById("set-demo-chooser-open");
+  if (demo.demoActive()) wireArtistSearch({
+    inputId: "set-demo-chooser-search",
+    listId: "set-demo-chooser-results",
+    source: (q) => client.searchArtists(q, 8),
+    onChoose: (artist) => {
+      demoChooserArtist = artist;
+      chooserOpen.disabled = false;
+    },
+  });
+  chooserInput?.addEventListener("input", () => {
+    if (demoChooserArtist && chooserInput.value.trim().toLowerCase() !== demoChooserArtist.name.toLowerCase()) {
+      demoChooserArtist = null;
+    }
+    chooserOpen.disabled = !chooserInput.value.trim();
+  });
+  chooserOpen?.addEventListener("click", async () => {
+    const name = chooserInput.value.trim();
+    if (!name) return;
+    chooserOpen.disabled = true;
+    try {
+      const artist = demoChooserArtist || await client.findArtist(name);
+      if (!artist) throw new Error(`Couldn't find ${name} on Spotify.`);
+      _artistLookups.set(artist.name.toLowerCase(), Promise.resolve(artist));
+      openIntentModal(artist.name, { force: true, chroma: true });
+    } catch (e) {
+      say(e.message || "Couldn't open that artist.", true);
+    } finally {
+      chooserOpen.disabled = false;
+    }
   });
 
   document.getElementById("set-demo-save")?.addEventListener("click", () => {

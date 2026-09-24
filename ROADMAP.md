@@ -289,7 +289,7 @@ the pacing work. Neither has been looked at properly.
 
 ---
 
-## Stopping point, 22 Sept (build 2.9.84)
+## Stopping point, 22 Sept (build 2.9.96)
 
 Picking up next session:
 
@@ -299,11 +299,13 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.95
+## Shipped since — build 2.9.96
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Demo Settings can search Spotify for any artist and open the real
+  Dip/Dive/Multi-Dip chooser on a hard chroma-green capture surface (2.9.96)
 - Landing privacy copy now leads with the no-collection guarantee and
   briefly explains the serverless architecture behind it (2.9.84)
 - Landing privacy copy now uses Joseph's exact no-data-collection statement

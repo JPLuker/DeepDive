@@ -11,6 +11,7 @@ import { readFileSync } from 'fs';
 import { demoScreen, DEMO_SCREENS, approvedArtists, artistNames, namesFor, searchNames, setApprovedArtists, setArtistNames } from '../docs/js/demo.js';
 const src = readFileSync(new URL('../docs/js/app.js', import.meta.url), 'utf8');
 const dsrc = readFileSync(new URL('../docs/js/demo.js', import.meta.url), 'utf8');
+const shell = readFileSync(new URL('../docs/app/index.html', import.meta.url), 'utf8');
 
 let pass = 0, fail = 0;
 function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } }
@@ -43,7 +44,7 @@ check('results preloads full Spotify artist artwork', /client\.get\(`artists\/\$
 check('results stage uneven counts and visible duplicates', /already_liked_count: 11/.test(dsrc) && /usable\.slice\(0, 3\)/.test(dsrc) && /new_tracks: usable\.slice\(3\)/.test(dsrc));
 check('demo artist taps cannot start a live dive', /function startSearch\(artistName\) \{\s*if \(demo\.demoActive\(\)\) return renderDemoChooser\(artistName\)/.test(src) && /onChoose: \(it\) => startSearch\(it\.name\)/.test(src));
 check('home preview leads with a library-wide recipe', /id: "demo-home-random", title: "Surprise me"/.test(src) && !/id: `demo-mix-\$\{i\}`/.test(src));
-check('demo module import is cache-versioned', /import \* as demo from "\.\/demo\.js\?v=2\.9\.84"/.test(src));
+check('demo module import is cache-versioned', /import \* as demo from "\.\/demo\.js\?v=2\.9\.96"/.test(src));
 check('scan uses the real renderer', /return renderScrubResults\(demo\.scanFrom\(groups\)\)/.test(src));
 check('sampler uses the real dialog', /openCardModal\(card\)/.test(src));
 check('home uses the real suggestion row', /renderSuggestionRow\(el, demo\.pinsFrom\(pins\), demo\.suggestionsFrom\(suggestions\)\)/.test(src));
@@ -51,6 +52,9 @@ check('no second copy of tile markup in demo.js', !/class="tile"/.test(dsrc));
 check('the old pill markup is gone', !/class=\\?"pill\\?"/.test(src.slice(src.indexOf('async function loadSuggestions'), src.indexOf('async function loadSuggestions') + 900)));
 
 check('settings exposes Spotify whitelist search', /id="set-demo-artist-search"/.test(src) && /client\.searchArtists\(q, 8\)/.test(src) && /id="set-demo-save"/.test(src));
+check('settings exposes a Spotify-backed green-screen chooser', /id="set-demo-chooser-search"/.test(src) && /id="set-demo-chooser-open"/.test(src) && /openIntentModal\(artist\.name, \{ force: true, chroma: true \}\)/.test(src));
+check('chooser capture uses exact hard chroma green', /body\.demo-chroma-chooser #intent-modal \{ background:#00ff00; \}/.test(shell));
+check('closing the chooser clears chroma mode', /document\.body\.classList\.remove\("demo-chroma-chooser"\)/.test(src));
 check('demo refreshes cannot read outside the whitelist', /demo\.demoActive\(\) \? "" : `<button class="row-icon" id="sugg-refresh"/.test(src) && /if \(!demo\.demoActive\(\)\) refreshLibrary\(\)/.test(src));
 check('assignments can be shuffled', /id="set-demo-shuffle"/.test(src) && /demo\.reshuffle\(\)/.test(src));
 check('demo search never escapes the whitelist', /demo\.searchNames\(query, limit\)/.test(src));

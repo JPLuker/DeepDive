@@ -78,6 +78,13 @@
       job
 - [ ] Tap Dip: staged results open, with no real library work
 - [ ] Tap Multi-Dip: the staged Multi-Dip bill opens
+- [ ] In demo Settings, search for an artist under Green-screen chooser;
+      results come from Spotify and selecting the intended artist enables
+      Open green screen
+- [ ] Open it: the normal chooser and artist image appear over a perfectly
+      flat `#00ff00` viewport, with no app chrome visible behind it
+- [ ] Cancel, tap outside, or press Escape: the green background is removed;
+      opening a normal chooser afterward uses the normal dark backdrop
 
 ## 43. Demo/live isolation (2.9.74)
 
