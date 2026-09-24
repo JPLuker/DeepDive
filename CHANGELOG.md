@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.93
+- Started the copy rewrite in chat rather than the PDF, which was
+  unworkable on a phone. Answers are recorded in
+  `copy/rewrite-answers.json` as they're given, id by id. Nothing is
+  applied to the app yet: the landing page changes land in one pass
+  once its strings are done.
+
 ## 2.9.92
 - Added `copy/strings-2.9.91.json` and `copy/extract-strings.py`: the
   488 user-facing strings behind the full copy-rewrite PDF, each with

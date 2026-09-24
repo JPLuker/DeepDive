@@ -1,0 +1,42 @@
+{
+  "_note": "Joseph's copy rewrite, taken one string at a time in chat. Ids match copy/strings-2.9.91.json. action: keep | replace | remove. 'remove' means the string and its element go. Nothing here is applied to the app yet.",
+  "_open": [
+    "VIAL needs a new home on the landing page: the dive-in-progress section it was in has been cut. Footer credit S047 keeps VIAL until then.",
+    "The crate screenshot is stale (old sampler spacing); Joseph to retake: Dives > Crate with a few artists starred.",
+    "Cutting the seven eyebrow labels leaves spacing to close up in each section."
+  ],
+  "answers": {
+    "S001": { "action": "replace", "text": "DeepDive - Hear it all." },
+    "S002": { "action": "keep" },
+    "S003": { "action": "keep" },
+    "S004": { "action": "keep" },
+    "S005": { "action": "replace", "text": "DeepDive learns what is in your library, finds missing tracks and puts them in a playlist for you to enjoy." },
+    "S006": { "action": "keep" },
+    "S007": { "action": "keep" },
+    "S008": { "action": "remove", "why": "eyebrow label above a heading; all seven cut" },
+    "S009": { "action": "keep" },
+    "S010": { "action": "replace", "text": "Dip gives you the most popular tracks first. Dive scans the entire discography. Multi-Dip lets you pick multiple artists in order to make a playlist out of any lineup you want." },
+    "S011": { "action": "keep" },
+    "S012": { "action": "remove", "why": "eyebrow label" },
+    "S013": { "action": "remove", "why": "whole dive-progress section cut: it explained a loading screen" },
+    "S014": { "action": "remove", "why": "section cut" },
+    "S015": { "action": "remove", "why": "section cut; VIAL to be placed elsewhere" },
+    "S016": { "action": "remove", "why": "eyebrow label" },
+    "S017": { "action": "keep" },
+    "S018": { "action": "replace", "text": "DeepDive compares recordings rather than releases, so it knows the difference between an unheard song and a duplicate, letting you quickly add to your library while creating your playlist." },
+    "S019": { "action": "keep" },
+    "S020": { "action": "remove", "why": "eyebrow label" },
+    "S021": { "action": "replace", "text": "Mixes that keep it personal" },
+    "S022": { "action": "replace", "text": "From your library, DeepDive can generate mixes based on when you found songs, release dates, even track length. With a Last.fm key you can also create similar artist discovery and genre mixes." },
+    "S023": { "action": "replace", "text": "DeepDive Mixes showing recommendations, Build your own, Sampler, year, album and library mixes", "why": "alt text kept, but 'listening-history mixes' corrected to 'library mixes' to match S022" },
+    "S024": { "action": "remove", "why": "eyebrow label" },
+    "S025": { "action": "replace", "text": "A crate to dig through" },
+    "S026": { "action": "replace", "text": "Save artists for later dives, with an \"Up next\" feature that keeps your priorities in order." },
+    "S027": { "action": "keep" },
+    "S028": { "action": "remove", "why": "eyebrow label" },
+    "S029": { "action": "replace", "text": "Prepare for your show" },
+    "S030": { "action": "replace", "text": "Multi-Dip lets you grab artists and make a unique lineup, allowing you to create a multi-hour playlist of their most popular songs to emulate a set list." },
+    "S031": { "action": "keep" },
+    "S032": { "action": "remove", "why": "eyebrow label" }
+  }
+}
