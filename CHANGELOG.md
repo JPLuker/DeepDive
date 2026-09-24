@@ -4,6 +4,12 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.98
+- Replaced the landing page's Crate screenshot with Joseph's updated
+  capture, showing the current search, ordering, sampler and Up next UI.
+- Kept the complete composition while resizing and compressing it to the
+  landing page's existing 490-by-724 screenshot slot.
+
 ## 2.9.97
 - Replaced the Maciann Dip/Dive chooser on the landing page with
   Joseph's new VIAL capture.

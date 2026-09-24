@@ -44,7 +44,7 @@ check('results preloads full Spotify artist artwork', /client\.get\(`artists\/\$
 check('results stage uneven counts and visible duplicates', /already_liked_count: 11/.test(dsrc) && /usable\.slice\(0, 3\)/.test(dsrc) && /new_tracks: usable\.slice\(3\)/.test(dsrc));
 check('demo artist taps cannot start a live dive', /function startSearch\(artistName\) \{\s*if \(demo\.demoActive\(\)\) return renderDemoChooser\(artistName\)/.test(src) && /onChoose: \(it\) => startSearch\(it\.name\)/.test(src));
 check('home preview leads with a library-wide recipe', /id: "demo-home-random", title: "Surprise me"/.test(src) && !/id: `demo-mix-\$\{i\}`/.test(src));
-check('demo module import is cache-versioned', /import \* as demo from "\.\/demo\.js\?v=2\.9\.97"/.test(src));
+check('demo module import is cache-versioned', /import \* as demo from "\.\/demo\.js\?v=2\.9\.98"/.test(src));
 check('scan uses the real renderer', /return renderScrubResults\(demo\.scanFrom\(groups\)\)/.test(src));
 check('sampler uses the real dialog', /openCardModal\(card\)/.test(src));
 check('home uses the real suggestion row', /renderSuggestionRow\(el, demo\.pinsFrom\(pins\), demo\.suggestionsFrom\(suggestions\)\)/.test(src));

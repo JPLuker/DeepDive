@@ -94,6 +94,13 @@
 - [ ] The taller mobile chooser stays fully visible and does not collide
       with the section copy at desktop or phone widths
 
+## 46. Landing Crate replacement (2.9.98)
+
+- [ ] The Crate card shows the updated nine-artist capture
+- [ ] Search, ordering, Sampler from your crate and Up next are readable
+- [ ] The complete screenshot remains visible without stretching or an
+      unintended crop at desktop and phone widths
+
 ## 43. Demo/live isolation (2.9.74)
 
 - [ ] Open `/app/?demo=home`, then manually load plain `/app/` in the

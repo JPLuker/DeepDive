@@ -101,6 +101,8 @@ const vialBytes = readFileSync(new URL('../docs/img/shots/app-vial-crop.jpg', im
 check('VIAL crop is the approved replacement', createHash('sha256').update(vialBytes).digest('hex') === '3b5232e3a117031f532dbb7901adf5b8ce4d3b1c80efe29419e3ad6aa47b0d5e');
 const chooserBytes = readFileSync(new URL('../docs/img/shots/app-chooser-crop.png', import.meta.url));
 check('VIAL chooser is the approved transparent cutout', createHash('sha256').update(chooserBytes).digest('hex') === 'c5b28cc3ad7c50f2f45779146b9892aed07cca950c88d5c16e967eebbd188a1c');
+const crateBytes = readFileSync(new URL('../docs/img/shots/app-crate-crop.jpg', import.meta.url));
+check('Crate crop is the approved replacement', createHash('sha256').update(crateBytes).digest('hex') === 'bcd7a0400bb8a0660e692b43d515015a1bedb4cc1af5e6ecf12f84b8caeec6a7');
 check('below-fold images lazy-load', (html.match(/loading="lazy"/g) || []).length >= 5);
 
 check('no artist photo is used as page background', !/hero-photo|background-image:\s*url\([^)]*img\/shots/.test(html));
