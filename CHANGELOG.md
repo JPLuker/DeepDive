@@ -4,6 +4,11 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.94
+- Copy rewrite: the landing page's 48 strings are decided (16
+  rewritten, 22 kept, 10 removed). Recorded in
+  `copy/rewrite-answers.json`; still not applied to the page.
+
 ## 2.9.93
 - Started the copy rewrite in chat rather than the PDF, which was
   unworkable on a phone. Answers are recorded in
