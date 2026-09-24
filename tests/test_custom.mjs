@@ -93,7 +93,7 @@ check('count updates while typing', /c\.addEventListener\("input", update\)/.tes
 // creating the playlist talks to Spotify, at one request per hundred.
 check('cost is stated for large mixes', /one per hundred tracks/.test(src));
 check('and only above a threshold', /n > 300 \?/.test(src));
-check('the cap says it reads nothing', /Nothing here reads from Spotify/.test(src));
+check('the cap says it reads nothing', /built from your cached library, not from Spotify/.test(src));
 
 // Reuse by name is the behaviour now, not an option.
 check('force-new control is gone', !/card-force-new/.test(src));

@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.98";
+export const BUILD = "2.9.99";
 
 const client = new SpotifyClient(auth.getToken);
 // Incremental liked-songs cache: read the whole library once, then only
@@ -191,7 +191,7 @@ async function refreshLibrary() {
   flash("Refreshing your library from Spotify…");
   try {
     const tracks = await libraryCache.getLikedTracks({ forceFull: true });
-    flash(`Library refreshed — ${tracks.length} liked songs synced.`);
+    flash(`Library refreshed. ${tracks.length} liked songs synced.`);
   } catch (e) {
     flash(`Couldn't refresh library: ${e.message || e}`, true);
   }
@@ -431,7 +431,7 @@ function searchShellHtml({ options = true } = {}) {
   return `
     <div class="search-shell">
       <div class="search-pill-form">
-        <input type="text" id="artist-input" placeholder="Search an artist" autocomplete="off" autofocus>
+        <input type="text" id="artist-input" placeholder="Search for an artist" autocomplete="off" autofocus>
         ${options ? `<button type="button" class="settings-icon-btn" id="settings-toggle-btn" aria-label="Search options" title="Search options">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
         </button>` : ""}
@@ -769,7 +769,7 @@ async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml 
     const forMixes = withoutMixBlocked(cached);
     _allCards = insights.playlistCards(forMixes, { seed });
     if (!_allCards.length) {
-      el.innerHTML = `<p class="empty-note">Nothing to build a mix from yet — that usually means the cached library is very small.</p>`;
+      el.innerHTML = `<p class="empty-note">Nothing to build a mix from yet. Your cached library is probably too small.</p>`;
       return;
     }
     _cards = insights.seededPick(_allCards, CARDS_PER_LOAD, seed);
@@ -832,7 +832,7 @@ function renderCardRow(el) {
     <button class="pcard is-custom" data-custom>
       <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></span>
       <span class="pcard-title">Build your own</span>
-      <span class="pcard-sub">pick an era, a length, an artist — any combination</span>
+      <span class="pcard-sub">pick an era, a length, an artist, any combination</span>
     </button>`;
   const samplerCard = _samplerPool.length >= 2 ? `
     <button class="pcard is-sampler" data-sampler>
@@ -915,7 +915,7 @@ function renderSamplerIntro(artists) {
           ? `<img src="${esc(a.image_url)}" alt="" class="sampler-face">`
           : `<span class="sampler-face sampler-face-blank">${esc((a.name || "?").charAt(0).toUpperCase())}</span>`).join("")}
       </div>
-      <p class="nav-hint">This takes a moment — one request per artist.</p>
+      <p class="nav-hint">This takes a moment, one request per artist.</p>
       <div class="actions">
         <button class="btn btn-primary" id="sampler-start">Build sampler</button>
         <button class="btn btn-ghost" id="sampler-cancel">Back</button>
@@ -1270,7 +1270,7 @@ async function renderCustomMix() {
   root.innerHTML = `
     <div class="row-head"><h2>Build your own</h2></div>
     <p class="nav-hint" style="margin-top:0;">Everything comes from tracks already in your library. Nothing is created until you confirm it.</p>
-    <div id="custom-form"><p class="nav-hint">Reading your library…</p></div>`;
+    <div id="custom-form"><p class="nav-hint">Scanning your library…</p></div>`;
 
   let cached = [];
   try {
@@ -1331,7 +1331,7 @@ async function renderCustomMix() {
           <div class="set-row-detail">${artists.length} in your library. Leave blank for anyone.</div></div>
         <div class="search-shell cm-search">
           <div class="search-pill-form">
-            <input type="text" id="cm-artist" placeholder="Search an artist" autocomplete="off" spellcheck="false">
+            <input type="text" id="cm-artist" placeholder="Search for an artist" autocomplete="off" spellcheck="false">
             <button type="button" class="search-icon-btn" id="cm-artist-clear" aria-label="Clear artist">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -1346,7 +1346,7 @@ async function renderCustomMix() {
       </div>
       <div class="set-row">
         <div class="set-row-text"><div class="set-row-title">One track per artist</div>
-          <div class="set-row-detail">A tour rather than a deep dive.</div></div>
+          <div class="set-row-detail">A tour, not a deep dive.</div></div>
         <div class="set-row-control"><label class="set-switch"><input type="checkbox" id="cm-oneeach"><span class="switch-track"><span class="switch-thumb"></span></span></label></div>
       </div>
     </div>
@@ -1375,7 +1375,7 @@ async function renderCustomMix() {
       </div>
       <div class="set-row set-row-block">
         <div class="set-row-text"><div class="set-row-title">How many tracks</div>
-          <div class="set-row-detail">The same choices the other mixes offer. Nothing here reads from Spotify — the mix is built from your cached library.</div></div>
+          <div class="set-row-detail">The same choices the other mixes offer. This one is built from your cached library, not from Spotify.</div></div>
         <select id="cm-limit" class="sort-select">
           ${CUSTOM_LENGTHS.map((n, i) => `<option value="${n}"${i === CUSTOM_LENGTHS.length - 1 ? " selected" : ""}>${n} tracks</option>`).join("")}
         </select>
@@ -1750,7 +1750,7 @@ function paintIntentHero(artistName) {
 }
 
 // What a feature that needs Last.fm says instead of what it does.
-const DIP_SUB = "their best hour, most played first";
+const DIP_SUB = "their most popular tracks first";
 const NEEDS_LASTFM = "needs a Last.fm key, added in Settings";
 const NEEDS_LASTFM_FULL = "Needs a Last.fm key, added in Settings.";
 
@@ -2125,7 +2125,7 @@ async function loadSuggestions({ compact = false, showAllPins = false } = {}) {
     const stillLimited = await verifyRateLimit();
     if (stillLimited) {
       btn.disabled = false;
-      btn.textContent = "Still paused — check again";
+      btn.textContent = "Still paused, check again";
     } else {
       flash("Spotify is responding again.");
       renderHome();
@@ -3011,7 +3011,7 @@ function explainError(err) {
     return {
       headline: "Spotify has paused this app",
       detail:
-        `Your Spotify app has been rate-limited for about ${dur} — until roughly ${clock}. ` +
+        `Your Spotify app has been rate-limited for about ${dur}, until roughly ${clock}. ` +
         `This isn't a bug and retrying won't help; the limit is on your Spotify credentials, not DeepDive. ` +
         `It usually follows a lot of scanning in a short period, especially with compilations and guest appearances turned on.`,
       canRetry: false,
@@ -3142,7 +3142,7 @@ function renderProgressError(msgOrErr, err) {
       }
     }
   }).catch(() => {
-    if (slot.isConnected) slot.innerHTML = `<p class="nav-hint">The checks couldn't run either — that usually means no connection.</p>`;
+    if (slot.isConnected) slot.innerHTML = `<p class="nav-hint">The checks couldn't run either. You're probably offline.</p>`;
   });
 }
 
@@ -3237,7 +3237,7 @@ async function presentDip(result) {
     if (lastfm.hasKey()) top = await lastfm.topTracks(artistName, 50);
   } catch (e) {
     // An ordering we couldn't fetch is not a reason to lose the mix.
-    flash("Couldn't reach Last.fm — ordering by catalogue instead.");
+    flash("Couldn't reach Last.fm, ordering by catalogue instead.");
   }
 
   const dip = matching.buildDip(pool, top, {
@@ -3245,7 +3245,7 @@ async function presentDip(result) {
     likedIds: result.already_liked_ids || [],
   });
   if (!dip.tracks.length) {
-    renderProgressError(`Couldn't build a dip for ${artistName} — no tracks came back.`);
+    renderProgressError(`Couldn't build a dip for ${artistName}. No tracks came back.`);
     return;
   }
   const mins = Math.round(dip.totalMs / 60000);
@@ -3287,7 +3287,7 @@ function renderResults(r) {
     <div class="results-body">
       ${dups.length ? `
         <div class="crate-header"><span class="label">Already yours, elsewhere</span></div>
-        <p class="crate-note">Same recording as something in your Liked Songs, under a different release. Checked = will be liked.</p>
+        <p class="crate-note">Same recording as something in your Liked Songs, under a different release. Anything ticked gets added to your library.</p>
         <div id="dup-list">
           ${dups.map((d) => dupRow(d)).join("")}
         </div>` : ""}
@@ -3304,7 +3304,7 @@ function renderResults(r) {
           </select>
         </div>
         <div id="new-list">${sortTracks(news, "album").map((t) => trackRow(t, { cls: "newt" })).join("")}</div>
-      ` : `<p class="empty-note">Nothing new — your library already covers this artist.</p>`}
+      ` : `<p class="empty-note">Nothing new. Your library already covers this artist.</p>`}
 
       <div class="playlist-name-field" id="playlist-name-wrap">
         <label>Playlist name</label>
@@ -3469,14 +3469,14 @@ function renderScrubForm() {
   root.innerHTML = `
     <div class="card">
       <h1>Scan your whole library</h1>
-      <p class="muted">Crawls every artist in your Liked Songs the same way a single search does — catches everything, but for a large library this can take a long time. You can cancel any time and keep what was found.</p>
+      <p class="muted">Scans every artist in your Liked Songs, the same way a single dive does. It catches everything, but a large library takes a long time. Cancel whenever you like and keep what was found.</p>
       <div class="filter-options" style="margin-bottom:20px;">
         <label class="checkbox-option"><input type="checkbox" id="s-live"> Exclude live recordings</label>
-        <label class="checkbox-option"><input type="checkbox" id="s-censored"> Exclude radio edits &amp; censored versions</label>
+        <label class="checkbox-option"><input type="checkbox" id="s-censored"> Exclude radio edits and censored versions</label>
         <label class="checkbox-option"><input type="checkbox" id="s-instrumental"> Exclude instrumentals</label>
         <label class="checkbox-option"><input type="checkbox" id="s-acappella"> Exclude a cappella versions</label>
         <label class="checkbox-option"><input type="checkbox" id="s-remaster"> Count remasters as duplicates</label>
-        <label class="checkbox-option"><input type="checkbox" id="s-compilations"> Include compilations &amp; greatest hits</label>
+        <label class="checkbox-option"><input type="checkbox" id="s-compilations"> Include compilations and greatest hits</label>
         <label class="checkbox-option"><input type="checkbox" id="s-appears-on"> Include releases they only guest on</label>
       </div>
       <div class="actions" style="margin-top:0;">
@@ -3508,7 +3508,7 @@ async function startScrub() {
   if (blockedByRateLimit()) return;
   showDiveScreen("Scanning your whole library…", () => { scrubCancel.cancelled = true; });
   const cancelBtn = document.getElementById("dive-cancel");
-  if (cancelBtn) cancelBtn.textContent = "Cancel & show what's found";
+  if (cancelBtn) cancelBtn.textContent = "Cancel and show what's found";
 
   try {
     // Preflight before a long scrub (issue #3) — a scope problem found
@@ -3678,7 +3678,7 @@ function blockedByRateLimit() {
   const hrs = Math.floor(mins / 60);
   const dur = hrs ? `${hrs}h ${mins % 60}m` : `${mins} minutes`;
   const clock = new Date(until).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  flash(`Spotify has paused this app for about ${dur} — until roughly ${clock}. Nothing will work until then.`, true);
+  flash(`Spotify has paused this app for about ${dur}, until roughly ${clock}. Nothing will work until then.`, true);
   return true;
 }
 
@@ -3702,7 +3702,7 @@ function scopeBanner() {
   return `
     <div class="api-banner" id="scope-banner">
       <div class="api-banner-head">Reconnect to get playlist covers</div>
-      <p class="api-banner-detail">DeepDive makes a cover for each playlist it creates, from the album art inside it. That needs a Spotify permission added after you connected, so it has to be granted once. Everything else works either way.</p>
+      <p class="api-banner-detail">DeepDive makes a cover for each playlist it creates, from the album art inside it. That needs a Spotify permission you haven't granted yet. Everything else works either way.</p>
       <div class="api-banner-actions">
         <button class="btn btn-ghost btn-small" id="scope-reconnect">Reconnect</button>
         <button class="btn btn-ghost btn-small" id="scope-dismiss">Not now</button>
@@ -3832,7 +3832,7 @@ async function renderGenreSection() {
     const secs = Math.ceil((n * 250) / 1000);
     el.innerHTML = `
       <div class="crate-header"><span class="label">Genres</span></div>
-      <p class="nav-hint" style="margin-top:0;">DeepDive can ask Last.fm what your artists actually sound like, then build mixes from it. That's one request per artist — <strong>${n}</strong> of them, about <strong>${secs} seconds</strong>, starting with the artists you own the most of. You can stop at any point and keep what's been found.</p>
+      <p class="nav-hint" style="margin-top:0;">DeepDive can ask Last.fm what your artists sound like, then build mixes from it. One request per artist, <strong>${n}</strong> of them, about <strong>${secs} seconds</strong>, starting with the artists you own the most of. Stop at any point and keep what was found.</p>
       ${knownTags ? `<p class="crate-note">${knownTags} artist${knownTags === 1 ? "" : "s"} already looked up and remembered — those cost nothing to reuse.</p>` : ""}
       <div class="actions">
         <button class="btn btn-ghost btn-small" id="genre-go">Find my genres</button>
@@ -4039,7 +4039,7 @@ async function renderAskSimilar() {
   setActiveTab("mixes");
   root.innerHTML = `
     <div class="row-head"><h2>If you like&hellip;</h2></div>
-    <p class="nav-hint" style="margin-top:0;">Name an artist and DeepDive will ask Last.fm who resembles them, then build a mix from the ones in your library. You don't have to own the artist you name.</p>
+    <p class="nav-hint" style="margin-top:0;">Name any artist, even one you don't own. DeepDive asks Last.fm who sounds like them, then builds a mix from the ones in your library.</p>
     ${searchShellHtml({ options: false })}
     <div id="ask-result"></div>
     <div class="actions"><button class="btn btn-ghost" data-tab="mixes">Back to mixes</button></div>`;
@@ -4301,7 +4301,7 @@ async function maybeSetCover(res, tracks, title, art) {
       split: !!(art && art.split),
     });
     if (!data) {
-      flash("Couldn't build a cover for that one — DD-COVER.", true);
+      flash("Couldn't build a cover for that one (DD-COVER).", true);
       return;
     }
     await client.setPlaylistCover(res.id, data);
@@ -4309,7 +4309,7 @@ async function maybeSetCover(res, tracks, title, art) {
     // Reported, not thrown: a cover is decoration and must never turn a
     // built playlist into a failure.
     console.warn("[DeepDive] cover art failed:", e);
-    flash(`Playlist made, but the cover didn't upload — DD-COVER: ${e.message || e}`, true);
+    flash(`Playlist made, but the cover didn't upload (DD-COVER: ${e.message || e})`, true);
   }
 }
 
@@ -4396,7 +4396,7 @@ async function runDipViaSearch(artist, artistName, opts) {
     onProgress: (n, of, ms, target) => {
       updateDiveScreen(
         Math.min(95, Math.round((ms / target) * 100)),
-        `Finding their best hour… ${n} of ${of} checked`
+        `Finding their most popular tracks… ${n} of ${of} checked`
       );
     },
   });
@@ -5247,7 +5247,7 @@ function probeVerdict(rows) {
     ? `<p class="nav-hint">DeepDive is currently waiting <strong>${paced}ms</strong> before every request, learned from an earlier rate limit. On an artist with 40 releases that alone adds about ${Math.round(paced * 40 / 1000)} seconds. If dives feel slow and nothing is being refused, this is why — clear it with Reset pacing above.</p>`
     : "";
   if (!failed.length) {
-    return pacingNote + `<p class="nav-hint">Every endpoint answered. If a dive still fails, it's the number of requests it makes rather than the endpoints it uses — try a small artist.</p>`;
+    return pacingNote + `<p class="nav-hint">Every endpoint answered. If a dive still fails it's the number of requests, not the endpoints. Try a small artist.</p>`;
   }
   const all = failed.length === rows.length;
   const quota = failed.some(([, r]) => r.reason === "QUOTA_EXCEEDED");
@@ -5256,12 +5256,12 @@ function probeVerdict(rows) {
     return `<p class="nav-hint">Everything is refused with a quota error. This is a limit on your Spotify credentials and only time refills it.</p>`;
   }
   if (all && limited) {
-    return `<p class="nav-hint">Everything is rate-limited. That's a burst limit rather than a spent budget — wait a minute and run this again before concluding anything.</p>`;
+    return `<p class="nav-hint">Everything is rate-limited. That's a burst limit, not a spent budget. Wait a minute and run this again before concluding anything.</p>`;
   }
   if (limited || quota) {
-    return `<p class="nav-hint">Some endpoints answer while others are refused, which means the budget is per-group rather than app-wide. The refused ones are the ones to avoid until they recover.</p>`;
+    return `<p class="nav-hint">Some endpoints answer while others are refused, so the budget is per-group, not app-wide. Avoid the refused ones until they recover.</p>`;
   }
-  return `<p class="nav-hint">Some endpoints failed without a rate limit — check the status codes above. 403 usually means the endpoint is restricted for this app rather than temporarily unavailable.</p>`;
+  return `<p class="nav-hint">Some endpoints failed without a rate limit. Check the status codes above. 403 usually means the endpoint is restricted for this app, not temporarily down.</p>`;
 }
 
 /**
@@ -5419,11 +5419,11 @@ function renderSettings() {
 
       <div class="set-group">
         <div class="set-group-label">Last.fm</div>
-        <p class="set-note">Optional but recommended. Powers genre and subgenre mixes and an artist's best hour — things Spotify no longer exposes. Leave it empty and those features simply don't appear.</p>
+        <p class="set-note">Optional but recommended. Powers genre and subgenre mixes, and an artist's most popular tracks, which Spotify no longer provides. Leave it empty and those features simply don't appear.</p>
         <div class="set-row set-row-block">
           <div class="set-row-text">
             <div class="set-row-title">API key</div>
-            <div class="set-row-detail">Free and instant from last.fm/api/account/create. The key only — not the shared secret.</div>
+            <div class="set-row-detail">Free and instant from last.fm/api/account/create. The key only, not the shared secret.</div>
           </div>
           <input type="text" id="set-lastfm-key" class="nav-input" placeholder="not set" autocomplete="off" spellcheck="false">
         </div>
@@ -5604,7 +5604,7 @@ function renderSettings() {
 
   document.getElementById("set-reset-pacing")?.addEventListener("click", () => {
     client.resetPacing();
-    flash("Pacing cleared — the next dive starts at full speed.");
+    flash("Pacing cleared. The next dive starts at full speed.");
   });
 
   document.getElementById("set-export")?.addEventListener("click", () => {
@@ -5713,7 +5713,7 @@ function renderHistory() {
             <button class="btn btn-ghost btn-small" id="undo-last">Undo</button>
           </div>
         </div>
-        <p class="nav-hint">Removes those tracks from your Liked Songs. Playlists aren't undone — deleting one you may have edited or shared would be worse than leaving it.</p>
+        <p class="nav-hint">Removes those tracks from your Liked Songs. Playlists stay: DeepDive won't delete one you may have edited or shared.</p>
       ` : `<p class="empty-note">Nothing to undo.</p>`}
 
       ${created.length ? `
@@ -5731,7 +5731,7 @@ function renderHistory() {
               <button class="btn btn-ghost btn-small" data-delete-playlist="${esc(p.id)}" data-pid="${esc(p.playlistId)}" data-label="${esc(p.label)}">Remove</button>
             </div>
           </div>`).join("")}
-        <p class="nav-hint">Removing takes the playlist out of your Spotify library. Only playlists DeepDive created are listed — one it merely added to is yours, not ours to remove.</p>
+        <p class="nav-hint">Removing takes the playlist out of your Spotify library. Only playlists DeepDive created are listed. One it added to is yours to delete.</p>
       ` : ""}
 
       <div class="crate-header"><span class="label">Dives</span></div>
@@ -5751,7 +5751,7 @@ function renderHistory() {
       ${dives.length ? `<div class="actions"><button class="btn btn-ghost btn-small" id="clear-dives">Clear dive history</button></div>` : ""}
 
       <div class="crate-header"><span class="label">Your data</span></div>
-      <p class="nav-hint" style="margin-top:0;">Pins, blocked artists, dive history and settings. The library cache isn't included — it rebuilds itself from Spotify in one read, so carrying thousands of tracks around in a file would be a poor trade.</p>
+      <p class="nav-hint" style="margin-top:0;">Pins, blocked artists, dive history and settings. The library cache isn't included: it rebuilds itself from Spotify in one read.</p>
       <div class="actions">
         <button class="btn btn-ghost btn-small" id="export-data">Export backup</button>
         <button class="btn btn-ghost btn-small" id="import-data">Import backup</button>
@@ -6047,7 +6047,7 @@ function renderBlocked() {
     <div class="card">
       <h1>Blocked artists</h1>
       <p class="muted">Blocked artists never appear in suggestions or mixes, depending on what you tick.</p>
-            <p class="nav-hint" style="margin-top:0;">Blocking is per feature. Not wanting to dive an artist isn't the same as not wanting them in a mix built from tracks you already liked.</p>
+            <p class="nav-hint" style="margin-top:0;">Blocking is per feature. You might not want to dive an artist and still want their songs in a mix.</p>
       ${blocked.length ? blocked.map((b) => {
         const sc = watchlist.blockScopes(b.name);
         return `
@@ -6106,7 +6106,7 @@ function renderLanding() {
   root.innerHTML = `
     <div class="onboard onboard-welcome">
       <h1 class="onboard-hero">Hear it all.</h1>
-      <p class="onboard-lede">DeepDive knows what's already in your Spotify library, so every playlist it builds is made of the songs you missed.</p>
+      <p class="onboard-lede">DeepDive learns what is in your library, finds missing tracks and puts them in a playlist for you to enjoy.</p>
       <div class="onboard-process">
         <p>Setting up takes about two minutes. You make a free app on Spotify's developer site, paste its Client ID here, and sign in with your Spotify account, which has to be <strong>Premium</strong>: Spotify only runs apps like this for Premium accounts.</p>
         <p>A free Last.fm key is optional. It turns on Dips, Multi-Dips, recommendations and genre mixes, and you can add it later.</p>

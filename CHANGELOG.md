@@ -4,6 +4,19 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.99
+- Rewrote the app's copy in the voice Joseph set on the landing page.
+  Every user-facing em dash is gone (40 strings touched), "&" is now
+  "and", and the strings that explained their own reasoning say the
+  thing instead: the guest-appearance warning, the rate-limit
+  diagnostics, the undo and export notes, and the blocking note.
+- Dip and Dive now say "their most popular tracks first" and "their
+  entire discography, checked against your library", matching the
+  landing page.
+- The app's welcome screen now opens with the same line as the landing
+  page rather than the old one.
+- Labels and buttons were left alone: they were already short.
+
 ## 2.9.98
 - Replaced the landing page's Crate screenshot with Joseph's updated
   capture, showing the current search, ordering, sampler and Up next UI.

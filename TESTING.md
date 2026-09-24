@@ -899,6 +899,15 @@ Always:
 - [ ] Welcome (private window): two short paragraphs covering the whole
       setup, Premium in bold
 
+## 39. App copy rewrite (2.9.99)
+
+- [ ] Chooser: Dip and Dive read the same way as the landing page
+- [ ] Dive options: "Include releases they only guest on" warning is
+      shorter and no longer lectures
+- [ ] Settings: Last.fm, undo, export and blocking notes read cleanly
+- [ ] Onboarding welcome opens with the landing page's line
+- [ ] Nothing reads as truncated or mid-sentence anywhere
+
 ## 38. Landing page rewrite (2.9.95)
 
 - [ ] Read the page top to bottom on a phone: the new wording is there,

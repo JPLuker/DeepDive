@@ -190,5 +190,17 @@
       "why": "footer and closing links: Joseph kept the block as one"
     }
   },
-  "_progress": "Landing page (S001-S048) decided AND applied in 2.9.95. Next: app shell, S049 onward."
+  "_progress": "Landing page applied in 2.9.95. App strings given the same treatment in 2.9.99 by Claude, following the style of Joseph's landing rewrites rather than string-by-string dictation.",
+  "_app_pass": {
+    "build": "2.9.99",
+    "rules": [
+      "The product does the doing: DeepDive/Multi-Dip as the subject.",
+      "Say the outcome, not the reasoning behind it.",
+      "Commas and short sentences, no em dashes.",
+      "'and' rather than '&'.",
+      "No telling the reader off, and no 'rather than'/'instead of' framing."
+    ],
+    "changed": 40,
+    "left_alone": "labels, buttons and anything already short and plain"
+  }
 }

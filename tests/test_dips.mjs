@@ -79,7 +79,7 @@ check('and no saturated primary slab', !/is-primary/.test(shell));
 // The gear is gone. A choice and its settings were two controls for one
 // decision; Dive asks how deep as a second step instead.
 check('no gear anywhere', !/intent-gear/.test(shell) && !/intent-gear/.test(src));
-check('each says what it does', /their best hour, most played first/.test(shell) && /their whole catalogue against your library/.test(shell));
+check('each says what it does', /their most popular tracks first/.test(shell) && /their entire discography, checked against your library/.test(shell));
 // The gear adjusts what a dive reads, so it belongs against Dive.
 check('dive opens a second step', /freshGo\.addEventListener\("click", \(\) => showDiveStep\(true\)\)/.test(src));
 check('with a way back', /id="intent-back"/.test(shell));
