@@ -86,6 +86,14 @@
 - [ ] Cancel, tap outside, or press Escape: the green background is removed;
       opening a normal chooser afterward uses the normal dark backdrop
 
+## 45. Landing VIAL chooser (2.9.97)
+
+- [ ] The How far in section shows VIAL, not Maciann
+- [ ] No chroma green remains around the rounded chooser on light or dark
+      backgrounds
+- [ ] The taller mobile chooser stays fully visible and does not collide
+      with the section copy at desktop or phone widths
+
 ## 43. Demo/live isolation (2.9.74)
 
 - [ ] Open `/app/?demo=home`, then manually load plain `/app/` in the

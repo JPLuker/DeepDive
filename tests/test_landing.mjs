@@ -26,6 +26,7 @@ check('hero shows Mixes', /app-mixes\.svg/.test(hero));
 check('hero has three distinct screenshots', new Set([...hero.matchAll(/img\/shots\/([^"]+\.(?:svg|jpg))/g)].map(m => m[1])).size === 3);
 
 check('chooser screenshot is present', /app-chooser-crop\.png/.test(html));
+check('chooser screenshot now features VIAL', /artist chooser showing Dip, Dive and Multi-Dip for VIAL/.test(html));
 // The rewrite (2.9.95) says the same three things in Joseph's words.
 check('chooser copy explains Dip', /Dip gives you the most popular tracks first/.test(html));
 check('chooser copy explains Dive', /Dive scans the entire discography/.test(html));
@@ -52,8 +53,8 @@ const expected = [
   ['app-home-crop.jpg', 490, 724],
   ['app-dive-crop.jpg', 490, 724],
   ['app-mixes.svg', 640, 905],
-  // Trimmed to the modal in 2.9.86; the rest of the frame was transparent.
-  ['app-chooser-crop.png', 450, 406],
+  // The VIAL chooser is cut from the demo capture's chroma-green backdrop.
+  ['app-chooser-crop.png', 600, 667],
   ['app-mixes-crop.jpg', 490, 724],
   ['app-results-crop.jpg', 490, 724],
   ['app-multidip-crop.jpg', 490, 724],
@@ -98,6 +99,8 @@ for (const [file, width, height] of expected) {
 }
 const vialBytes = readFileSync(new URL('../docs/img/shots/app-vial-crop.jpg', import.meta.url));
 check('VIAL crop is the approved replacement', createHash('sha256').update(vialBytes).digest('hex') === '3b5232e3a117031f532dbb7901adf5b8ce4d3b1c80efe29419e3ad6aa47b0d5e');
+const chooserBytes = readFileSync(new URL('../docs/img/shots/app-chooser-crop.png', import.meta.url));
+check('VIAL chooser is the approved transparent cutout', createHash('sha256').update(chooserBytes).digest('hex') === 'c5b28cc3ad7c50f2f45779146b9892aed07cca950c88d5c16e967eebbd188a1c');
 check('below-fold images lazy-load', (html.match(/loading="lazy"/g) || []).length >= 5);
 
 check('no artist photo is used as page background', !/hero-photo|background-image:\s*url\([^)]*img\/shots/.test(html));

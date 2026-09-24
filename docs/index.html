@@ -470,10 +470,8 @@
   }
   .choice-section .section-copy { max-width:52ch; margin:18px 0 0; }
   .choice-shot { width:min(100%,520px); justify-self:end; }
-  /* The chooser capture is the modal and its shadow, trimmed to them in
-     2.9.86: the file carried 149px of transparent space above the modal
-     and 185px below, which the page drew as empty gaps. It must not
-     inherit the generic full-image frame either. */
+  /* The chooser capture is already a transparent cutout of the modal.
+     It must not inherit the generic full-image frame. */
   .choice-shot img {
     background:transparent; border:0; border-radius:0; box-shadow:none;
   }
@@ -800,7 +798,7 @@
         <h2 class="section-title">How far in?</h2>
         <p class="section-copy">Dip gives you the most popular tracks first. Dive scans the entire discography. Multi-Dip lets you pick multiple artists in order to make a playlist out of any lineup you want.</p>
       </div>
-      <figure class="screen choice-shot"><img src="img/shots/app-chooser-crop.png" alt="DeepDive's artist chooser showing Dip, Dive and Multi-Dip for Maciann" width="450" height="406" loading="lazy"></figure>
+      <figure class="screen choice-shot"><img src="img/shots/app-chooser-crop.png" alt="DeepDive's artist chooser showing Dip, Dive and Multi-Dip for VIAL" width="600" height="667" loading="lazy"></figure>
     </section>
 
     <div class="feature-grid">

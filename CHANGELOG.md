@@ -4,6 +4,13 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.97
+- Replaced the Maciann Dip/Dive chooser on the landing page with
+  Joseph's new VIAL capture.
+- Removed the chroma-green capture background, preserved a transparent
+  rounded cutout, and resized the asset for the page without redrawing
+  its photography, text or controls.
+
 ## 2.9.96
 - Demo Settings now has a green-screen chooser capture: search Spotify
   for any exact artist, then open the real Dip, Dive and Multi-Dip popup
