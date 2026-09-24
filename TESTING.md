@@ -877,6 +877,16 @@ Always:
 - [ ] Welcome (private window): two short paragraphs covering the whole
       setup, Premium in bold
 
+## 38. Landing page rewrite (2.9.95)
+
+- [ ] Read the page top to bottom on a phone: the new wording is there,
+      no grey labels above the headings, and no gaps where they were
+- [ ] Five sections between the hero and "Try it out", no empty card
+      slot beside the crate card
+- [ ] Share the link somewhere: the preview shows the new description
+- [ ] Desktop: the three cards read as one band, crate across the
+      bottom
+
 ## 37. Repo and README (2.9.89)
 
 - [ ] GitHub's repo page opens on the new README, and the language

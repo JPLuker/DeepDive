@@ -12,10 +12,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DeepDive">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
-<title>DeepDive — Hear it all.</title>
-<meta name="description" content="Hear it all. DeepDive reads an artist's whole catalogue against your Spotify library and finds the recordings you already love but never saved.">
-<meta property="og:title" content="DeepDive — Hear it all.">
-<meta property="og:description" content="Reads an artist's whole catalogue against your Spotify library and finds the recordings you already love but never saved.">
+<title>DeepDive - Hear it all.</title>
+<meta name="description" content="DeepDive learns what is in your library, finds missing tracks and puts them in a playlist for you to enjoy.">
+<meta property="og:title" content="DeepDive - Hear it all.">
+<meta property="og:description" content="DeepDive learns what is in your library, finds missing tracks and puts them in a playlist for you to enjoy.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://jpluker.github.io/DeepDive/">
 <meta property="og:image" content="https://jpluker.github.io/DeepDive/assets/icon-512.png">
@@ -482,9 +482,10 @@
     display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
     gap:18px; margin-top:96px;
   }
-  /* Two rows of cards are one band. Between them, the gap the cards
-     already use; the 96px above is for the section before it. */
-  .feature-grid + .feature-grid { margin-top:18px; }
+  /* Three cards: an odd one last would leave a hole beside it, so it
+     takes the whole row. */
+  .feature-card-wide { grid-column:1 / -1; }
+  .feature-card-wide .screen { width:min(100%,430px); }
   .feature-card {
     background:var(--surface); border:1px solid var(--line);
     border-radius:var(--radius-lg); padding:clamp(22px,4vw,38px);
@@ -782,7 +783,7 @@
 
     <header class="lead">
       <h1 class="lead-title">Hear it all.</h1>
-      <p class="lead-sub">DeepDive knows what's already in your Spotify library, finds the tracks you missed, and turns the music you've saved into mixes built around how you listen.</p>
+      <p class="lead-sub">DeepDive learns what is in your library, finds missing tracks and puts them in a playlist for you to enjoy.</p>
       <div class="lead-cta">
         <a class="btn btn-primary" href="app/">Open DeepDive</a>
         <a class="lead-link" href="#how">See how it works</a>
@@ -796,63 +797,48 @@
 
     <section class="landing-section choice-section" id="how">
       <div>
-        <p class="section-eyebrow">Start with an artist</p>
         <h2 class="section-title">How far in?</h2>
-        <p class="section-copy">Dip gives you their best hour, most played first. Dive checks the whole catalogue against your library. Multi-Dip takes a whole bill and builds one playlist in the order they play.</p>
+        <p class="section-copy">Dip gives you the most popular tracks first. Dive scans the entire discography. Multi-Dip lets you pick multiple artists in order to make a playlist out of any lineup you want.</p>
       </div>
       <figure class="screen choice-shot"><img src="img/shots/app-chooser-crop.png" alt="DeepDive's artist chooser showing Dip, Dive and Multi-Dip for Maciann" width="450" height="406" loading="lazy"></figure>
     </section>
 
     <div class="feature-grid">
-      <section class="feature-card">
-        <p class="section-eyebrow">While DeepDive reads the catalogue</p>
-        <h2>See the Dive happen</h2>
-        <p>DeepDive works through every release and shows its progress against the artist image. You can see exactly what it is reading instead of waiting on an unexplained loading screen.</p>
-        <figure class="screen"><img src="img/shots/app-vial-crop.jpg" alt="A VIAL dive in progress with the artist photo filling the screen" width="490" height="724" loading="lazy"></figure>
-      </section>
-
       <section class="feature-card feature-card-results">
-        <p class="section-eyebrow">A real catalogue check</p>
         <h2>Know what you missed</h2>
-        <p>A Dive reads every album, single and EP, then checks the recordings against your Liked Songs. It catches the same recording under another release instead of trusting titles alone. Review the split, uncheck anything you don't want, then like songs, make a playlist, or both.</p>
+        <p>DeepDive compares recordings rather than releases, so it knows the difference between an unheard song and a duplicate, letting you quickly add to your library while creating your playlist.</p>
         <figure class="screen"><img src="img/shots/app-results-crop.jpg" alt="A finished Houseghost dive showing duplicate recordings and tracks new to the listener" width="490" height="724" loading="lazy"></figure>
       </section>
-    </div>
 
-    <div class="feature-grid">
       <section class="feature-card">
-        <p class="section-eyebrow">From what you've saved</p>
-        <h2>Mixes with a reason</h2>
-        <p>Your library becomes dozens of useful cuts: years, albums you went deep on, songs you found late, your regulars, and more. Build your own from an era, a length and an artist, or use Sampler to revisit artists you barely touched. Add Last.fm for similar-artist and genre mixes.</p>
-        <figure class="screen"><img src="img/shots/app-mixes-crop.jpg" alt="DeepDive Mixes showing recommendations, Build your own, Sampler, year, album and listening-history mixes" width="490" height="724" loading="lazy"></figure>
+        <h2>Mixes that keep it personal</h2>
+        <p>From your library, DeepDive can generate mixes based on when you found songs, release dates, even track length. With a Last.fm key you can also create similar artist discovery and genre mixes.</p>
+        <figure class="screen"><img src="img/shots/app-mixes-crop.jpg" alt="DeepDive Mixes showing recommendations, Build your own, Sampler, year, album and library mixes" width="490" height="724" loading="lazy"></figure>
       </section>
 
-      <section class="feature-card">
-        <p class="section-eyebrow">Don't lose the next one</p>
-        <h2>Keep a crate</h2>
-        <p>Put aside artists you mean to get to. Star a few for Up next so Home keeps them in sight, then search, sort and sample everyone else when you're ready.</p>
+      <section class="feature-card feature-card-wide">
+        <h2>A crate to dig through</h2>
+        <p>Save artists for later dives, with an "Up next" feature that keeps your priorities in order.</p>
         <figure class="screen"><img src="img/shots/app-crate-crop.jpg" alt="The Crate with an Up next section and more saved artists below" width="490" height="724" loading="lazy"></figure>
       </section>
     </div>
 
     <section class="feature-band">
       <div>
-        <p class="section-eyebrow">Going to a show?</p>
-        <h2>One playlist for the whole bill</h2>
-        <p>Multi-Dip keeps the artists in show order and fits them to the length of your night. Leave the split even, mark someone More or Less, or give an artist an exact number of songs.</p>
+        <h2>Prepare for your show</h2>
+        <p>Multi-Dip lets you grab artists and make a unique lineup, allowing you to create a multi-hour playlist of their most popular songs to emulate a set list.</p>
       </div>
       <figure class="screen"><img src="img/shots/app-multidip-crop.jpg" alt="Multi-Dip with Maciann, ValkenWolf and Moonside arranged into a three-hour playlist" width="490" height="724" loading="lazy"></figure>
     </section>
 
     <section class="privacy-note">
-      <p class="section-eyebrow">Private by design</p>
-      <h2>DeepDive cannot collect your data</h2>
-      <p>There is nowhere for it to go. DeepDive has no server, database or account system—your Spotify library stays in your browser and on your device.</p>
+      <h2>DeepDive CAN'T collect your data</h2>
+      <p>DeepDive has no backend. There is no server, database or account system. Everything is stored on your device within the browser. The only external requests are to Spotify and Last.fm as needed.</p>
     </section>
 
     <section class="closing">
-      <h2>Start with one artist</h2>
-      <p>Pick someone you think you know well. That's usually where the surprise is.</p>
+      <h2>Try it out</h2>
+      <p>Only takes two minutes to set up.</p>
       <a class="btn btn-primary" href="app/">Open DeepDive</a>
     </section>
 

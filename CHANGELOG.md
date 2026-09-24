@@ -4,6 +4,21 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.95
+- Applied the landing page copy rewrite: 15 strings in Joseph's words,
+  23 kept, 10 removed. The seven grey labels above the headings are
+  gone, and so is the "See the Dive happen" section, which explained a
+  loading screen.
+- Two corrections carried into it: the page no longer says the mixes
+  come from listening history (they come from the library, and play
+  counts aren't available), and the title, description and link preview
+  now match the new opening line.
+- One card grid instead of two, since removing that section left a card
+  alone in a row; the last of three now takes the full width.
+- The VIAL screenshot came off the page with that section. The file
+  stays and the footer still credits VIAL, because Joseph wants them
+  back on the page; a test holds the file and the credit together.
+
 ## 2.9.94
 - Copy rewrite: the landing page's 48 strings are decided (16
   rewritten, 22 kept, 10 removed). Recorded in

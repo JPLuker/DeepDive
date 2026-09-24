@@ -15,7 +15,7 @@ function check(label, condition) {
 check('tagline is the headline', /<h1 class="lead-title">Hear it all\.<\/h1>/.test(html));
 check('landing identifies DeepDive', /class="topline"[\s\S]{0,220}wordmark/.test(html));
 check('primary CTA opens the app', /class="btn btn-primary" href="app\/"/.test(html));
-check('title carries the tagline', /<title>DeepDive — Hear it all\.<\/title>/.test(html));
+check('title carries the tagline', /<title>DeepDive - Hear it all\.<\/title>/.test(html));
 check('manifest carries the tagline', /^Hear it all\./.test(manifest.description));
 check('link preview is not an artist screenshot', !/og:image[^>]*img\/shots/.test(html));
 
@@ -26,22 +26,26 @@ check('hero shows Mixes', /app-mixes\.svg/.test(hero));
 check('hero has three distinct screenshots', new Set([...hero.matchAll(/img\/shots\/([^"]+\.(?:svg|jpg))/g)].map(m => m[1])).size === 3);
 
 check('chooser screenshot is present', /app-chooser-crop\.png/.test(html));
-check('chooser copy explains Dip', /Dip gives you their best hour/.test(html));
-check('chooser copy explains Dive', /Dive checks the whole catalogue/.test(html));
-check('chooser copy explains Multi-Dip', /Multi-Dip takes a whole bill/.test(html));
+// The rewrite (2.9.95) says the same three things in Joseph's words.
+check('chooser copy explains Dip', /Dip gives you the most popular tracks first/.test(html));
+check('chooser copy explains Dive', /Dive scans the entire discography/.test(html));
+check('chooser copy explains Multi-Dip', /Multi-Dip lets you pick multiple artists/.test(html));
 
-check('Mixes has its own recipe screenshot', /Mixes with a reason[\s\S]{0,1400}app-mixes-crop\.jpg/.test(html));
-check('Mixes covers Build your own', /Build your own from an era, a length and an artist/.test(html));
-check('Mixes covers Sampler', /Sampler to revisit artists you barely touched/.test(html));
-check('Mixes covers similarity and genres', /similar-artist and genre mixes/.test(html));
-check('results explain recording-level matching', /same recording under another release/.test(html));
-check('results show like, playlist or both', /like songs, make a playlist, or both/.test(html));
-check('Multi-Dip has a dedicated section', /One playlist for the whole bill[\s\S]{0,1200}app-multidip-crop\.jpg/.test(html));
-check('Multi-Dip covers More and Less', /mark someone More or Less/.test(html));
-check('privacy leads with the no-collection message', /<h2>DeepDive cannot collect your data<\/h2>/.test(html));
+check('Mixes has its own recipe screenshot', /Mixes that keep it personal[\s\S]{0,1400}app-mixes-crop\.jpg/.test(html));
+check('Mixes says what the mixes are cut from', /when you found songs, release dates, even track length/.test(html));
+// It must not promise play counts: the mixes come from the library,
+// not from listening history. That claim was corrected during the
+// rewrite and the alt text with it.
+check('Mixes does not claim listening history', !/listening.history/i.test(html));
+check('Mixes covers similarity and genres', /similar artist discovery and genre mixes/.test(html));
+check('results explain recording-level matching', /compares recordings rather than releases/.test(html));
+check('results say what you get out of it', /add to your library while creating your playlist/.test(html));
+check('Multi-Dip has a dedicated section', /Prepare for your show[\s\S]{0,1200}app-multidip-crop\.jpg/.test(html));
+check('Multi-Dip says what it builds', /multi-hour playlist of their most popular songs/.test(html));
+check('privacy leads with the no-collection message', /<h2>DeepDive CAN'T collect your data<\/h2>/.test(html));
 check('privacy explains the technical reason', /no server, database or account system/.test(html));
-check('privacy says the library stays local', /stays in your browser and on your device/.test(html));
-check('Crate covers Up next', /Star a few for Up next/.test(html));
+check('privacy says the library stays local', /stored on your device within the browser/.test(html));
+check('Crate covers Up next', /"Up next" feature that keeps your priorities in order/.test(html));
 check('Crate screenshot is present', /app-crate-crop\.jpg/.test(html));
 
 const expected = [
@@ -53,10 +57,16 @@ const expected = [
   ['app-mixes-crop.jpg', 490, 724],
   ['app-results-crop.jpg', 490, 724],
   ['app-multidip-crop.jpg', 490, 724],
-  ['app-vial-crop.jpg', 490, 724],
   ['app-crate-crop.jpg', 490, 724],
 ];
 const refs = [...html.matchAll(/img\/shots\/([a-z-]+\.(?:svg|jpg|png))/g)].map(m => m[1]);
+
+// The VIAL shot came off the page in 2.9.95 with the dive-progress
+// card, but Joseph wants VIAL back on it, so the file stays put and
+// the footer still credits them. If VIAL is dropped for good, the
+// credit has to lose them at the same time.
+check('the VIAL shot is kept for its next home', existsSync(new URL('../docs/img/shots/app-vial-crop.jpg', import.meta.url)));
+check('and the footer still credits VIAL', /Artists pictured include[^<]*VIAL/.test(html));
 
 // A PNG's real size, from its header, so a declared size can't drift
 // from the file. The chooser capture carried 334px of transparent
@@ -65,8 +75,8 @@ function pngSize(path) {
   const b = readFileSync(path);
   return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) };
 }
-check('all nine final screenshots are referenced', refs.length === 9);
-check('screenshots are not duplicated', new Set(refs).size === 9);
+check('the final screenshots are referenced', refs.length === 8);
+check('screenshots are not duplicated', new Set(refs).size === 8);
 for (const [file, width, height] of expected) {
   check(file + ' appears once', refs.filter(x => x === file).length === 1);
   check(file + ' declares dimensions',
@@ -88,7 +98,7 @@ for (const [file, width, height] of expected) {
 }
 const vialBytes = readFileSync(new URL('../docs/img/shots/app-vial-crop.jpg', import.meta.url));
 check('VIAL crop is the approved replacement', createHash('sha256').update(vialBytes).digest('hex') === '3b5232e3a117031f532dbb7901adf5b8ce4d3b1c80efe29419e3ad6aa47b0d5e');
-check('below-fold images lazy-load', (html.match(/loading="lazy"/g) || []).length >= 6);
+check('below-fold images lazy-load', (html.match(/loading="lazy"/g) || []).length >= 5);
 
 check('no artist photo is used as page background', !/hero-photo|background-image:\s*url\([^)]*img\/shots/.test(html));
 check('screenshots stay inside screen frames',
@@ -97,7 +107,7 @@ check('screenshots stay inside screen frames',
 check('transparent chooser does not inherit an outer screenshot frame',
   /\.choice-shot img\s*\{[^}]*background:transparent[^}]*border:0[^}]*box-shadow:none/.test(css));
 check('sections follow the listening journey',
-  ['How far in?', 'See the Dive happen', 'Know what you missed', 'Mixes with a reason', 'Keep a crate', 'One playlist for the whole bill', 'DeepDive cannot collect your data']
+  ['How far in?', 'Know what you missed', 'Mixes that keep it personal', 'A crate to dig through', 'Prepare for your show', "DeepDive CAN'T collect your data"]
     .map(label => html.indexOf(label))
     .every((position, i, positions) => position >= 0 && (i === 0 || position > positions[i - 1])));
 

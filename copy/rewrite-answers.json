@@ -1,7 +1,7 @@
 {
   "_note": "Joseph's copy rewrite, taken one string at a time in chat. Ids match copy/strings-2.9.91.json. action: keep | replace | remove. 'remove' means the string and its element go. Nothing here is applied to the app yet.",
   "_open": [
-    "VIAL needs a new home on the landing page: the dive-in-progress section it was in has been cut. Footer credit S047 (kept) names VIAL, so it must be placed before the rewrite is applied, or the credit corrected.",
+    "VIAL is off the landing page (their section was cut) but Joseph wants them back on it. app-vial-crop.jpg is kept and the footer still credits VIAL; a test holds both. Place them, or correct the credit.",
     "The crate screenshot is stale (old sampler spacing); Joseph to retake: Dives > Crate with a few artists starred.",
     "Cutting the seven eyebrow labels leaves spacing to close up in each section."
   ],
@@ -190,5 +190,5 @@
       "why": "footer and closing links: Joseph kept the block as one"
     }
   },
-  "_progress": "Landing page finished (S001-S048). Next: app shell, S049 onward."
+  "_progress": "Landing page (S001-S048) decided AND applied in 2.9.95. Next: app shell, S049 onward."
 }
