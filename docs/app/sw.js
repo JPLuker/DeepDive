@@ -23,7 +23,7 @@
  * change constantly, and a cached response would be actively wrong.
  */
 
-const VERSION = "v1";
+const VERSION = "v2";
 const CACHE = `deepdive-shell-${VERSION}`;
 
 // The minimum needed to render something useful offline.
