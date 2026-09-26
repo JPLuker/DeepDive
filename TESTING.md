@@ -34,6 +34,18 @@
 > 4. **Dive photos and the slideshow** — untouched since the first
 >    session
 
+## 47. Duplicate-only library scrub (2.9.100)
+
+- [ ] Dives calls the feature Duplicate scan and says it finds alternate
+      releases of songs already liked
+- [ ] Running it still checks each liked artist's releases; it does not
+      merely look for duplicates already inside Liked Songs
+- [ ] Results contain only confirmed copies of liked recordings, with no
+      new-to-you section, playlist name or Build playlist action
+- [ ] Like selected copies adds them to Liked Songs, clears the library
+      cache, and makes Undo available in Dive history
+- [ ] Cancelling shows only matches found before cancellation
+
 
 ## 45. Landing page rebuild (2.9.76)
 
@@ -414,7 +426,7 @@ the demo Settings list should appear.
 - [ ] No artist outside the approved list appears anywhere in demo mode
 - [ ] Suggested has no refresh button and Settings' library Refresh is
       disabled while demo mode is active
-- [ ] From the demo Dives tab, Crate, Multi-Dip and Full library scan all
+- [ ] From the demo Dives tab, Crate, Multi-Dip and Duplicate scan all
       open populated staged screens rather than live or empty data
 - [ ] Demo Mixes includes year, album, early-library, random and regulars
       cards alongside artist-based ideas
@@ -873,16 +885,16 @@ With a Last.fm key:
 
 - [ ] Multi-Dip is directly below search, visually distinct, and above
       the artist suggestions
-- [ ] Below the artist list, the order is Crate, Dive history, then Full
-      library scan
-- [ ] Full library scan sits under "Go further" and warns that it can
-      take hours
+- [ ] Below the artist list, the order is Crate, Dive history, then
+      Duplicate scan
+- [ ] Duplicate scan says it finds alternate Spotify copies of songs
+      already liked and marks those copies liked too
 - [ ] Without a Last.fm key, the featured Multi-Dip row is dimmed and
       does nothing
 
 ## 36. Mixed recommendations and Dives cards (2.9.61)
 
-- [ ] Dives: Multi-Dip, Crate, Dive history and Full library scan all
+- [ ] Dives: Multi-Dip, Crate, Dive history and Duplicate scan all
       have coordinated tinted cards; none looks like a plain Settings row
 - [ ] Mixes with a Last.fm key: Recommended leads with four cards drawn
       across Sampler, Similar artists, Mix ideas and Genres

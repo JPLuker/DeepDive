@@ -44,7 +44,7 @@ check('dives owns the library scan', /id="go-scrub"/.test(dives));
 check('dives owns history and pins', /id="go-history"/.test(dives) && /id="go-pins"/.test(dives));
 check('multi-dip comes before the suggestions', dives.indexOf('id="go-show"') < dives.indexOf('id="suggestions-row"'));
 check('crate comes before history', dives.indexOf('id="go-pins"') < dives.indexOf('id="go-history"'));
-check('the slow scan comes last', dives.indexOf('id="go-history"') < dives.indexOf('id="go-scrub"'));
+check('the duplicate scan comes after history', dives.indexOf('id="go-history"') < dives.indexOf('id="go-scrub"'));
 
 // Mixes: the renamed Playlists, with the sampler.
 const mixes = src.slice(src.indexOf('async function renderMixes()'), src.indexOf('async function loadPlaylistCards'));
@@ -83,7 +83,7 @@ check('old library heading is gone', !/<h2>From your library<\/h2>/.test(src));
 // looked exactly like opening a list of pins. Each row carries its own
 // description now, which is where the cost belongs.
 check('dive destinations are rows', /function navRow\(idAttr, title, detail, \{ disabled = false, tone = "" \} = \{\}\)/.test(src));
-check('the scan explains its cost', /this can take hours/.test(dives));
+check('the scan explains its duplicate-only scope', /alternate releases of songs you already like/.test(dives));
 check('history explains itself', /how to undo it/.test(dives));
 // Pins became the Crate, and Blocked moved to Settings: blocking
 // changes what the app does, not what you're listening to.

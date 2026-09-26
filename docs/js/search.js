@@ -228,120 +228,73 @@ export async function runSearch(client, artistName, opts = {}) {
 }
 
 /**
- * runFullScrub — whole-library flow. Reads Liked Songs once, then runs
- * the per-artist catalog+match for each distinct liked artist.
+ * runFullScrub — duplicate-only whole-library flow.
  *
- * Supports cancellation: opts.isCancelled() checked between artists, and
- * passed down into the catalog read so a long artist can bail mid-way.
- * Returns whatever was found up to the cancel point (matching the
- * Python's "cancel still shows partial results").
+ * It searches each liked artist's catalogue for alternate Spotify copies
+ * of recordings already in Liked Songs. Genuinely new music is discarded:
+ * the only output is copies the user can like so later dives recognize
+ * them as already owned.
  */
 export async function runFullScrub(client, opts = {}) {
   const {
-    excludeLive = false, excludeCensored = false,
-    excludeInstrumental = false, excludeAcappella = false,
-    matchRemasters = false, onProgress = () => {},
-    isCancelled = () => false,
-    libraryCache = null, scopeToArtist = true, resolvedArtist = null,
-    includeCompilations = false, includeAppearsOn = false,
+    onProgress = () => {}, isCancelled = () => false, libraryCache = null,
   } = opts;
-
-  const includeGroups = buildIncludeGroups(includeCompilations, includeAppearsOn);
-  if (typeof client.setMinimumPacing === "function") {
-    client.setMinimumPacing(includeAppearsOn ? WIDE_CATALOG_PACING_MS : CATALOG_PACING_MS);
-  }
-
-  // Pace up front for the wide catalog read. A prolific artist's
-  // appears_on can be 300-500 releases, and since Spotify's Feb 2026
-  // changes that is one request each with no batching. Sprinting into
-  // that earns a rate limit within seconds and then everything is slow
-  // anyway, so start deliberate instead.
+  const includeGroups = buildIncludeGroups(true, false);
+  if (typeof client.setMinimumPacing === "function") client.setMinimumPacing(CATALOG_PACING_MS);
 
   onProgress(0, "Reading your Liked Songs…");
   let likedTracks;
   if (libraryCache) {
     likedTracks = await libraryCache.getLikedTracks({
-      onProgress: (cur, total) => onProgress(Math.round(clamp01(cur / Math.max(total, 1)) * 5), "Syncing your Liked Songs…"),
+      onProgress: (cur, total) => onProgress(Math.round(clamp01(cur / Math.max(total, 1)) * 5), "Reading your Liked Songs…"),
     });
   } else {
     likedTracks = await client.getAllLikedTracks((cur, total) => {
       onProgress(Math.round(clamp01(cur / Math.max(total, 1)) * 5), "Reading your Liked Songs…");
     });
   }
-  // Whole-library index (used when scoping is off).
-  const wholeLibraryIndex = matching.buildLikedIndexes(likedTracks);
 
-  // Distinct primary artists across the library (pure local work).
   const artists = distinctLikedArtists(likedTracks);
-  const totalArtists = artists.length || 1;
-
-  const allDuplicates = [];
-  const allNew = [];
-  const perArtist = [];
+  const duplicates = [];
+  const seen = new Set();
   let scanned = 0;
-
   for (const artist of artists) {
     if (isCancelled()) break;
-
-    const base = 5 + Math.round((scanned / totalArtists) * 93);
-    onProgress(base, `Scanning ${artist.name}… (${scanned + 1}/${totalArtists})`);
-
+    onProgress(5 + Math.round((scanned / Math.max(artists.length, 1)) * 94), `Checking ${artist.name}… (${scanned + 1}/${artists.length})`);
     try {
-      const catalogTracks = await client.getArtistCatalogTracks(artist.id, { isCancelled, includeGroups });
-      // Per-artist comparison set (Version A) or the whole library.
-      const likedIndex = scopeToArtist
-        ? matching.buildLikedIndexes(filterLikedByArtist(likedTracks, artist.id, artist.name))
-        : wholeLibraryIndex;
-      const phase1 = matching.findCandidates(catalogTracks, likedIndex, {
-        excludeLive, excludeCensored, excludeInstrumental, excludeAcappella,
-      });
-      const candidateIds = phase1.candidates.map((c) => c.track.id);
-      let fullTracks = [];
-      if (candidateIds.length && !isCancelled()) {
-        fullTracks = await client.getTracksWithIsrc(candidateIds);
+      const catalog = await client.getArtistCatalogTracks(artist.id, { isCancelled, includeGroups });
+      const likedIndex = matching.buildLikedIndexes(filterLikedByArtist(likedTracks, artist.id, artist.name));
+      const phase1 = matching.findCandidates(catalog, likedIndex);
+      const ids = phase1.candidates.map((candidate) => candidate.track.id);
+      const fullTracks = ids.length && !isCancelled() ? await client.getTracksWithIsrc(ids) : [];
+      const phase2 = matching.confirmCandidates(fullTracks, phase1.candidates, likedIndex);
+      for (const duplicate of phase2.duplicate_candidates) {
+        if (!seen.has(duplicate.track.id)) {
+          seen.add(duplicate.track.id);
+          duplicates.push(duplicate);
+        }
       }
-      const phase2 = matching.confirmCandidates(fullTracks, phase1.candidates, likedIndex, { matchRemasters });
-
-      const artistNew = phase1.new_tracks.concat(phase2.new_tracks);
-      for (const d of phase2.duplicate_candidates) allDuplicates.push(d);
-      for (const t of artistNew) allNew.push(t);
-      perArtist.push({
-        artist,
-        duplicate_count: phase2.duplicate_candidates.length,
-        new_count: artistNew.length,
-      });
     } catch (e) {
-      // One artist failing shouldn't sink the whole scrub — record and move on.
-      perArtist.push({ artist, error: String(e && e.message ? e.message : e) });
+      // One unavailable artist should not discard matches already found.
     }
-    scanned += 1;
+    scanned++;
   }
-
   onProgress(100, "Done");
-  // Collapse across the whole scrub, not per artist: the same recording
-  // can surface under more than one artist (features, splits), so the
-  // dedupe has to see everything at once.
-  const collapsedScrub = matching.collapseDuplicateRecordings(allNew);
   return {
     mode: "full_scrub",
-    duplicate_candidates: allDuplicates,
-    new_tracks: collapsedScrub.tracks,
-    collapsed_count: collapsedScrub.collapsedCount,
-    collapsed_groups: collapsedScrub.groups,
-    per_artist_summary: perArtist,
+    duplicate_candidates: duplicates,
+    new_tracks: [],
+    tracks_scanned: likedTracks.length,
     artists_scanned: scanned,
     artists_total: artists.length,
   };
 }
 
-// Local helper (mirrors spotify_client.get_distinct_liked_artists /
-// getDistinctLikedArtists — duplicated here to keep search.js's imports
-// to just matching, but identical logic).
 function distinctLikedArtists(likedTracks) {
   const seen = new Map();
-  for (const t of likedTracks) {
-    const a = (t.artists || [])[0];
-    if (a && a.id && !seen.has(a.id)) seen.set(a.id, { id: a.id, name: a.name });
+  for (const track of likedTracks) {
+    const artist = (track.artists || [])[0];
+    if (artist?.id && !seen.has(artist.id)) seen.set(artist.id, { id: artist.id, name: artist.name });
   }
   return Array.from(seen.values());
 }

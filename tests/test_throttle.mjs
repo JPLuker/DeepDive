@@ -113,7 +113,7 @@ const se = readFileSync(new URL('../docs/js/search.js', import.meta.url),'utf8')
 check('baseline pacing exists', /export const CATALOG_PACING_MS = 250;/.test(sp));
 check('wide reads pace harder', /export const WIDE_CATALOG_PACING_MS = 350;/.test(sp));
 check('standard dives are paced too', !/if \(includeAppearsOn && typeof client\.setMinimumPacing/.test(se));
-check('both entry points pace', (se.match(/client\.setMinimumPacing\(includeAppearsOn \?/g) || []).length === 2);
+check('both entry points pace', /client\.setMinimumPacing\(includeAppearsOn \?/.test(se) && /runFullScrub[\s\S]*?client\.setMinimumPacing\(CATALOG_PACING_MS\)/.test(se));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

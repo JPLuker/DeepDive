@@ -53,7 +53,7 @@ check('sampler still seeds every artist', /artists\.forEach\(\(a\) => addDiveIma
 check('sampler adds each as it goes', /if \(a\) addDiveImage\(photoFor\(a\)\);/.test(src));
 check('photo accessor prefers the full-size copy', /a\.image_url_large \|\| a\.image_url/.test(src));
 check('sampler no longer uses the tile-sized copy alone', !/addDiveImage\(a\.image_url\);/.test(src));
-check('library scan feeds it too', /onArtwork: \(url\) => addDiveImage\(url\),\s*\}\);/.test(src));
+check('duplicate scan does not fake an artist slideshow', !/function startScrub\(\)[\s\S]{0,1200}onArtwork:/.test(src));
 
 // lifecycle
 check('hidden on results', /hideDiveScreen\(\);\s*if \(_diveCancelled\) return;/.test(src) || /hideDiveScreen\(\);\s*lastResult/.test(src));

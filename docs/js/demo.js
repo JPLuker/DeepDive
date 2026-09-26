@@ -194,10 +194,9 @@ export function samplerFrom(groups) {
 export function scanFrom(groups) {
   const results = resultsFrom(groups[0]?.artist || { name: "Demo artist" }, groups.flatMap((g) => g.tracks || []));
   return {
-    artists_scanned: 214, artists_total: 214,
+    tracks_scanned: 6842,
     duplicate_candidates: results.duplicate_candidates,
-    new_tracks: results.new_tracks,
-    per_artist_summary: groups.slice(0, 3).map((g, i) => ({ name: g.artist.name, matches: i + 1, new: (g.tracks || []).length })),
+    new_tracks: [],
   };
 }
 

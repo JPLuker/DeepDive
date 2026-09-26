@@ -32,7 +32,7 @@ const samplerFn = src.slice(src.indexOf('async function runSampler'));
 check('sampler is blocked', /async function runSampler\(artists\) \{[\s\S]{0,600}?if \(blockedByRateLimit\(\)\) return;/.test(samplerFn));
 check('guard runs before any screen is shown',
   samplerFn.indexOf('blockedByRateLimit()') < samplerFn.indexOf('showDiveSpinner()'));
-check('library scan is blocked', /if \(blockedByRateLimit\(\)\) return;\s*showDiveScreen\("Scanning your whole library/.test(src));
+check('library scan is blocked', /if \(blockedByRateLimit\(\)\) return;\s*showDiveScreen\("Finding duplicate copies/.test(src));
 check('home shows a standing notice', /\$\{rateLimitBanner\(\)\}/.test(src));
 // The sentence wraps in source, so match across whitespace.
 check('notice says it is not our fault', /not a\s+fault in DeepDive/.test(src));
