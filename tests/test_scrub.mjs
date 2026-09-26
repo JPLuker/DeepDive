@@ -38,6 +38,15 @@ check('scrub reports the duplicate copy and kept match', result.duplicate_candid
 check('different-ISRC remaster stays distinct', !result.duplicate_candidates.some((d) => d.track.id === 'remaster'));
 check('scrub returns no new-track pool', result.new_tracks.length === 0 && result.tracks_scanned === 1);
 
+let failure = null;
+try {
+  await runFullScrub({
+    setMinimumPacing() {},
+    async getArtistCatalogTracks() { throw new Error('Spotify refused the request'); },
+  }, { libraryCache: cache });
+} catch (e) { failure = e; }
+check('failed artist cannot be counted as scanned', failure?.message.includes('Duplicate scan stopped while checking Artist'));
+
 const view = src.slice(src.indexOf('function renderScrubForm()'), src.indexOf('// Watchlist page'));
 check('scrub UI says duplicate scan', /Find duplicate songs/.test(view) && /Find duplicate copies/.test(view));
 check('scrub UI has no playlist path', !/Build playlist|scrub-build|playlist-name|addTracksToPlaylistDeduped/.test(view));

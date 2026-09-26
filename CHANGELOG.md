@@ -4,6 +4,12 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.102
+- Versioned the application entry script in the HTML so a browser cannot
+  reuse a broken or obsolete bundle after a deployment.
+- Duplicate scan now stops and reports the Spotify failure instead of
+  silently counting failed artist catalogues as successfully checked.
+
 ## 2.9.101
 - Restored the complete application bundle after the 2.9.100 deployment
   truncated `app.js`, and rotated the service-worker cache so browsers

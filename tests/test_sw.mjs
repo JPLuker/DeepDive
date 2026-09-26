@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from 'fs';
 const sw = readFileSync(new URL('../docs/app/sw.js', import.meta.url),'utf8');
 const src = readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
+const shell = readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 check('service worker exists beside the app', existsSync(new URL('../docs/app/sw.js', import.meta.url)));
@@ -20,6 +21,7 @@ check('GET only', /request\.method !== "GET"/.test(sw));
 // Update behaviour.
 check('takes over immediately', /skipWaiting\(\)/.test(sw) && /clients\.claim\(\)/.test(sw));
 check('clears old caches on activate', /keys\.filter\(\(k\) => k\.startsWith\("deepdive-shell-"\)/.test(sw));
+check('application entry point is cache-versioned', /src="\.\.\/js\/app\.js\?v=2\.9\.102"/.test(shell));
 check('install tolerates a missing asset', /Promise\.allSettled/.test(sw));
 check('navigation has an offline fallback', /request\.mode === "navigate"/.test(sw));
 

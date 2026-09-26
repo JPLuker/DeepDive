@@ -275,7 +275,15 @@ export async function runFullScrub(client, opts = {}) {
         }
       }
     } catch (e) {
-      // One unavailable artist should not discard matches already found.
+      // Never count a failed catalogue read as a successful scan. The old
+      // scrub swallowed every Spotify error and advanced the counter, so a
+      // rate-limited run could claim it checked the entire library while it
+      // had actually checked almost nothing.
+      const reason = e?.message || String(e);
+      const err = new Error(`Duplicate scan stopped while checking ${artist.name}: ${reason}`);
+      err.cause = e;
+      err.artist = artist;
+      throw err;
     }
     scanned++;
   }

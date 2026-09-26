@@ -34,7 +34,7 @@
 > 4. **Dive photos and the slideshow** — untouched since the first
 >    session
 
-## 47. Duplicate-only library scrub (2.9.101)
+## 47. Duplicate-only library scrub (2.9.102)
 
 - [ ] Dives calls the feature Duplicate scan and says it finds alternate
       releases of songs already liked
