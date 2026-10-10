@@ -47,6 +47,9 @@
       was cleared
 - [ ] A browser without Screen Wake Lock support displays the do-not-close
       warning instead of implying background execution
+- [ ] After closing and reopening the app with saved progress, Continue
+      Dive resumes the same artist and options; Discard removes the prompt
+      and does not resume
 
 ## 47. Duplicate-only library scrub (2.9.103)
 

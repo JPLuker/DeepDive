@@ -4,6 +4,12 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.106
+- Reopening DeepDive with an unfinished ordinary Dive now offers to
+  continue from its saved release checkpoint or discard it.
+- Continued dives restore the artist and the exact Dip/Dive filters and
+  release options used by the interrupted run.
+
 ## 2.9.105
 - Ordinary Dip and Dive runs now request a screen wake lock and clearly
   warn when the browser cannot keep the display awake. Returning to the

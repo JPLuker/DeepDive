@@ -66,6 +66,11 @@ check('unsupported browsers warn not to close the screen', /Do not close this sc
 check('wake status is visible on the dive screen', /id="dive-awake"/.test(app));
 check('ordinary dives persist catalogue checkpoints', /onCatalogCheckpoint: \(catalog\) => saveDiveCheckpoint/.test(src));
 check('ordinary dives resume saved catalogue work', /catalogResume = await loadDiveCheckpoint/.test(src));
+check('reopening offers to continue an unfinished dive', /function offerDiveResume/.test(src) && /Continue Dive/.test(src));
+check('resume prompt reports saved release count', /saved\.catalog\.completed_album_ids\.length/.test(src));
+check('resume restores the original dive options', /runSearchWithOptions\(saved\.artist_name, saved\.options \|\| \{\}\)/.test(src));
+check('discard clears only the dive checkpoint', /appStore\.set\(DIVE_CHECKPOINT_KEY, null\)/.test(src));
+check('resume decision cannot be lost by tapping the backdrop', /dismissible: false/.test(src));
 
 // Percentage returned in 2.6.4 — the full-screen rewrite dropped it.
 check('percentage element exists', /id="dive-pct"/.test(app));

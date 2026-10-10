@@ -19,14 +19,14 @@ import { bestStore } from "./storage.js";
 import * as history from "./history.js";
 // Version the demo module independently. Mobile browsers were reloading
 // app.js while continuing to execute an older cached demo.js.
-import * as demo from "./demo.js?v=2.9.105";
+import * as demo from "./demo.js?v=2.9.106";
 import * as lastfm from "./lastfm.js";
 import * as cover from "./cover.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.105";
+export const BUILD = "2.9.106";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -2762,6 +2762,16 @@ function saveDiveCheckpoint(artist, opts, catalog) {
     signature: diveCheckpointSignature(artist, opts),
     artist_id: artist?.id || null,
     artist_name: artist?.name || null,
+    options: {
+      excludeLive: !!opts?.excludeLive,
+      excludeCensored: !!opts?.excludeCensored,
+      excludeInstrumental: !!opts?.excludeInstrumental,
+      excludeAcappella: !!opts?.excludeAcappella,
+      matchRemasters: !!opts?.matchRemasters,
+      includeCompilations: !!opts?.includeCompilations,
+      includeAppearsOn: !!opts?.includeAppearsOn,
+      dip: !!opts?.dip,
+    },
     catalog,
     updated_at: Date.now(),
   });
@@ -3676,7 +3686,7 @@ function renderScrubResults(r) {
  *
  * Returns a promise so callers read the same as before.
  */
-function confirmDialog({ title, body, confirmLabel = "Confirm", danger = false }) {
+function confirmDialog({ title, body, confirmLabel = "Confirm", cancelLabel = "Cancel", danger = false, dismissible = true }) {
   return new Promise((resolve) => {
     const wrap = document.createElement("div");
     wrap.className = "modal-backdrop";
@@ -3686,19 +3696,19 @@ function confirmDialog({ title, body, confirmLabel = "Confirm", danger = false }
         ${body ? `<p class="modal-sub">${esc(body)}</p>` : ""}
         <div class="modal-actions">
           <span class="spacer"></span>
-          <button class="btn btn-ghost" data-c="no">Cancel</button>
+          <button class="btn btn-ghost" data-c="no">${esc(cancelLabel)}</button>
           <button class="btn ${danger ? "btn-danger" : "btn-primary"}" data-c="yes">${esc(confirmLabel)}</button>
         </div>
       </div>`;
     document.body.appendChild(wrap);
     const done = (v) => { wrap.remove(); document.removeEventListener("keydown", onKey); resolve(v); };
     function onKey(e) {
-      if (e.key === "Escape") done(false);
+      if (e.key === "Escape" && dismissible) done(false);
       if (e.key === "Enter") done(true);
     }
     wrap.querySelector('[data-c="yes"]').addEventListener("click", () => done(true));
     wrap.querySelector('[data-c="no"]').addEventListener("click", () => done(false));
-    wrap.addEventListener("click", (e) => { if (e.target === wrap) done(false); });
+    wrap.addEventListener("click", (e) => { if (dismissible && e.target === wrap) done(false); });
     document.addEventListener("keydown", onKey);
     wrap.querySelector('[data-c="yes"]').focus();
   });
@@ -6471,6 +6481,29 @@ async function render() {
   return renderHome();
 }
 
+let _diveResumePromptShown = false;
+
+async function offerDiveResume() {
+  if (_diveResumePromptShown || demo.demoActive() || !auth.isLoggedIn()) return;
+  const saved = await appStore.get(DIVE_CHECKPOINT_KEY);
+  if (!saved?.artist_name || !saved?.catalog?.completed_album_ids?.length) return;
+  _diveResumePromptShown = true;
+  const releases = saved.catalog.completed_album_ids.length;
+  const keepGoing = await confirmDialog({
+    title: `Continue ${saved.artist_name}?`,
+    body: `DeepDive saved progress after ${releases} release${releases === 1 ? "" : "s"}. Continue from there?`,
+    confirmLabel: "Continue Dive",
+    cancelLabel: "Discard",
+    dismissible: false,
+  });
+  if (!keepGoing) {
+    await appStore.set(DIVE_CHECKPOINT_KEY, null);
+    return;
+  }
+  if (blockedByRateLimit()) return;
+  runSearchWithOptions(saved.artist_name, saved.options || {});
+}
+
 // ---- support link visibility ----
 // Some people would rather not see a donate prompt every time they open
 // the app. It costs nothing to let them turn it off, and a support link
@@ -6589,8 +6622,13 @@ async function boot() {
     // in a flash that disappears.
     return renderConnect(cb.error === "access_denied" ? "access was not allowed" : cb.error);
   }
-  if (cb.ok === true) { flash("Connected to Spotify."); return renderHome(); }
-  render();
+  if (cb.ok === true) {
+    flash("Connected to Spotify.");
+    await renderHome();
+    return offerDiveResume();
+  }
+  await render();
+  await offerDiveResume();
 }
 
 boot();

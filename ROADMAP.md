@@ -289,7 +289,7 @@ the pacing work. Neither has been looked at properly.
 
 ---
 
-## Stopping point, 10 Oct (build 2.9.105)
+## Stopping point, 10 Oct (build 2.9.106)
 
 Picking up next session:
 
@@ -303,11 +303,14 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.105
+## Shipped since — build 2.9.106
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Reopening the app with an interrupted ordinary Dive now asks whether
+  to continue from the saved release checkpoint or discard it, retaining
+  the original artist and options (2.9.106)
 - Phone dives now keep the screen awake where supported, warn when they
   cannot, and save ordinary catalogue progress every five releases for
   easy continuation after suspension or closure (2.9.105)
