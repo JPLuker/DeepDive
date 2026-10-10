@@ -4,6 +4,11 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.104
+- Endpoint diagnostics now test and display the quota-sensitive catalogue
+  calls first, putting the checks that repeatedly fail in real use above
+  the routine account endpoints.
+
 ## 2.9.103
 - Duplicate scans now save completed artists, matches found, and the
   current artist's catalogue progress in IndexedDB. A quota refusal,

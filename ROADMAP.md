@@ -289,7 +289,7 @@ the pacing work. Neither has been looked at properly.
 
 ---
 
-## Stopping point, 10 Oct (build 2.9.103)
+## Stopping point, 10 Oct (build 2.9.104)
 
 Picking up next session:
 
@@ -303,11 +303,13 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.103
+## Shipped since — build 2.9.104
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Endpoint diagnostics now put the frequently refused catalogue calls
+  first, ahead of routine account checks (2.9.104)
 - Duplicate scan now resumes across Spotify quota failures and closed
   tabs, checkpoints long artists every ten releases, and deduplicates
   repeated Spotify release IDs before reading albums (2.9.103)

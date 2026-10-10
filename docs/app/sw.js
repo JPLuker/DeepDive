@@ -23,14 +23,14 @@
  * change constantly, and a cached response would be actively wrong.
  */
 
-const VERSION = "v4";
+const VERSION = "v5";
 const CACHE = `deepdive-shell-${VERSION}`;
 
 // The minimum needed to render something useful offline.
 const SHELL = [
   "./",
   "./index.html",
-  "../js/app.js?v=2.9.103",
+  "../js/app.js?v=2.9.104",
   "../assets/icon-192.png",
 ];
 

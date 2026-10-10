@@ -32,6 +32,11 @@ check('probes the release listing', /artists\/\$\{PROBE_ARTIST\}\/albums/.test(s
 check('probes the album read', /albums\/\$\{PROBE_ALBUM\}/.test(src));
 check('probes the user endpoints too', /"me\/tracks"/.test(src) && /"me\/top\/artists"/.test(src));
 check('probes search', /"search"/.test(src));
+const probeList = src.slice(src.indexOf('const PROBES = ['), src.indexOf('];', src.indexOf('const PROBES = [')));
+check('quota-sensitive probes are listed first',
+  probeList.indexOf('Album tracklist') < probeList.indexOf('Account') &&
+  probeList.indexOf('Track details') < probeList.indexOf('Account') &&
+  probeList.indexOf('Artist details') < probeList.indexOf('Account'));
 
 // Fixed public ids: a failure should mean the endpoint, not the data.
 check('uses fixed ids', /const PROBE_ARTIST = "/.test(src) && /const PROBE_ALBUM = "/.test(src));

@@ -19,14 +19,14 @@ import { bestStore } from "./storage.js";
 import * as history from "./history.js";
 // Version the demo module independently. Mobile browsers were reloading
 // app.js while continuing to execute an older cached demo.js.
-import * as demo from "./demo.js?v=2.9.103";
+import * as demo from "./demo.js?v=2.9.104";
 import * as lastfm from "./lastfm.js";
 import * as cover from "./cover.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.103";
+export const BUILD = "2.9.104";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -5169,16 +5169,19 @@ const PROBE_TRACK = "11dFghVXANMlKmJXsNCbNl";
 // Spotify's own quota buckets follow these groupings is exactly what
 // this is meant to find out — the boundaries aren't published.
 const PROBES = [
+  // Put the quota-sensitive catalogue calls first. These are the ones
+  // that have repeatedly failed in real diagnostics, and they are the
+  // answer the user is usually opening this test to get.
+  ["Album tracklist — the bulk of a dive", `albums/${PROBE_ALBUM}`, null],
+  ["Artist releases — dives start here", `artists/${PROBE_ARTIST}/albums`, { include_groups: "album,single", limit: 1 }],
+  ["Track details", `tracks/${PROBE_TRACK}`, null],
+  ["Artist details", `artists/${PROBE_ARTIST}`, null],
   ["Account", "me", null],
   ["Your library", "me/tracks", { limit: 1 }],
   ["Listening history", "me/top/artists", { limit: 1 }],
   ["Recently played", "me/player/recently-played", { limit: 1 }],
   ["Your playlists", "me/playlists", { limit: 1 }],
   ["Search", "search", { q: "artist:\"Radiohead\"", type: "artist", limit: 1 }],
-  ["Artist details", `artists/${PROBE_ARTIST}`, null],
-  ["Artist releases — dives start here", `artists/${PROBE_ARTIST}/albums`, { include_groups: "album,single", limit: 1 }],
-  ["Album tracklist — the bulk of a dive", `albums/${PROBE_ALBUM}`, null],
-  ["Track details", `tracks/${PROBE_TRACK}`, null],
 ];
 
 async function runEndpointTest(into) {
