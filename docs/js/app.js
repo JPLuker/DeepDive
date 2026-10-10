@@ -19,24 +19,25 @@ import { bestStore } from "./storage.js";
 import * as history from "./history.js";
 // Version the demo module independently. Mobile browsers were reloading
 // app.js while continuing to execute an older cached demo.js.
-import * as demo from "./demo.js?v=2.9.102";
+import * as demo from "./demo.js?v=2.9.103";
 import * as lastfm from "./lastfm.js";
 import * as cover from "./cover.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.102";
+export const BUILD = "2.9.103";
 
 const client = new SpotifyClient(auth.getToken);
+const appStore = bestStore();
 // Incremental liked-songs cache: read the whole library once, then only
 // fetch changes on later searches. Persisted in IndexedDB. See
 // library-cache.js for the correctness (checksum) design.
-const libraryCache = new LibraryCache(client, bestStore());
+const libraryCache = new LibraryCache(client, appStore);
 // Last.fm's terms require caching similar-artist and chart data for at
 // least a week, so it shares the same persistent store rather than
 // living in memory and being re-fetched on every reload.
-lastfm.attachStore(bestStore());
+lastfm.attachStore(appStore);
 
 // Last catalogue read, for diagnostics. Whether credit filtering
 // engaged was previously invisible, which is how it stayed broken.
@@ -3463,13 +3464,16 @@ function showActionResult({ headline, detail, url, ok = true, artists = [] }) {
 // ============================================================
 // Full library scrub
 // ============================================================
+const SCRUB_CHECKPOINT_KEY = "deepdive_duplicate_scan_v1";
+
 function renderScrubForm() {
   setTitle("DeepDive · Duplicate scan");
   setActiveTab("scrub");
   root.innerHTML = `
     <div class="card">
       <h1>Find duplicate songs</h1>
-      <p class="muted">Checks each artist's releases for other Spotify copies of songs already in your Liked Songs. Like those copies so future dives know they are not new. It never builds a playlist, but a large library can take hours.</p>
+      <p class="muted">Checks each artist's releases for other Spotify copies of songs already in your Liked Songs. Like those copies so future dives know they are not new. It never builds a playlist. Progress is saved as it works, so a Spotify limit or closed tab will not restart the scan.</p>
+      <p class="crate-note hidden" id="scrub-resume-note"></p>
       <div class="actions" style="margin-top:0;">
         <button class="btn btn-primary" id="scrub-go">Find duplicate copies</button>
         <button class="btn btn-ghost" data-home>Cancel</button>
@@ -3477,6 +3481,20 @@ function renderScrubForm() {
     </div>`;
   root.querySelector("[data-home]").addEventListener("click", () => renderHome());
   document.getElementById("scrub-go").addEventListener("click", startScrub);
+  showScrubCheckpoint();
+}
+
+async function showScrubCheckpoint() {
+  const saved = await appStore.get(SCRUB_CHECKPOINT_KEY);
+  if (!saved?.completed_artist_ids?.length && !saved?.current_artist) return;
+  const note = document.getElementById("scrub-resume-note");
+  const button = document.getElementById("scrub-go");
+  if (!note || !button) return;
+  const done = saved.completed_artist_ids?.length || 0;
+  const next = saved.current_artist?.name ? ` Next: ${saved.current_artist.name}.` : "";
+  note.textContent = `Saved progress: ${done} of ${saved.artists_total || "your"} artists.${next}`;
+  note.classList.remove("hidden");
+  button.textContent = "Resume duplicate scan";
 }
 
 async function startScrub() {
@@ -3492,11 +3510,17 @@ async function startScrub() {
     updateDiveScreen(0, "Checking your Spotify connection…");
     await preflight();
 
+    const resume = await appStore.get(SCRUB_CHECKPOINT_KEY);
     const result = await search.runFullScrub(client, {
       libraryCache,
       onProgress: (pct, stage) => updateDiveScreen(pct, stage),
       isCancelled: () => scrubCancel.cancelled,
+      resume,
+      onCheckpoint: (state) => appStore.set(SCRUB_CHECKPOINT_KEY, state),
     });
+    if (result.artists_scanned >= result.artists_total) {
+      await appStore.set(SCRUB_CHECKPOINT_KEY, null);
+    }
     hideDiveScreen();
     lastResult = result;
     renderScrubResults(result);

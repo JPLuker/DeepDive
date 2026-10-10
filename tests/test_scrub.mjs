@@ -52,5 +52,44 @@ check('scrub UI says duplicate scan', /Find duplicate songs/.test(view) && /Find
 check('scrub UI has no playlist path', !/Build playlist|scrub-build|playlist-name|addTracksToPlaylistDeduped/.test(view));
 check('selected copies are liked and cache is cleared', /client\.likeTracks\(ids\)/.test(view) && /libraryCache\.clear\(\)/.test(view));
 
+// A long scan must resume after Spotify refuses a later request. Complete
+// artist catalogues are not read again, and discoveries already made are
+// carried into the resumed result.
+const likedTwo = [
+  track('liked-1', 'One', 'USAAA2600011', 'One album'),
+  { ...track('liked-2', 'Two', 'USAAA2600012', 'Two album'), artists: [{ id: 'artist-2', name: 'Artist Two' }] },
+];
+let stopAfterFirst = false;
+let saved = null;
+const resumeReads = [];
+const resumeClient = {
+  setMinimumPacing() {},
+  async getArtistCatalogTracks(id) {
+    resumeReads.push(id);
+    return id === 'artist-1'
+      ? [track('copy-1', 'One', 'USAAA2600011', 'Copy album')]
+      : [{ ...track('copy-2', 'Two', 'USAAA2600012', 'Copy two'), artists: [{ id: 'artist-2', name: 'Artist Two' }] }];
+  },
+  async getTracksWithIsrc(ids) {
+    return ids.map((id) => id === 'copy-1'
+      ? track(id, 'One', 'USAAA2600011', 'Copy album')
+      : { ...track(id, 'Two', 'USAAA2600012', 'Copy two'), artists: [{ id: 'artist-2', name: 'Artist Two' }] });
+  },
+};
+await runFullScrub(resumeClient, {
+  libraryCache: { async getLikedTracks() { return likedTwo; } },
+  isCancelled: () => stopAfterFirst,
+  onCheckpoint: async (state) => { saved = state; stopAfterFirst = true; },
+});
+check('partial scan saves a resumable checkpoint', saved?.completed_artist_ids?.[0] === 'artist-1');
+resumeReads.length = 0;
+const resumed = await runFullScrub(resumeClient, {
+  libraryCache: { async getLikedTracks() { return likedTwo; } },
+  resume: saved,
+});
+check('resume skips artists already completed', resumeReads.length === 1 && resumeReads[0] === 'artist-2');
+check('resume keeps earlier discoveries', resumed.duplicate_candidates.some((d) => d.track.id === 'copy-1'));
+check('scrub UI exposes saved progress', /Resume duplicate scan/.test(view) && /SCRUB_CHECKPOINT_KEY/.test(view));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

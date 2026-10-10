@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.103
+- Duplicate scans now save completed artists, matches found, and the
+  current artist's catalogue progress in IndexedDB. A quota refusal,
+  closed tab, or later return resumes the scan instead of starting over.
+- Long artist catalogues checkpoint every ten releases, limiting a failed
+  request to at most nine repeated album reads.
+- Repeated release IDs in Spotify artist results are fetched only once.
+
 ## 2.9.102
 - Versioned the application entry script in the HTML so a browser cannot
   reuse a broken or obsolete bundle after a deployment.

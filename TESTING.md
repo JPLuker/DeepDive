@@ -34,7 +34,7 @@
 > 4. **Dive photos and the slideshow** — untouched since the first
 >    session
 
-## 47. Duplicate-only library scrub (2.9.102)
+## 47. Duplicate-only library scrub (2.9.103)
 
 - [ ] Dives calls the feature Duplicate scan and says it finds alternate
       releases of songs already liked
@@ -45,6 +45,12 @@
 - [ ] Like selected copies adds them to Liked Songs, clears the library
       cache, and makes Undo available in Dive history
 - [ ] Cancelling shows only matches found before cancellation
+- [ ] After at least one artist completes, close the tab or let Spotify
+      return 429; reopening Duplicate scan shows saved progress and a
+      Resume duplicate scan button
+- [ ] Resuming does not reread completed artists, preserves matches found
+      before the stop, and resumes a large current artist near its last
+      ten-release checkpoint
 
 
 ## 45. Landing page rebuild (2.9.76)

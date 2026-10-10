@@ -169,7 +169,7 @@ check('and is persistent, not per-session', /_store\.set\(CACHE_KEY, _cache\)/.t
 check('minimum retention is a week', /CACHE_MIN_MS = 7 \* 24 \* 60 \* 60 \* 1000/.test(lfm));
 check('actual retention meets it', /CACHE_TTL_MS = 30 \* 24 \* 60 \* 60 \* 1000/.test(lfm));
 check('all three endpoints read through it', (lfm.match(/return cached\("/g) || []).length === 3);
-check('the store is attached at startup', /lastfm\.attachStore\(bestStore\(\)\)/.test(src));
+check('the store is attached at startup', /lastfm\.attachStore\(appStore\)/.test(src));
 // The session maps are empty on reload even when the cache is warm.
 check('session maps rehydrate', /async function hydrateFromCache/.test(src));
 // One cache read rather than an isCached check per artist. With 1,500

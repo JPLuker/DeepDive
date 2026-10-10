@@ -652,6 +652,7 @@ export class SpotifyClient {
    */
   async getArtistAlbumRefs(artistId, onProgress = null, includeGroups = "album,single") {
     const refs = [];
+    const seen = new Set();
     let results = await this.get(`artists/${artistId}/albums`, {
       include_groups: includeGroups,
       limit: ARTIST_ALBUMS_LIMIT_MAX,
@@ -659,6 +660,11 @@ export class SpotifyClient {
     const total = (results && results.total) || 1;
     while (results) {
       for (const a of results.items || []) {
+        // Spotify can return the same release more than once across
+        // editions/markets. Fetching it twice wastes the scarcest quota
+        // bucket and was especially damaging in the whole-library scan.
+        if (!a.id || seen.has(a.id)) continue;
+        seen.add(a.id);
         refs.push({ id: a.id, group: a.album_group || a.album_type || null });
       }
       if (onProgress) onProgress(refs.length, total);
@@ -675,7 +681,10 @@ export class SpotifyClient {
   // Simplified tracks (NO ISRC), one request per album. Mirrors
   // get_artist_catalog_tracks. Supports a cancel check + checkpoint hook
   // for the scrub-resume design (both optional).
-  async getArtistCatalogTracks(artistId, { onProgress = null, isCancelled = null, includeGroups = "album,single" } = {}) {
+  async getArtistCatalogTracks(artistId, {
+    onProgress = null, isCancelled = null, includeGroups = "album,single",
+    resumeState = null, onCheckpoint = null,
+  } = {}) {
     const albumRefs = await this.getArtistAlbumRefs(artistId, null, includeGroups);
     const total = albumRefs.length || 1;
     // Pace before starting, not after being punished.
@@ -692,12 +701,19 @@ export class SpotifyClient {
     // because most artists never trip anything and pacing them would be
     // a tax on the common case.
     this.setRunPacing(pacingForReleaseCount(albumRefs.length));
-    const tracks = [];
-    const seen = new Set();
+    const tracks = Array.isArray(resumeState?.tracks) ? [...resumeState.tracks] : [];
+    const seen = new Set(tracks.map((t) => t?.id).filter(Boolean));
+    const completedAlbums = new Set(
+      Array.isArray(resumeState?.completed_album_ids) ? resumeState.completed_album_ids : []
+    );
 
     for (let i = 0; i < albumRefs.length; i++) {
       if (isCancelled && isCancelled()) break;
       const ref = albumRefs[i];
+      if (completedAlbums.has(ref.id)) {
+        if (onProgress) onProgress(i + 1, total);
+        continue;
+      }
       const album = await this.get(`albums/${ref.id}`);
       // Whose record is this?
       //
@@ -750,6 +766,16 @@ export class SpotifyClient {
       if (this.onCatalogAlbum) {
         this.onCatalogAlbum({
           name: album.name, group: ref.group, ownRelease, creditedOnly, kept, dropped,
+        });
+      }
+      completedAlbums.add(ref.id);
+      // Persist in small batches. A quota failure can then lose at most
+      // nine album reads instead of forcing a prolific artist to restart
+      // hundreds of releases from the beginning.
+      if (onCheckpoint && (completedAlbums.size % 10 === 0 || i === albumRefs.length - 1)) {
+        await onCheckpoint({
+          completed_album_ids: Array.from(completedAlbums),
+          tracks,
         });
       }
       if (onProgress) onProgress(i + 1, total);

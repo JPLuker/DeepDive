@@ -289,21 +289,28 @@ the pacing work. Neither has been looked at properly.
 
 ---
 
-## Stopping point, 22 Sept (build 2.9.102)
+## Stopping point, 10 Oct (build 2.9.103)
 
 Picking up next session:
 
+- **Duplicate scan needs one real resumed run**: 2.9.103 checkpoints
+  completed artists and the current artist every ten releases. Confirm a
+  deliberately interrupted run offers Resume and does not reread the
+  completed albums.
 - **Mixes section of the landing page**: interim copy. Joseph has an
   idea for it and hasn't said what yet. Ask.
 - **Not yet checked on a phone**: 2.9.53 Multi-Dip overhaul (partly
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.102
+## Shipped since — build 2.9.103
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Duplicate scan now resumes across Spotify quota failures and closed
+  tabs, checkpoints long artists every ten releases, and deduplicates
+  repeated Spotify release IDs before reading albums (2.9.103)
 - Full library scrub is now Duplicate scan: it searches artist releases
   only for alternate copies of already-liked recordings, discards new
   music, and likes those copies instead of building an all-library

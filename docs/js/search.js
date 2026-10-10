@@ -238,6 +238,7 @@ export async function runSearch(client, artistName, opts = {}) {
 export async function runFullScrub(client, opts = {}) {
   const {
     onProgress = () => {}, isCancelled = () => false, libraryCache = null,
+    resume = null, onCheckpoint = null,
   } = opts;
   const includeGroups = buildIncludeGroups(true, false);
   if (typeof client.setMinimumPacing === "function") client.setMinimumPacing(CATALOG_PACING_MS);
@@ -255,14 +256,50 @@ export async function runFullScrub(client, opts = {}) {
   }
 
   const artists = distinctLikedArtists(likedTracks);
-  const duplicates = [];
-  const seen = new Set();
-  let scanned = 0;
+  const fingerprint = libraryFingerprint(likedTracks);
+  const usableResume = resume?.version === 1 && resume.library_fingerprint === fingerprint;
+  const completed = new Set(usableResume && Array.isArray(resume.completed_artist_ids)
+    ? resume.completed_artist_ids : []);
+  const duplicates = usableResume && Array.isArray(resume.duplicate_candidates)
+    ? [...resume.duplicate_candidates] : [];
+  const seen = new Set(duplicates.map((d) => d?.track?.id).filter(Boolean));
+  let currentArtist = usableResume ? resume.current_artist || null : null;
+  let scanned = artists.filter((artist) => completed.has(artist.id)).length;
+
+  const checkpoint = async () => {
+    if (!onCheckpoint) return;
+    await onCheckpoint({
+      version: 1,
+      library_fingerprint: fingerprint,
+      completed_artist_ids: Array.from(completed),
+      duplicate_candidates: duplicates,
+      current_artist: currentArtist,
+      artists_total: artists.length,
+      tracks_scanned: likedTracks.length,
+      updated_at: Date.now(),
+    });
+  };
+
   for (const artist of artists) {
+    if (completed.has(artist.id)) continue;
     if (isCancelled()) break;
     onProgress(5 + Math.round((scanned / Math.max(artists.length, 1)) * 94), `Checking ${artist.name}… (${scanned + 1}/${artists.length})`);
     try {
-      const catalog = await client.getArtistCatalogTracks(artist.id, { isCancelled, includeGroups });
+      const artistResume = currentArtist?.id === artist.id ? currentArtist.catalog : null;
+      currentArtist = { id: artist.id, name: artist.name, catalog: artistResume };
+      const catalog = await client.getArtistCatalogTracks(artist.id, {
+        isCancelled,
+        includeGroups,
+        resumeState: artistResume,
+        onCheckpoint: async (catalogState) => {
+          currentArtist = { id: artist.id, name: artist.name, catalog: catalogState };
+          await checkpoint();
+        },
+      });
+      if (isCancelled()) {
+        await checkpoint();
+        break;
+      }
       const likedIndex = matching.buildLikedIndexes(filterLikedByArtist(likedTracks, artist.id, artist.name));
       const phase1 = matching.findCandidates(catalog, likedIndex);
       const ids = phase1.candidates.map((candidate) => candidate.track.id);
@@ -274,6 +311,10 @@ export async function runFullScrub(client, opts = {}) {
           duplicates.push(duplicate);
         }
       }
+      completed.add(artist.id);
+      currentArtist = null;
+      scanned++;
+      await checkpoint();
     } catch (e) {
       // Never count a failed catalogue read as a successful scan. The old
       // scrub swallowed every Spotify error and advanced the counter, so a
@@ -285,7 +326,6 @@ export async function runFullScrub(client, opts = {}) {
       err.artist = artist;
       throw err;
     }
-    scanned++;
   }
   onProgress(100, "Done");
   return {
@@ -296,6 +336,21 @@ export async function runFullScrub(client, opts = {}) {
     artists_scanned: scanned,
     artists_total: artists.length,
   };
+}
+
+function libraryFingerprint(tracks) {
+  // A cheap deterministic signature is enough here. Its job is to avoid
+  // applying a checkpoint to a materially different library, not to be a
+  // cryptographic identity.
+  let hash = 2166136261;
+  for (const track of tracks) {
+    const id = track?.id || "";
+    for (let i = 0; i < id.length; i++) {
+      hash ^= id.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+  }
+  return `${tracks.length}:${(hash >>> 0).toString(16)}`;
 }
 
 function distinctLikedArtists(likedTracks) {

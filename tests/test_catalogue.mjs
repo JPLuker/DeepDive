@@ -131,5 +131,40 @@ check('every release is reported', seen.length === 2);
 check('guest release is flagged as not their own', seen.some((e) => e.creditedOnly && e.dropped === 2));
 check('own release is not filtered', seen.some((e) => !e.creditedOnly && e.kept === 2));
 
+// Spotify can repeat one release in its artist listing. It must cost one
+// album request, not one request per duplicate listing row.
+let duplicateAlbumReads = 0;
+const repeated = fakeClient([OWN, OWN]);
+const repeatedGet = repeated.get.bind(repeated);
+repeated.get = async (path, params) => {
+  if (path === 'albums/own-1') duplicateAlbumReads++;
+  return repeatedGet(path, params);
+};
+await repeated.getArtistCatalogTracks(AID);
+check('duplicate release ids are fetched once', duplicateAlbumReads === 1);
+
+// An interrupted prolific artist resumes at its remaining albums and
+// retains the tracks already read.
+const secondOwn = {
+  listing: { id: 'own-2', album_group: 'single' },
+  full: {
+    id: 'own-2', name: 'Second', release_date: '2021-01-01', album_type: 'single',
+    artists: [{ id: AID, name: 'Them' }], images: [],
+    tracks: { items: [{ id: 't3', name: 'Third', artists: [{ id: AID }] }], next: null },
+  },
+};
+const resumedClient = fakeClient([OWN, secondOwn]);
+let resumedAlbumReads = 0;
+const resumedGet = resumedClient.get.bind(resumedClient);
+resumedClient.get = async (path, params) => {
+  if (path.startsWith('albums/')) resumedAlbumReads++;
+  return resumedGet(path, params);
+};
+const resumedTracks = await resumedClient.getArtistCatalogTracks(AID, {
+  resumeState: { completed_album_ids: ['own-1'], tracks: [{ id: 'saved', name: 'Saved' }] },
+});
+check('catalogue resume skips completed albums', resumedAlbumReads === 1);
+check('catalogue resume retains saved tracks', resumedTracks.some((t) => t.id === 'saved') && resumedTracks.some((t) => t.id === 't3'));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
