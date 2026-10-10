@@ -289,7 +289,7 @@ the pacing work. Neither has been looked at properly.
 
 ---
 
-## Stopping point, 10 Oct (build 2.9.104)
+## Stopping point, 10 Oct (build 2.9.105)
 
 Picking up next session:
 
@@ -303,11 +303,14 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.104
+## Shipped since — build 2.9.105
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Phone dives now keep the screen awake where supported, warn when they
+  cannot, and save ordinary catalogue progress every five releases for
+  easy continuation after suspension or closure (2.9.105)
 - Endpoint diagnostics now put the frequently refused catalogue calls
   first, ahead of routine account checks (2.9.104)
 - Duplicate scan now resumes across Spotify quota failures and closed

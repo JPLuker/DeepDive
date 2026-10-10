@@ -59,6 +59,13 @@ check('duplicate scan does not fake an artist slideshow', !/function startScrub\
 check('hidden on results', /hideDiveScreen\(\);\s*if \(_diveCancelled\) return;/.test(src) || /hideDiveScreen\(\);\s*lastResult/.test(src));
 check('hidden on error', /hideDiveScreen\(\);\s*if \(!_diveCancelled\) renderProgressError/.test(src));
 check('cancellable', /id="dive-cancel"/.test(app) && /_diveCancelled = true;/.test(src));
+check('dive screen requests a wake lock', /navigator\.wakeLock\.request\("screen"\)/.test(src));
+check('wake lock is released with the dive screen', /_diveWakeLock\.release\(\)/.test(src));
+check('wake lock is reacquired after returning', /visibilitychange/.test(src) && /requestDiveWakeLock\(\)/.test(src));
+check('unsupported browsers warn not to close the screen', /Do not close this screen or lock your phone/.test(src));
+check('wake status is visible on the dive screen', /id="dive-awake"/.test(app));
+check('ordinary dives persist catalogue checkpoints', /onCatalogCheckpoint: \(catalog\) => saveDiveCheckpoint/.test(src));
+check('ordinary dives resume saved catalogue work', /catalogResume = await loadDiveCheckpoint/.test(src));
 
 // Percentage returned in 2.6.4 — the full-screen rewrite dropped it.
 check('percentage element exists', /id="dive-pct"/.test(app));

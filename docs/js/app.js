@@ -19,14 +19,14 @@ import { bestStore } from "./storage.js";
 import * as history from "./history.js";
 // Version the demo module independently. Mobile browsers were reloading
 // app.js while continuing to execute an older cached demo.js.
-import * as demo from "./demo.js?v=2.9.104";
+import * as demo from "./demo.js?v=2.9.105";
 import * as lastfm from "./lastfm.js";
 import * as cover from "./cover.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.104";
+export const BUILD = "2.9.105";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -2667,6 +2667,7 @@ async function runSearchWithOptions(artistName, opts) {
   }
 
   try {
+    const catalogResume = await loadDiveCheckpoint(artist, opts);
     const result = await search.runSearch(client, artistName, {
       ...opts,
       libraryCache,
@@ -2677,8 +2678,12 @@ async function runSearchWithOptions(artistName, opts) {
       // Album art is a fallback for acts with no photo on Spotify, not
       // decoration to mix in alongside one.
       onArtwork: (url) => { if (!_haveArtistPhoto) addDiveImage(url); },
+      catalogResume,
+      onCatalogCheckpoint: (catalog) => saveDiveCheckpoint(artist, opts, catalog),
+      isCancelled: () => _diveCancelled,
     });
     if (_diveCancelled) return;   // abandoned while it ran
+    await clearDiveCheckpoint(artist, opts);
     hideDiveScreen();
     lastResult = result;
     history.recordDive({
@@ -2737,6 +2742,83 @@ let _diveCancelled = false;
 let _diveImages = [];
 let _diveSlideTimer = null;
 let _diveSlideIndex = 0;
+let _diveWakeLock = null;
+let _diveWakePending = false;
+
+const DIVE_CHECKPOINT_KEY = "deepdive_dive_checkpoint_v1";
+
+function diveCheckpointSignature(artist, opts = {}) {
+  return [artist?.id || "", !!opts.includeCompilations, !!opts.includeAppearsOn].join(":");
+}
+
+async function loadDiveCheckpoint(artist, opts) {
+  const saved = await appStore.get(DIVE_CHECKPOINT_KEY);
+  return saved?.signature === diveCheckpointSignature(artist, opts) ? saved.catalog : null;
+}
+
+function saveDiveCheckpoint(artist, opts, catalog) {
+  return appStore.set(DIVE_CHECKPOINT_KEY, {
+    version: 1,
+    signature: diveCheckpointSignature(artist, opts),
+    artist_id: artist?.id || null,
+    artist_name: artist?.name || null,
+    catalog,
+    updated_at: Date.now(),
+  });
+}
+
+async function clearDiveCheckpoint(artist, opts) {
+  const saved = await appStore.get(DIVE_CHECKPOINT_KEY);
+  if (saved?.signature === diveCheckpointSignature(artist, opts)) {
+    await appStore.set(DIVE_CHECKPOINT_KEY, null);
+  }
+}
+
+function setDiveAwakeMessage(text, warning = false) {
+  const note = document.getElementById("dive-awake");
+  if (!note) return;
+  note.textContent = text;
+  note.classList.toggle("is-warning", warning);
+}
+
+async function requestDiveWakeLock() {
+  if (_diveWakePending || _diveWakeLock) return;
+  setDiveAwakeMessage("Do not close DeepDive or switch apps during this dive.", true);
+  if (!("wakeLock" in navigator) || !navigator.wakeLock?.request) {
+    setDiveAwakeMessage("Do not close this screen or lock your phone. This browser cannot keep DeepDive awake.", true);
+    return;
+  }
+  _diveWakePending = true;
+  try {
+    const lock = await navigator.wakeLock.request("screen");
+    const screen = document.getElementById("dive-screen");
+    if (!screen || screen.hidden) {
+      await lock.release();
+      return;
+    }
+    _diveWakeLock = lock;
+    setDiveAwakeMessage("Screen will stay awake. Do not close DeepDive or switch apps.");
+    lock.addEventListener("release", () => {
+      if (_diveWakeLock === lock) _diveWakeLock = null;
+      const screen = document.getElementById("dive-screen");
+      if (screen && !screen.hidden) {
+        setDiveAwakeMessage("Do not close this screen or lock your phone. The wake lock was released.", true);
+      }
+    });
+  } catch (e) {
+    _diveWakeLock = null;
+    setDiveAwakeMessage("Do not close this screen or lock your phone. This browser denied screen wake access.", true);
+  } finally {
+    _diveWakePending = false;
+  }
+}
+
+document.addEventListener("visibilitychange", () => {
+  const screen = document.getElementById("dive-screen");
+  if (document.visibilityState === "visible" && screen && !screen.hidden && !_diveWakeLock) {
+    requestDiveWakeLock();
+  }
+});
 
 /**
  * Fetch an artist's photos when the search result didn't carry any.
@@ -2777,6 +2859,7 @@ function showDiveScreen(heading, onCancel) {
   const pc0 = document.getElementById("dive-pct");
   if (pc0) pc0.textContent = "0%";
   el.hidden = false;
+  requestDiveWakeLock();
 
   const cancel = document.getElementById("dive-cancel");
   if (cancel) {
@@ -2940,6 +3023,10 @@ function hideDiveScreen() {
   if (el) el.hidden = true;
   clearInterval(_diveSlideTimer);
   _diveSlideTimer = null;
+  if (_diveWakeLock) {
+    _diveWakeLock.release().catch(() => {});
+    _diveWakeLock = null;
+  }
   setTitle("DeepDive");
 }
 
@@ -4427,13 +4514,19 @@ async function wholeDiscographyDip(artist, artistName, built, likedIds, opts) {
   updateDiveScreen(20, `Only ${Math.round(built.totalMs / 60000)} minutes are well known — reading everything…`);
   let result;
   try {
+    const catalogResume = await loadDiveCheckpoint(artist, opts);
     result = await search.runSearch(client, artistName, {
       ...opts,
       libraryCache,
       resolvedArtist: artist,
       onProgress: (pct, stage) => updateDiveScreen(20 + Math.round(pct * 0.75), stage),
       onArtwork: (url) => { if (!_haveArtistPhoto) addDiveImage(url); },
+      catalogResume,
+      onCatalogCheckpoint: (catalog) => saveDiveCheckpoint(artist, opts, catalog),
+      isCancelled: () => _diveCancelled,
     });
+    if (_diveCancelled) return false;
+    await clearDiveCheckpoint(artist, opts);
   } catch (e) {
     return false;   // the short dip is better than an error
   }

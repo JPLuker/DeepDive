@@ -683,7 +683,7 @@ export class SpotifyClient {
   // for the scrub-resume design (both optional).
   async getArtistCatalogTracks(artistId, {
     onProgress = null, isCancelled = null, includeGroups = "album,single",
-    resumeState = null, onCheckpoint = null,
+    resumeState = null, onCheckpoint = null, checkpointEvery = 10,
   } = {}) {
     const albumRefs = await this.getArtistAlbumRefs(artistId, null, includeGroups);
     const total = albumRefs.length || 1;
@@ -772,7 +772,7 @@ export class SpotifyClient {
       // Persist in small batches. A quota failure can then lose at most
       // nine album reads instead of forcing a prolific artist to restart
       // hundreds of releases from the beginning.
-      if (onCheckpoint && (completedAlbums.size % 10 === 0 || i === albumRefs.length - 1)) {
+      if (onCheckpoint && (completedAlbums.size % checkpointEvery === 0 || i === albumRefs.length - 1)) {
         await onCheckpoint({
           completed_album_ids: Array.from(completedAlbums),
           tracks,

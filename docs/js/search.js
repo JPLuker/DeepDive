@@ -76,6 +76,8 @@ export async function runSearch(client, artistName, opts = {}) {
     matchRemasters = false, onProgress = () => {}, onArtist = () => {}, onArtwork = () => {},
     libraryCache = null, scopeToArtist = true, resolvedArtist = null,
     includeCompilations = false, includeAppearsOn = false,
+    catalogResume = null, onCatalogCheckpoint = null,
+    isCancelled = () => false,
   } = opts;
 
   const includeGroups = buildIncludeGroups(includeCompilations, includeAppearsOn);
@@ -161,6 +163,10 @@ export async function runSearch(client, artistName, opts = {}) {
       report(`Reading ${artist.name}'s releases… (${done}/${total})${eta}`);
     },
     includeGroups,
+    resumeState: catalogResume,
+    onCheckpoint: onCatalogCheckpoint,
+    checkpointEvery: 5,
+    isCancelled,
   });
 
   // Smaller acts often have no artist photo on Spotify at all. Their own

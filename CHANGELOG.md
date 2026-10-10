@@ -4,6 +4,14 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.105
+- Ordinary Dip and Dive runs now request a screen wake lock and clearly
+  warn when the browser cannot keep the display awake. Returning to the
+  app automatically reacquires a released lock while the dive is active.
+- Catalogue progress is saved every five releases and reused when the
+  same artist and release options are started again. Completed dives
+  clear their checkpoint; interrupted dives keep it.
+
 ## 2.9.104
 - Endpoint diagnostics now test and display the quota-sensitive catalogue
   calls first, putting the checks that repeatedly fail in real use above

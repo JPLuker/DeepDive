@@ -34,6 +34,20 @@
 > 4. **Dive photos and the slideshow** — untouched since the first
 >    session
 
+## 48. Phone wake lock and ordinary-dive resume (2.9.105)
+
+- [ ] Android Chrome: start a catalogue Dive and confirm the display does
+      not sleep while the full-screen progress view is open
+- [ ] Switch away and return; the wake message should recover without
+      restarting the dive
+- [ ] Cancel or close after at least five releases, then start the same
+      artist with the same options and confirm it continues past saved
+      releases instead of fetching them again
+- [ ] Complete the Dive, start it again, and confirm the old checkpoint
+      was cleared
+- [ ] A browser without Screen Wake Lock support displays the do-not-close
+      warning instead of implying background execution
+
 ## 47. Duplicate-only library scrub (2.9.103)
 
 - [ ] Dives calls the feature Duplicate scan and says it finds alternate

@@ -10,7 +10,8 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
 // hideDiveScreen did clear the title; the run's in-flight progress
 // callbacks then set it straight back.
 check('late progress updates are ignored', /const screen = document\.getElementById\("dive-screen"\);\s*\n\s*if \(!screen \|\| screen\.hidden\) return;/.test(src));
-check('hiding still resets the title', /function hideDiveScreen[\s\S]{0,200}setTitle\("DeepDive"\)/.test(src));
+const hideDiveBody = src.slice(src.indexOf('function hideDiveScreen'), src.indexOf('/**', src.indexOf('function hideDiveScreen')));
+check('hiding still resets the title', /setTitle\("DeepDive"\)/.test(hideDiveBody));
 
 // Playlist cleanup showed "0 tracks" for every row.
 check('useless track count is gone', !/\$\{p\.tracks\} track/.test(src));

@@ -1219,6 +1219,8 @@
   .dive-foot-inner { max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:8px; }
   .dive-heading { font-size:28px; font-weight:700; letter-spacing:-0.02em; line-height:1.15; text-shadow:0 2px 20px rgba(0,0,0,0.55); }
   .dive-stage { font-size:13.5px; color:var(--muted); min-height:19px; }
+  .dive-awake { font-size:11.5px; line-height:1.35; color:var(--muted-soft); }
+  .dive-awake.is-warning { color:#f0bd62; }
   .dive-track { height:3px; border-radius:999px; background:rgba(255,255,255,0.16); overflow:hidden; margin-top:6px; }
   .dive-track-fill { height:100%; width:0%; background:var(--accent-gradient); border-radius:999px; transition:width .4s ease; }
   /* Right-aligned under the bar: present when wanted, out of the way of
@@ -1550,6 +1552,7 @@
       <div class="dive-foot-inner">
         <span class="dive-heading" id="dive-heading"></span>
         <span class="dive-stage" id="dive-stage"></span>
+        <span class="dive-awake" id="dive-awake"></span>
         <div class="dive-track"><div class="dive-track-fill" id="dive-fill"></div></div>
         <span class="dive-pct" id="dive-pct">0%</span>
         <button class="btn btn-ghost btn-small dive-cancel" id="dive-cancel">Cancel</button>
@@ -1567,6 +1570,6 @@
   <div id="flash-slot"></div>
   <div class="wrap" id="view-root"><!-- views render here --></div>
 
-  <script type="module" src="../js/app.js?v=2.9.104"></script>
+  <script type="module" src="../js/app.js?v=2.9.105"></script>
 </body>
 </html>

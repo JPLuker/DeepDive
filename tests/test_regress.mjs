@@ -78,5 +78,22 @@ function t(id,name,{album='Al',albumType='album',dur=200000,isrc=null,artist='A'
   check('R6: progress ends at 100', seen[seen.length-1]===100);
 }
 
+// REGRESSION 7: an ordinary dive forwards its saved catalogue state and
+// checkpoints frequently enough that a suspended phone loses little work.
+{
+  const saved={completed_album_ids:['album-1'],tracks:[t('saved','Saved')]};
+  let catalogueOpts=null, checkpointed=false;
+  const client={
+    async findArtist(){return {id:'a1',name:'A'};},
+    async getAllLikedTracks(){return [];},
+    async getArtistCatalogTracks(_id,opts){catalogueOpts=opts; await opts.onCheckpoint(saved); return saved.tracks;},
+    async getTracksWithIsrc(){return [];},
+  };
+  await runSearch(client,'A',{catalogResume:saved,onCatalogCheckpoint:()=>{checkpointed=true;}});
+  check('R7: saved catalogue state reaches Spotify client', catalogueOpts.resumeState===saved);
+  check('R7: ordinary dive checkpoints every five releases', catalogueOpts.checkpointEvery===5);
+  check('R7: catalogue checkpoint reaches the caller', checkpointed);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);
