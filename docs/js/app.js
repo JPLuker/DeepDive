@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.106";
+export const BUILD = "2.9.107";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -3569,7 +3569,7 @@ function renderScrubForm() {
   root.innerHTML = `
     <div class="card">
       <h1>Find duplicate songs</h1>
-      <p class="muted">Checks each artist's releases for other Spotify copies of songs already in your Liked Songs. Like those copies so future dives know they are not new. It never builds a playlist. Progress is saved as it works, so a Spotify limit or closed tab will not restart the scan.</p>
+      <p class="muted">Checks each artist's releases for other Spotify copies of songs already in your Liked Songs. Like those copies so future dives know they are not new. It never builds a playlist. Progress is saved as it works, and if Spotify pauses the app the scan waits it out and carries on, so nothing has to be scanned twice.</p>
       <p class="crate-note hidden" id="scrub-resume-note"></p>
       <div class="actions" style="margin-top:0;">
         <button class="btn btn-primary" id="scrub-go">Find duplicate copies</button>
@@ -3594,6 +3594,21 @@ async function showScrubCheckpoint() {
   button.textContent = "Resume duplicate scan";
 }
 
+/**
+ * A photograph already paid for.
+ *
+ * The crate stores an artist's photo when they were put aside, so a
+ * sweep can show the real thing for those without spending a request.
+ * Matched by id first: Spotify has two bands called Provoked.
+ */
+function crateArtistPhoto(artist) {
+  if (!artist) return null;
+  const name = (artist.name || "").trim().toLowerCase();
+  const entry = watchlist.listEntries().find((e) =>
+    (artist.id && e.spotify_id === artist.id) || (!e.spotify_id && name && (e.name || "").trim().toLowerCase() === name));
+  return entry ? (entry.image_url_large || entry.image_url || null) : null;
+}
+
 async function startScrub() {
   scrubCancel = { cancelled: false };
   if (blockedByRateLimit()) return;
@@ -3612,6 +3627,10 @@ async function startScrub() {
       libraryCache,
       onProgress: (pct, stage) => updateDiveScreen(pct, stage),
       isCancelled: () => scrubCancel.cancelled,
+      // The crate already holds photographs for artists put aside, so
+      // those cost nothing either; everyone else is shown by their art.
+      onArtist: (artist) => { const photo = crateArtistPhoto(artist); if (photo) addDiveImage(photo); },
+      onArtwork: (url) => addDiveImage(url),
       resume,
       onCheckpoint: (state) => appStore.set(SCRUB_CHECKPOINT_KEY, state),
     });

@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.106.** If the build in `js/app.js` is well
+**Last updated at build 2.9.107.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -168,7 +168,7 @@ confirms them.
 ./tests/run.sh
 ```
 
-1,663 assertions, 61 suites at 2.9.106, plus a syntax check and a boot
+1,678 assertions, 61 suites at 2.9.107, plus a syntax check and a boot
 check. It takes seconds.
 
 **Gate the push on the suite's own result.** `run.sh ... | tail -2 &&

@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 const html=readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
 const app=readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
 const src=readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
+const search=readFileSync(new URL('../docs/js/search.js', import.meta.url),'utf8');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 check('full-screen dive exists', /id="dive-screen"/.test(app));
@@ -53,7 +54,25 @@ check('sampler still seeds every artist', /artists\.forEach\(\(a\) => addDiveIma
 check('sampler adds each as it goes', /if \(a\) addDiveImage\(photoFor\(a\)\);/.test(src));
 check('photo accessor prefers the full-size copy', /a\.image_url_large \|\| a\.image_url/.test(src));
 check('sampler no longer uses the tile-sized copy alone', !/addDiveImage\(a\.image_url\);/.test(src));
-check('duplicate scan does not fake an artist slideshow', !/function startScrub\(\)[\s\S]{0,1200}onArtwork:/.test(src));
+// 2.9.100 cut the scan's slideshow feed so it couldn't pass one artist's
+// art off as another's. Issue #10: that left every sweep running against
+// the empty loading field for its whole length. The feed is back, but
+// only with art that belongs to the artist being checked, and only art
+// already paid for — a real photo for crate artists, their own album
+// covers otherwise. Spending a request per artist on photos would come
+// straight out of the quota issue #11 is about.
+check('duplicate scan feeds the screen', /function startScrub\(\)[\s\S]{0,1600}onArtwork: \(url\) => addDiveImage\(url\),/.test(src));
+check('and shows a real photo when one is already held', /onArtist: \(artist\) => \{ const photo = crateArtistPhoto\(artist\);/.test(src)
+  && /function crateArtistPhoto\(artist\)/.test(src));
+check('matched by id before name', /e\.spotify_id === artist\.id/.test(src));
+check('and buys no photographs', !/function startScrub\(\)[\s\S]{0,1600}client\.get\(`artists\//.test(src));
+{
+  // The art must come from the artist being checked, not from whatever
+  // was last read.
+  const scrub = search.slice(search.indexOf('export async function runFullScrub'));
+  check('art comes from that artist\'s own liked tracks', /const likedForArtist = filterLikedByArtist\(likedTracks, artist\.id, artist\.name\);[\s\S]{0,400}onArtwork\(owned\.album\.images\[0\]\.url\)/.test(scrub));
+  check('with their own catalogue as the fallback', /const withArt = catalog\.find\([\s\S]{0,120}onArtwork\(withArt\.album\.images\[0\]\.url\)/.test(scrub));
+}
 
 // lifecycle
 check('hidden on results', /hideDiveScreen\(\);\s*if \(_diveCancelled\) return;/.test(src) || /hideDiveScreen\(\);\s*lastResult/.test(src));

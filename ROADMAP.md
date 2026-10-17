@@ -303,11 +303,17 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.106
+## Shipped since — build 2.9.107
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Duplicate scan sits out a Spotify pause and continues from where it
+  stopped, rather than ending the run; it reports the time left and
+  gives up only after twenty refusals of one artist (2.9.107, issue #11)
+- Duplicate scan shows the artist again on the full-screen dive: the
+  crate's photo where one is held, their own album art otherwise, both
+  already paid for (2.9.107, issue #10)
 - Reopening the app with an interrupted ordinary Dive now asks whether
   to continue from the saved release checkpoint or discard it, retaining
   the original artist and options (2.9.106)

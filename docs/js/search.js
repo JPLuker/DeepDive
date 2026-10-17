@@ -13,7 +13,7 @@
  */
 
 import * as matching from "./matching.js";
-import { CATALOG_PACING_MS, WIDE_CATALOG_PACING_MS } from "./spotify.js";
+import { CATALOG_PACING_MS, WIDE_CATALOG_PACING_MS, limitedUntil } from "./spotify.js";
 import { filterLikedByArtist } from "./library-cache.js";
 
 // Same weights as app.py's STAGE_WEIGHTS, so the progress bar advances
@@ -60,6 +60,57 @@ export function buildIncludeGroups(includeCompilations, includeAppearsOn) {
   if (includeCompilations) groups.push("compilation");
   if (includeAppearsOn) groups.push("appears_on");
   return groups.join(",");
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** How long a pause has left, in words. */
+function fmtWait(ms) {
+  if (ms < 60000) return `${Math.max(5, Math.round(ms / 5000) * 5)} seconds`;
+  const mins = Math.max(1, Math.round(ms / 60000));
+  if (mins < 60) return mins === 1 ? "a minute" : `${mins} minutes`;
+  const hrs = Math.floor(mins / 60);
+  const rest = mins % 60;
+  return rest ? `${hrs}h ${rest}m` : `${hrs}h`;
+}
+
+function isRateLimited(e) {
+  return e?.status === 429 || e?.sustained === true;
+}
+
+/**
+ * Sit out a sustained rate limit rather than failing the scan.
+ *
+ * A whole-library scan is thousands of requests against a Dev Mode
+ * quota, so hitting a penalty is normal rather than exceptional. Until
+ * 2.9.107 that ended the scan: the work was checkpointed, but someone
+ * had to come back hours later and start it again, and a library large
+ * enough to earn one penalty earns several. Issue #11 is that it must
+ * finish, however long that takes.
+ *
+ * Waiting in small steps so cancel still answers, and re-reading the
+ * stored expiry each time: any successful request anywhere in the app
+ * clears it, and Spotify often lifts a limit earlier than the header
+ * said it would.
+ */
+async function waitOutRateLimit(error, { isCancelled, report }) {
+  const fromHeader = Number.isFinite(error?.retryAfterSeconds)
+    ? Date.now() + error.retryAfterSeconds * 1000 : 0;
+  const hadStored = !!limitedUntil();
+  let until = Math.max(limitedUntil() || 0, fromHeader);
+  // Only when nothing said how long: a 429 that reached here without a
+  // usable header still means stop. Applied as a floor to a header that
+  // did say so, it would sit out a minute on Spotify's two seconds.
+  if (!until) until = Date.now() + 60000;
+  while (!isCancelled()) {
+    const left = until - Date.now();
+    if (left <= 0) return;
+    const stored = limitedUntil();
+    if (hadStored && !stored) return; // lifted early, or cleared by a success
+    if (stored && stored < until) until = stored;
+    report(`Spotify has paused us. Waiting ${fmtWait(left)}, then carrying on where it stopped…`);
+    await sleep(Math.min(5000, left));
+  }
 }
 
 /** Rounded, and never to the second — false precision on an estimate. */
@@ -244,7 +295,7 @@ export async function runSearch(client, artistName, opts = {}) {
 export async function runFullScrub(client, opts = {}) {
   const {
     onProgress = () => {}, isCancelled = () => false, libraryCache = null,
-    resume = null, onCheckpoint = null,
+    resume = null, onCheckpoint = null, onArtist = () => {}, onArtwork = () => {},
   } = opts;
   const includeGroups = buildIncludeGroups(true, false);
   if (typeof client.setMinimumPacing === "function") client.setMinimumPacing(CATALOG_PACING_MS);
@@ -286,11 +337,38 @@ export async function runFullScrub(client, opts = {}) {
     });
   };
 
+  // A pause is a wait, not a failure (issue #11), so each artist is
+  // attempted until it goes through. The bound is only against spinning:
+  // a library this size can legitimately sit out several penalties, but
+  // something that fails twenty times in a row is not a quota problem.
+  const MAX_PAUSES_PER_ARTIST = 20;
+
+  // Labelled because the per-artist retry below is a second loop, and a
+  // cancel found mid-catalogue has to leave the scan, not move on to the
+  // next artist.
+  artists:
   for (const artist of artists) {
     if (completed.has(artist.id)) continue;
     if (isCancelled()) break;
-    onProgress(5 + Math.round((scanned / Math.max(artists.length, 1)) * 94), `Checking ${artist.name}… (${scanned + 1}/${artists.length})`);
+    let pauses = 0;
+    while (!isCancelled() && !completed.has(artist.id)) {
+    const pct = 5 + Math.round((scanned / Math.max(artists.length, 1)) * 94);
+    onProgress(pct, `Checking ${artist.name}… (${scanned + 1}/${artists.length})`);
     try {
+      // The scan runs for a long time on the full-screen dive, and until
+      // 2.9.107 it fed that screen nothing at all: no artist, no art, so
+      // every sweep ran against the empty loading field.
+      //
+      // The liked tracks are already in memory, so their album art costs
+      // nothing and arrives before the catalogue read rather than after
+      // it. A real artist photo would be one request per artist on the
+      // flow that is already running out of quota.
+      const likedForArtist = filterLikedByArtist(likedTracks, artist.id, artist.name);
+      try { onArtist(artist); } catch (e) {}
+      try {
+        const owned = likedForArtist.find((t) => t?.album?.images?.length);
+        if (owned) onArtwork(owned.album.images[0].url);
+      } catch (e) {}
       const artistResume = currentArtist?.id === artist.id ? currentArtist.catalog : null;
       currentArtist = { id: artist.id, name: artist.name, catalog: artistResume };
       const catalog = await client.getArtistCatalogTracks(artist.id, {
@@ -304,9 +382,14 @@ export async function runFullScrub(client, opts = {}) {
       });
       if (isCancelled()) {
         await checkpoint();
-        break;
+        break artists;
       }
-      const likedIndex = matching.buildLikedIndexes(filterLikedByArtist(likedTracks, artist.id, artist.name));
+      // A fallback for an artist whose liked tracks carried no image.
+      try {
+        const withArt = catalog.find((t) => t?.album?.images?.length);
+        if (withArt) onArtwork(withArt.album.images[0].url);
+      } catch (e) {}
+      const likedIndex = matching.buildLikedIndexes(likedForArtist);
       const phase1 = matching.findCandidates(catalog, likedIndex);
       const ids = phase1.candidates.map((candidate) => candidate.track.id);
       const fullTracks = ids.length && !isCancelled() ? await client.getTracksWithIsrc(ids) : [];
@@ -322,6 +405,18 @@ export async function runFullScrub(client, opts = {}) {
       scanned++;
       await checkpoint();
     } catch (e) {
+      // A rate limit stops the request, not the scan. Everything found so
+      // far is already checkpointed, including this artist's place in
+      // their own catalogue, so waiting costs nothing but time.
+      if (isRateLimited(e) && !isCancelled() && pauses < MAX_PAUSES_PER_ARTIST) {
+        pauses++;
+        await checkpoint();
+        await waitOutRateLimit(e, {
+          isCancelled,
+          report: (stage) => onProgress(pct, stage),
+        });
+        continue;
+      }
       // Never count a failed catalogue read as a successful scan. The old
       // scrub swallowed every Spotify error and advanced the counter, so a
       // rate-limited run could claim it checked the entire library while it
@@ -331,6 +426,7 @@ export async function runFullScrub(client, opts = {}) {
       err.cause = e;
       err.artist = artist;
       throw err;
+    }
     }
   }
   onProgress(100, "Done");

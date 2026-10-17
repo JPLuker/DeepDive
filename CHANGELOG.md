@@ -4,6 +4,22 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.107
+- Issue #11: a Spotify pause no longer ends a duplicate scan. The scan
+  waits the penalty out, says how long is left, and carries on from the
+  artist it stopped at. It gives up only if the same artist is refused
+  twenty times, which is not a quota problem. Cancel still answers
+  during a wait, and a 403 still fails immediately: waiting cannot clear
+  one, and a countdown would hide it.
+- A pause named by Spotify is now waited exactly, instead of a flat
+  minute. The minute remains for a refusal that arrives without a
+  Retry-After.
+- Issue #10: the scan feeds the full-screen dive again. Every sweep
+  before this ran against the empty loading field for its whole length.
+  It shows the real photo for artists in the crate, and the artist's own
+  album art otherwise. Both are already paid for: a photo per artist
+  would be one more request each, on the flow issue #11 is about.
+
 ## 2.9.106
 - Reopening DeepDive with an unfinished ordinary Dive now offers to
   continue from its saved release checkpoint or discard it.

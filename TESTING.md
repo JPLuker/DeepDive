@@ -934,6 +934,18 @@ Always:
 - [ ] Welcome (private window): two short paragraphs covering the whole
       setup, Premium in bold
 
+## 40. Duplicate scan: pauses and artwork (2.9.107)
+
+- [ ] Start a duplicate scan: the screen shows the artist being checked,
+      by photo or album art, not the empty loading field
+- [ ] Artists in your crate show their real photograph
+- [ ] Leave it running into a Spotify pause: it says how long is left
+      and counts down, rather than failing
+- [ ] When the pause lifts it carries on at the same artist, and the
+      count does not go backwards
+- [ ] Cancel works while it is waiting
+- [ ] Come back later: the resume note still offers the saved progress
+
 ## 39. App copy rewrite (2.9.99)
 
 - [ ] Chooser: Dip and Dive read the same way as the landing page

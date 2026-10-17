@@ -91,5 +91,94 @@ check('resume skips artists already completed', resumeReads.length === 1 && resu
 check('resume keeps earlier discoveries', resumed.duplicate_candidates.some((d) => d.track.id === 'copy-1'));
 check('scrub UI exposes saved progress', /Resume duplicate scan/.test(view) && /SCRUB_CHECKPOINT_KEY/.test(view));
 
+// --- Issue #11: a pause must not end the scan (2.9.107) ---
+//
+// A whole-library scan is thousands of requests against a Dev Mode
+// quota, so penalties are routine. Until now the first one ended the
+// run and someone had to come back and restart it by hand.
+{
+  const limited = (secs) => {
+    const e = new Error('Rate limited');
+    e.status = 429; e.sustained = true; e.retryAfterSeconds = secs;
+    return e;
+  };
+  const twoArtists = [
+    track('liked-1', 'One', 'USAAA2600011', 'A'),
+    { ...track('liked-2', 'Two', 'USAAA2600012', 'B'), artists: [{ id: 'artist-2', name: 'Other' }] },
+  ];
+  let attempts = [], refusals = 2;
+  const pausingClient = {
+    setMinimumPacing() {},
+    async getArtistCatalogTracks(id) {
+      attempts.push(id);
+      // Refuse the first artist twice, then let everything through.
+      if (id === 'artist-1' && refusals-- > 0) throw limited(0.02);
+      return [];
+    },
+    async getTracksWithIsrc() { return []; },
+  };
+  const stages = [];
+  const started = Date.now();
+  // Caught, because the behaviour before this was to throw: letting that
+  // escape would end the suite here and hide every check below it.
+  let result = { artists_scanned: -1, artists_total: -1 };
+  try {
+    result = await runFullScrub(pausingClient, {
+      libraryCache: { async getLikedTracks() { return twoArtists; } },
+      onProgress: (pct, stage) => stages.push(stage),
+    });
+  } catch (e) {
+    console.log('FAIL: the scan threw instead of waiting:', e?.message || e);
+    fail++;
+  }
+  check('a rate limit does not end the scan', result.artists_scanned === 2 && result.artists_total === 2);
+  check('the refused artist is retried, not skipped', attempts.filter((id) => id === 'artist-1').length === 3);
+  check('and the rest of the library still gets checked', attempts.includes('artist-2'));
+  check('the wait is reported, not silent', stages.some((s) => /Spotify has paused us\. Waiting/.test(s)));
+  check('it says it will carry on', stages.some((s) => /carrying on where it stopped/.test(s)));
+  check('waiting actually waits', Date.now() - started >= 40);
+
+  // Cancel has to answer during a wait, or the only way out of a
+  // multi-hour pause is closing the tab.
+  attempts = []; refusals = 50;
+  let cancelled = false;
+  setTimeout(() => { cancelled = true; }, 30);
+  let stopped = { artists_scanned: -1 };
+  try {
+    stopped = await runFullScrub(pausingClient, {
+      libraryCache: { async getLikedTracks() { return twoArtists; } },
+      isCancelled: () => cancelled,
+    });
+  } catch (e) {
+    console.log('FAIL: cancel during a pause threw:', e?.message || e);
+    fail++;
+  }
+  check('cancel is answered while paused', cancelled && stopped.artists_scanned === 0);
+
+  // Something failing forever is not a quota problem, and must not spin.
+  attempts = []; refusals = Infinity;
+  let gaveUp = null;
+  try {
+    await runFullScrub(pausingClient, { libraryCache: { async getLikedTracks() { return twoArtists; } } });
+  } catch (e) { gaveUp = e; }
+  check('an endless refusal still reports', /Duplicate scan stopped while checking/.test(gaveUp?.message || ''));
+  check('after a bounded number of tries', attempts.filter((id) => id === 'artist-1').length === 21);
+}
+
+// A non-rate-limit error is still a failure: a 403 will never clear by
+// waiting, and pretending otherwise would hide it behind a countdown.
+{
+  const client403 = {
+    setMinimumPacing() {},
+    async getArtistCatalogTracks() { const e = new Error('Forbidden'); e.status = 403; throw e; },
+    async getTracksWithIsrc() { return []; },
+  };
+  let err = null;
+  try {
+    await runFullScrub(client403, { libraryCache: { async getLikedTracks() { return liked; } } });
+  } catch (e) { err = e; }
+  check('a 403 fails immediately', /Forbidden/.test(err?.message || ''));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
