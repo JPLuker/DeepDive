@@ -4,6 +4,22 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.109
+- Fonts are self-hosted. The app and the landing page both pulled Inter
+  and IBM Plex Mono from Google's CDN, so every load told Google who
+  was using DeepDive and when. That is the one thing the app promises
+  it does not do: "the only external requests are to Spotify and
+  Last.fm" was false while that link was there. Both faces are now
+  Geist and Geist Mono, bundled as variable fonts under the SIL Open
+  Font License, which also removes two network round-trips from a cold
+  start. The wordmark keeps Martius, which was always local.
+- Deleted `regen-app.sh`. It rebuilt the app shell's `<head>` from the
+  landing page's, but it was written before the app moved under `docs/`
+  and had been failing on a missing file ever since. In the meantime
+  the two heads diverged completely, so running it would have replaced
+  every app style with the landing page's. `CLAUDE.md` said it mattered
+  and to run it; it now says the opposite, with the reason.
+
 ## 2.9.108
 - The duplicate scan shows one artist at a time instead of building a
   rotation. It was cycling through acts finished an hour ago while the

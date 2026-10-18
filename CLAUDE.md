@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.108.** If the build in `js/app.js` is well
+**Last updated at build 2.9.109.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -141,7 +141,6 @@ docs/
   js/storage.js       IndexedDB with a memory fallback
   js/watchlist.js     pins and blocklist
 tests/run.sh          runs everything
-regen-app.sh          rebuilds app/index.html's <head> from index.html
 ```
 
 **The Flask app is gone from the tree.** `app.py`, `matching.py`,
@@ -153,10 +152,22 @@ carry comments saying they are a port of one of those files, and those
 comments are worth keeping: the originals are at commit `80d4a54` and
 in the v1.x tags.
 
-**`regen-app.sh` matters.** `app/index.html` shares `index.html`'s head
-with asset paths climbing one level. Editing one without running it has
-already broken the font once and would have shipped a redesign to only
-half the site.
+**`app/index.html` and `index.html` are separate files. Edit both.**
+There used to be a `regen-app.sh` that rebuilt the app shell's `<head>`
+from the landing page's, and this note used to say running it mattered.
+It was written on 2 Sept, before the app moved under `docs/`, and it
+opened `index.html` from the repo root — so it had been dead ever since
+and nobody noticed, because nobody ran it.
+
+Worse than dead: the two heads diverged completely while it was broken.
+The app shell carries the whole app stylesheet in its head (1,435 lines
+against the landing page's 786), so running it would have overwritten
+every app style with the landing page's and destroyed the UI. It was
+deleted in 2.9.109 rather than repaired, because the premise that one
+file derives from the other stopped being true a long time ago.
+
+When a style has to match across both, change it in both and say so in
+the commit.
 
 ---
 
@@ -174,7 +185,7 @@ confirms them.
 ./tests/run.sh
 ```
 
-1,689 assertions, 61 suites at 2.9.108, plus a syntax check and a boot
+1,709 assertions, 62 suites at 2.9.109, plus a syntax check and a boot
 check. It takes seconds.
 
 **Gate the push on the suite's own result.** `run.sh ... | tail -2 &&
@@ -580,6 +591,12 @@ It looked like rate limiting for two days.
 > several places; seven ALL-CAPS labels remain in app chrome; there is
 > no ambient layer. Already in line: pill buttons, fills over outlines,
 > and a working light and dark theme.
+>
+> **Settled since:** the font moved to self-hosted Geist in 2.9.109, and
+> the ambient layer is out — Joseph's call, 18 Oct, it isn't wanted.
+> `Martius` stays on the wordmark as a third family, which the
+> two-family rule in Part 9.1 would otherwise forbid; it is the brand
+> mark and was not something to change unasked.
 >
 > Its copy rules (Part 10) are most of what the 3.0 copy-rewrite gate
 > was for, so do those as one pass rather than twice.

@@ -36,10 +36,22 @@
     } catch (e) {}
   })();
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* Self-hosted, deliberately. Linking Google Fonts handed every
+     visitor's IP to Google on each load, which made the page's own
+     "the only external requests are to Spotify and Last.fm" untrue.
+     Both faces are SIL OFL 1.8.1; see assets/Geist-LICENSE.txt.
+     Variable files, so one request each covers every weight. */
+  @font-face {
+    font-family: 'Geist';
+    src: url('assets/Geist-Variable.woff2') format('woff2-variations');
+    font-weight: 100 900; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'Geist Mono';
+    src: url('assets/GeistMono-Variable.woff2') format('woff2-variations');
+    font-weight: 100 900; font-style: normal; font-display: swap;
+  }
   @font-face {
     font-family: 'Martius';
     src: url('assets/Martius-LV9L4.ttf') format('truetype');
@@ -90,7 +102,7 @@
      highlight shouldn't cost accessibility. */
   :focus:not(:focus-visible) { outline:none; }
   :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-  body { margin:0; background:var(--bg); color:var(--ink); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'Geist','SF Pro Text','Segoe UI Variable',system-ui,sans-serif; min-height:100vh; }
   a { color:inherit; }
   .wrap { max-width:760px; margin:0 auto; padding:0 24px 80px; position:relative; z-index:1; }
   .hidden { display:none !important; }
@@ -103,9 +115,9 @@
   .menu-btn { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; border:none; background:transparent; cursor:pointer; color:var(--ink); flex-shrink:0; }
   .menu-btn:hover { background:var(--surface); }
   .menu-btn svg { width:24px; height:24px; }
-  .wordmark { font-family:'Martius','Inter',sans-serif; text-transform:uppercase; letter-spacing:0.01em; color:var(--ink); text-decoration:none; font-size:22px; line-height:1; display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
+  .wordmark { font-family:'Martius','Geist',sans-serif; text-transform:uppercase; letter-spacing:0.01em; color:var(--ink); text-decoration:none; font-size:22px; line-height:1; display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
   .wordmark-icon { height:1.5em; width:auto; display:block; }
-  .wordmark-hero { font-family:'Martius','Inter',sans-serif; text-transform:uppercase; letter-spacing:0.01em; color:var(--ink); font-size:76px; line-height:1; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; }
+  .wordmark-hero { font-family:'Martius','Geist',sans-serif; text-transform:uppercase; letter-spacing:0.01em; color:var(--ink); font-size:76px; line-height:1; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; }
   .wordmark-hero-icon { height:100px; width:auto; display:block; }
 
   .nav-backdrop { position:fixed; inset:0; background:rgba(10,10,10,0.35); opacity:0; pointer-events:none; transition:opacity .2s; z-index:40; }
@@ -125,9 +137,9 @@
   .nav-link:hover { background:var(--surface); }
   .nav-link svg { width:20px; height:20px; flex-shrink:0; }
   .nav-divider { height:1px; background:var(--line); margin:10px 4px; }
-  .nav-sub { padding:4px 12px 10px; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted-soft); }
+  .nav-sub { padding:4px 12px 10px; font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted-soft); }
   .theme-toggle { display:flex; gap:6px; padding:0 12px 4px; }
-  .theme-opt { flex:1; font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; padding:8px 4px; border-radius:var(--radius); border:1.5px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }
+  .theme-opt { flex:1; font-family:'Geist',sans-serif; font-size:12.5px; font-weight:600; padding:8px 4px; border-radius:var(--radius); border:1.5px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }
   .theme-opt:hover { border-color:var(--ink); color:var(--ink); }
   .theme-opt.active { background:var(--accent-gradient); color:#fff; border-color:transparent; }
 
@@ -141,22 +153,22 @@
   .nav-switch input:focus-visible + .switch-track { outline:2px solid var(--ink); outline-offset:2px; }
 
   .nav-settings { padding:0 12px 4px; }
-  .nav-field-label { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted-soft); margin-bottom:5px; }
-  .nav-input { font-family:'IBM Plex Mono',monospace; font-size:12px; padding:9px 10px; border-radius:var(--radius); border:1.5px solid var(--line); background:var(--field); color:var(--ink); width:100%; }
-  .nav-uri { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:8px 10px; word-break:break-all; line-height:1.45; }
+  .nav-field-label { font-family:'Geist Mono', ui-monospace, monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted-soft); margin-bottom:5px; }
+  .nav-input { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; padding:9px 10px; border-radius:var(--radius); border:1.5px solid var(--line); background:var(--field); color:var(--ink); width:100%; }
+  .nav-uri { font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; color:var(--muted); background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:8px 10px; word-break:break-all; line-height:1.45; }
   .nav-hint { font-size:11.5px; color:var(--muted-soft); line-height:1.45; margin:9px 0 0; }
 
   .flash { max-width:760px; margin:0 auto 20px; padding:12px 16px; background:var(--gold-soft); border:1px solid var(--gold); color:var(--ink); border-radius:var(--radius); font-size:14px; }
   .flash.error { background:#fbe9e7; border-color:var(--danger); }
 
   .card { background:var(--paper); border:none; border-radius:var(--radius-lg); padding:28px; margin-top:20px; }
-  h1,h2,h3 { font-family:'Inter',sans-serif; font-weight:700; margin:0 0 12px; line-height:1.15; letter-spacing:-0.01em; }
+  h1,h2,h3 { font-family:'Geist',sans-serif; font-weight:700; margin:0 0 12px; line-height:1.15; letter-spacing:-0.01em; }
   h1 { font-size:26px; } h2 { font-size:18px; }
   p { line-height:1.55; }
   .muted { color:var(--muted); }
-  .mono { font-family:'IBM Plex Mono',monospace; }
+  .mono { font-family:'Geist Mono', ui-monospace, monospace; }
 
-  .btn { display:inline-flex; align-items:center; gap:8px; font-family:'Inter',sans-serif; font-weight:600; font-size:14px; padding:12px 22px; border-radius:var(--radius-pill); border:1.5px solid var(--ink); cursor:pointer; text-decoration:none; background:none; }
+  .btn { display:inline-flex; align-items:center; gap:8px; font-family:'Geist',sans-serif; font-weight:600; font-size:14px; padding:12px 22px; border-radius:var(--radius-pill); border:1.5px solid var(--ink); cursor:pointer; text-decoration:none; background:none; }
   .btn-primary { background:var(--accent-gradient); color:#fff; border-color:transparent; }
   .btn-primary:hover { filter:brightness(0.92); }
   .btn-ghost { background:transparent; border:1.5px solid var(--line); color:var(--ink); }
@@ -164,12 +176,12 @@
   .btn-small { padding:7px 12px; font-size:12.5px; }
   .btn:disabled { opacity:0.5; cursor:default; }
 
-  input[type=text], input[type=password] { font-family:'Inter',sans-serif; font-size:16px; padding:13px 14px; border-radius:var(--radius); border:1.5px solid var(--line); background:var(--field); color:var(--ink); width:100%; }
+  input[type=text], input[type=password] { font-family:'Geist',sans-serif; font-size:16px; padding:13px 14px; border-radius:var(--radius); border:1.5px solid var(--line); background:var(--field); color:var(--ink); width:100%; }
   input:focus, button:focus, a:focus, select:focus { outline:2px solid var(--ink); outline-offset:2px; }
   .search-row { display:flex; gap:10px; margin-top:20px; } .search-row input { flex:1; }
 
   .crate-header { display:flex; align-items:center; gap:12px; margin:40px 0 8px; }
-  .crate-header .label { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; padding:4px 8px; border-radius:4px; border:1px solid currentColor; }
+  .crate-header .label { font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; padding:4px 8px; border-radius:4px; border:1px solid currentColor; }
   .crate-header .label.gold { background:var(--gold-soft); color:var(--gold); }
   .crate-header .label.teal { background:var(--teal-soft); color:var(--teal); }
   .crate-header .rule { flex:1; height:1px; background:var(--line); }
@@ -181,12 +193,12 @@
   .track-row input[type=checkbox] { margin-top:3px; width:17px; height:17px; accent-color:var(--accent); flex-shrink:0; }
   .track-meta { flex:1; min-width:0; } .track-name { font-weight:600; font-size:15px; }
   .track-sub { font-size:12.5px; color:var(--muted); margin-top:2px; }
-  .track-match { font-size:12px; color:var(--teal); margin-top:4px; font-family:'IBM Plex Mono',monospace; }
-  .track-dur { font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--muted-soft); flex-shrink:0; padding-top:2px; }
+  .track-match { font-size:12px; color:var(--teal); margin-top:4px; font-family:'Geist Mono', ui-monospace, monospace; }
+  .track-dur { font-family:'Geist Mono', ui-monospace, monospace; font-size:12.5px; color:var(--muted-soft); flex-shrink:0; padding-top:2px; }
 
   .pill-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
   .pill-wrap { position:relative; }
-  .pill { display:inline-flex; align-items:center; gap:6px; font-family:'Inter',sans-serif; font-size:13px; font-weight:500; padding:7px 14px; border-radius:var(--radius-pill); border:1.5px solid var(--line); background:var(--paper); color:var(--ink); cursor:pointer; }
+  .pill { display:inline-flex; align-items:center; gap:6px; font-family:'Geist',sans-serif; font-size:13px; font-weight:500; padding:7px 14px; border-radius:var(--radius-pill); border:1.5px solid var(--line); background:var(--paper); color:var(--ink); cursor:pointer; }
   .pill:hover { border-color:var(--ink); }
   .pill-avatar { width:20px; height:20px; border-radius:50%; object-fit:cover; margin-right:2px; vertical-align:middle; background:var(--surface); }
   .pill-icon-btn { position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:var(--accent); color:var(--paper); border:1.5px solid var(--paper); display:none; align-items:center; justify-content:center; font-size:13px; line-height:1; cursor:pointer; padding:0; }
@@ -199,7 +211,7 @@
      it. The old mono-uppercase-plus-rule was a record-shop idiom and sat
      oddly next to artwork. */
   .row-head { display:flex; align-items:baseline; gap:8px; margin:38px auto 14px; max-width:760px; }
-  .row-head h2 { font-family:'Inter',system-ui,sans-serif; font-size:21px; font-weight:700; letter-spacing:-0.02em; margin:0; }
+  .row-head h2 { font-family:'Geist','SF Pro Text','Segoe UI Variable',system-ui,sans-serif; font-size:21px; font-weight:700; letter-spacing:-0.02em; margin:0; }
   .row-head .qual { font-size:21px; font-weight:700; letter-spacing:-0.02em; color:var(--muted-soft); }
   .row-head .rule { display:none; }
 
@@ -290,7 +302,7 @@
   .pcard-text { display:contents; }
 
   .card-len { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:4px; }
-  .len-opt { font-family:'IBM Plex Mono',monospace; font-size:12px; padding:7px 12px; border-radius:var(--radius-pill); border:1.5px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }
+  .len-opt { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; padding:7px 12px; border-radius:var(--radius-pill); border:1.5px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }
   .len-opt:hover { border-color:var(--ink); color:var(--ink); }
   .len-opt.active { background:var(--accent-gradient); color:#fff; border-color:transparent; }
   .card-preview { margin-top:10px; max-height:240px; overflow-y:auto; }
@@ -300,8 +312,8 @@
   .filter-options { display:flex; flex-direction:column; gap:10px; margin-top:16px; }
 
   .sort-row { display:flex; align-items:center; gap:10px; margin:4px 0 14px; }
-  .sort-row label { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
-  .sort-select { font-family:'Inter',sans-serif; font-size:13px; padding:7px 10px; border-radius:var(--radius); border:1.5px solid var(--line); background:var(--field); color:var(--ink); }
+  .sort-row label { font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+  .sort-select { font-family:'Geist',sans-serif; font-size:13px; padding:7px 10px; border-radius:var(--radius); border:1.5px solid var(--line); background:var(--field); color:var(--ink); }
 
   .watchlist-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
   .watchlist-row.watchlist-done .watchlist-name { color:var(--muted-soft); text-decoration:line-through; }
@@ -311,14 +323,14 @@
   .empty-note { font-size:14px; color:var(--muted); padding:10px 0 4px; font-style:italic; }
   .actions { margin-top:32px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
   .playlist-name-field { margin:28px 0 20px; }
-  .playlist-name-field label { display:block; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  .playlist-name-field label { display:block; font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
 
   .progress-track { background:var(--surface); border-radius:var(--radius-pill); height:10px; overflow:hidden; margin:28px 0 12px; }
   .progress-fill { height:100%; background:var(--accent-gradient); border-radius:var(--radius-pill); width:0%; transition:width .35s; }
-  .progress-meta { display:flex; justify-content:space-between; align-items:baseline; font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--muted); }
+  .progress-meta { display:flex; justify-content:space-between; align-items:baseline; font-family:'Geist Mono', ui-monospace, monospace; font-size:12.5px; color:var(--muted); }
   .progress-stage { font-size:15px; color:var(--ink); margin-top:18px; min-height:22px; }
 
-  code.env { background:var(--surface); padding:2px 6px; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:13px; }
+  code.env { background:var(--surface); padding:2px 6px; border-radius:4px; font-family:'Geist Mono', ui-monospace, monospace; font-size:13px; }
 
   .search-shell { position:relative; max-width:620px; margin:0 auto; }
   /* A filled field rather than a 2.5px outline. Heavy borders are the
@@ -342,7 +354,7 @@
 
   .settings-panel { position:absolute; top:calc(100% + 8px); right:0; width:300px; background:var(--paper); border:1.5px solid var(--ink); border-radius:var(--radius); padding:16px; z-index:25; display:none; }
   .settings-panel.open { display:block; }
-  .settings-panel-title { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .settings-panel-title { font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
 
   /* ---- intent modal ---- */
   .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.55); display:flex; align-items:center; justify-content:center; z-index:60; padding:20px; }
@@ -366,12 +378,12 @@
   .intent-custom.hidden { display:none; }
   /* diagnostics disclosure inside the error box */
   .diag { margin-top:12px; }
-  .diag summary { cursor:pointer; font-size:12.5px; color:var(--muted); font-family:'IBM Plex Mono',monospace; letter-spacing:0.04em; }
+  .diag summary { cursor:pointer; font-size:12.5px; color:var(--muted); font-family:'Geist Mono', ui-monospace, monospace; letter-spacing:0.04em; }
   .diag summary:hover { color:var(--ink); }
   .diag-block { margin-top:12px; padding-top:10px; border-top:1px solid var(--line); font-size:12.5px; line-height:1.6; }
-  .diag-label { font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
-  .diag-mono { font-family:'IBM Plex Mono',monospace; font-size:11.5px; word-break:break-all; color:var(--muted); margin-top:3px; }
-  .diag-table { width:100%; border-collapse:collapse; font-family:'IBM Plex Mono',monospace; font-size:11.5px; }
+  .diag-label { font-family:'Geist Mono', ui-monospace, monospace; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+  .diag-mono { font-family:'Geist Mono', ui-monospace, monospace; font-size:11.5px; word-break:break-all; color:var(--muted); margin-top:3px; }
+  .diag-table { width:100%; border-collapse:collapse; font-family:'Geist Mono', ui-monospace, monospace; font-size:11.5px; }
   .diag-table td { padding:2px 0; border-bottom:1px solid var(--line); }
 
   .intent-warning { display:flex; gap:10px; align-items:flex-start; margin-top:16px; padding:13px 15px; border-radius:var(--radius); background:var(--gold-soft); border:1px solid var(--gold); font-size:12.8px; line-height:1.5; color:var(--ink); }
@@ -387,7 +399,7 @@
   .bmc-row { display:flex; justify-content:center; margin-top:44px; }
   .bmc-link {
     display:inline-flex; align-items:center; gap:9px;
-    font-family:'Inter',sans-serif; font-size:13.5px; font-weight:600;
+    font-family:'Geist',sans-serif; font-size:13.5px; font-weight:600;
     padding:10px 20px; border-radius:var(--radius-pill);
     border:1.5px solid var(--line); background:transparent;
     color:var(--muted); text-decoration:none;
@@ -415,7 +427,7 @@
 
   .lead { text-align:center; padding:44px 0 0; }
   .lead-title {
-    font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
+    font-family:'Martius','Geist',sans-serif; text-transform:uppercase;
     font-size:clamp(58px,11vw,124px); line-height:.88;
     letter-spacing:-.025em; margin:0;
   }
@@ -451,12 +463,12 @@
 
   .landing-section { margin-top:96px; }
   .section-eyebrow {
-    font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:500;
+    font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; font-weight:500;
     letter-spacing:.1em; text-transform:uppercase; color:var(--accent);
     margin:0 0 12px;
   }
   .section-title, .feature-card h2, .feature-band h2, .closing h2 {
-    font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
+    font-family:'Martius','Geist',sans-serif; text-transform:uppercase;
     font-size:clamp(30px,5vw,48px); line-height:.98;
     letter-spacing:-.015em; margin:0;
   }
@@ -514,7 +526,7 @@
     text-align:center; background:var(--surface);
   }
   .privacy-note h2 {
-    font-family:'Martius','Inter',sans-serif; text-transform:uppercase;
+    font-family:'Martius','Geist',sans-serif; text-transform:uppercase;
     font-size:clamp(27px,4vw,38px); line-height:.98; margin:0;
   }
   .privacy-note p {
@@ -571,7 +583,7 @@
     .feature-card h2, .feature-band h2 { font-size:29px; }
   }
 
-  .settings-build { margin:26px 0 0; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; color:var(--muted-soft); }
+  .settings-build { margin:26px 0 0; text-align:center; font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; letter-spacing:0.06em; color:var(--muted-soft); }
 
   /* Sampler intro: the artists it's about to fetch, so the page shows
      what it's going to do rather than describing it. */
@@ -638,7 +650,7 @@
   .dive-track-fill { height:100%; width:0%; background:var(--accent-gradient); border-radius:999px; transition:width .4s ease; }
   /* Right-aligned under the bar: present when wanted, out of the way of
      the artist name and the stage line otherwise. */
-  .dive-pct { align-self:flex-end; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted-soft); letter-spacing:0.04em; margin-top:-2px; }
+  .dive-pct { align-self:flex-end; font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; color:var(--muted-soft); letter-spacing:0.04em; margin-top:-2px; }
   .dive-cancel { align-self:flex-start; margin-top:12px; }
 
   @media (max-width: 640px) {

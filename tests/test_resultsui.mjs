@@ -16,8 +16,11 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
 // --- section headings ------------------------------------------------
 // Shared markup across results, Settings, History and Pins, so restyling
 // the class moves all of them at once.
-check('headings are no longer uppercase pills', !/\.crate-header \.label \{ font-family:'IBM Plex Mono'/.test(html));
-check('headings use the app heading face', /\.crate-header \.label \{[\s\S]*?font-family:'Inter'/.test(html));
+// 2.9.109 moved both faces to self-hosted Geist. The check is that
+// headings use the body face rather than the mono one, so it names the
+// current face rather than pinning a font that will change again.
+check('headings are no longer uppercase pills', !/\.crate-header \.label \{ font-family:'Geist Mono'/.test(html));
+check('headings use the app heading face', /\.crate-header \.label \{[\s\S]*?font-family:'Geist'/.test(html));
 check('heading rules are hidden', /\.crate-header \.rule \{ display:none; \}/.test(html));
 
 // --- rows -------------------------------------------------------------

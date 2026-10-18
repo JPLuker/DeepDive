@@ -18,7 +18,12 @@ check('no Python is left anywhere', !names.some((n) => n.endsWith('.py')));
 // run.sh was the Flask launcher; tests/run.sh is the suite and stays.
 check('the Flask launcher is gone', !names.includes('run.sh'));
 check('the test runner is not', existsSync(new URL('../tests/run.sh', import.meta.url)));
-check('regen-app.sh stays: it is live tooling', names.includes('regen-app.sh'));
+// Deleted in 2.9.109. It was written before the app moved under docs/,
+// opened index.html from the repo root, and so had been dead for weeks.
+// By then the two heads had diverged completely — the app shell holds
+// the whole app stylesheet — so running it would have overwritten every
+// app style with the landing page's.
+check('the broken regen script stays gone', !names.includes('regen-app.sh'));
 for (const keep of ['docs', 'tests', 'README.md', 'LICENSE', 'CLAUDE.md',
                     'ROADMAP.md', 'TESTING.md', 'CHANGELOG.md'])
   check(`${keep} is still here`, names.includes(keep));

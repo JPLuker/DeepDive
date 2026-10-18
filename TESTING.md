@@ -934,6 +934,15 @@ Always:
 - [ ] Welcome (private window): two short paragraphs covering the whole
       setup, Premium in bold
 
+## 42. Self-hosted fonts (2.9.109)
+
+- [ ] App and landing page look right: body text, headings, and the
+      monospace bits (Client ID, redirect URI, diagnostics)
+- [ ] The DeepDive wordmark still uses Martius
+- [ ] Load with the network panel open: no request to any
+      `fonts.googleapis.com` or `fonts.gstatic.com`
+- [ ] No flash of fallback text on a cold load
+
 ## 41. Scan screen and wake lock (2.9.108)
 
 - [ ] Duplicate scan: the photo changes to whoever the status line

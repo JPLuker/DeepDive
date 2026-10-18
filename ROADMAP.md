@@ -268,7 +268,9 @@ who has to do it, since the long poles are Joseph's.
 6. ~~**Repo cleanup.**~~ *Done in 2.9.89. The Flask app, its templates
    and static files, its launcher and requirements, and the two
    obsolete plan documents are out of the tree; they remain at commit
-   `80d4a54` and in the v1.x tags. `regen-app.sh` stayed: live tooling.*
+   `80d4a54` and in the v1.x tags. `regen-app.sh` was kept at the time as
+   live tooling; it turned out to have been broken since the move under
+   `docs/` and was deleted in 2.9.109.*
 7. ~~**The README still sells v1.**~~ *Rewritten in 2.9.89, which also
    fixed the redirect address it gave (`/DeepDive/` rather than
    `/DeepDive/app/`), a setup-breaking error.*
@@ -303,11 +305,15 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.108
+## Shipped since — build 2.9.109
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Fonts self-hosted (Geist, SIL OFL): no more Google Fonts, which was
+  the only thing contradicting the app's own privacy claim (2.9.109)
+- `regen-app.sh` deleted — broken since the move under `docs/`, and by
+  then running it would have destroyed the app's styles (2.9.109)
 - Duplicate scan shows one artist at a time and reports which release
   it is on, and a spent quota stops it cleanly again rather than being
   retried twenty times an artist (2.9.108, issues #15 and #13)
