@@ -934,6 +934,18 @@ Always:
 - [ ] Welcome (private window): two short paragraphs covering the whole
       setup, Premium in bold
 
+## 41. Scan screen and wake lock (2.9.108)
+
+- [ ] Duplicate scan: the photo changes to whoever the status line
+      names, and never cycles back to an earlier artist
+- [ ] The line shows "release 4 of 31" and moves during a long artist
+- [ ] Desktop: nothing tells you to keep the screen open or not to
+      switch apps
+- [ ] Phone: the warning appears only if the screen can still sleep
+- [ ] With the quota spent, the scan stops promptly and shows the
+      message naming which budget is gone, not a generic error
+- [ ] Reopening offers to resume from where it stopped
+
 ## 40. Duplicate scan: pauses and artwork (2.9.107)
 
 - [ ] Start a duplicate scan: the screen shows the artist being checked,

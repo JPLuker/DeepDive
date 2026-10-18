@@ -4,6 +4,28 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.108
+- The duplicate scan shows one artist at a time instead of building a
+  rotation. It was cycling through acts finished an hour ago while the
+  status line named someone else, and keeping a slide element for every
+  artist it had ever seen. Multi-Dip already did this correctly; the
+  scan now uses the same helper rather than a second copy of it.
+- The scan reports which release it is on within an artist, the way a
+  dive already did. A prolific artist is minutes on one name and the
+  line never moved.
+- A spent Spotify quota stops the scan cleanly again instead of being
+  retried twenty times an artist. 2.9.107 treated it as a burst limit,
+  which undid a guard in `spotify.js` that exists because retrying
+  cannot refill a quota and each attempt spends more of what is gone.
+  Burst limits are still waited out.
+- A scan stopped by a spent quota now shows the explanation naming
+  which budget is gone, rather than a generic failure. The wrapper was
+  dropping the tag that message keys off.
+- The dive screen no longer announces that the screen will stay awake,
+  and no longer tells desktop users not to switch apps, which was never
+  true there. It speaks only when the screen can sleep and that would
+  stop the run.
+
 ## 2.9.107
 - Issue #11: a Spotify pause no longer ends a duplicate scan. The scan
   waits the penalty out, says how long is left, and carries on from the

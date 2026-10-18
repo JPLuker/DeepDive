@@ -180,5 +180,40 @@ check('scrub UI exposes saved progress', /Resume duplicate scan/.test(view) && /
   check('a 403 fails immediately', /Forbidden/.test(err?.message || ''));
 }
 
+// --- A spent quota is not a burst limit (2.9.108) ---
+//
+// spotify.js throws QUOTA_EXCEEDED immediately on purpose: retrying
+// cannot refill a quota and each attempt spends more of what is gone.
+// 2.9.107 caught that and retried it twenty times an artist.
+{
+  const quota = () => { const e = new Error('Quota'); e.status = 429; e.quotaExhausted = true; return e; };
+  let calls = 0;
+  const spent = {
+    setMinimumPacing() {},
+    async getArtistCatalogTracks() { calls++; throw quota(); },
+    async getTracksWithIsrc() { return []; },
+  };
+  let err = null;
+  const started = Date.now();
+  // Bounded, because the behaviour this replaces retried twenty times a
+  // minute apart. Left unbounded the suite hangs and the runner scores
+  // it as absent rather than failed, which reads as green.
+  const tooSlow = Symbol('timeout');
+  try {
+    const outcome = await Promise.race([
+      runFullScrub(spent, { libraryCache: { async getLikedTracks() { return liked; } } }),
+      new Promise((resolve) => setTimeout(() => resolve(tooSlow), 3000)),
+    ]);
+    if (outcome === tooSlow) { console.log('FAIL: a spent quota was retried instead of stopping'); fail++; }
+  } catch (e) { err = e; }
+  check('a spent quota stops instead of retrying', calls === 1);
+  check('and does not sit waiting first', Date.now() - started < 1000);
+  check('the failure names the artist', /Duplicate scan stopped while checking/.test(err?.message || ''));
+  // explainError reads these off the top-level error, so the wrapper
+  // has to carry them or the user gets the generic failure page.
+  check('the quota tag survives the wrapper', err?.quotaExhausted === true);
+  check('with the status alongside it', err?.status === 429);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

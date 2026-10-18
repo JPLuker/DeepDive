@@ -303,11 +303,19 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.107
+## Shipped since — build 2.9.108
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Duplicate scan shows one artist at a time and reports which release
+  it is on, and a spent quota stops it cleanly again rather than being
+  retried twenty times an artist (2.9.108, issues #15 and #13)
+- Dive screen stops announcing the wake lock, and stops telling desktop
+  users not to switch apps, which was never true there (2.9.108, #16)
+- **Standards precedence settled, 18 Oct:** `InternalDesignGuidelines`
+  beats DeepDive's own recorded design decisions. See the note at the
+  top of `CLAUDE.md`'s "Design direction". Issue #14 is the work.
 - Duplicate scan sits out a Spotify pause and continues from where it
   stopped, rather than ending the run; it reports the time left and
   gives up only after twenty refusals of one artist (2.9.107, issue #11)

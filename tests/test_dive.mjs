@@ -3,6 +3,9 @@ const html=readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8
 const app=readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
 const src=readFileSync(new URL('../docs/js/app.js', import.meta.url),'utf8');
 const search=readFileSync(new URL('../docs/js/search.js', import.meta.url),'utf8');
+// Comments stripped, for checks that a string is *gone*: a comment
+// explaining why it went would otherwise keep the check failing.
+const code=src.replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|[^:])\/\/[^\n]*/g,'$1');
 let pass=0,fail=0; function check(l,c){if(c)pass++;else{fail++;console.log('FAIL:',l);}}
 
 check('full-screen dive exists', /id="dive-screen"/.test(app));
@@ -61,7 +64,15 @@ check('sampler no longer uses the tile-sized copy alone', !/addDiveImage\(a\.ima
 // already paid for — a real photo for crate artists, their own album
 // covers otherwise. Spending a request per artist on photos would come
 // straight out of the quota issue #11 is about.
-check('duplicate scan feeds the screen', /function startScrub\(\)[\s\S]{0,1600}onArtwork: \(url\) => addDiveImage\(url\),/.test(src));
+// 2.9.108 (issue #15): one artist at a time, not a rotation. A scan
+// walks a list, so accumulating slides meant cycling through acts
+// finished an hour ago while the status line named someone else — and
+// a few hundred slide elements by the end of a library.
+check('duplicate scan feeds the screen', /function startScrub\(\)[\s\S]{0,1700}onArtwork: \(url\) => showOnlyDiveImage\(url\),/.test(src));
+check('and does not accumulate a rotation', !/function startScrub\(\)[\s\S]{0,1700}addDiveImage\(/.test(src));
+check('reusing the Multi-Dip helper rather than a second copy', !/function setDiveImage\(/.test(src)
+  && (src.match(/function showOnlyDiveImage\(/g) || []).length === 1);
+check('the same photo twice does not re-crossfade', /dive-slide\.on"\)\?\.dataset\.url === url\) return;/.test(src));
 check('and shows a real photo when one is already held', /onArtist: \(artist\) => \{ const photo = crateArtistPhoto\(artist\);/.test(src)
   && /function crateArtistPhoto\(artist\)/.test(src));
 check('matched by id before name', /e\.spotify_id === artist\.id/.test(src));
@@ -81,7 +92,15 @@ check('cancellable', /id="dive-cancel"/.test(app) && /_diveCancelled = true;/.te
 check('dive screen requests a wake lock', /navigator\.wakeLock\.request\("screen"\)/.test(src));
 check('wake lock is released with the dive screen', /_diveWakeLock\.release\(\)/.test(src));
 check('wake lock is reacquired after returning', /visibilitychange/.test(src) && /requestDiveWakeLock\(\)/.test(src));
-check('unsupported browsers warn not to close the screen', /Do not close this screen or lock your phone/.test(src));
+// 2.9.108 (issue #16): the warning only applies where backgrounding a
+// tab suspends it. On a desktop it doesn't, so "do not switch apps" was
+// false there, and announcing success on every dive is the reassurance
+// filler the copy rules ban.
+check('the warning is scoped to touch devices', /function diveNeedsScreenAwake\(\)/.test(src)
+  && /\(pointer: coarse\) and \(hover: none\)/.test(src));
+check('unsupported browsers warn, but only where it matters', /if \(matters\) setDiveAwakeMessage\("Keep this screen open\.", true\);/.test(src));
+check('a working lock says nothing at all', !/Screen will stay awake/.test(code));
+check('and nothing tells a desktop user not to switch apps', !/switch apps/.test(code));
 check('wake status is visible on the dive screen', /id="dive-awake"/.test(app));
 check('ordinary dives persist catalogue checkpoints', /onCatalogCheckpoint: \(catalog\) => saveDiveCheckpoint/.test(src));
 check('ordinary dives resume saved catalogue work', /catalogResume = await loadDiveCheckpoint/.test(src));

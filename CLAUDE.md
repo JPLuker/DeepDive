@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.107.** If the build in `js/app.js` is well
+**Last updated at build 2.9.108.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -74,6 +74,12 @@ rejected.
 ---
 
 ## Working with Joseph
+
+**Handoff is GitHub Issues, not chat.** Per the standards repo's
+`WORKFLOW.md`: read the project's open issues at the start of every
+session, treat them as the to-do list, and close them from the commit
+with `Closes #N`. Work that only partly covers an issue gets a comment
+saying what is left, and stays open.
 
 **Version numbers are Joseph's call.** Claimed 2.9 twice, then 3.0 once
 — that last from reading "3.0 was the new 2.9 target" as permission to
@@ -168,7 +174,7 @@ confirms them.
 ./tests/run.sh
 ```
 
-1,678 assertions, 61 suites at 2.9.107, plus a syntax check and a boot
+1,689 assertions, 61 suites at 2.9.108, plus a syntax check and a boot
 check. It takes seconds.
 
 **Gate the push on the suite's own result.** `run.sh ... | tail -2 &&
@@ -559,6 +565,27 @@ It looked like rate limiting for two days.
 ---
 
 ## Design direction
+
+> **Superseded. `JPLuker/InternalDesignGuidelines` wins.** Joseph's
+> call, 18 Oct: where the standards repo and this section disagree, the
+> standards repo is right. Read its `WORKFLOW.md` at the start of a
+> session and `DESIGN.md` ("Aurora Glass") before any UI work.
+>
+> It reverses things recorded below as deliberate, so the reason
+> matters: one house style across every project beats a per-project
+> one, and these decisions were made before the standard existed.
+> Known conflicts, all open under issue #14: Inter is the body font and
+> is banned by name; the tab bar is a full-width bar with a top border
+> where the standard wants a floating pill; there are hard dividers in
+> several places; seven ALL-CAPS labels remain in app chrome; there is
+> no ambient layer. Already in line: pill buttons, fills over outlines,
+> and a working light and dark theme.
+>
+> Its copy rules (Part 10) are most of what the 3.0 copy-rewrite gate
+> was for, so do those as one pass rather than twice.
+>
+> The rest of this section is kept as the record of what DeepDive did
+> before, since it explains why the code looks the way it does.
 
 Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 

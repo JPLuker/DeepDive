@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.107";
+export const BUILD = "2.9.108";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -2791,11 +2791,36 @@ function setDiveAwakeMessage(text, warning = false) {
   note.classList.toggle("is-warning", warning);
 }
 
+/**
+ * Whether losing the screen actually costs anything here.
+ *
+ * Backgrounding a tab suspends it on a phone, which kills a run. On a
+ * desktop it does not, so "do not switch apps" was simply untrue there
+ * (issue #16). Touch-primary is the same test CSS uses for this, and it
+ * beats sniffing the user agent.
+ */
+function diveNeedsScreenAwake() {
+  try {
+    return window.matchMedia?.("(pointer: coarse) and (hover: none)").matches === true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Only speaks when it has something to say.
+ *
+ * It used to announce success — "Screen will stay awake" — on every
+ * dive, including desktops where nothing was at risk. A working lock is
+ * the resting state and needs no text; the warning earns its place only
+ * when the screen can sleep and that would stop the run.
+ */
 async function requestDiveWakeLock() {
   if (_diveWakePending || _diveWakeLock) return;
-  setDiveAwakeMessage("Do not close DeepDive or switch apps during this dive.", true);
+  const matters = diveNeedsScreenAwake();
+  setDiveAwakeMessage("");
   if (!("wakeLock" in navigator) || !navigator.wakeLock?.request) {
-    setDiveAwakeMessage("Do not close this screen or lock your phone. This browser cannot keep DeepDive awake.", true);
+    if (matters) setDiveAwakeMessage("Keep this screen open.", true);
     return;
   }
   _diveWakePending = true;
@@ -2807,17 +2832,17 @@ async function requestDiveWakeLock() {
       return;
     }
     _diveWakeLock = lock;
-    setDiveAwakeMessage("Screen will stay awake. Do not close DeepDive or switch apps.");
+    setDiveAwakeMessage("");
     lock.addEventListener("release", () => {
       if (_diveWakeLock === lock) _diveWakeLock = null;
       const screen = document.getElementById("dive-screen");
-      if (screen && !screen.hidden) {
-        setDiveAwakeMessage("Do not close this screen or lock your phone. The wake lock was released.", true);
+      if (screen && !screen.hidden && matters) {
+        setDiveAwakeMessage("Keep this screen open.", true);
       }
     });
   } catch (e) {
     _diveWakeLock = null;
-    setDiveAwakeMessage("Do not close this screen or lock your phone. This browser denied screen wake access.", true);
+    if (matters) setDiveAwakeMessage("Keep this screen open.", true);
   } finally {
     _diveWakePending = false;
   }
@@ -2936,8 +2961,10 @@ function showOnlyDiveImage(url) {
   if (!url) return;
   const slides = document.getElementById("dive-slides");
   if (!slides) return;
+  if (slides.querySelector(".dive-slide.on")?.dataset.url === url) return;
   const probe = new Image();
   probe.onload = () => {
+    if (slides.querySelector(".dive-slide.on")?.dataset.url === url) return;
     _diveImages = [url];
     _diveSlideIndex = 0;
     const slide = document.createElement("div");
@@ -3629,8 +3656,13 @@ async function startScrub() {
       isCancelled: () => scrubCancel.cancelled,
       // The crate already holds photographs for artists put aside, so
       // those cost nothing either; everyone else is shown by their art.
-      onArtist: (artist) => { const photo = crateArtistPhoto(artist); if (photo) addDiveImage(photo); },
-      onArtwork: (url) => addDiveImage(url),
+      // One artist on screen at a time (issue #15): the scan walks a
+      // list, so the photo follows whoever the status line names.
+      // One artist on screen at a time (issue #15). A scan walks a list,
+      // so the photo follows whoever the status line names, exactly as
+      // a Multi-Dip already did.
+      onArtist: (artist) => { const photo = crateArtistPhoto(artist); if (photo) showOnlyDiveImage(photo); },
+      onArtwork: (url) => showOnlyDiveImage(url),
       resume,
       onCheckpoint: (state) => appStore.set(SCRUB_CHECKPOINT_KEY, state),
     });

@@ -74,7 +74,20 @@ function fmtWait(ms) {
   return rest ? `${hrs}h ${rest}m` : `${hrs}h`;
 }
 
+/**
+ * A pause worth waiting out.
+ *
+ * Deliberately not every 429. `spotify.js` tags a spent quota bucket as
+ * `quotaExhausted` and throws it straight away, because retrying cannot
+ * refill a quota and each attempt spends more of what is already gone.
+ * 2.9.107 caught that throw and retried it anyway, twenty times an
+ * artist, which is the behaviour that guard exists to prevent.
+ *
+ * A burst limit is the opposite: it clears on its own, so waiting is
+ * exactly right.
+ */
 function isRateLimited(e) {
+  if (e?.quotaExhausted) return false;
   return e?.status === 429 || e?.sustained === true;
 }
 
@@ -374,6 +387,13 @@ export async function runFullScrub(client, opts = {}) {
       const catalog = await client.getArtistCatalogTracks(artist.id, {
         isCancelled,
         includeGroups,
+        // Issue #13: no different from a dive, it was simply never
+        // wired up. A prolific artist is minutes on one name, and
+        // without this the line sits unchanged for all of it.
+        onProgress: (done, releases) => onProgress(
+          pct,
+          `Checking ${artist.name}… (${scanned + 1}/${artists.length}) · release ${done} of ${releases}`,
+        ),
         resumeState: artistResume,
         onCheckpoint: async (catalogState) => {
           currentArtist = { id: artist.id, name: artist.name, catalog: catalogState };
@@ -422,9 +442,21 @@ export async function runFullScrub(client, opts = {}) {
       // rate-limited run could claim it checked the entire library while it
       // had actually checked almost nothing.
       const reason = e?.message || String(e);
+      // Save where it got to before giving up, so resuming picks up at
+      // this artist rather than the last completed one.
+      await checkpoint();
       const err = new Error(`Duplicate scan stopped while checking ${artist.name}: ${reason}`);
       err.cause = e;
       err.artist = artist;
+      // The wrapper used to drop these, so a scan killed by a spent
+      // quota got the generic failure page instead of the one that
+      // explains which budget is gone and that the rest of the app
+      // still works. explainError reads them off the top-level error.
+      err.quotaExhausted = !!e?.quotaExhausted;
+      err.status = e?.status;
+      err.sustained = !!e?.sustained;
+      err.retryAfter = e?.retryAfter;
+      err.retryAfterSeconds = e?.retryAfterSeconds;
       throw err;
     }
     }
