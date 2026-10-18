@@ -132,5 +132,58 @@ check('and scrolls when it has to', /#card-modal \.modal \{[\s\S]{0,240}overflow
 // foot, a card beside a taller one opened a gap under its icon.
 check('mix cards start at the top', /\.pcard \{[\s\S]{0,120}justify-content:flex-start/.test(h) && /\.pcard-icon \{ opacity:0\.85; margin-bottom:10px; \}/.test(h));
 
+// --- the floating tab pill (2.9.111) -------------------------------
+// DESIGN.md P2 "float, don't fence" and 14.1. The bar used to span the
+// full width and sit on bottom:0 with a 1px line above it, which is the
+// most web-page-looking thing an app can do. Scoped to the mobile block
+// so a desktop rule can't satisfy these by accident.
+{
+  // There are three (max-width: 640px) blocks and a base
+  // `.tabbar { display:none; }` outside them, so slicing from the first
+  // media query picks up the wrong rule — it did, and these checks
+  // passed over the base rule until the slice was anchored on the
+  // declaration that actually matters.
+  const bar = (h.match(/\.tabbar \{[^}]*position:fixed[^}]*\}/) || [''])[0];
+  const mob = h;
+  check('the floating rule is the one being read', /position:fixed/.test(bar) && !/display:none/.test(bar));
+  check('the bar floats clear of every edge', /left:14px; right:14px; bottom:calc\(14px \+ env\(safe-area-inset-bottom\)\)/.test(bar));
+  check('it is a pill', /border-radius:var\(--radius-pill\)/.test(bar));
+  check('it is glass, not a tinted bar', /background:var\(--glass\)/.test(bar) && /saturate\(160%\)/.test(bar));
+  check('the hard top border is gone', !/border-top:/.test(bar));
+  check('it has a hairline, not a line', /border:1px solid var\(--hairline\)/.test(bar));
+  check('and a shadow with the glass edge highlight', /box-shadow:var\(--glass-shadow\), var\(--glass-highlight\)/.test(bar));
+
+  // The selection slides. A background on each tab would blink.
+  check('the selection is one sliding element', /\.tabbar::before \{/.test(mob));
+  check('it moves by transform', /transform:translateX\(var\(--tab-x, 0px\)\)/.test(mob));
+  check('and animates', /transition:transform \.32s/.test(mob));
+  check('it is not stacked behind its own parent background', !/\.tabbar::before \{[\s\S]{0,120}z-index:-1/.test(mob));
+  check('tabs stack above it', /\.tab \{[\s\S]{0,400}position:relative; z-index:1;/.test(mob));
+  check('nothing is drawn before the first measurement', /\.tabbar:not\(\.has-selection\)::before \{ opacity:0; \}/.test(mob));
+
+  // 6.4 makes both of these mandatory, not optional.
+  check('opaque without backdrop-filter', /@supports not \(backdrop-filter: blur\(1px\)\) \{\s*\n\s*\.tabbar \{ background:var\(--paper\)/.test(mob));
+  check('opaque for reduced transparency', /@media \(prefers-reduced-transparency: reduce\)/.test(mob));
+  check('still for reduced motion', /@media \(prefers-reduced-motion: reduce\) \{\s*\n\s*\.tabbar::before \{ transition:none; \}/.test(mob));
+}
+
+// Measured, not computed from a tab count — two copies of the division
+// would drift, and the bar is an auto-flow grid that already knows.
+check('the selection is measured from rects', /getBoundingClientRect\(\)/.test(src) && /setProperty\("--tab-x"/.test(src));
+check('not from offsetLeft, whose origin varies by engine', !/offsetLeft - bar\.clientLeft/.test(src));
+check('measurement is gated to one frame', /_tabMoveQueued/.test(src));
+check('it re-measures on resize', /addEventListener\("resize", moveTabSelection\)/.test(src));
+// Screens that aren't one of the four destinations: setActiveTab is
+// called with "scrub" and "history", which no tab carries.
+check('a screen with no tab clears the selection', /if \(!active\) \{ bar\.classList\.remove\("has-selection"\); return; \}/.test(src));
+
+// Dead since the dive went full-screen: no .dive-bar element was ever
+// rendered and nothing set body.diving, in either stylesheet.
+{
+  const landing = readFileSync(new URL('../docs/index.html', import.meta.url), 'utf8');
+  check('no dead dive-bar rule', !/\.dive-bar/.test(h) && !/\.dive-bar/.test(landing));
+  check('no dead body.diving rule', !/body\.diving/.test(h) && !/body\.diving/.test(landing));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

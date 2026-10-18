@@ -60,6 +60,15 @@
     --bg:#FAFAFA; --tile:#F2F2F3; --tile-hover:#EAEAEC;
     --radius:14px; --radius-lg:22px; --radius-pill:999px;
     --radius-tile:10px;
+    /* Glass (DESIGN.md 6.1), light values. One tier is in use so far:
+       the tab pill. --hairline is the border all glass shares; it is
+       deliberately lighter than --line, which is for hard edges on
+       Surface and is being removed from most places. */
+    --glass:rgba(255,255,255,.62); --glass-blur:24px;
+    --glass-highlight:inset 0 1px 0 rgba(255,255,255,.55);
+    --hairline:rgba(10,10,10,0.08);
+    --glass-shadow:0 8px 28px rgba(10,10,10,.14), 0 2px 8px rgba(10,10,10,.08);
+    --accent-soft-fill:color-mix(in srgb, var(--accent) 14%, transparent);
     /* Desktop rail width and content measure; used by the min-width
        blocks below and overridden at the widest breakpoint. */
     /* Content measure for the desktop breakpoints below. */
@@ -83,6 +92,14 @@
     --field:#1C1E23;
     --accent-top:#2FB6FF; --accent-bottom:#3B5BFF; --accent:#3E7BFF;
     --tile:#16181D; --tile-hover:#1F222A;
+    --glass:rgba(26,30,46,.62);
+    --glass-highlight:inset 0 1px 0 rgba(255,255,255,.10);
+    --hairline:rgba(255,255,255,0.08);
+    --glass-shadow:0 8px 28px rgba(0,0,0,.44), 0 2px 8px rgba(0,0,0,.30);
+    /* Dark wants a raised surface rather than a blue wash: a tint over
+       near-black reads as a smudge, and the accent is already carrying
+       the selected icon and label. */
+    --accent-soft-fill:rgba(255,255,255,.09);
   }
   /* Reserve the scrollbar's width on both sides, so a centred layout
      stays centred instead of sitting ~8px left of true centre on any
@@ -1245,35 +1262,83 @@
   /* ---- bottom tab bar (mobile) ---- */
   /* A slide-out drawer is a web idiom; every phone music app puts its
      primary destinations in a fixed bar at the bottom, within thumb
-     reach. Hidden on desktop, where the drawer is fine. */
+     reach. Hidden on desktop, where the top bar carries navigation.
+
+     2.9.111: a floating glass pill rather than a full-width bar with a
+     top border. DESIGN.md P2 ("float, don't fence") and 14.1 — the bar
+     spanning edge to edge with a hard 1px line above it was the single
+     most web-looking thing left in the app. */
   .tabbar { display:none; }
   @media (max-width: 640px) {
     .tabbar {
-      /* Auto-fit so the bar always divides evenly however many tabs
+      /* Auto-fit so the pill always divides evenly however many tabs
          there are, rather than leaving empty columns on the right. */
       display:grid; grid-auto-flow:column; grid-auto-columns:1fr;
-      position:fixed; left:0; right:0; bottom:0; z-index:40;
-      background:color-mix(in srgb, var(--bg) 92%, transparent);
-      backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
-      border-top:1px solid var(--line);
-      padding-bottom:env(safe-area-inset-bottom);
+      position:fixed; z-index:40;
+      left:14px; right:14px; bottom:calc(14px + env(safe-area-inset-bottom));
+      padding:6px;
+      border-radius:var(--radius-pill);
+      background:var(--glass);
+      backdrop-filter:blur(var(--glass-blur)) saturate(160%);
+      -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(160%);
+      border:1px solid var(--hairline);
+      box-shadow:var(--glass-shadow), var(--glass-highlight);
     }
+    /* The sliding selection (14.1). One element moved with a transform
+       rather than a background on each tab, so it travels between tabs
+       instead of blinking from one to the next. Its radius is the
+       pill's minus the 6px padding — concentric rule, 7.3 — which at
+       pill radius is just another pill.
+
+       Not z-index:-1. A negative index on a child puts it behind its
+       own parent's background, which is how an artist photo spent five
+       releases being invisible. The pill stacks above the glass and the
+       tabs stack above the pill. */
+    .tabbar::before {
+      content:""; position:absolute; z-index:0;
+      top:6px; bottom:6px; left:6px;
+      width:var(--tab-w, 0px);
+      transform:translateX(var(--tab-x, 0px));
+      border-radius:var(--radius-pill);
+      background:var(--accent-soft-fill);
+      transition:transform .32s cubic-bezier(.32,.72,0,1), width .32s cubic-bezier(.32,.72,0,1);
+    }
+    /* Before the first measurement there is no width, so nothing is
+       drawn — better than a pill parked under the wrong tab. */
+    .tabbar:not(.has-selection)::before { opacity:0; }
     .tab {
       display:flex; flex-direction:column; align-items:center; gap:3px;
-      padding:9px 0 7px; background:none; border:none; cursor:pointer;
-      color:var(--muted-soft); font-family:inherit; font-size:10px; font-weight:500;
+      padding:8px 0 7px; background:none; border:none; cursor:pointer;
+      border-radius:var(--radius-pill);
+      color:var(--muted); font-family:inherit; font-size:10px; font-weight:500;
+      -webkit-tap-highlight-color:transparent;
+      /* Above the sliding pill, which is painted on the bar itself. */
+      position:relative; z-index:1;
+    }
+    /* 6.4: both fallbacks are required. Without blur the translucency
+       is just a washed-out panel over scrolling content, so go opaque
+       and keep the shape and shadow. */
+    @supports not (backdrop-filter: blur(1px)) {
+      .tabbar { background:var(--paper); }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      .tabbar { background:var(--paper); backdrop-filter:none; -webkit-backdrop-filter:none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .tabbar::before { transition:none; }
     }
     .tab svg { width:21px; height:21px; }
-    .tab.active { color:var(--ink); }
+    .tab.active { color:var(--accent); }
     .tab.active svg { color:var(--accent); }
-    /* Clear the bar so the last row isn't trapped underneath it. */
-    .wrap { padding-bottom:calc(78px + env(safe-area-inset-bottom)); }
-    .dive-bar { bottom:calc(60px + env(safe-area-inset-bottom)); }
-    body.diving .wrap { padding-bottom:calc(148px + env(safe-area-inset-bottom)); }
-    #flash-slot .flash { margin-bottom:calc(84px + env(safe-area-inset-bottom)); }
-    /* On result screens the contextual actions replace the global tab bar.
-       They sit in the same bottom space, above it in the stacking order,
-       instead of creating two separate fixed bars. */
+    /* Clear the pill so the last row isn't trapped underneath it. */
+    .wrap { padding-bottom:calc(92px + env(safe-area-inset-bottom)); }
+    #flash-slot .flash { margin-bottom:calc(98px + env(safe-area-inset-bottom)); }
+    /* On result screens the contextual actions replace the global tab
+       bar. That used to work by covering it: both were full-width and
+       docked to bottom:0, so the higher z-index hid the lower one. The
+       tab bar floats clear of the edge now, so painting over it no
+       longer hides it — it has to actually go. */
+    body:has(.results-actions) .tabbar { display:none; }
     .results-actions {
       position:fixed; left:0; right:0; bottom:0; z-index:45;
       padding:12px 16px calc(14px + env(safe-area-inset-bottom));

@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.110";
+export const BUILD = "2.9.111";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -6666,7 +6666,57 @@ function setActiveTab(name) {
   // a time, but both are always in the DOM.
   document.querySelectorAll(".tab, .topnav-btn").forEach((t) =>
     t.classList.toggle("active", t.dataset.tab === name));
+  moveTabSelection();
 }
+
+/**
+ * Put the sliding selection pill under the active tab.
+ *
+ * The pill is one element moved with a transform rather than a
+ * background on each tab, so it travels between tabs instead of
+ * blinking from one to the next (DESIGN.md 14.1).
+ *
+ * Measured rather than computed from a tab count: the bar is an
+ * auto-flow grid, so the browser already knows each tab's width and
+ * duplicating that arithmetic here would be a second copy of the rule
+ * to drift. Reads are clamped to one frame to keep this off the click
+ * path.
+ */
+let _tabMoveQueued = false;
+function moveTabSelection() {
+  if (_tabMoveQueued) return;
+  _tabMoveQueued = true;
+  requestAnimationFrame(() => {
+    _tabMoveQueued = false;
+    const bar = document.getElementById("tabbar");
+    if (!bar) return;
+    const active = bar.querySelector(".tab.active");
+    // Some screens aren't one of the four destinations — the library
+    // scan and the history list both set a tab name no tab carries. The
+    // pill would otherwise sit under whichever section was selected
+    // last, pointing at a screen you aren't on, so it goes away.
+    if (!active) { bar.classList.remove("has-selection"); return; }
+    // Hidden on desktop, and display:none gives every child zero width.
+    // Parking the pill at zero would animate it to the left edge the
+    // next time the bar appears, so leave the last known position.
+    if (!active.offsetWidth) return;
+    // Rects, not offsetLeft: that is measured from the offsetParent's
+    // border box in some engines and its padding box in others, and
+    // this bar has a border. Subtracting two rects has no such
+    // ambiguity. The 6px is the bar's padding, which is where the
+    // pill's own `left` already puts it.
+    const barBox = bar.getBoundingClientRect();
+    const tabBox = active.getBoundingClientRect();
+    bar.style.setProperty("--tab-w", `${tabBox.width}px`);
+    bar.style.setProperty("--tab-x", `${tabBox.left - barBox.left - 6}px`);
+    bar.classList.add("has-selection");
+  });
+}
+
+// Rotating the phone or resizing re-divides the pill, so the selection
+// has to be re-measured. Not debounced beyond the rAF gate above:
+// resize fires in bursts and each one collapses into the same frame.
+window.addEventListener("resize", moveTabSelection);
 
 (function initTabs() {
   document.addEventListener("click", (e) => {

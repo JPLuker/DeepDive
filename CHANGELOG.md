@@ -4,6 +4,35 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.111
+- The tab bar is a floating glass pill. It was a full-width bar docked
+  to the bottom edge with a hard 1px line above it, which DESIGN.md P2
+  ("float, don't fence") rules out and 14.1 replaces with a pill
+  floating 12–16px clear of the edges. It now sits 14px in on three
+  sides, on glass with a hairline border and the inner top highlight
+  that fakes a glass edge.
+- The selection slides. One pill moved with a transform rather than a
+  background appearing on each tab, so it travels between sections
+  instead of blinking from one to the next. Position and width are
+  measured from the rendered tabs rather than divided by a tab count,
+  so there is no second copy of the grid arithmetic to drift.
+- The pill goes away on screens that aren't one of the four
+  destinations. The library scan and history list both set a section
+  name no tab carries, which would have left the selection parked under
+  whichever section was chosen last.
+- Opaque fallbacks for no `backdrop-filter` and for
+  `prefers-reduced-transparency`, and the slide stops for
+  `prefers-reduced-motion`. DESIGN.md 6.4 requires the first two.
+- Results screens hide the tab bar rather than covering it. The
+  contextual action dock used to replace it by overlapping — both were
+  full-width on `bottom:0`, so the higher z-index hid the lower one. A
+  floating pill sits inside the screen, so it had to actually go.
+- Removed `.dive-bar` and `body.diving` from both stylesheets. Neither
+  has done anything since the dive became full-screen: no element with
+  that class is ever rendered and nothing sets that body class. I had
+  already adjusted both their offsets for the new pill before noticing
+  I was maintaining dead code.
+
 ## 2.9.110
 - Settings → About. The app had no About section: the version sat in a
   monospace line at the bottom of the page, the licence was reachable
