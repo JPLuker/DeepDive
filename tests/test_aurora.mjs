@@ -96,7 +96,7 @@ check('text fields keep a hairline border', /input\[type=text\], input\[type=pas
 for (const sel of ['.modal', '#flash-slot .flash']) {
   const i = shell.indexOf('\n  ' + sel + ' {');
   const rule = i > -1 ? shell.slice(i, shell.indexOf('}', i)) : '';
-  check(`${sel} is thick glass`, /background:var\(--glass-thick\)/.test(rule));
+  check(`${sel} is thick glass`, /background:var\(--glass-thick-bg\)/.test(rule));
   check(`${sel} blurs what is behind it`, /backdrop-filter:blur\(var\(--glass-thick-blur\)\)/.test(rule));
   check(`${sel} has a hairline, not a hard border`, /border:1px solid var\(--hairline\)/.test(rule));
 }
@@ -105,10 +105,39 @@ for (const sel of ['.modal', '#flash-slot .flash']) {
 {
   const light = shell.slice(shell.indexOf(':root {'), shell.indexOf(':root[data-theme="dark"]'));
   const dark = shell.slice(shell.indexOf(':root[data-theme="dark"]'));
-  for (const t of ['--glass:', '--glass-thick:', '--hairline:', '--glass-highlight:', '--glass-shadow:', '--accent-soft-fill:']) {
+  for (const t of ['--glass-bg:', '--glass-thick-bg:', '--hairline:', '--glass-highlight:', '--glass-shadow:', '--accent-soft-fill:']) {
     check(`${t} is defined for light`, light.includes(t));
     check(`${t} is redefined for dark`, dark.includes(t));
   }
+}
+
+// --- Part 20: the radius scale --------------------------------------
+// Renamed from --radius-* in 2.9.114 so the scale matches the standard
+// and every other project. Both stylesheets, because they are separate
+// files and a token that exists in one and not the other fails silently
+// as an invalid custom property.
+{
+  const landing = readFileSync(new URL('../docs/index.html', import.meta.url), 'utf8');
+  for (const [name, value] of [['--r-xs', '6px'], ['--r-sm', '10px'], ['--r-md', '14px'],
+                               ['--r-lg', '20px'], ['--r-xl', '28px'], ['--r-2xl', '36px'],
+                               ['--r-pill', '9999px']]) {
+    check(`${name} is ${value} in the app`, shell.includes(`${name}:${value}`));
+    check(`${name} is ${value} on the landing page`, landing.includes(`${name}:${value}`));
+  }
+  check('no --radius-* references left in the app', !/var\(--radius/.test(shell));
+  check('nor on the landing page', !/var\(--radius/.test(landing));
+  // --r-lg was 22px, which is not a value on the scale at all.
+  check('--r-lg is on the scale, not 22px', !/--r-lg:22px/.test(shell) && !/--r-lg:22px/.test(landing));
+  // Every radius in use should name a token or be a deliberate shape
+  // (50% for a circle, 999px inside a shorthand, 0 to square a corner).
+  const literals = [...shell.matchAll(/border-radius:([^;}]+)/g)]
+    .map((m) => m[1].trim())
+    .filter((v) => !v.includes('var(--r-') && !/^(?:50%|0|999px)$/.test(v));
+  // Nine were hard-coded: thin bars at 2-4px (pills, said plainly
+  // now), two album thumbnails at 8px sitting beside a 10px tile
+  // token, a 112px cover at 12px, two icon buttons at 8px (7.2 is
+  // pill-first for controls) and an inline code chip at 4px.
+  check('every radius names a token', literals.length === 0);
 }
 
 // --- 14.3: touch targets --------------------------------------------

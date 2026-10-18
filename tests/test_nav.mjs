@@ -147,8 +147,8 @@ check('mix cards start at the top', /\.pcard \{[\s\S]{0,120}justify-content:flex
   const mob = h;
   check('the floating rule is the one being read', /position:fixed/.test(bar) && !/display:none/.test(bar));
   check('the bar floats clear of every edge', /left:14px; right:14px; bottom:calc\(14px \+ env\(safe-area-inset-bottom\)\)/.test(bar));
-  check('it is a pill', /border-radius:var\(--radius-pill\)/.test(bar));
-  check('it is glass, not a tinted bar', /background:var\(--glass\)/.test(bar) && /saturate\(160%\)/.test(bar));
+  check('it is a pill', /border-radius:var\(--r-pill\)/.test(bar));
+  check('it is glass, not a tinted bar', /background:var\(--glass-bg\)/.test(bar) && /saturate\(160%\)/.test(bar));
   check('the hard top border is gone', !/border-top:/.test(bar));
   check('it has a hairline, not a line', /border:1px solid var\(--hairline\)/.test(bar));
   check('and a shadow with the glass edge highlight', /box-shadow:var\(--glass-shadow\), var\(--glass-highlight\)/.test(bar));

@@ -58,18 +58,23 @@
     --accent-gradient:linear-gradient(180deg,var(--accent-top),var(--accent-bottom));
     --field:#FFF;
     --bg:#FAFAFA; --tile:#F2F2F3; --tile-hover:#EAEAEC;
-    --radius:14px; --radius-lg:22px; --radius-pill:999px;
-    --radius-tile:10px;
+    /* Radius scale, Part 20. Named --r-* rather than --radius-* so the
+       scale matches the standard and the rest of the projects.
+       --r-lg was 22px, which is not on the scale; it is 20px now. The
+       three unused members are declared so the concentric rule has
+       something to reach for rather than a hand-written calc. */
+    --r-xs:6px; --r-sm:10px; --r-md:14px; --r-lg:20px;
+    --r-xl:28px; --r-2xl:36px; --r-pill:9999px;
     /* Glass (DESIGN.md 6.1), light values. One tier is in use so far:
        the tab pill. --hairline is the border all glass shares; it is
        deliberately lighter than --line, which is for hard edges on
        Surface and is being removed from most places. */
-    --glass:rgba(255,255,255,.62); --glass-blur:24px;
+    --glass-bg:rgba(255,255,255,.62); --glass-blur:24px;
     --glass-highlight:inset 0 1px 0 rgba(255,255,255,.55);
     --hairline:rgba(10,10,10,0.08);
     --glass-shadow:0 8px 28px rgba(10,10,10,.14), 0 2px 8px rgba(10,10,10,.08);
     --accent-soft-fill:color-mix(in srgb, var(--accent) 14%, transparent);
-    --glass-thick:rgba(255,255,255,.80); --glass-thick-blur:32px;
+    --glass-thick-bg:rgba(255,255,255,.80); --glass-thick-blur:32px;
     --overlay-shadow:0 24px 60px rgba(10,10,10,.22), 0 4px 16px rgba(10,10,10,.10);
     /* Desktop rail width and content measure; used by the min-width
        blocks below and overridden at the widest breakpoint. */
@@ -94,7 +99,7 @@
     --field:#1C1E23;
     --accent-top:#2FB6FF; --accent-bottom:#3B5BFF; --accent:#3E7BFF;
     --tile:#16181D; --tile-hover:#1F222A;
-    --glass:rgba(26,30,46,.62);
+    --glass-bg:rgba(26,30,46,.62);
     --glass-highlight:inset 0 1px 0 rgba(255,255,255,.10);
     --hairline:rgba(255,255,255,0.08);
     --glass-shadow:0 8px 28px rgba(0,0,0,.44), 0 2px 8px rgba(0,0,0,.30);
@@ -102,7 +107,7 @@
        near-black reads as a smudge, and the accent is already carrying
        the selected icon and label. */
     --accent-soft-fill:rgba(255,255,255,.09);
-    --glass-thick:rgba(22,26,40,.82);
+    --glass-thick-bg:rgba(22,26,40,.82);
     --overlay-shadow:0 24px 60px rgba(0,0,0,.60), 0 4px 16px rgba(0,0,0,.40);
   }
   /* Reserve the scrollbar's width on both sides, so a centred layout
@@ -153,12 +158,12 @@
   .nav-back svg:first-child { width:18px; height:18px; }
   .nav-drawer.open { transform:translateX(0); }
   .nav-drawer-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
-  .nav-link { display:flex; align-items:center; gap:12px; padding:13px 12px; border-radius:var(--radius); text-decoration:none; color:var(--ink); font-weight:600; font-size:15px; background:none; border:none; width:100%; text-align:left; cursor:pointer; font-family:inherit; }
+  .nav-link { display:flex; align-items:center; gap:12px; padding:13px 12px; border-radius:var(--r-md); text-decoration:none; color:var(--ink); font-weight:600; font-size:15px; background:none; border:none; width:100%; text-align:left; cursor:pointer; font-family:inherit; }
   .nav-link:hover { background:var(--surface); }
   .nav-link svg { width:20px; height:20px; flex-shrink:0; }
   .nav-divider { height:1px; background:var(--line); margin:10px 4px; }
   .theme-toggle { display:flex; gap:6px; padding:0 12px 4px; }
-  .theme-opt { flex:1; font-family:'Geist',sans-serif; font-size:12.5px; font-weight:600; padding:9px 4px; border-radius:var(--radius-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
+  .theme-opt { flex:1; font-family:'Geist',sans-serif; font-size:12.5px; font-weight:600; padding:9px 4px; border-radius:var(--r-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
   .theme-opt:hover { background:var(--tile-hover); color:var(--ink); }
   .theme-opt.active { background:var(--accent); color:#fff; border-color:transparent; }
 
@@ -175,21 +180,21 @@
   .set-switch input:focus-visible + .switch-track { outline:2px solid var(--ink); outline-offset:2px; }
 
   .nav-settings { padding:0 12px 4px; }
-  .nav-input { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; padding:9px 10px; border-radius:var(--radius); border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%; }
-  .nav-uri { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; color:var(--muted); background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:8px 10px; word-break:break-all; line-height:1.45; }
+  .nav-input { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; padding:9px 10px; border-radius:var(--r-md); border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%; }
+  .nav-uri { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; color:var(--muted); background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); padding:8px 10px; word-break:break-all; line-height:1.45; }
   .nav-hint { font-size:13px; color:var(--muted-soft); line-height:1.45; margin:9px 0 0; }
 
-  .flash { max-width:760px; margin:0 auto 20px; padding:12px 16px; background:var(--gold-soft); border:1px solid var(--gold); color:var(--ink); border-radius:var(--radius); font-size:14px; }
+  .flash { max-width:760px; margin:0 auto 20px; padding:12px 16px; background:var(--gold-soft); border:1px solid var(--gold); color:var(--ink); border-radius:var(--r-md); font-size:14px; }
   .flash.error { background:#fbe9e7; border-color:var(--danger); }
 
-  .card { background:var(--paper); border:none; border-radius:var(--radius-lg); padding:28px; margin-top:20px; }
+  .card { background:var(--paper); border:none; border-radius:var(--r-lg); padding:28px; margin-top:20px; }
   h1,h2,h3 { font-family:'Geist',sans-serif; font-weight:700; margin:0 0 12px; line-height:1.15; letter-spacing:-0.01em; }
   h1 { font-size:26px; } h2 { font-size:18px; }
   p { line-height:1.55; }
   .muted { color:var(--muted); }
   .mono { font-family:'Geist Mono', ui-monospace, monospace; }
 
-  .btn { display:inline-flex; align-items:center; gap:8px; font-family:'Geist',sans-serif; font-weight:600; font-size:14px; padding:12px 22px; border-radius:var(--radius-pill); border:1.5px solid var(--ink); cursor:pointer; text-decoration:none; background:none; }
+  .btn { display:inline-flex; align-items:center; gap:8px; font-family:'Geist',sans-serif; font-weight:600; font-size:14px; padding:12px 22px; border-radius:var(--r-pill); border:1.5px solid var(--ink); cursor:pointer; text-decoration:none; background:none; }
   .btn-primary { background:var(--accent); color:#fff; border-color:transparent; }
   .btn-primary:hover { filter:brightness(0.92); }
   .btn-ghost { background:var(--tile); border:none; color:var(--ink); }
@@ -197,7 +202,7 @@
   .btn-small { padding:7px 12px; font-size:12.5px; }
   .btn:disabled { opacity:0.5; cursor:default; }
 
-  input[type=text], input[type=password] { font-family:'Geist',sans-serif; font-size:16px; padding:13px 14px; border-radius:var(--radius); border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%; }
+  input[type=text], input[type=password] { font-family:'Geist',sans-serif; font-size:16px; padding:13px 14px; border-radius:var(--r-md); border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%; }
   input:focus, button:focus, a:focus, select:focus { outline:2px solid var(--ink); outline-offset:2px; }
   .search-row { display:flex; gap:10px; margin-top:20px; } .search-row input { flex:1; }
 
@@ -222,7 +227,7 @@
      left edge, the whole row a hit target for its checkbox. */
   .track-row {
     display:flex; align-items:center; gap:12px;
-    background:var(--tile); border:none; border-radius:var(--radius-tile);
+    background:var(--tile); border:none; border-radius:var(--r-sm);
     overflow:hidden; margin-bottom:6px; min-height:56px;
     cursor:pointer; transition:background .15s ease;
     position:relative; width:100%; text-align:left; font-family:inherit; color:var(--ink); padding:0;
@@ -252,7 +257,7 @@
 
   .pill-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
   .pill-wrap { position:relative; }
-  .pill { display:inline-flex; align-items:center; gap:6px; font-family:'Geist',sans-serif; font-size:13px; font-weight:500; padding:8px 14px; border-radius:var(--radius-pill); border:none; background:var(--tile); color:var(--ink); cursor:pointer; }
+  .pill { display:inline-flex; align-items:center; gap:6px; font-family:'Geist',sans-serif; font-size:13px; font-weight:500; padding:8px 14px; border-radius:var(--r-pill); border:none; background:var(--tile); color:var(--ink); cursor:pointer; }
   .pill:hover { background:var(--tile-hover); }
   .pill-avatar { width:20px; height:20px; border-radius:50%; object-fit:cover; margin-right:2px; vertical-align:middle; background:var(--surface); }
   .pill-icon-btn { position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:var(--accent); color:var(--paper); border:1.5px solid var(--paper); display:none; align-items:center; justify-content:center; font-size:13px; line-height:1; cursor:pointer; padding:0; }
@@ -280,10 +285,10 @@
 
   /* Skeletons while suggestions load. An empty area reads as broken;
      a placeholder in the shape of the answer reads as working. */
-  .tile-skeleton { display:flex; align-items:center; gap:12px; background:var(--tile); border-radius:var(--radius-tile); min-height:56px; overflow:hidden; }
+  .tile-skeleton { display:flex; align-items:center; gap:12px; background:var(--tile); border-radius:var(--r-sm); min-height:56px; overflow:hidden; }
   .sk-art { width:56px; height:56px; flex-shrink:0; background:var(--surface); }
   .sk-lines { flex:1; display:flex; flex-direction:column; gap:6px; padding-right:14px; }
-  .sk-line { height:9px; border-radius:4px; background:var(--surface); }
+  .sk-line { height:9px; border-radius:var(--r-pill); background:var(--surface); }
   .sk-line.short { width:45%; height:7px; }
   .tile-skeleton, .sk-art, .sk-line { animation:sk-pulse 1.4s ease-in-out infinite; }
   @keyframes sk-pulse { 0%,100% { opacity:1; } 50% { opacity:0.55; } }
@@ -319,7 +324,7 @@
      glance, and the same colours key the rows below. */
   .results-stats { display:flex; flex-wrap:wrap; gap:6px; margin:0; }
   .results-stat {
-    font-size:12px; font-weight:600; padding:4px 9px; border-radius:var(--radius-pill);
+    font-size:12px; font-weight:600; padding:4px 9px; border-radius:var(--r-pill);
     background:rgba(255,255,255,0.14); color:#fff;
     backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   }
@@ -341,7 +346,7 @@
   .results-actions {
     position:fixed; left:0; right:0; bottom:0; z-index:35;
     padding:12px 16px calc(14px + env(safe-area-inset-bottom));
-    background:var(--glass);
+    background:var(--glass-bg);
     backdrop-filter:blur(var(--glass-blur)) saturate(160%);
     -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(160%);
     border-top:1px solid var(--hairline);
@@ -358,7 +363,7 @@
   .tile-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
   .tile {
     display:flex; align-items:center; gap:12px;
-    background:var(--tile); border:none; border-radius:var(--radius-tile);
+    background:var(--tile); border:none; border-radius:var(--r-sm);
     overflow:hidden; cursor:pointer; text-align:left; font-family:inherit;
     color:var(--ink); padding:0; min-height:56px;
     transition:background .15s ease;
@@ -383,7 +388,7 @@
   .tile-more {
     position:absolute; right:6px; top:50%; transform:translateY(-50%);
     background:none; border:none; cursor:pointer; padding:6px;
-    color:var(--muted-soft); display:block; border-radius:8px; z-index:2;
+    color:var(--muted-soft); display:block; border-radius:var(--r-pill); z-index:2;
   }
   .tile-more:hover { color:var(--ink); background:var(--tile-hover); }
   .tile-more svg { width:16px; height:16px; display:block; }
@@ -424,7 +429,7 @@
     position:relative; overflow:hidden;
     display:flex; flex-direction:column; justify-content:flex-start; gap:3px;
     min-height:104px; padding:14px;
-    border:none; border-radius:var(--radius); cursor:pointer;
+    border:none; border-radius:var(--r-md); cursor:pointer;
     text-align:left; font-family:inherit; color:#fff;
     background:var(--tile);
     transition:transform .14s ease, filter .14s ease;
@@ -467,7 +472,7 @@
   .pcard-text { display:contents; }
 
   .card-len { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:4px; }
-  .len-opt { font-family:inherit; font-size:13px; padding:8px 13px; border-radius:var(--radius-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
+  .len-opt { font-family:inherit; font-size:13px; padding:8px 13px; border-radius:var(--r-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
   .len-opt:hover { background:var(--tile-hover); color:var(--ink); }
   .len-opt.active { background:var(--accent); color:#fff; border-color:transparent; }
 
@@ -477,7 +482,7 @@
 
   .sort-row { display:flex; align-items:center; gap:10px; margin:4px 0 14px; }
   .sort-row label { font-size:13px; color:var(--muted); }
-  .sort-select { font-family:'Geist',sans-serif; font-size:13px; padding:8px 10px; border-radius:var(--radius-pill); border:1px solid var(--hairline); background:var(--field); color:var(--ink); }
+  .sort-select { font-family:'Geist',sans-serif; font-size:13px; padding:8px 10px; border-radius:var(--r-pill); border:1px solid var(--hairline); background:var(--field); color:var(--ink); }
 
   /* Filled rows rather than a bordered list — the same treatment track
      rows and settings rows got. The actions stay visible: unlike a tile,
@@ -533,7 +538,7 @@
     grid-template-columns:repeat(auto-fill, minmax(min(340px, 100%), 1fr));
   }
   .crate-tile {
-    position:relative; background:var(--tile); border-radius:var(--radius-tile);
+    position:relative; background:var(--tile); border-radius:var(--r-sm);
     display:flex; align-items:center; gap:8px; padding:8px 10px 8px 8px;
     min-width:0;
   }
@@ -543,7 +548,7 @@
     padding:0; cursor:pointer; font:inherit;
   }
   .crate-art {
-    flex:0 0 auto; width:52px; height:52px; border-radius:8px;
+    flex:0 0 auto; width:52px; height:52px; border-radius:var(--r-sm);
     object-fit:cover; display:block; background:var(--surface);
   }
   .crate-art-blank {
@@ -564,7 +569,7 @@
 
   /* The question after a playlist: done with this artist, or not. */
   .action-result-upnext {
-    margin:14px 0 4px; padding:12px 14px; border-radius:var(--radius);
+    margin:14px 0 4px; padding:12px 14px; border-radius:var(--r-md);
     background:var(--tile); font-size:13.5px;
   }
   .action-result-upnext p { margin:0 0 10px; color:var(--ink); }
@@ -589,7 +594,7 @@
   .show-hero { display:flex; gap:16px; align-items:center; margin:4px 0 18px; }
   .show-cover {
     position:relative; flex:0 0 auto; width:112px; aspect-ratio:1;
-    border-radius:12px; overflow:hidden;
+    border-radius:var(--r-md); overflow:hidden;
     background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 45%, var(--surface)), var(--surface));
     box-shadow:0 10px 26px rgba(0,0,0,0.4);
   }
@@ -608,11 +613,11 @@
 
   .bill-row {
     display:flex; align-items:center; gap:10px;
-    background:var(--tile); border-radius:var(--radius-tile);
+    background:var(--tile); border-radius:var(--r-sm);
     padding:8px 8px 8px 6px; margin-bottom:6px;
   }
   .bill-art {
-    flex:0 0 auto; width:48px; height:48px; border-radius:8px;
+    flex:0 0 auto; width:48px; height:48px; border-radius:var(--r-sm);
     object-fit:cover; display:block; background:var(--surface);
   }
   .bill-art-blank {
@@ -627,7 +632,7 @@
   .bill-actions .bill-btn { width:36px; height:36px; font-size:14px; }
 
   .show-settings {
-    background:var(--tile); border-radius:var(--radius-tile);
+    background:var(--tile); border-radius:var(--r-sm);
     margin:22px 0 0; padding:4px 14px;
   }
   .show-setting {
@@ -699,7 +704,7 @@
 
   .watchlist-row {
     display:flex; align-items:center; justify-content:space-between; gap:12px;
-    background:var(--tile); border-radius:var(--radius-tile);
+    background:var(--tile); border-radius:var(--r-sm);
     padding:12px 14px; margin-bottom:6px;
   }
   .watchlist-row.watchlist-done .watchlist-name { color:var(--muted-soft); text-decoration:line-through; }
@@ -717,18 +722,18 @@
   .playlist-name-field { margin:28px 0 20px; }
   .playlist-name-field label { display:block; font-size:13px; color:var(--muted); margin-bottom:7px; }
 
-  .progress-track { background:var(--surface); border-radius:var(--radius-pill); height:10px; overflow:hidden; margin:28px 0 12px; }
-  .progress-fill { height:100%; background:var(--accent-gradient); border-radius:var(--radius-pill); width:0%; transition:width .35s; }
+  .progress-track { background:var(--surface); border-radius:var(--r-pill); height:10px; overflow:hidden; margin:28px 0 12px; }
+  .progress-fill { height:100%; background:var(--accent-gradient); border-radius:var(--r-pill); width:0%; transition:width .35s; }
   .progress-meta { display:flex; justify-content:space-between; align-items:baseline; font-family:'Geist Mono', ui-monospace, monospace; font-size:12.5px; color:var(--muted); }
   .progress-stage { font-size:15px; color:var(--ink); margin-top:18px; min-height:22px; }
 
-  code.env { background:var(--surface); padding:2px 6px; border-radius:4px; font-family:'Geist Mono', ui-monospace, monospace; font-size:13px; }
+  code.env { background:var(--surface); padding:2px 6px; border-radius:var(--r-xs); font-family:'Geist Mono', ui-monospace, monospace; font-size:13px; }
 
   .search-shell { position:relative; max-width:620px; margin:0 auto; }
   /* A filled field rather than a 2.5px outline. Heavy borders are the
      single most dated thing in an interface like this; modern apps use
      a raised surface and let focus do the signalling. */
-  .search-pill-form { display:flex; align-items:center; gap:8px; border:1px solid transparent; border-radius:var(--radius); padding:7px 8px 7px 18px; background:var(--surface); transition:border-color .15s ease, background .15s ease; }
+  .search-pill-form { display:flex; align-items:center; gap:8px; border:1px solid transparent; border-radius:var(--r-md); padding:7px 8px 7px 18px; background:var(--surface); transition:border-color .15s ease, background .15s ease; }
   .search-pill-form:focus-within { border-color:var(--accent); background:var(--paper); }
   .search-pill-form input[type=text] { border:none; padding:10px 0; font-size:16px; }
   .search-pill-form input[type=text]:focus { outline:none; }
@@ -737,14 +742,14 @@
   .settings-icon-btn:hover { background:var(--tile-hover); }
   .search-icon-btn svg, .settings-icon-btn svg { width:20px; height:20px; }
 
-  .autofill-list { position:absolute; top:calc(100% + 8px); left:8px; right:8px; background:var(--paper); border:1.5px solid var(--ink); border-radius:var(--radius); overflow:hidden; z-index:20; display:none; }
+  .autofill-list { position:absolute; top:calc(100% + 8px); left:8px; right:8px; background:var(--paper); border:1.5px solid var(--ink); border-radius:var(--r-md); overflow:hidden; z-index:20; display:none; }
   .autofill-list.open { display:block; }
   .autofill-item { display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; font-size:14px; border-bottom:1px solid var(--hairline); }
   .autofill-item:last-child { border-bottom:none; }
   .autofill-item:hover, .autofill-item.active { background:var(--surface); }
   .autofill-item img { width:24px; height:24px; border-radius:50%; object-fit:cover; background:var(--surface); }
 
-  .settings-panel { position:absolute; top:calc(100% + 8px); right:0; width:300px; background:var(--paper); border:1.5px solid var(--ink); border-radius:var(--radius); padding:16px; z-index:25; display:none; }
+  .settings-panel { position:absolute; top:calc(100% + 8px); right:0; width:300px; background:var(--paper); border:1.5px solid var(--ink); border-radius:var(--r-md); padding:16px; z-index:25; display:none; }
   .settings-panel.open { display:block; }
   .settings-panel-title { font-size:13px; font-weight:500; color:var(--muted); margin-bottom:10px; }
 
@@ -758,12 +763,12 @@
   /* Layer 4. A 1.5px hard border on an opaque panel was the heaviest
      edge in the app; thick glass carries the separation instead. */
   .modal {
-    background:var(--glass-thick);
+    background:var(--glass-thick-bg);
     backdrop-filter:blur(var(--glass-thick-blur)) saturate(160%);
     -webkit-backdrop-filter:blur(var(--glass-thick-blur)) saturate(160%);
     border:1px solid var(--hairline);
     box-shadow:var(--overlay-shadow), var(--glass-highlight);
-    border-radius:var(--radius-lg); padding:26px;
+    border-radius:var(--r-lg); padding:26px;
     width:min(520px,100%); max-height:88vh; overflow-y:auto;
     /* Roughly where the search bar sits, so the choices appear under
        the thing that produced them. */
@@ -819,7 +824,7 @@
   .intent-choice {
     display:grid; grid-template-columns:18px 1fr; align-items:center;
     column-gap:14px; row-gap:2px; text-align:left;
-    background:var(--tile); border:none; border-radius:var(--radius);
+    background:var(--tile); border:none; border-radius:var(--r-md);
     padding:14px 16px; cursor:pointer; font-family:inherit; color:var(--ink);
     width:100%; transition:background .15s ease;
   }
@@ -836,7 +841,7 @@
     display:flex; flex-direction:column; gap:3px; width:18px;
   }
   .intent-depth i {
-    display:block; height:3px; border-radius:2px;
+    display:block; height:3px; border-radius:var(--r-pill);
     background:var(--line); transition:background .15s ease;
   }
   /* Two rungs: Dip is one, Dive is both. Multi-Dip was the middle rung
@@ -881,7 +886,7 @@
   .diag-table { width:100%; border-collapse:collapse; font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; }
   .diag-table td { padding:3px 0; border-bottom:1px solid var(--hairline); }
 
-  .intent-warning { display:flex; gap:10px; align-items:flex-start; margin-top:16px; padding:13px 15px; border-radius:var(--radius); background:var(--gold-soft); border:1px solid var(--gold); font-size:12.8px; line-height:1.5; color:var(--ink); }
+  .intent-warning { display:flex; gap:10px; align-items:flex-start; margin-top:16px; padding:13px 15px; border-radius:var(--r-md); background:var(--gold-soft); border:1px solid var(--gold); font-size:12.8px; line-height:1.5; color:var(--ink); }
   .intent-warning.hidden { display:none; }
   .intent-warning svg { width:17px; height:17px; flex-shrink:0; margin-top:1px; color:var(--gold); }
   .modal-actions { display:flex; gap:10px; align-items:center; margin-top:22px; flex-wrap:wrap; }
@@ -895,7 +900,7 @@
   .bmc-link {
     display:inline-flex; align-items:center; gap:9px;
     font-family:'Geist',sans-serif; font-size:13.5px; font-weight:600;
-    padding:10px 20px; border-radius:var(--radius-pill);
+    padding:10px 20px; border-radius:var(--r-pill);
     border:none; background:var(--tile);
     color:var(--muted); text-decoration:none;
     transition:color .15s ease, background .15s ease;
@@ -919,7 +924,7 @@
   .onboard-top { display:flex; justify-content:flex-end; margin:0 0 8px; }
   .onboard-step { font-size:12.5px; font-weight:600; color:var(--muted); letter-spacing:0.02em; }
   .onboard-dots { display:flex; gap:6px; margin:0 0 26px; }
-  .onboard-dots i { flex:1; height:4px; border-radius:2px; background:var(--line); }
+  .onboard-dots i { flex:1; height:4px; border-radius:var(--r-pill); background:var(--line); }
   .onboard-dots i.on { background:var(--accent); }
   .onboard-title { font-size:26px; margin:0 0 10px; letter-spacing:-0.02em; }
   .onboard-hero {
@@ -934,7 +939,7 @@
   .onboard-list li + li { margin-top:8px; }
   .onboard-copy {
     display:flex; align-items:center; gap:10px;
-    background:var(--tile); border-radius:var(--radius-tile); padding:10px 10px 10px 14px;
+    background:var(--tile); border-radius:var(--r-sm); padding:10px 10px 10px 14px;
   }
   .onboard-copy code {
     flex:1 1 auto; min-width:0; font-size:13px; overflow-x:auto; white-space:nowrap;
@@ -945,7 +950,7 @@
   .onboard-field span { font-size:12.5px; font-weight:600; color:var(--muted); }
   .onboard-field input {
     font-family:'Geist Mono', ui-monospace, monospace; font-size:15px;
-    padding:13px 14px; border-radius:var(--radius-tile);
+    padding:13px 14px; border-radius:var(--r-sm);
     border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%;
   }
   .onboard-check { min-height:1.4em; font-size:13px; margin:8px 0 0; color:var(--muted); }
@@ -958,7 +963,7 @@
   .onboard-welcome, .onboard-connect { text-align:center; }
   .onboard-welcome .onboard-lede, .onboard-connect .onboard-lede { max-width:440px; margin-left:auto; margin-right:auto; }
   .onboard-process {
-    background:var(--tile); border-radius:var(--radius-tile); padding:14px 16px;
+    background:var(--tile); border-radius:var(--r-sm); padding:14px 16px;
     margin:22px 0 0; text-align:left;
   }
   .onboard-process p { margin:0; font-size:14px; line-height:1.55; color:var(--muted); }
@@ -986,7 +991,7 @@
   .topnav { display:none; }
   .topnav-btn {
     background:none; border:none; cursor:pointer; padding:7px 12px;
-    border-radius:var(--radius-pill); color:var(--muted);
+    border-radius:var(--r-pill); color:var(--muted);
     font-family:inherit; font-size:13.5px; font-weight:600; letter-spacing:-0.01em;
   }
   .topnav-btn:hover { color:var(--ink); background:var(--tile); }
@@ -1025,7 +1030,7 @@
   }
   .action-result-card {
     background:var(--paper); color:var(--ink);
-    border-radius:var(--radius-lg); padding:26px 24px 20px;
+    border-radius:var(--r-lg); padding:26px 24px 20px;
     width:min(420px, 100%); box-shadow:0 18px 50px rgba(0,0,0,0.45);
   }
   .action-result-head { font-size:21px; font-weight:700; letter-spacing:-0.02em; }
@@ -1038,7 +1043,7 @@
      it the row simply came back short and nothing said why. */
   .api-banner {
     margin:0 0 18px; padding:14px 16px;
-    border:1px solid var(--danger); border-radius:var(--radius);
+    border:1px solid var(--danger); border-radius:var(--r-md);
     background:color-mix(in srgb, var(--danger) 12%, transparent);
   }
   .api-banner-head { font-weight:700; font-size:14.5px; letter-spacing:-0.01em; }
@@ -1052,14 +1057,14 @@
   /* Small icon buttons in a row heading — refresh, random. */
   .row-icon {
     background:none; border:none; cursor:pointer; padding:4px;
-    color:var(--muted-soft); display:flex; align-items:center; border-radius:8px;
+    color:var(--muted-soft); display:flex; align-items:center; border-radius:var(--r-pill);
   }
   .row-icon:hover { color:var(--ink); background:var(--tile); }
   .row-icon svg { width:16px; height:16px; }
   .row-head .row-icon:first-of-type { margin-left:auto; }
   .row-head .row-more { margin-left:8px; }
 
-  .diag-verdict { margin-top:14px; padding:14px 16px; border-radius:var(--radius); border:1px solid var(--line); }
+  .diag-verdict { margin-top:14px; padding:14px 16px; border-radius:var(--r-md); border:1px solid var(--line); }
   .diag-verdict.is-good { border-color:var(--teal); background:var(--teal-soft); }
   .diag-verdict.is-bad { border-color:var(--gold); background:var(--gold-soft); }
   .diag-verdict-head { font-weight:700; font-size:15px; letter-spacing:-0.015em; }
@@ -1092,7 +1097,7 @@
   }
   .set-row {
     display:flex; align-items:center; gap:16px;
-    background:var(--tile); border-radius:var(--radius-tile);
+    background:var(--tile); border-radius:var(--r-sm);
     padding:14px 16px; margin-bottom:6px;
   }
   /* Where the control needs its own line rather than sitting alongside:
@@ -1138,7 +1143,7 @@
   .demo-artist-search { position:relative; width:100%; }
   .demo-artist-search .autofill-list { left:0; right:0; }
   .demo-artist-list { width:100%; display:grid; gap:7px; }
-  .demo-approved-artist { display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); }
+  .demo-approved-artist { display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface); }
   .demo-approved-artist img, .demo-approved-placeholder { width:30px; height:30px; border-radius:50%; object-fit:cover; background:var(--tile); display:grid; place-items:center; font-weight:700; }
   .demo-approved-artist span:nth-child(2) { flex:1; min-width:0; font-weight:600; }
   .demo-approved-artist button { border:0; background:none; color:var(--muted); font-size:22px; cursor:pointer; }
@@ -1173,7 +1178,7 @@
   /* Sampler intro: the artists it's about to fetch, so the page shows
      what it's going to do rather than describing it. */
   .sampler-faces { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0; }
-  .sampler-face { width:48px; height:48px; border-radius:var(--radius-tile); object-fit:cover; display:block; }
+  .sampler-face { width:48px; height:48px; border-radius:var(--r-sm); object-fit:cover; display:block; }
   .sampler-face-blank { display:flex; align-items:center; justify-content:center; background:var(--surface); color:var(--muted); font-weight:600; }
   .btn-danger { background:var(--danger); color:#fff; }
 
@@ -1192,11 +1197,11 @@
   #flash-slot { position:fixed; left:0; right:0; bottom:0; z-index:60; pointer-events:none; display:flex; justify-content:center; }
   #flash-slot .flash {
     pointer-events:auto; margin:0 16px calc(18px + env(safe-area-inset-bottom));
-    background:var(--glass-thick); color:var(--ink);
+    background:var(--glass-thick-bg); color:var(--ink);
     backdrop-filter:blur(var(--glass-thick-blur)) saturate(160%);
     -webkit-backdrop-filter:blur(var(--glass-thick-blur)) saturate(160%);
     border:1px solid var(--hairline);
-    border-radius:var(--radius-pill); padding:12px 18px; font-size:13.5px;
+    border-radius:var(--r-pill); padding:12px 18px; font-size:13.5px;
     box-shadow:var(--overlay-shadow), var(--glass-highlight); max-width:min(460px,calc(100vw - 32px));
     animation:toast-in .18s ease;
   }
@@ -1297,8 +1302,8 @@
       position:fixed; z-index:40;
       left:14px; right:14px; bottom:calc(14px + env(safe-area-inset-bottom));
       padding:6px;
-      border-radius:var(--radius-pill);
-      background:var(--glass);
+      border-radius:var(--r-pill);
+      background:var(--glass-bg);
       backdrop-filter:blur(var(--glass-blur)) saturate(160%);
       -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(160%);
       border:1px solid var(--hairline);
@@ -1319,7 +1324,7 @@
       top:6px; bottom:6px; left:6px;
       width:var(--tab-w, 0px);
       transform:translateX(var(--tab-x, 0px));
-      border-radius:var(--radius-pill);
+      border-radius:var(--r-pill);
       background:var(--accent-soft-fill);
       transition:transform .32s cubic-bezier(.32,.72,0,1), width .32s cubic-bezier(.32,.72,0,1);
     }
@@ -1329,7 +1334,7 @@
     .tab {
       display:flex; flex-direction:column; align-items:center; gap:3px;
       padding:8px 0 7px; background:none; border:none; cursor:pointer;
-      border-radius:var(--radius-pill);
+      border-radius:var(--r-pill);
       color:var(--muted); font-family:inherit; font-size:12px; font-weight:500;
       -webkit-tap-highlight-color:transparent;
       /* Above the sliding pill, which is painted on the bar itself. */
@@ -1423,7 +1428,7 @@
     .wordmark { font-size:19px; }
 
     h1 { font-size:22px; }
-    .card { padding:20px 16px; border-radius:var(--radius); }
+    .card { padding:20px 16px; border-radius:var(--r-md); }
 
     /* Search stays the priority; tighten it so the input keeps room. */
     .search-shell { margin:0 auto; }
@@ -1467,7 +1472,7 @@
     #intent-modal, #card-modal { align-items:flex-start; padding:0 10px; }
     #intent-modal .modal, #card-modal .modal {
       width:100%; margin-top:clamp(52px, 12vh, 132px);
-      border-radius:var(--radius-lg);
+      border-radius:var(--r-lg);
       padding:20px 18px;
       max-height:calc(100vh - clamp(52px, 12vh, 132px) - 24px);
       overflow-y:auto;
@@ -1476,7 +1481,7 @@
     /* Matches the phone padding above; without it the photo would stop
        short of the edges. */
     #intent-modal .intent-hero { margin:-20px -18px 0; height:180px; }
-    .modal { width:100%; max-height:92vh; border-radius:var(--radius-lg) var(--radius-lg) 0 0; padding:22px 18px calc(22px + env(safe-area-inset-bottom)); }
+    .modal { width:100%; max-height:92vh; border-radius:var(--r-lg) var(--r-lg) 0 0; padding:22px 18px calc(22px + env(safe-area-inset-bottom)); }
     .modal-actions { position:sticky; bottom:0; background:var(--paper); padding-top:14px; margin-top:18px; }
     /* Don't stretch every action to equal width: with three buttons
        that squeezed each label until it truncated. The primary action

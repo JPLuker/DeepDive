@@ -301,9 +301,35 @@ floating tab pill (2.9.111). Next in Phase 1, in this order:
   several places. Keep `--hairline` separate — it is the glass border,
   and merging the two is how the fencing returns.
 - **Seven ALL-CAPS labels → sentence case** (Part 9.3).
-- **Radius tokens `--radius-*` → `--r-*`** (Part 20). Mechanical and
-  wide; worth its own commit so the diff is reviewable.
-- **Type scale against Part 9.2.**
+- **Spacing onto the 4px grid** (Part 20, and 21.2 asks for it
+  explicitly). 244 of 441 padding/margin/gap values are off it; the
+  common ones are 10px, 14px, 6px and 18px. Held back from 2.9.114 on
+  purpose: it is a second layout-wide change and stacking it on
+  2.9.113's visual pass would make a device report impossible to
+  attribute. **Do it after Joseph has looked at 2.9.113.** Sub-4px
+  values (1, 1.5, 2, 3px) are hairlines and optical nudges, not
+  spacing — leave those.
+- **The landing page's dead stylesheet.** 175 of 209 styled classes
+  have no markup: it carries most of the app's CSS, from when it was
+  derived from the app. That premise is what `regen-app.sh` was built
+  on, and that script was deleted in 2.9.109 for being backwards.
+  Dead rules include the uppercase mono `.crate-header .label` and the
+  `.track-row::before` colour spine, both long gone from the app. This
+  needs its own session: ~160 rules, a live marketing page, and
+  CLAUDE.md's standing rule against cutting CSS with a line-based
+  regex. Remove by brace-matched rule, and compare a render before and
+  after.
+- **The accent colour — Joseph's decision, not a code change.**
+  Part 5.1 names one accent, `#6B5CF0` violet; DeepDive's is `#0B54FF`
+  blue, and it is in the logo, the landing page and all nine approved
+  screenshots. Part 22 is explicit: "Changing a core value (accent,
+  radius scale, font)? Change it here first, then in code. This file is
+  the source of truth." So either DeepDive adopts the standard's
+  accent, or `DESIGN.md` gains a per-project accent provision and
+  records blue. Nothing in the standard currently allows a project to
+  keep its own. **Don't change either repo without asking.**
+- **Type scale against Part 9.2.** The 12px floor landed in 2.9.113;
+  the scale itself (display/title-1/…/micro) has not been checked.
 - **Part 10 copy pass**, then the Part 21 self-review.
 
 Phases 2 to 6 are unchanged: repo furniture (`SECURITY.md`, issue

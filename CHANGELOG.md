@@ -4,6 +4,41 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.114
+- Radius tokens renamed to the Part 20 scale: `--radius` → `--r-md`,
+  `--radius-tile` → `--r-sm`, `--radius-pill` → `--r-pill`, and
+  `--radius-lg` → `--r-lg`. 80 references across both stylesheets. Two
+  of the old values already matched the scale exactly; `--r-lg` was
+  22px, which is not a value on the scale at all, and is 20px now.
+  `--r-xs`, `--r-xl` and `--r-2xl` are declared so the concentric rule
+  (7.3) has something to reach for.
+- Nine hard-coded radii put on the scale. Thin bars at 2–4px are pills
+  and say so now; two album thumbnails sat at 8px beside a 10px tile
+  token; a 112px cover was 12px; two icon buttons were 8px, where 7.2
+  is pill-first for controls; and an inline code chip was 4px. Every
+  radius in the app now names a token, which a test enforces.
+- The glass background tokens took their Part 20 names, `--glass-bg`
+  and `--glass-thick-bg`.
+- On the landing page, the device frames holding the screenshots moved
+  off 18px, which is also not on the scale.
+
+Two findings, neither fixed here and both recorded in `ROADMAP.md`:
+
+- **244 of 441 spacing values are off the 4px grid** (21.2 asks for all
+  of them to be on it). The common offenders are 10px, 14px, 6px and
+  18px. Not done in this build deliberately: it would be a second
+  layout-wide change stacked on 2.9.113, and if something looked wrong
+  on a device there would be no way to tell which pass caused it.
+- **175 of 209 styled classes on the landing page have no markup.** It
+  carries most of the app's stylesheet, left over from when it was
+  derived from the app — the premise behind the `regen-app.sh` that was
+  deleted in 2.9.109 for being backwards. Among the dead rules are the
+  uppercase mono `.crate-header .label` and the `.track-row::before`
+  colour spine, both removed from the app long ago. Deleting ~160 rules
+  from a live marketing page is not something to do blind, and
+  CLAUDE.md's standing rule is never to cut CSS with a line-based
+  regex.
+
 ## 2.9.113
 A real pass against Aurora Glass rather than the pill alone. The app had
 the pill buttons and the fills-over-outlines intent long before the
