@@ -4,6 +4,58 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.113
+A real pass against Aurora Glass rather than the pill alone. The app had
+the pill buttons and the fills-over-outlines intent long before the
+standard existed, which is exactly why the gap was easy to miss: it
+looked close enough, and it wasn't.
+
+- **Gradients are no longer control fills.** Seven elements used
+  `--accent-gradient` as a fill, including every primary button — the
+  most prominent thing on screen. Part 19 bans gradient fills on
+  buttons and P3 is "light behind, not on"; 14.3 says primary is a
+  solid accent. The two remaining uses are the progress and dive
+  track fills, which are not controls and are not in Part 19's list.
+- **Thirteen controls carried 1.5px outlines.** Heavier than the
+  hairline the standard permits anywhere, and "outlined-everything" is
+  a Part 19 anti-pattern. Buttons, chips, segmented options, icon
+  buttons and the support link are filled surfaces now; text fields
+  keep a border as a hairline, which is what 14.6 asks for.
+  `.btn-ghost` became 14.3's *secondary* rather than its ghost: 61 call
+  sites, most of them real secondary actions like Export and Copy,
+  which would lose their affordance as bare text. The class name is now
+  a misnomer and renaming it is a mechanical change of its own.
+- **Overlays are glass.** The modal sat on an opaque panel behind a
+  1.5px border, the heaviest edge in the app. Modal and toast are
+  `glass-thick` with a hairline and the Part 20 overlay shadow, which
+  is what Part 4 layer 4 asks for. Toasts are pills now.
+- **No ALL-CAPS eyebrow labels.** Three live ones, all banned by 9.3.
+  The copy was already sentence case in the markup — the stylesheet was
+  shouting on its own, in mono at 0.08em tracking, which is most of
+  what still read as Flask-era. Two remain and both are the Martius
+  wordmark, which 9.3 reserves caps for.
+- **No hard section dividers.** Seven `1px solid var(--line)` rules
+  became space, per 21.2's "groups separated by space before lines".
+  The two in genuinely dense lists — the search dropdown and the
+  diagnostics table — kept a rule but moved to `--hairline`, which 14.8
+  allows.
+- **The 12px type floor.** Sixteen declarations were under it, the tab
+  labels at 10px and the build tag at 10.5px. 9.2 is "nothing below
+  12px, ever"; content metadata went to 13px, which is 21.2's bar for
+  readable text, and technical chrome to the 12px floor.
+- **Touch targets.** Icon buttons were 34px against 14.3's 36px floor,
+  and a narrower `.bill-actions .bill-btn` override had them at 30px.
+- The results action dock was fencing itself with a hard top border and
+  a flat tint, while the tab bar it replaces had already become glass.
+- Removed dead rules confirmed unreferenced from `app.js`: `.nav-sub`,
+  `.nav-field-label`, and the whole `.intent-opt` / `.intent-radio` /
+  `.intent-text` family from the superseded chooser.
+
+New `tests/test_aurora.mjs`, 52 checks, 38 of them confirmed failing
+against 2.9.112. What it cannot check is in `TESTING.md`: contrast on
+glass, whether a screen has one focal point, and whether the copy earns
+its place.
+
 ## 2.9.112
 - The dev build tag is back in the top bar, with its toggle. Removing it
   in 2.9.110 was wrong, and the reasoning was circular: the same change

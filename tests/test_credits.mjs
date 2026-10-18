@@ -28,7 +28,16 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   check('the licence is named, not just linked', /title: "Licence"/.test(about) && />MIT</.test(about));
   check('and points at the LICENSE file', /blob\/main\/LICENSE/.test(about));
   check('the source is linked', /github\.com\/JPLuker\/DeepDive"/.test(about));
-  check('it is readable, not hidden', /\.set-legal \{[^}]*font-size:11\.5px/.test(shell) && !/\.set-legal \{[^}]*display:none/.test(shell));
+  // Was pinned to 11.5px, which went stale the moment the type floor
+  // was applied (2.9.113 took it to 13px). The point was never the
+  // exact size — it was that the attribution is legible rather than
+  // hidden — so this asserts DESIGN.md 9.2's floor and 21.2's
+  // "readable text >= 13px" instead of a number that moves.
+  {
+    const rule = (shell.match(/\.set-legal \{[^}]*\}/) || [''])[0];
+    const px = parseFloat((rule.match(/font-size:([\d.]+)px/) || [0, 0])[1]);
+    check('it is readable, not hidden', px >= 13 && !/display:none/.test(rule));
+  }
 }
 
 // MAINTENANCE.md 1.2: people need to be told reports are read, and

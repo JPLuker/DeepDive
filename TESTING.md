@@ -531,6 +531,40 @@ No quota needed.
 - [ ] Export writes a file; Import reads one back
 - [ ] The attribution paragraph is still legible under About
 
+## 4j3. Aurora Glass pass (2.9.113)
+
+No quota needed. These are the parts of DESIGN.md that source-text
+assertions cannot see — `tests/test_aurora.mjs` covers the rest.
+
+- [ ] **Glass needs something behind it.** Scroll a screen with artwork
+      (Home, Mixes, the crate) and check the tab pill reads as frosted
+      rather than as a flat panel. On a sparse screen it will look
+      closer to a plain surface; say if it reads as flat, because the
+      fix is glass opacity, not the ambient layer (ruled out, 18 Oct)
+- [ ] Tab labels at 12px still fit four tabs without wrapping, on the
+      narrowest phone available
+- [ ] The selection pill slides between tabs rather than jumping, and
+      sits under the right tab after a rotation
+- [ ] It disappears on the library scan and history screens, which are
+      not one of the four destinations
+- [ ] Open a dive result: the action dock replaces the tab pill, with
+      no pill peeking out behind it
+- [ ] **Contrast on glass, both themes.** Text on the modal, the toast
+      and the tab pill, with artwork behind them. 6.2 is explicit that
+      this must hold against the worst case that can scroll past
+- [ ] Primary buttons are a solid accent, not a gradient — check one in
+      light and one in dark
+- [ ] Filled secondary buttons still read as buttons. This is the
+      change most likely to be wrong: `.btn-ghost` lost its outline and
+      is used in 61 places
+- [ ] Nothing reads as too small anywhere after the 12px floor, and
+      nothing that got bigger now wraps or overflows a row
+- [ ] Icon buttons at 36px are comfortable to hit on a phone
+- [ ] **One focal point per screen** (P1, 21.2). Each screen should have
+      exactly one primary action; flag any with two competing
+- [ ] Accent on roughly 8% of the screen or less (5.2), not more
+- [ ] Toasts are pills on glass and still legible over artwork
+
 ## 4k. Settings rework (2.8.16)
 
 No quota needed.

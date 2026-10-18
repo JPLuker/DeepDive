@@ -69,6 +69,8 @@
     --hairline:rgba(10,10,10,0.08);
     --glass-shadow:0 8px 28px rgba(10,10,10,.14), 0 2px 8px rgba(10,10,10,.08);
     --accent-soft-fill:color-mix(in srgb, var(--accent) 14%, transparent);
+    --glass-thick:rgba(255,255,255,.80); --glass-thick-blur:32px;
+    --overlay-shadow:0 24px 60px rgba(10,10,10,.22), 0 4px 16px rgba(10,10,10,.10);
     /* Desktop rail width and content measure; used by the min-width
        blocks below and overridden at the widest breakpoint. */
     /* Content measure for the desktop breakpoints below. */
@@ -100,6 +102,8 @@
        near-black reads as a smudge, and the accent is already carrying
        the selected icon and label. */
     --accent-soft-fill:rgba(255,255,255,.09);
+    --glass-thick:rgba(22,26,40,.82);
+    --overlay-shadow:0 24px 60px rgba(0,0,0,.60), 0 4px 16px rgba(0,0,0,.40);
   }
   /* Reserve the scrollbar's width on both sides, so a centred layout
      stays centred instead of sitting ~8px left of true centre on any
@@ -153,29 +157,27 @@
   .nav-link:hover { background:var(--surface); }
   .nav-link svg { width:20px; height:20px; flex-shrink:0; }
   .nav-divider { height:1px; background:var(--line); margin:10px 4px; }
-  .nav-sub { padding:4px 12px 10px; font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted-soft); }
   .theme-toggle { display:flex; gap:6px; padding:0 12px 4px; }
-  .theme-opt { flex:1; font-family:'Geist',sans-serif; font-size:12.5px; font-weight:600; padding:8px 4px; border-radius:var(--radius); border:1.5px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }
-  .theme-opt:hover { border-color:var(--ink); color:var(--ink); }
-  .theme-opt.active { background:var(--accent-gradient); color:#fff; border-color:transparent; }
+  .theme-opt { flex:1; font-family:'Geist',sans-serif; font-size:12.5px; font-weight:600; padding:9px 4px; border-radius:var(--radius-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
+  .theme-opt:hover { background:var(--tile-hover); color:var(--ink); }
+  .theme-opt.active { background:var(--accent); color:#fff; border-color:transparent; }
 
   /* ---- inline settings in the drawer ---- */
   .nav-switch { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 12px 8px; font-size:13.5px; font-weight:500; color:var(--ink); cursor:pointer; user-select:none; }
   .nav-switch input { position:absolute; opacity:0; pointer-events:none; }
-  .switch-track { position:relative; width:38px; height:21px; border-radius:999px; background:var(--surface); border:1.5px solid var(--line); flex-shrink:0; transition:background .15s ease, border-color .15s ease; }
+  .switch-track { position:relative; width:38px; height:21px; border-radius:999px; background:var(--surface); border:1px solid var(--hairline); flex-shrink:0; transition:background .15s ease, border-color .15s ease; }
   .switch-thumb { position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:var(--muted); transition:transform .15s ease, background .15s ease; }
   .nav-switch input:checked + .switch-track,
-  .set-switch input:checked + .switch-track { background:var(--accent-gradient); border-color:transparent; }
+  .set-switch input:checked + .switch-track { background:var(--accent); border-color:transparent; }
   .nav-switch input:checked + .switch-track .switch-thumb,
   .set-switch input:checked + .switch-track .switch-thumb { transform:translateX(17px); background:#fff; }
   .nav-switch input:focus-visible + .switch-track,
   .set-switch input:focus-visible + .switch-track { outline:2px solid var(--ink); outline-offset:2px; }
 
   .nav-settings { padding:0 12px 4px; }
-  .nav-field-label { font-family:'Geist Mono', ui-monospace, monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted-soft); margin-bottom:5px; }
-  .nav-input { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; padding:9px 10px; border-radius:var(--radius); border:1.5px solid var(--line); background:var(--field); color:var(--ink); width:100%; }
-  .nav-uri { font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; color:var(--muted); background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:8px 10px; word-break:break-all; line-height:1.45; }
-  .nav-hint { font-size:11.5px; color:var(--muted-soft); line-height:1.45; margin:9px 0 0; }
+  .nav-input { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; padding:9px 10px; border-radius:var(--radius); border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%; }
+  .nav-uri { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; color:var(--muted); background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:8px 10px; word-break:break-all; line-height:1.45; }
+  .nav-hint { font-size:13px; color:var(--muted-soft); line-height:1.45; margin:9px 0 0; }
 
   .flash { max-width:760px; margin:0 auto 20px; padding:12px 16px; background:var(--gold-soft); border:1px solid var(--gold); color:var(--ink); border-radius:var(--radius); font-size:14px; }
   .flash.error { background:#fbe9e7; border-color:var(--danger); }
@@ -188,14 +190,14 @@
   .mono { font-family:'Geist Mono', ui-monospace, monospace; }
 
   .btn { display:inline-flex; align-items:center; gap:8px; font-family:'Geist',sans-serif; font-weight:600; font-size:14px; padding:12px 22px; border-radius:var(--radius-pill); border:1.5px solid var(--ink); cursor:pointer; text-decoration:none; background:none; }
-  .btn-primary { background:var(--accent-gradient); color:#fff; border-color:transparent; }
+  .btn-primary { background:var(--accent); color:#fff; border-color:transparent; }
   .btn-primary:hover { filter:brightness(0.92); }
-  .btn-ghost { background:transparent; border:1.5px solid var(--line); color:var(--ink); }
-  .btn-ghost:hover { border-color:var(--ink); }
+  .btn-ghost { background:var(--tile); border:none; color:var(--ink); }
+  .btn-ghost:hover { background:var(--tile-hover); }
   .btn-small { padding:7px 12px; font-size:12.5px; }
   .btn:disabled { opacity:0.5; cursor:default; }
 
-  input[type=text], input[type=password] { font-family:'Geist',sans-serif; font-size:16px; padding:13px 14px; border-radius:var(--radius); border:1.5px solid var(--line); background:var(--field); color:var(--ink); width:100%; }
+  input[type=text], input[type=password] { font-family:'Geist',sans-serif; font-size:16px; padding:13px 14px; border-radius:var(--radius); border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%; }
   input:focus, button:focus, a:focus, select:focus { outline:2px solid var(--ink); outline-offset:2px; }
   .search-row { display:flex; gap:10px; margin-top:20px; } .search-row input { flex:1; }
 
@@ -238,10 +240,10 @@
   }
   .track-meta { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; padding:8px 0; }
   .track-name { font-weight:600; font-size:14px; letter-spacing:-0.01em; }
-  .track-sub { font-size:11.5px; color:var(--muted-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .track-sub { font-size:13px; color:var(--muted-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   /* The reason this row is here at all, so it reads as information
      rather than a monospace annotation bolted underneath. */
-  .track-match { font-size:11.5px; color:var(--teal); }
+  .track-match { font-size:13px; color:var(--teal); }
   .track-dur { font-size:12px; color:var(--muted-soft); flex-shrink:0; font-variant-numeric:tabular-nums; }
   .track-row input[type=checkbox] {
     width:19px; height:19px; accent-color:var(--accent); flex-shrink:0;
@@ -250,8 +252,8 @@
 
   .pill-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
   .pill-wrap { position:relative; }
-  .pill { display:inline-flex; align-items:center; gap:6px; font-family:'Geist',sans-serif; font-size:13px; font-weight:500; padding:7px 14px; border-radius:var(--radius-pill); border:1.5px solid var(--line); background:var(--paper); color:var(--ink); cursor:pointer; }
-  .pill:hover { border-color:var(--ink); }
+  .pill { display:inline-flex; align-items:center; gap:6px; font-family:'Geist',sans-serif; font-size:13px; font-weight:500; padding:8px 14px; border-radius:var(--radius-pill); border:none; background:var(--tile); color:var(--ink); cursor:pointer; }
+  .pill:hover { background:var(--tile-hover); }
   .pill-avatar { width:20px; height:20px; border-radius:50%; object-fit:cover; margin-right:2px; vertical-align:middle; background:var(--surface); }
   .pill-icon-btn { position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:var(--accent); color:var(--paper); border:1.5px solid var(--paper); display:none; align-items:center; justify-content:center; font-size:13px; line-height:1; cursor:pointer; padding:0; }
   .pill-wrap:hover .pill-icon-btn, .pill-icon-btn:focus { display:inline-flex; }
@@ -339,9 +341,11 @@
   .results-actions {
     position:fixed; left:0; right:0; bottom:0; z-index:35;
     padding:12px 16px calc(14px + env(safe-area-inset-bottom));
-    background:color-mix(in srgb, var(--bg) 92%, transparent);
-    backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
-    border-top:1px solid var(--line);
+    background:var(--glass);
+    backdrop-filter:blur(var(--glass-blur)) saturate(160%);
+    -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(160%);
+    border-top:1px solid var(--hairline);
+    box-shadow:var(--glass-highlight);
     display:flex; flex-direction:column; gap:8px; align-items:stretch;
   }
   .results-actions-row { display:flex; gap:8px; }
@@ -368,7 +372,7 @@
   }
   .tile-text { flex:1; min-width:0; padding-right:12px; display:flex; flex-direction:column; gap:2px; }
   .tile-title { font-size:14px; font-weight:600; letter-spacing:-0.01em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .tile-sub { font-size:11.5px; color:var(--muted-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tile-sub { font-size:13px; color:var(--muted-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   /* Pin and remove are occasional. They used to hold width on every row
      permanently on touch, where there is no hover to hide behind. Now
      they sit behind an overflow and are revealed one row at a time. */
@@ -406,7 +410,7 @@
   /* pin button inside the autofill dropdown */
   .autofill-item { justify-content:space-between; }
   .autofill-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .autofill-pin { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; border:1.5px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; flex-shrink:0; }
+  .autofill-pin { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:50%; border:none; background:var(--tile); color:var(--muted); cursor:pointer; flex-shrink:0; }
   .autofill-pin:hover { border-color:var(--accent); color:var(--accent); }
   .autofill-pin svg { width:14px; height:14px; }
 
@@ -459,13 +463,13 @@
   .pcard-icon { opacity:0.85; margin-bottom:10px; }
   .pcard-icon svg { width:18px; height:18px; }
   .pcard-title { font-size:14.5px; font-weight:700; letter-spacing:-0.01em; line-height:1.2; }
-  .pcard-sub { font-size:11.5px; color:rgba(255,255,255,0.72); line-height:1.35; }
+  .pcard-sub { font-size:13px; color:rgba(255,255,255,0.72); line-height:1.35; }
   .pcard-text { display:contents; }
 
   .card-len { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:4px; }
-  .len-opt { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; padding:7px 12px; border-radius:var(--radius-pill); border:1.5px solid var(--line); background:transparent; color:var(--muted); cursor:pointer; }
-  .len-opt:hover { border-color:var(--ink); color:var(--ink); }
-  .len-opt.active { background:var(--accent-gradient); color:#fff; border-color:transparent; }
+  .len-opt { font-family:inherit; font-size:13px; padding:8px 13px; border-radius:var(--radius-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
+  .len-opt:hover { background:var(--tile-hover); color:var(--ink); }
+  .len-opt.active { background:var(--accent); color:#fff; border-color:transparent; }
 
   .checkbox-option { display:flex; align-items:center; gap:9px; font-size:14px; color:var(--ink); cursor:pointer; user-select:none; }
   .checkbox-option input[type=checkbox] { width:16px; height:16px; accent-color:var(--accent); flex-shrink:0; }
@@ -473,7 +477,7 @@
 
   .sort-row { display:flex; align-items:center; gap:10px; margin:4px 0 14px; }
   .sort-row label { font-size:13px; color:var(--muted); }
-  .sort-select { font-family:'Geist',sans-serif; font-size:13px; padding:7px 10px; border-radius:var(--radius); border:1.5px solid var(--line); background:var(--field); color:var(--ink); }
+  .sort-select { font-family:'Geist',sans-serif; font-size:13px; padding:8px 10px; border-radius:var(--radius-pill); border:1px solid var(--hairline); background:var(--field); color:var(--ink); }
 
   /* Filled rows rather than a bordered list — the same treatment track
      rows and settings rows got. The actions stay visible: unlike a tile,
@@ -519,8 +523,7 @@
   .actions.crate-sampler-actions { margin:8px 0 14px; }
   .crate-section { margin:22px 0 10px; }
   .crate-section .label {
-    font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;
-    color:var(--muted);
+    font-size:13px; font-weight:500; color:var(--muted);
   }
   /* A list, not a wall of photos. Square tiles put two artists on a
      phone screen, which made a crate of 74 thirty-odd screens long.
@@ -552,8 +555,8 @@
   .crate-sub { font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .crate-actions { flex:0 0 auto; display:flex; gap:6px; }
   .crate-btn {
-    width:34px; height:34px; border-radius:50%; flex:0 0 auto;
-    border:1px solid var(--line); background:none; color:var(--muted);
+    width:36px; height:36px; border-radius:50%; flex:0 0 auto;
+    border:none; background:var(--tile); color:var(--muted);
     font-size:15px; line-height:1; cursor:pointer;
     display:inline-flex; align-items:center; justify-content:center;
   }
@@ -569,8 +572,8 @@
   .action-result-upnext-btns { display:flex; gap:8px; flex-wrap:wrap; }
 
   .star-btn {
-    width:34px; height:34px; border-radius:50%; flex:0 0 auto;
-    border:1px solid var(--line); background:none; color:var(--muted);
+    width:36px; height:36px; border-radius:50%; flex:0 0 auto;
+    border:none; background:var(--tile); color:var(--muted);
     display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
     transition:color .15s ease, border-color .15s ease;
   }
@@ -621,7 +624,7 @@
   .bill-seg .bill-tag-btn { border:none; border-radius:0; }
   .bill-seg .bill-tag-btn + .bill-tag-btn { border-left:1px solid var(--line); }
   .bill-rm { flex:0 0 auto; align-self:center; }
-  .bill-actions .bill-btn { width:30px; height:30px; font-size:14px; }
+  .bill-actions .bill-btn { width:36px; height:36px; font-size:14px; }
 
   .show-settings {
     background:var(--tile); border-radius:var(--radius-tile);
@@ -631,7 +634,7 @@
     display:flex; align-items:center; justify-content:space-between; gap:12px;
     padding:10px 0; font-size:14px;
   }
-  .show-setting + .show-setting { border-top:1px solid var(--line); }
+  .show-setting + .show-setting { margin-top:4px; }
   /* One width for both, whatever their options say. Sized to their
      content they came out different, which read as a mistake. */
   .show-setting .sort-select { flex:0 0 50%; width:50%; }
@@ -666,19 +669,19 @@
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .bill-tag {
-    flex:0 0 auto; font-size:11px; font-weight:600; letter-spacing:0.02em;
+    flex:0 0 auto; font-size:12px; font-weight:600; letter-spacing:0.02em;
     color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, transparent);
     padding:3px 8px; border-radius:999px;
   }
   .bill-actions { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
   .bill-tag-btn {
     font-family:inherit; font-size:12.5px; font-weight:600;
-    padding:6px 11px; border-radius:999px; cursor:pointer;
-    border:1px solid var(--line); background:none; color:var(--muted);
+    padding:7px 12px; border-radius:999px; cursor:pointer;
+    border:none; background:var(--tile); color:var(--muted);
   }
-  .bill-tag-btn:hover { color:var(--ink); border-color:var(--ink); }
+  .bill-tag-btn:hover { color:var(--ink); background:var(--tile-hover); }
   .bill-tag-btn.on {
-    background:var(--accent-gradient); border-color:transparent; color:#fff;
+    background:var(--accent); border-color:transparent; color:#fff;
   }
 
   .bill-songs {
@@ -687,8 +690,8 @@
     background:var(--surface); color:var(--ink); cursor:pointer;
   }
   .bill-btn {
-    width:34px; height:34px; border-radius:50%;
-    border:1px solid var(--line); background:none; color:var(--muted);
+    width:36px; height:36px; border-radius:50%;
+    border:none; background:var(--tile); color:var(--muted);
     font-size:15px; line-height:1; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
   }
@@ -729,21 +732,21 @@
   .search-pill-form:focus-within { border-color:var(--accent); background:var(--paper); }
   .search-pill-form input[type=text] { border:none; padding:10px 0; font-size:16px; }
   .search-pill-form input[type=text]:focus { outline:none; }
-  .search-icon-btn, .settings-icon-btn { display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:50%; border:none; background:var(--accent-gradient); color:var(--paper); cursor:pointer; flex-shrink:0; }
-  .settings-icon-btn { background:transparent; color:var(--ink); border:1.5px solid var(--line); }
-  .settings-icon-btn:hover { border-color:var(--ink); }
+  .search-icon-btn, .settings-icon-btn { display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:50%; border:none; background:var(--accent); color:var(--paper); cursor:pointer; flex-shrink:0; }
+  .settings-icon-btn { background:var(--tile); color:var(--ink); }
+  .settings-icon-btn:hover { background:var(--tile-hover); }
   .search-icon-btn svg, .settings-icon-btn svg { width:20px; height:20px; }
 
   .autofill-list { position:absolute; top:calc(100% + 8px); left:8px; right:8px; background:var(--paper); border:1.5px solid var(--ink); border-radius:var(--radius); overflow:hidden; z-index:20; display:none; }
   .autofill-list.open { display:block; }
-  .autofill-item { display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; font-size:14px; border-bottom:1px solid var(--line); }
+  .autofill-item { display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; font-size:14px; border-bottom:1px solid var(--hairline); }
   .autofill-item:last-child { border-bottom:none; }
   .autofill-item:hover, .autofill-item.active { background:var(--surface); }
   .autofill-item img { width:24px; height:24px; border-radius:50%; object-fit:cover; background:var(--surface); }
 
   .settings-panel { position:absolute; top:calc(100% + 8px); right:0; width:300px; background:var(--paper); border:1.5px solid var(--ink); border-radius:var(--radius); padding:16px; z-index:25; display:none; }
   .settings-panel.open { display:block; }
-  .settings-panel-title { font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .settings-panel-title { font-size:13px; font-weight:500; color:var(--muted); margin-bottom:10px; }
 
   /* ---- intent modal ---- */
   .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.55); display:flex; align-items:flex-start; justify-content:center; z-index:60; padding:20px; }
@@ -752,8 +755,14 @@
      chooser. The fixed backdrop covers the entire app and navigation. */
   body.demo-chroma-chooser #intent-modal { background:#00ff00; }
   body.demo-chroma-chooser #intent-modal .modal { animation:none; }
+  /* Layer 4. A 1.5px hard border on an opaque panel was the heaviest
+     edge in the app; thick glass carries the separation instead. */
   .modal {
-    background:var(--paper); border:1.5px solid var(--line);
+    background:var(--glass-thick);
+    backdrop-filter:blur(var(--glass-thick-blur)) saturate(160%);
+    -webkit-backdrop-filter:blur(var(--glass-thick-blur)) saturate(160%);
+    border:1px solid var(--hairline);
+    box-shadow:var(--overlay-shadow), var(--glass-highlight);
     border-radius:var(--radius-lg); padding:26px;
     width:min(520px,100%); max-height:88vh; overflow-y:auto;
     /* Roughly where the search bar sits, so the choices appear under
@@ -857,27 +866,20 @@
   .intent-familiar .sort-select { width:100%; }
 
   .intent-list { display:flex; flex-direction:column; gap:9px; }
-  .intent-opt { display:flex; gap:12px; align-items:flex-start; padding:13px 15px; border:1.5px solid var(--line); border-radius:var(--radius); cursor:pointer; background:transparent; text-align:left; width:100%; font-family:inherit; color:var(--ink); }
-  .intent-opt:hover { border-color:var(--ink); }
-  .intent-opt.selected { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 8%, transparent); }
-  .intent-radio { width:16px; height:16px; border-radius:50%; border:2px solid var(--line); flex-shrink:0; margin-top:2px; position:relative; }
-  .intent-opt.selected .intent-radio { border-color:var(--accent); }
-  .intent-opt.selected .intent-radio::after { content:""; position:absolute; inset:2px; border-radius:50%; background:var(--accent); }
-  .intent-text { flex:1; min-width:0; }
   .intent-name { font-weight:600; font-size:14.5px; }
   .intent-desc { font-size:12.5px; color:var(--muted); margin-top:3px; line-height:1.45; }
 
-  .intent-custom { margin-top:14px; padding-top:16px; border-top:1px solid var(--line); }
+  .intent-custom { margin-top:24px; }
   .intent-custom.hidden { display:none; }
   /* diagnostics disclosure inside the error box */
   .diag { margin-top:12px; }
   .diag summary { cursor:pointer; font-size:12.5px; color:var(--muted); font-family:'Geist Mono', ui-monospace, monospace; letter-spacing:0.04em; }
   .diag summary:hover { color:var(--ink); }
-  .diag-block { margin-top:12px; padding-top:10px; border-top:1px solid var(--line); font-size:12.5px; line-height:1.6; }
-  .diag-label { font-family:'Geist Mono', ui-monospace, monospace; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
-  .diag-mono { font-family:'Geist Mono', ui-monospace, monospace; font-size:11.5px; word-break:break-all; color:var(--muted); margin-top:3px; }
-  .diag-table { width:100%; border-collapse:collapse; font-family:'Geist Mono', ui-monospace, monospace; font-size:11.5px; }
-  .diag-table td { padding:2px 0; border-bottom:1px solid var(--line); }
+  .diag-block { margin-top:20px; font-size:12.5px; line-height:1.6; }
+  .diag-label { font-size:13px; font-weight:500; color:var(--muted); margin-bottom:5px; }
+  .diag-mono { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; word-break:break-all; color:var(--muted); margin-top:3px; }
+  .diag-table { width:100%; border-collapse:collapse; font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; }
+  .diag-table td { padding:3px 0; border-bottom:1px solid var(--hairline); }
 
   .intent-warning { display:flex; gap:10px; align-items:flex-start; margin-top:16px; padding:13px 15px; border-radius:var(--radius); background:var(--gold-soft); border:1px solid var(--gold); font-size:12.8px; line-height:1.5; color:var(--ink); }
   .intent-warning.hidden { display:none; }
@@ -894,12 +896,12 @@
     display:inline-flex; align-items:center; gap:9px;
     font-family:'Geist',sans-serif; font-size:13.5px; font-weight:600;
     padding:10px 20px; border-radius:var(--radius-pill);
-    border:1.5px solid var(--line); background:transparent;
+    border:none; background:var(--tile);
     color:var(--muted); text-decoration:none;
-    transition:color .15s ease, border-color .15s ease;
+    transition:color .15s ease, background .15s ease;
   }
   .bmc-link svg { width:17px; height:17px; }
-  .bmc-link:hover { color:var(--accent); border-color:var(--accent); }
+  .bmc-link:hover { color:var(--accent); background:var(--tile-hover); }
 
   /* No navigation while onboarding: nothing behind the tabs works yet.
      Two classes and an element, so it outranks the phone bar's
@@ -918,7 +920,7 @@
   .onboard-step { font-size:12.5px; font-weight:600; color:var(--muted); letter-spacing:0.02em; }
   .onboard-dots { display:flex; gap:6px; margin:0 0 26px; }
   .onboard-dots i { flex:1; height:4px; border-radius:2px; background:var(--line); }
-  .onboard-dots i.on { background:var(--accent-gradient); }
+  .onboard-dots i.on { background:var(--accent); }
   .onboard-title { font-size:26px; margin:0 0 10px; letter-spacing:-0.02em; }
   .onboard-hero {
     font-family:'Martius','Geist',sans-serif; text-transform:uppercase;
@@ -944,7 +946,7 @@
   .onboard-field input {
     font-family:'Geist Mono', ui-monospace, monospace; font-size:15px;
     padding:13px 14px; border-radius:var(--radius-tile);
-    border:1.5px solid var(--line); background:var(--field); color:var(--ink); width:100%;
+    border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%;
   }
   .onboard-check { min-height:1.4em; font-size:13px; margin:8px 0 0; color:var(--muted); }
   .onboard-check.good { color:#4fbf87; }
@@ -977,7 +979,7 @@
      Restored in 2.9.112. The top bar shows on phones too, which is the
      point of it being there. */
   .build-tag {
-    font-size:10.5px; color:var(--muted-soft); letter-spacing:0.02em;
+    font-size:12px; color:var(--muted-soft); letter-spacing:0.02em;
     user-select:all; align-self:center;
   }
 
@@ -993,7 +995,7 @@
   /* Collapsed by default. The point is that a casual user never has to
      read past it, so it should look like one row rather than a section
      header with contents hidden behind it. */
-  .advanced { margin-top:34px; border-top:1px solid var(--line); padding-top:6px; }
+  .advanced { margin-top:40px; }
   .advanced > summary {
     cursor:pointer; list-style:none; padding:12px 2px;
     font-size:14px; font-weight:600; color:var(--muted);
@@ -1043,7 +1045,7 @@
   .api-banner-detail { margin:6px 0 0; font-size:13px; color:var(--muted); line-height:1.5; }
   .api-banner-actions { display:flex; align-items:center; gap:12px; margin-top:12px; }
   .api-banner-code {
-    font-family:'Geist Mono', ui-monospace, monospace; font-size:11px;
+    font-family:'Geist Mono', ui-monospace, monospace; font-size:12px;
     letter-spacing:0.08em; color:var(--muted-soft); user-select:all;
   }
 
@@ -1064,7 +1066,7 @@
   .diag-notes { margin:8px 0 0; padding-left:18px; font-size:13px; color:var(--muted); }
   .diag-notes li { margin-bottom:4px; }
   .diag-code {
-    margin-top:10px; font-family:'Geist Mono', ui-monospace, monospace; font-size:11px;
+    margin-top:10px; font-family:'Geist Mono', ui-monospace, monospace; font-size:12px;
     letter-spacing:0.08em; color:var(--muted-soft); user-select:all;
   }
 
@@ -1163,7 +1165,7 @@
      through the API to be attributed; the landing page said so and the
      app itself never did until 2.9.85. */
   .set-legal {
-    margin:14px 2px 0; max-width:62ch; font-size:11.5px; line-height:1.5;
+    margin:14px 2px 0; max-width:62ch; font-size:13px; line-height:1.5;
     color:var(--muted-soft);
   }
   .set-legal a { color:var(--muted); text-decoration:underline; }
@@ -1190,9 +1192,12 @@
   #flash-slot { position:fixed; left:0; right:0; bottom:0; z-index:60; pointer-events:none; display:flex; justify-content:center; }
   #flash-slot .flash {
     pointer-events:auto; margin:0 16px calc(18px + env(safe-area-inset-bottom));
-    background:var(--surface); color:var(--ink); border:1px solid var(--line);
-    border-radius:var(--radius); padding:12px 18px; font-size:13.5px;
-    box-shadow:0 8px 28px rgba(0,0,0,0.45); max-width:min(460px,calc(100vw - 32px));
+    background:var(--glass-thick); color:var(--ink);
+    backdrop-filter:blur(var(--glass-thick-blur)) saturate(160%);
+    -webkit-backdrop-filter:blur(var(--glass-thick-blur)) saturate(160%);
+    border:1px solid var(--hairline);
+    border-radius:var(--radius-pill); padding:12px 18px; font-size:13.5px;
+    box-shadow:var(--overlay-shadow), var(--glass-highlight); max-width:min(460px,calc(100vw - 32px));
     animation:toast-in .18s ease;
   }
   #flash-slot .flash.error { border-color:var(--danger); color:var(--danger); }
@@ -1260,13 +1265,13 @@
   .dive-foot-inner { max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:8px; }
   .dive-heading { font-size:28px; font-weight:700; letter-spacing:-0.02em; line-height:1.15; text-shadow:0 2px 20px rgba(0,0,0,0.55); }
   .dive-stage { font-size:13.5px; color:var(--muted); min-height:19px; }
-  .dive-awake { font-size:11.5px; line-height:1.35; color:var(--muted-soft); }
+  .dive-awake { font-size:13px; line-height:1.35; color:var(--muted-soft); }
   .dive-awake.is-warning { color:#f0bd62; }
   .dive-track { height:3px; border-radius:999px; background:rgba(255,255,255,0.16); overflow:hidden; margin-top:6px; }
   .dive-track-fill { height:100%; width:0%; background:var(--accent-gradient); border-radius:999px; transition:width .4s ease; }
   /* Right-aligned under the bar: present when wanted, out of the way of
      the artist name and the stage line otherwise. */
-  .dive-pct { align-self:flex-end; font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; color:var(--muted-soft); letter-spacing:0.04em; margin-top:-2px; }
+  .dive-pct { align-self:flex-end; font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; color:var(--muted-soft); letter-spacing:0.04em; margin-top:-2px; }
   .dive-cancel { align-self:flex-start; margin-top:12px; }
 
   @media (max-width: 640px) {
@@ -1325,7 +1330,7 @@
       display:flex; flex-direction:column; align-items:center; gap:3px;
       padding:8px 0 7px; background:none; border:none; cursor:pointer;
       border-radius:var(--radius-pill);
-      color:var(--muted); font-family:inherit; font-size:10px; font-weight:500;
+      color:var(--muted); font-family:inherit; font-size:12px; font-weight:500;
       -webkit-tap-highlight-color:transparent;
       /* Above the sliding pill, which is painted on the bar itself. */
       position:relative; z-index:1;
@@ -1482,7 +1487,6 @@
     .modal-actions .spacer { display:none; }
     .modal-remember { order:-1; width:100%; }
 
-    .intent-opt { padding:12px 13px; }
     .len-opt { padding:8px 13px; }
 
     /* Results rows need the space more than the padding. */
