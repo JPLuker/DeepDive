@@ -291,9 +291,28 @@ the pacing work. Neither has been looked at properly.
 
 ---
 
-## Stopping point, 10 Oct (build 2.9.106)
+## Stopping point, 18 Oct (build 2.9.111)
 
-Picking up next session:
+Phase 1 of the road to 3.0 (issue #14, Aurora Glass plus the copy pass)
+is under way. Done: Settings → About and Data and storage (2.9.110), the
+floating tab pill (2.9.111). Next in Phase 1, in this order:
+
+- **Hard dividers out.** `--line` is still doing structural work in
+  several places. Keep `--hairline` separate — it is the glass border,
+  and merging the two is how the fencing returns.
+- **Seven ALL-CAPS labels → sentence case** (Part 9.3).
+- **Radius tokens `--radius-*` → `--r-*`** (Part 20). Mechanical and
+  wide; worth its own commit so the diff is reviewable.
+- **Type scale against Part 9.2.**
+- **Part 10 copy pass**, then the Part 21 self-review.
+
+Phases 2 to 6 are unchanged: repo furniture (`SECURITY.md`, issue
+templates, README support section), the quota experiment that decides
+whether duplicate search survives, native apps via Tauri, the
+`TESTING.md` rewrite and then the full pass, and finally tagging 3.0.
+Testing stays last — doing it earlier invalidates the 423 items.
+
+Also still open from the previous stopping point:
 
 - **Duplicate scan needs one real resumed run**: 2.9.103 checkpoints
   completed artists and the current artist every ten releases. Confirm a
@@ -305,11 +324,26 @@ Picking up next session:
   seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
 
-## Shipped since — build 2.9.109
+## Shipped since — build 2.9.111
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 
+- Tab bar is a floating glass pill with a sliding selection, rather than
+  a full-width bar with a hard top border (2.9.111, #14: P2 and 14.1).
+  Brought the first glass tokens into the app. Results screens now hide
+  it rather than covering it, which stopped working once it floated, and
+  `.dive-bar` / `body.diving` were removed from both stylesheets as dead
+  since the dive went full-screen
+- Settings → About: version, licence, source, "Report an issue" and
+  "Copy diagnostic info", with the Spotify and Last.fm attribution
+  beneath it (2.9.110). Three MAINTENANCE.md 1.2 items hang off this
+  existing. The diagnostic blob reports whether credentials are set,
+  never what they are
+- Data and storage promoted out of Advanced, and storage now reports
+  whether it actually persists — `bestStore()` fell back to memory
+  silently, and could not be detected by probing because `set` writes to
+  memory first and `get` falls back to it (2.9.110)
 - Fonts self-hosted (Geist, SIL OFL): no more Google Fonts, which was
   the only thing contradicting the app's own privacy claim (2.9.109)
 - `regen-app.sh` deleted — broken since the move under `docs/`, and by

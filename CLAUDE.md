@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.109.** If the build in `js/app.js` is well
+**Last updated at build 2.9.111.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -116,9 +116,30 @@ batch of notes mixing both; sort them and say which went where.
 - He handles all testing on real devices and manages his own tokens. Do
   not lecture him about token hygiene; he's asked for that explicitly.
 - He pushes via personal access tokens he pastes in. **Verify the push
-  landed** — compare `HEAD` against `origin/main` — because a failed
-  auth still prints success if you echo on the wrong condition. That has
-  happened.
+  landed**, because a failed auth still prints success if you echo on
+  the wrong condition. That has happened.
+
+  **Verify against the remote, not against `origin/main`.** Pushing by
+  full URL — which is what keeps the token out of `.git/config` — does
+  not update `refs/remotes/origin/main`, so that ref sits at whatever
+  it was last fetched at and `HEAD` looks ahead of it forever. This
+  produces a confident false "unpushed commits" warning, including from
+  the stop hook, and it has cost time three times now. Ask the remote:
+
+  ```bash
+  R=$(git ls-remote "https://JPLuker:$T@github.com/JPLuker/DeepDive.git" refs/heads/main | cut -f1)
+  [ "$R" = "$(git rev-parse HEAD)" ] && echo "landed"
+  git update-ref refs/remotes/origin/main "$R"   # so the hook agrees
+  ```
+
+  That last line is the part that is easy to skip and the reason this
+  keeps coming back. Do it in the same command as the push.
+
+  Also: if `git rev-parse origin/main` ever warns that the name is
+  ambiguous, there is a stray local *branch* literally called
+  `origin/main` (`refs/heads/origin/main`) shadowing the remote-tracking
+  ref, and every comparison against it is meaningless. One was deleted
+  in 2.9.110. Check with `git for-each-ref | grep origin/main`.
 
 ---
 
@@ -185,7 +206,7 @@ confirms them.
 ./tests/run.sh
 ```
 
-1,709 assertions, 62 suites at 2.9.109, plus a syntax check and a boot
+1,750 assertions, 62 suites at 2.9.111, plus a syntax check and a boot
 check. It takes seconds.
 
 **Gate the push on the suite's own result.** `run.sh ... | tail -2 &&
@@ -585,18 +606,30 @@ It looked like rate limiting for two days.
 > It reverses things recorded below as deliberate, so the reason
 > matters: one house style across every project beats a per-project
 > one, and these decisions were made before the standard existed.
-> Known conflicts, all open under issue #14: Inter is the body font and
-> is banned by name; the tab bar is a full-width bar with a top border
-> where the standard wants a floating pill; there are hard dividers in
-> several places; seven ALL-CAPS labels remain in app chrome; there is
-> no ambient layer. Already in line: pill buttons, fills over outlines,
-> and a working light and dark theme.
+> Known conflicts were tracked under issue #14. **Still open:** hard
+> dividers in several places; seven ALL-CAPS labels in app chrome; the
+> radius tokens are `--radius-*` where Part 20 names them `--r-*`; the
+> type scale has not been checked against Part 9.2; the Part 10 copy
+> pass and the Part 21 self-review are both outstanding. Already in
+> line: pill buttons, fills over outlines, and a working light and dark
+> theme.
 >
-> **Settled since:** the font moved to self-hosted Geist in 2.9.109, and
-> the ambient layer is out — Joseph's call, 18 Oct, it isn't wanted.
+> **Settled since:** the font moved to self-hosted Geist in 2.9.109.
+> The ambient layer is out — Joseph's call, 18 Oct, it isn't wanted.
 > `Martius` stays on the wordmark as a third family, which the
 > two-family rule in Part 9.1 would otherwise forbid; it is the brand
-> mark and was not something to change unasked.
+> mark and was not something to change unasked. Settings → About exists
+> as of 2.9.110, which several MAINTENANCE.md items hang off. The tab
+> bar became a floating glass pill in 2.9.111 (P2, 14.1), which brought
+> the first glass tokens into the app: `--glass`, `--glass-blur`,
+> `--glass-highlight`, `--glass-shadow`, `--hairline` and
+> `--accent-soft-fill`.
+>
+> **`--hairline` and `--line` are different things, deliberately.**
+> `--hairline` is the low-opacity border glass carries (Part 6.1);
+> `--line` is the hard 1px edge that the divider work is removing. Don't
+> consolidate them — reaching for `--line` on a floating element is how
+> the fencing comes back.
 >
 > Its copy rules (Part 10) are most of what the 3.0 copy-rewrite gate
 > was for, so do those as one pass rather than twice.
@@ -655,7 +688,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.106**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.111**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.
