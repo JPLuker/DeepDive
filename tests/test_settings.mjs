@@ -69,7 +69,7 @@ check('no card wrapper around the page', !/<div class="card">\s*\n\s*<h1>Setting
 // Ids stay literal so the orphan audit can still see them. Building
 // them from arguments hid every one and blinded the check that has
 // caught two real bugs.
-for (const id of ['set-refresh','find-playlists','set-disconnect','set-reset-pacing','set-test-endpoints','set-export','set-import','set-save-id','set-show-bmc']) {
+for (const id of ['set-refresh','find-playlists','set-disconnect','set-reset-pacing','set-show-build','set-test-endpoints','set-export','set-import','set-save-id','set-show-bmc']) {
   check(`${id} is a literal id`, src.includes(`id="${id}"`));
 }
 
@@ -100,11 +100,16 @@ check('credited', /Made by Joseph Luker/.test(src));
   check('and surfaces whether storage actually works', /id="set-storage-kind"/.test(grp));
 }
 
-// The version lives in About only (VERSIONING.md 4). The opt-in build
-// tag in the top bar went with its toggle in 2.9.110.
-check('no build toggle', !/set-show-build/.test(src));
-check('no build tag left in the shell', !/id="build-tag"/.test(css));
+// The version is in About (VERSIONING.md 4), and the opt-in build tag
+// is a separate thing: off by default, so users don't see it, and
+// there for checking which build actually loaded on a real device.
 check('version is in About', /title: "Version"/.test(src));
+check('the build toggle is back', /id="set-show-build"/.test(src));
+check('and the tag it controls exists', /id="build-tag"/.test(css));
+// It was in Diagnostics before About existed; it belongs with the
+// version now. Advanced is still collapsed, and burying a switch for
+// an on-screen element behind a triangle is why it was easy to lose.
+check('the toggle is not buried in advanced', !/id="set-show-build"/.test(adv));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

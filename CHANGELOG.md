@@ -4,6 +4,23 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.112
+- The dev build tag is back in the top bar, with its toggle. Removing it
+  in 2.9.110 was wrong, and the reasoning was circular: the same change
+  removed the toggle, and then the absence of a toggle was given as the
+  reason the tag could go. The code it deleted carried its own
+  justification — confirming which build is loaded by opening Settings
+  is exactly how a stale cached bundle gets tested by accident. The top
+  bar is visible on phones, which is where that matters.
+- VERSIONING.md 4 restricts showing the version **to users** to Settings
+  → About. A switch that is off by default doesn't show anything to
+  users, so the two coexist: About names the version, and the tag is for
+  checking what actually loaded on a device.
+- The toggle now sits in About beside the version it controls, rather
+  than in Diagnostics inside collapsed Advanced, where a switch for an
+  on-screen element was easy to lose. Its storage key is unchanged, so
+  anyone who had it on still does.
+
 ## 2.9.111
 - The tab bar is a floating glass pill. It was a full-width bar docked
   to the bottom edge with a hard 1px line above it, which DESIGN.md P2

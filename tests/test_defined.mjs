@@ -62,15 +62,29 @@ check('no orphaned demoArtists call', !/demoArtists\(\)/.test(src));
   check('no references to elements that do not exist', orphans.length === 0);
 }
 
-// A build tag used to sit in the top bar, opt-in behind a Settings
-// toggle. 2.9.110 moved the version into Settings → About, where
-// VERSIONING.md 4 wants it, and the tag went with its toggle — an
-// opt-in display whose switch had been removed could never be shown.
+// Confirming which build is loaded meant scrolling to the bottom of
+// Settings, so a stale cached bundle was easy to test by accident and
+// draw the wrong conclusion from. It goes on screen now, set before
+// anything else in boot can fail.
+//
+// Removed in 2.9.110 and restored in 2.9.112: the removal argued that
+// its toggle was gone, but the same change had just removed the
+// toggle. It is opt-in and off by default, so it is not "shown to
+// users" in the sense VERSIONING.md 4 limits to About, and the top bar
+// is visible on phones, which is where it earns its place.
 const shell = readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
-check('no build tag markup', !/id="build-tag"/.test(shell));
-check('no build tag css', !/\.build-tag \{/.test(shell));
-check('no orphaned build tag helpers', !/applyBuildTagVisibility|BUILD_TAG_KEY|ShowBuildTag/.test(src));
-check('the version is still on screen somewhere', /title: "Version"/.test(src));
+check('build tag exists in the shell', /id="build-tag"/.test(shell));
+check('build tag has styles', /\.build-tag \{/.test(shell));
+check('build tag is filled at boot', /applyBuildTagVisibility\(\);/.test(src));
+check('build tag is off by default', /localStorage\.getItem\(BUILD_TAG_KEY\) === "1"/.test(src));
+check('and toggleable from settings', /id="set-show-build"/.test(src));
+// Its toggle sits in About beside the version it controls, not back in
+// Diagnostics where it was before About existed.
+check('the toggle lives in About', (() => {
+  const i = src.indexOf('<div class="set-group-label">About</div>');
+  return i > -1 && src.slice(i, src.indexOf('`;', i)).includes('id="set-show-build"');
+})());
+check('the version is also in About', /title: "Version"/.test(src));
 
 // Identifiers used inside a function that are declared in a different
 // one. `maybeSetCover(res, news, …)` was added to applyResults, but

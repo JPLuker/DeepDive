@@ -49,10 +49,8 @@ check('no breakpoint guessing left in js', !/innerWidth >= 1280 \? 4/.test(js));
 check('measure is fluid but bounded', /--measure:clamp\(860px, 88vw, 1440px\)/.test(desk));
 check('everything shares the measure', /\.wrap, \.flash, \.row-head, \.topbar \{ max-width:var\(--measure\); \}/.test(desk));
 
-// The build tag left the top bar in 2.9.110 (version lives in Settings
-// → About). The support link is what's left, and it should still be the
-// thing sitting at the top right rather than an empty slot.
-check('top bar right holds the support link', /topbar-right">\s*\n\s*<a class="coffee-btn"/.test(h));
+// Build tag sits with the support link rather than alone in a corner.
+check('build tag is in the top bar right', /topbar-right">\s*\n\s*<span class="build-tag"/.test(h));
 
 // Mobile untouched.
 check('mobile breakpoint intact', /@media \(max-width: 640px\)/.test(h));

@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.111";
+export const BUILD = "2.9.112";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -5606,6 +5606,11 @@ function renderSettings() {
         detail: "Version, browser and storage state. Paste it into a bug report.",
         control: `<button class="btn btn-ghost btn-small" id="set-copy-diagnostics">Copy</button>`,
       })}
+      ${settingRow({
+        title: "Show build in the top bar",
+        detail: "Keeps the version on screen, so a stale cached copy is obvious.",
+        control: setSwitch('id="set-show-build"', showBuildTag()),
+      })}
       <p class="set-note">Made by Joseph Luker. <a href="https://github.com/JPLuker" target="_blank" rel="noopener">GitHub</a> · <a href="https://www.linkedin.com/in/josephluker" target="_blank" rel="noopener">LinkedIn</a></p>
       <p class="set-legal">Music metadata and artwork are provided by Spotify. Artist tags and popularity are provided by Last.fm. Album artwork and artist photographs remain the property of their owners. DeepDive is not affiliated with Spotify AB or Last.fm.</p>
     </div>`;
@@ -5621,6 +5626,15 @@ function renderSettings() {
     if (!el) return;
     el.textContent = await storageKindLabel();
   })();
+
+  const buildSwitch = document.getElementById("set-show-build");
+  if (buildSwitch) {
+    buildSwitch.checked = showBuildTag();
+    buildSwitch.addEventListener("change", () => {
+      setShowBuildTag(buildSwitch.checked);
+      applyBuildTagVisibility();
+    });
+  }
 
   document.getElementById("set-copy-diagnostics")?.addEventListener("click", async () => {
     const text = await diagnosticInfo();
@@ -6595,6 +6609,18 @@ async function offerDiveResume() {
  * app, and a diagnostic blob gets pasted into public issues. Whether
  * they are set is the part that matters for diagnosis.
  */
+const BUILD_TAG_KEY = "deepdive_show_build";
+function showBuildTag() {
+  try { return localStorage.getItem(BUILD_TAG_KEY) === "1"; } catch (e) { return false; }
+}
+function setShowBuildTag(on) {
+  try { localStorage.setItem(BUILD_TAG_KEY, on ? "1" : "0"); } catch (e) {}
+}
+function applyBuildTagVisibility() {
+  const el = document.getElementById("build-tag");
+  if (el) el.textContent = showBuildTag() ? BUILD : "";
+}
+
 /**
  * Plain-language name for where data is sitting.
  *
@@ -6768,6 +6794,10 @@ function registerServiceWorker() {
 }
 
 async function boot() {
+  // Put the build on screen before anything else can fail, so a stale
+  // cached bundle is visible rather than inferred.
+  applyBuildTagVisibility();
+
   // A remembered pause is an upper bound from a Retry-After, and it
   // blocks the requests that would disprove it. Check once on startup so
   // it can't outlive the real limit.
