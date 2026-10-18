@@ -13,14 +13,45 @@ let pass = 0, fail = 0;
 function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } }
 
 // In the app, not only on the page that sells it.
+// 2.9.110 moved this out of an ad-hoc <footer> and into the About
+// group, where MAINTENANCE.md 1.2 expects the licence and the issue
+// link to live. Scoped to that group so the attribution can't drift
+// off to some other part of the screen and still pass.
 {
-  const foot = src.slice(src.indexOf('<footer class="set-footer">'), src.indexOf('</footer>`;'));
-  check('the app credits Spotify', /provided by Spotify/.test(foot));
-  check('and Last\u002efm', /provided by Last\.fm/.test(foot));
-  check('and says whose the artwork is', /remain the property of their owners/.test(foot));
-  check('and disclaims affiliation', /not affiliated with Spotify AB or Last\.fm/.test(foot));
-  check('and links the source and licence', /github\.com\/JPLuker\/DeepDive[^]{0,40}Source and licence/.test(foot));
+  const i = src.indexOf('<div class="set-group-label">About</div>');
+  const about = src.slice(i, src.indexOf('`;', i));
+  check('there is an About group', i > -1);
+  check('the app credits Spotify', /provided by Spotify/.test(about));
+  check('and Last\u002efm', /provided by Last\.fm/.test(about));
+  check('and says whose the artwork is', /remain the property of their owners/.test(about));
+  check('and disclaims affiliation', /not affiliated with Spotify AB or Last\.fm/.test(about));
+  check('the licence is named, not just linked', /title: "Licence"/.test(about) && />MIT</.test(about));
+  check('and points at the LICENSE file', /blob\/main\/LICENSE/.test(about));
+  check('the source is linked', /github\.com\/JPLuker\/DeepDive"/.test(about));
   check('it is readable, not hidden', /\.set-legal \{[^}]*font-size:11\.5px/.test(shell) && !/\.set-legal \{[^}]*display:none/.test(shell));
+}
+
+// MAINTENANCE.md 1.2: people need to be told reports are read, and
+// given something to paste when they file one.
+{
+  const i = src.indexOf('<div class="set-group-label">About</div>');
+  const about = src.slice(i, src.indexOf('`;', i));
+  check('About offers to take an issue', /issues\/new\/choose/.test(about));
+  check('and says they are watched', /Issues are monitored/.test(about));
+  check('and can hand over diagnostics', /id="set-copy-diagnostics"/.test(about));
+}
+
+// The blob is pasted into public issues, so it must not carry the
+// user's own Spotify app credentials or their Last.fm key.
+{
+  const i = src.indexOf('async function diagnosticInfo()');
+  const diag = src.slice(i, src.indexOf('\n}', i));
+  check('diagnostics exist', i > -1);
+  check('they report the build', /DeepDive \$\{BUILD\}/.test(diag));
+  check('and whether storage survives a reload', /appStore\.kind\(\)/.test(diag));
+  check('the client id is reported as set or not, never printed', /getClientId\(\) \? "set" : "not set"/.test(diag) && !/getClientId\(\)\}/.test(diag));
+  check('same for the last\u002efm key', /hasKey\(\) \? "set" : "not set"/.test(diag) && !/getKey\(\)/.test(diag));
+  check('no access token anywhere in it', !/token/i.test(diag));
 }
 check('the landing page still credits them too', /provided by Spotify/.test(landing) && /provided by Last\.fm/.test(landing));
 

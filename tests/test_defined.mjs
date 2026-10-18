@@ -62,18 +62,15 @@ check('no orphaned demoArtists call', !/demoArtists\(\)/.test(src));
   check('no references to elements that do not exist', orphans.length === 0);
 }
 
-// Confirming which build is loaded meant scrolling to the bottom of
-// Settings, so a stale cached bundle was easy to test by accident and
-// draw the wrong conclusion from. It goes on screen now, set before
-// anything else in boot can fail.
+// A build tag used to sit in the top bar, opt-in behind a Settings
+// toggle. 2.9.110 moved the version into Settings → About, where
+// VERSIONING.md 4 wants it, and the tag went with its toggle — an
+// opt-in display whose switch had been removed could never be shown.
 const shell = readFileSync(new URL('../docs/app/index.html', import.meta.url),'utf8');
-check('build tag exists in the shell', /id="build-tag"/.test(shell));
-// The tag is opt-in now — developer furniture, off unless asked for —
-// so boot applies the preference rather than the value.
-check('build tag is filled at boot', /applyBuildTagVisibility\(\);/.test(src));
-check('build tag is off by default', /localStorage\.getItem\(BUILD_TAG_KEY\) === "1"/.test(src));
-check('and toggleable from settings', /id="set-show-build"/.test(src));
-check('and set before the redirect handling', src.indexOf('tag.textContent = BUILD') < src.indexOf('handleRedirectCallback'));
+check('no build tag markup', !/id="build-tag"/.test(shell));
+check('no build tag css', !/\.build-tag \{/.test(shell));
+check('no orphaned build tag helpers', !/applyBuildTagVisibility|BUILD_TAG_KEY|ShowBuildTag/.test(src));
+check('the version is still on screen somewhere', /title: "Version"/.test(src));
 
 // Identifiers used inside a function that are declared in a different
 // one. `maybeSetCover(res, news, …)` was added to applyResults, but

@@ -26,9 +26,10 @@ check('and is collapsed by default', !/<details class="advanced"[^>]*\sopen/.tes
 // What belongs behind it.
 check('credentials are advanced', /id="set-client-id"/.test(adv));
 check('redirect uri is advanced', /id="set-redirect-uri"/.test(adv));
-check('backup import/export is advanced', /id="set-export"/.test(adv) && /id="set-import"/.test(adv));
+// Backup came out of Advanced in 2.9.110: it is the only copy that
+// outlives this browser, so it can't sit behind a disclosure triangle.
+check('backup is not buried in advanced', !/id="set-export"/.test(adv));
 check('pacing reset is advanced', /id="set-reset-pacing"/.test(adv));
-check('build toggle is advanced', /id="set-show-build"/.test(adv));
 
 // What must stay in front.
 check('theme stays visible', /data-theme-choice/.test(plain));
@@ -68,22 +69,42 @@ check('no card wrapper around the page', !/<div class="card">\s*\n\s*<h1>Setting
 // Ids stay literal so the orphan audit can still see them. Building
 // them from arguments hid every one and blinded the check that has
 // caught two real bugs.
-for (const id of ['set-refresh','find-playlists','set-disconnect','set-reset-pacing','set-show-build','set-test-endpoints','set-export','set-import','set-save-id','set-show-bmc']) {
+for (const id of ['set-refresh','find-playlists','set-disconnect','set-reset-pacing','set-test-endpoints','set-export','set-import','set-save-id','set-show-bmc']) {
   check(`${id} is a literal id`, src.includes(`id="${id}"`));
 }
 
 // Joseph's note: credit at the bottom of settings.
 check('credited', /Made by Joseph Luker/.test(src));
-// The credit links to Joseph, not the repository — this is a footer
-// crediting a person, not a project link. Scoped to that links block:
-// since 2.9.85 the attribution line below it does link the repo, for
-// the licence, and that is a different thing.
+// The credit links to Joseph, not the repository — it credits a person,
+// and the repo is linked separately as Source. Scoped to the credit
+// line, which since 2.9.110 is a .set-note rather than its own footer.
 {
-  const links = src.slice(src.indexOf('<div class="set-links">'), src.indexOf('</div>', src.indexOf('<div class="set-links">')));
-  check('github links to the profile', /github\.com\/JPLuker"/.test(links));
-  check('not the repo', !/github\.com\/JPLuker\/DeepDive/.test(links));
+  const i = src.indexOf('Made by Joseph Luker');
+  const credit = src.slice(i, src.indexOf('</p>', i));
+  check('github links to the profile', /github\.com\/JPLuker"/.test(credit));
+  check('not the repo', !/github\.com\/JPLuker\/DeepDive/.test(credit));
+  check('linkedin linked', /linkedin\.com\/in\//.test(credit));
 }
-check('linkedin linked', /linkedin\.com\/in\//.test(src));
+
+// Data and storage is a top-level group, not buried in Advanced: a
+// backup is the only copy that outlives the browser, so it can't be
+// behind a disclosure triangle.
+{
+  const i = src.indexOf('<div class="set-group-label">Data and storage</div>');
+  check('data and storage is its own group', i > -1);
+  const advAt = src.indexOf('<details class="advanced"');
+  check('and sits above Advanced', i > -1 && advAt > -1 && i < advAt);
+  const grp = src.slice(i, src.indexOf('</div>`', i));
+  check('export and import are both offered', /id="set-export"/.test(grp) && /id="set-import"/.test(grp));
+  check('it says where the data lives', /Everything stays in this browser/.test(grp));
+  check('and surfaces whether storage actually works', /id="set-storage-kind"/.test(grp));
+}
+
+// The version lives in About only (VERSIONING.md 4). The opt-in build
+// tag in the top bar went with its toggle in 2.9.110.
+check('no build toggle', !/set-show-build/.test(src));
+check('no build tag left in the shell', !/id="build-tag"/.test(css));
+check('version is in About', /title: "Version"/.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

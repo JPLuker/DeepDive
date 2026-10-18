@@ -94,6 +94,7 @@ export function makeMemoryStore() {
   return {
     async get(k) { return m.has(k) ? m.get(k) : null; },
     async set(k, v) { if (v === null) m.delete(k); else m.set(k, v); },
+    kind() { return "memory"; },
   };
 }
 
@@ -133,5 +134,18 @@ export function bestStore() {
   return {
     async get(k) { return tryIdb(() => idbStore.get(k), () => mem.get(k)); },
     async set(k, v) { await mem.set(k, v); return tryIdb(() => idbStore.set(k, v), () => undefined); },
+    /**
+     * Which store is actually answering.
+     *
+     * Reads can't tell you: `set` writes to memory first and `get` falls
+     * back to it, so a probe round-trips fine with IndexedDB stone dead.
+     * This reports the real state, which is the difference between data
+     * that survives a reload and data that doesn't.
+     */
+    kind() {
+      if (usable === true) return "idb";
+      if (usable === false) return "memory";
+      return "unknown";
+    },
   };
 }

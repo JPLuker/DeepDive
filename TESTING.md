@@ -501,11 +501,35 @@ running a dive.
       layout with the bottom tab bar, no half-state in between
 - [ ] `?demo=results` at desktop width — the docked buttons line up with
       the content rather than spanning the whole window
-- [ ] The build tag sits beside the support link in the top bar
+- [ ] The support link sits at the top right (the build tag that used
+      to share that slot was removed in 2.9.110 — the version is in
+      Settings → About now)
 
 *Built without being rendered: Chrome won't install in the sandbox, so
 this was written against the stylesheet. The rail and the docked action
 bar are the two things most likely to be off.*
+
+## 4j2. Settings → About and Data and storage (2.9.110)
+
+No quota needed.
+
+- [ ] Settings → About shows the version, and it matches the version in
+      the release you installed
+- [ ] Licence reads MIT and opens the LICENSE file on GitHub
+- [ ] Source opens the repository
+- [ ] "Open an issue" opens the issue chooser, not a blank issue
+- [ ] "Copy diagnostic info" → Copy, then paste somewhere: it lists the
+      build, URL, browser, language, Client ID / Last.fm key as "set" or
+      "not set", connection state, rate limit, storage and cache size
+- [ ] **It never prints the Client ID or the Last.fm key themselves** —
+      this blob is meant for public issues
+- [ ] Data and storage sits above Advanced, not inside it
+- [ ] Storage reads "Working"
+- [ ] In a private window: Storage reads "Blocked" (Firefox private
+      windows block IndexedDB; Chrome's incognito allows it, so this
+      may need Firefox)
+- [ ] Export writes a file; Import reads one back
+- [ ] The attribution paragraph is still legible under About
 
 ## 4k. Settings rework (2.8.16)
 

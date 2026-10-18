@@ -949,13 +949,6 @@
   /* Always on screen. Confirming which build is loaded was taking a trip
      to the bottom of Settings, which made it easy to test a stale one
      after a push and draw the wrong conclusion. */
-  /* Sits with the support link rather than floating alone in the
-     corner, where it read as debris rather than information. */
-  .build-tag {
-    font-size:10.5px; color:var(--muted-soft); letter-spacing:0.02em;
-    user-select:all; align-self:center;
-  }
-
   .topnav { display:none; }
   .topnav-btn {
     background:none; border:none; cursor:pointer; padding:7px 12px;
@@ -1122,22 +1115,26 @@
   .set-switch { display:inline-flex; align-items:center; cursor:pointer; }
   .set-switch input { position:absolute; opacity:0; width:0; height:0; }
 
-  .set-footer { margin-top:38px; padding-top:20px; border-top:1px solid var(--line); text-align:center; }
-  .set-credit { font-size:13px; color:var(--muted); margin:0; }
-  .set-links { display:flex; gap:18px; justify-content:center; margin-top:8px; }
-  .set-links a { font-size:13px; font-weight:600; color:var(--accent); text-decoration:none; }
-  .set-links a:hover { text-decoration:underline; }
+  .set-note a { color:var(--accent); text-decoration:none; font-weight:600; }
+  .set-note a:hover { text-decoration:underline; }
+
+  /* A read-only value in a row's control slot: same position and
+     alignment as a button or a switch, but plainly not interactive. */
+  .set-static { font-size:13px; color:var(--muted); align-self:center; }
+  .set-static-link {
+    font-size:13px; font-weight:600; color:var(--accent);
+    text-decoration:none; align-self:center;
+  }
+  .set-static-link:hover { text-decoration:underline; }
 
   /* Attribution. Spotify's Developer Terms require content reached
      through the API to be attributed; the landing page said so and the
      app itself never did until 2.9.85. */
   .set-legal {
-    margin:10px auto 0; max-width:46ch; font-size:11.5px; line-height:1.5;
-    color:var(--muted-soft); text-align:center;
+    margin:14px 2px 0; max-width:62ch; font-size:11.5px; line-height:1.5;
+    color:var(--muted-soft);
   }
   .set-legal a { color:var(--muted); text-decoration:underline; }
-
-  .settings-build { margin:26px 0 0; text-align:center; font-family:'Geist Mono', ui-monospace, monospace; font-size:11px; letter-spacing:0.06em; color:var(--muted-soft); }
 
   /* Sampler intro: the artists it's about to fetch, so the page shows
      what it's going to do rather than describing it. */
@@ -1452,7 +1449,6 @@
     </span>
     <span class="wordmark" data-nav="home"><img src="../assets/dd-logo.png" alt="" class="wordmark-icon">DeepDive</span>
     <span class="topbar-right">
-      <span class="build-tag" id="build-tag"></span>
       <a class="coffee-btn" id="coffee-link" href="https://buymeacoffee.com/OSJoseph" target="_blank" rel="noopener" title="Buy me a coffee" aria-label="Buy me a coffee">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 9h1.6a2.4 2.4 0 0 1 0 4.8H17"/><line x1="7" y1="2.5" x2="7" y2="5"/><line x1="11" y1="2.5" x2="11" y2="5"/><line x1="15" y1="2.5" x2="15" y2="5"/></svg>
       </a>

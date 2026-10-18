@@ -4,6 +4,36 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.110
+- Settings → About. The app had no About section: the version sat in a
+  monospace line at the bottom of the page, the licence was reachable
+  only through a "Source and licence" link in the legal paragraph, and
+  there was nowhere to report a problem. About now names the version,
+  the licence (MIT, linked to the LICENSE file), the source, and an
+  issue link, with the Spotify and Last.fm attribution beneath it.
+  MAINTENANCE.md 1.2 expects all four of these before 1.0.
+- "Copy diagnostic info". Version, URL, browser, language, whether a
+  Client ID and a Last.fm key are set, connection state, any recorded
+  rate limit, the storage backend and the library cache size. It
+  reports whether the credentials are *set*, never what they are: the
+  blob is meant to be pasted into public issues, and a Client ID
+  identifies someone's own Spotify app.
+- Data and storage is a top-level group rather than a row inside
+  Advanced. A backup is the only copy of a scan that outlives this
+  browser, so putting it behind a disclosure triangle was backwards.
+  The group says plainly that everything lives in this browser and
+  that clearing site data loses it.
+- Storage reports whether it is actually working. `bestStore()` falls
+  back to in-memory storage when IndexedDB is unavailable — private
+  windows, locked-down profiles — and nothing said so, which looked
+  identical to working right up until a reload emptied the app. It
+  could not be detected by probing either: `set` writes to memory
+  first and `get` falls back to it, so a round-trip succeeded with
+  IndexedDB stone dead. The store now reports its own state.
+- Removed the build tag and its toggle. An opt-in build number in the
+  top bar duplicated what About now shows, and VERSIONING.md 4 puts
+  the version in About.
+
 ## 2.9.109
 - Fonts are self-hosted. The app and the landing page both pulled Inter
   and IBM Plex Mono from Google's CDN, so every load told Google who

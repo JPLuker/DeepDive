@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.109";
+export const BUILD = "2.9.110";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -5490,6 +5490,23 @@ function renderSettings() {
     </div>
 
     <div class="set-group">
+      <div class="set-group-label">Data and storage</div>
+      <p class="set-note">Everything stays in this browser. Clearing site data loses it, and a backup is the only way to move it to another browser or device.</p>
+      ${settingRow({
+        title: "Backup",
+        detail: "Export everything to a file, or restore from one.",
+        control: `<button class="btn btn-ghost btn-small" id="set-export">Export</button>
+          <button class="btn btn-ghost btn-small" id="set-import">Import</button>
+          <input type="file" id="set-import-file" accept="application/json,.json" style="display:none;">`,
+      })}
+      ${settingRow({
+        title: "Storage",
+        detail: "If this says blocked, nothing survives a reload. Export a backup.",
+        control: `<span class="set-static" id="set-storage-kind">checking…</span>`,
+      })}
+    </div>
+
+    <div class="set-group">
       <div class="set-group-label">Spotify</div>
       ${settingRow({
         title: "Refresh library",
@@ -5526,28 +5543,11 @@ function renderSettings() {
       <div class="set-group">
         <div class="set-group-label">Diagnostics</div>
         ${settingRow({
-          title: "Show build number",
-          detail: "Puts the version in the top bar.",
-          control: setSwitch('id="set-show-build"', showBuildTag()),
-        })}
-        ${settingRow({
           title: "Test endpoints",
           detail: "Checks each Spotify endpoint DeepDive uses and measures what a request costs.",
           control: `<button class="btn btn-ghost btn-small" id="set-test-endpoints">Run test</button>`,
         })}
         <div id="endpoint-test"></div>
-      </div>
-
-      <div class="set-group">
-        <div class="set-group-label">Your data</div>
-        <p class="set-note">Pins, history and settings live in this browser only. A backup is the only way to move them elsewhere or recover them after clearing site data.</p>
-        ${settingRow({
-          title: "Backup",
-          detail: "Export everything to a file, or restore from one.",
-          control: `<button class="btn btn-ghost btn-small" id="set-export">Export</button>
-            <button class="btn btn-ghost btn-small" id="set-import">Import</button>
-            <input type="file" id="set-import-file" accept="application/json,.json" style="display:none;">`,
-        })}
       </div>
 
       <div class="set-group">
@@ -5585,19 +5585,54 @@ function renderSettings() {
 
     <div class="flash hidden" id="settings-msg" style="margin-top:14px;"></div>
 
-    <footer class="set-footer">
-      <p class="set-credit">Made by Joseph Luker</p>
-      <div class="set-links">
-        <a href="https://github.com/JPLuker" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://www.linkedin.com/in/josephluker" target="_blank" rel="noopener">LinkedIn</a>
-      </div>
-      <p class="settings-build">DeepDive · build ${esc(BUILD)}</p>
+    <div class="set-group">
+      <div class="set-group-label">About</div>
+      ${settingRow({ title: "Version", control: `<span class="set-static mono">${esc(BUILD)}</span>` })}
+      ${settingRow({
+        title: "Licence",
+        control: `<a class="set-static-link" href="https://github.com/JPLuker/DeepDive/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a>`,
+      })}
+      ${settingRow({
+        title: "Source",
+        control: `<a class="set-static-link" href="https://github.com/JPLuker/DeepDive" target="_blank" rel="noopener">GitHub</a>`,
+      })}
+      ${settingRow({
+        title: "Report an issue",
+        detail: "Issues are monitored.",
+        control: `<a class="btn btn-ghost btn-small" href="https://github.com/JPLuker/DeepDive/issues/new/choose" target="_blank" rel="noopener">Open an issue</a>`,
+      })}
+      ${settingRow({
+        title: "Diagnostic info",
+        detail: "Version, browser and storage state. Paste it into a bug report.",
+        control: `<button class="btn btn-ghost btn-small" id="set-copy-diagnostics">Copy</button>`,
+      })}
+      <p class="set-note">Made by Joseph Luker. <a href="https://github.com/JPLuker" target="_blank" rel="noopener">GitHub</a> · <a href="https://www.linkedin.com/in/josephluker" target="_blank" rel="noopener">LinkedIn</a></p>
       <p class="set-legal">Music metadata and artwork are provided by Spotify. Artist tags and popularity are provided by Last.fm. Album artwork and artist photographs remain the property of their owners. DeepDive is not affiliated with Spotify AB or Last.fm.</p>
-      <p class="set-legal"><a href="https://github.com/JPLuker/DeepDive" target="_blank" rel="noopener">Source and licence</a></p>
-    </footer>`;
+    </div>`;
 
   const msg = document.getElementById("settings-msg");
   const say = (t, err) => { msg.textContent = t; msg.classList.remove("hidden"); msg.classList.toggle("error", !!err); };
+
+  // IndexedDB can be blocked (private windows, locked-down profiles) and
+  // the app falls back to memory, which loses everything on reload.
+  // Worth being able to see, since it changes what a backup is for.
+  (async () => {
+    const el = document.getElementById("set-storage-kind");
+    if (!el) return;
+    el.textContent = await storageKindLabel();
+  })();
+
+  document.getElementById("set-copy-diagnostics")?.addEventListener("click", async () => {
+    const text = await diagnosticInfo();
+    try {
+      await navigator.clipboard.writeText(text);
+      say("Diagnostic info copied.");
+    } catch (e) {
+      // No clipboard permission: show it so it can be copied by hand
+      // rather than failing with nothing to copy.
+      say(text);
+    }
+  });
 
   let demoArtists = demo.demoActive() ? demo.approvedArtists() : [];
   const paintDemoArtists = () => {
@@ -5714,14 +5749,6 @@ function renderSettings() {
     bmc.addEventListener("change", () => setShowBmc(bmc.checked));
   }
 
-  const buildSwitch = document.getElementById("set-show-build");
-  if (buildSwitch) {
-    buildSwitch.checked = showBuildTag();
-    buildSwitch.addEventListener("change", () => {
-      setShowBuildTag(buildSwitch.checked);
-      applyBuildTagVisibility();
-    });
-  }
 
   document.getElementById("set-test-endpoints")?.addEventListener("click", async (ev) => {
     const btn = ev.currentTarget;
@@ -6561,17 +6588,52 @@ async function offerDiveResume() {
 // that can't be dismissed is worse than one that can.
 // The build tag reads well and has settled several "is this deployed
 // yet?" questions, but it is developer furniture. Off unless asked for.
-const BUILD_TAG_KEY = "deepdive_show_build";
-function showBuildTag() {
-  try { return localStorage.getItem(BUILD_TAG_KEY) === "1"; } catch (e) { return false; }
+/**
+ * What a bug report needs and nothing more.
+ *
+ * No Client ID and no Last.fm key: both identify a person's own Spotify
+ * app, and a diagnostic blob gets pasted into public issues. Whether
+ * they are set is the part that matters for diagnosis.
+ */
+/**
+ * Plain-language name for where data is sitting.
+ *
+ * `kind()` reports "unknown" until something has been read or written,
+ * so this nudges the store into answering before asking.
+ */
+async function storageKindLabel() {
+  try {
+    if (appStore.kind() === "unknown") await appStore.get("deepdive_kind_probe");
+    return appStore.kind() === "memory" ? "Blocked" : "Working";
+  } catch (e) {
+    return "Unknown";
+  }
 }
-function setShowBuildTag(on) {
-  try { localStorage.setItem(BUILD_TAG_KEY, on ? "1" : "0"); } catch (e) {}
+
+async function diagnosticInfo() {
+  const lines = [
+    `DeepDive ${BUILD}`,
+    `URL: ${location.origin}${location.pathname}`,
+    `Browser: ${navigator.userAgent}`,
+    `Language: ${navigator.language}`,
+    `Client ID: ${auth.getClientId() ? "set" : "not set"}`,
+    `Last.fm key: ${lastfm.hasKey() ? "set" : "not set"}`,
+    `Connected: ${auth.isLoggedIn() ? "yes" : "no"}`,
+  ];
+  try {
+    const until = limitedUntil();
+    lines.push(`Rate limit: ${until ? `until ${new Date(until).toISOString()}` : "none recorded"}`);
+  } catch (e) { /* best effort */ }
+  lines.push(`Storage: ${appStore.kind()}`);
+  try {
+    const cached = await libraryCache.peek();
+    lines.push(`Library cache: ${cached && cached.length ? `${cached.length} tracks` : "empty"}`);
+  } catch (e) {
+    lines.push("Library cache: unreadable");
+  }
+  return lines.join("\n");
 }
-function applyBuildTagVisibility() {
-  const el = document.getElementById("build-tag");
-  if (el) el.textContent = showBuildTag() ? BUILD : "";
-}
+
 
 const BMC_KEY = "deepdive_show_bmc";
 function showBmc() {
@@ -6656,10 +6718,6 @@ function registerServiceWorker() {
 }
 
 async function boot() {
-  // Put the build on screen before anything else can fail, so a stale
-  // cached bundle is visible rather than inferred.
-  applyBuildTagVisibility();
-
   // A remembered pause is an upper bound from a Retry-After, and it
   // blocks the requests that would disprove it. Check once on startup so
   // it can't outlive the real limit.
