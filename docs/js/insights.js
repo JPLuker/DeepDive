@@ -31,7 +31,7 @@ function smallestImage(images) {
  * The middle variant (300px album / 320px artist) covers 3x comfortably
  * at a fraction of the bytes of the 640px original.
  */
-function tileImage(images) {
+export function tileImage(images) {
   if (!images || !images.length) return null;
   if (images.length >= 2) return images[1].url || images[0].url || null;
   return images[0].url || null;

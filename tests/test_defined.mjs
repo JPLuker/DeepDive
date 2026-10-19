@@ -122,5 +122,147 @@ check('the version is also in About', /title: "Version"/.test(src));
   }
 }
 
+// --- calls to things that don't exist (2.9.117) ---------------------
+//
+// 2.9.116 shipped `tileImage(album.images)` in app.js. tileImage lives
+// in insights.js and was never exported, so it was a ReferenceError the
+// first time a real library reached that line. Nothing caught it:
+// `node --check` parses an undefined identifier happily, every
+// assertion in this suite reads source text, and the sandbox render
+// never reached the call because the staged cards had no tracks.
+//
+// This is the cheapest check that would have. It collects every bare
+// `name(` call in app.js and asks whether that name is declared in the
+// file, imported into it, or a known global. It is not a type checker
+// and does not need to be — it catches exactly the thing that bit.
+{
+  const KNOWN = new Set([
+    // language and browser surface used in this file
+    'if','for','while','switch','catch','return','typeof','function','await','super',
+    'Promise','Array','Object','String','Number','Boolean','Date','Map','Set','JSON','Math',
+    'RegExp','Error','TypeError','URL','URLSearchParams','Intl','AbortController','Blob','File',
+    'FileReader','FormData','Image','Audio','CustomEvent','Event','IntersectionObserver',
+    'setTimeout','clearTimeout','setInterval','clearInterval','requestAnimationFrame',
+    'cancelAnimationFrame','fetch','alert','confirm','prompt','structuredClone','queueMicrotask',
+    'encodeURIComponent','decodeURIComponent','parseInt','parseFloat','isNaN','isFinite',
+    'btoa','atob','escape','unescape','matchMedia','getComputedStyle','require','import',
+    'async',
+  ]);
+  // Names declared in app.js itself.
+  const declared = new Set();
+  for (const re of [/\bfunction\s+([A-Za-z_$][\w$]*)/g,
+                    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/g,
+                    /\bclass\s+([A-Za-z_$][\w$]*)/g]) {
+    for (const m of src.matchAll(re)) declared.add(m[1]);
+  }
+  // Parameters, including destructured ones. Callbacks arrive this way
+  // — onProgress, onChoose — and are called by name inside the function
+  // that received them, which looks identical to a bare global call.
+  for (const m of src.matchAll(/\(([^()]*)\)\s*(?:=>|\{)/g)) {
+    for (const part of m[1].split(',')) {
+      for (const id of part.matchAll(/([A-Za-z_$][\w$]*)\s*(?=[,:}\]=]|$)/g)) declared.add(id[1]);
+      const bare = part.trim().replace(/^\.\.\./, '').split(/[=:]/)[0].trim();
+      if (/^[A-Za-z_$][\w$]*$/.test(bare)) declared.add(bare);
+    }
+  }
+  // Destructured locals: const { a, b } = something.
+  for (const m of src.matchAll(/(?:const|let|var)\s*\{([^}]*)\}\s*=/g)) {
+    for (const part of m[1].split(',')) {
+      const name = part.trim().split(/\s*:\s*/).pop().split('=')[0].trim();
+      if (/^[A-Za-z_$][\w$]*$/.test(name)) declared.add(name);
+    }
+  }
+
+  // Names imported into it, default, named and namespace alike.
+  for (const m of src.matchAll(/import\s+(?:\*\s+as\s+([\w$]+)|\{([^}]+)\}|([\w$]+))\s+from/g)) {
+    if (m[1]) declared.add(m[1]);
+    if (m[3]) declared.add(m[3]);
+    if (m[2]) for (const part of m[2].split(',')) {
+      const name = part.trim().split(/\s+as\s+/).pop().trim();
+      if (name) declared.add(name);
+    }
+  }
+  // Comments and string literals have to go first, or English prose
+  // reads as calls — the first run flagged "modules(", "correctness("
+  // and "toggle(" out of comments. Template literals are stripped down
+  // to their ${...} expressions, which do hold real calls, rather than
+  // dropped whole.
+  const strip = (text) => {
+    let out = '', i = 0, n = text.length;
+    const src = text;
+    while (i < n) {
+      const c = src[i], d = src[i + 1];
+      if (c === '/' && d === '/') { while (i < n && src[i] !== '\n') i++; continue; }
+      if (c === '/' && d === '*') { i += 2; while (i < n && !(src[i] === '*' && src[i + 1] === '/')) i++; i += 2; continue; }
+      // Regex literals, before strings: `name.replace(/"/g, "")` has a
+      // quote inside a regex, and without this the scanner opened a
+      // string there and ran on until the next quote in the file,
+      // emitting whatever lay between. That is how a string constant
+      // several lines away ("deepdive_theme") came out looking like a
+      // call. The usual heuristic — a slash in a position where a
+      // value is expected starts a regex, otherwise it is division.
+      if (c === '/') {
+        let k = out.length - 1;
+        while (k >= 0 && /\s/.test(out[k])) k--;
+        const prev = k >= 0 ? out[k] : '';
+        if (prev === '' || '(,=:[!&|?{};+-*%<>~^'.includes(prev)) {
+          i++;
+          while (i < n && src[i] !== '/') {
+            if (src[i] === '\\') i++;
+            else if (src[i] === '[') { while (i < n && src[i] !== ']') { if (src[i] === '\\') i++; i++; } }
+            else if (src[i] === '\n') break;
+            i++;
+          }
+          i++;
+          while (i < n && /[gimsuyd]/.test(src[i])) i++;
+          out += ' '; continue;
+        }
+      }
+      if (c === "'" || c === '"') {
+        const q = c; i++;
+        while (i < n && src[i] !== q) { if (src[i] === '\\') i++; i++; }
+        i++; out += ' '; continue;
+      }
+      if (c === '`') {
+        i++;
+        while (i < n) {
+          if (src[i] === '\\') { i += 2; continue; }
+          if (src[i] === '`') { i++; break; }
+          if (src[i] === '$' && src[i + 1] === '{') {
+            i += 2; let depth = 1, start = i;
+            while (i < n && depth) {
+              if (src[i] === '{') depth++;
+              else if (src[i] === '}') depth--;
+              if (depth) i++;
+            }
+            // Recursive: a ${...} can hold another template, and its
+            // prose would otherwise come through verbatim. "Release
+            // date (newest first)" inside a nested one read as a call
+            // to date().
+            out += ' ' + strip(src.slice(start, i)) + ' ';
+            i++; continue;
+          }
+          i++;
+        }
+        out += ' '; continue;
+      }
+      out += c; i++;
+    }
+    return out;
+  };
+  const code = strip(src);
+  check('the call scanner actually stripped something', code.length < src.length * 0.8);
+
+  // Every bare call: `name(` not preceded by a dot, and not a keyword.
+  const unknown = new Set();
+  for (const m of code.matchAll(/(^|[^.\w$])([A-Za-z_$][\w$]*)\s*\(/g)) {
+    const name = m[2];
+    if (KNOWN.has(name) || declared.has(name)) continue;
+    // Skip property shorthand and labels that aren't really calls.
+    unknown.add(name);
+  }
+  check(`every call in app.js resolves (${[...unknown].slice(0, 6).join(', ') || 'none unresolved'})`, unknown.size === 0);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

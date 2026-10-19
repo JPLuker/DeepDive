@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.116";
+export const BUILD = "2.9.117";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -832,7 +832,7 @@ function cardArt(card, want = 4) {
     // paths normalise to a single album.image_url. A field present on
     // one shape and absent on the other fails silently and is how
     // Multi-Dip lost its artist photos, so read both.
-    const url = album && (tileImage(album.images) || album.image_url || null);
+    const url = album && (insights.tileImage(album.images) || album.image_url || null);
     const key = (album && album.id) || url;
     if (!url || seen.has(key)) continue;
     seen.add(key);

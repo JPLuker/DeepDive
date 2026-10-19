@@ -4,6 +4,27 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.117
+- **Fixes a crash shipped in 2.9.116.** `cardArt` called `tileImage`,
+  which lives in `insights.js` and was never exported, so building the
+  mixes threw `tileImage is not defined` the first time a real library
+  reached that line. `insights.js` exports it now and `app.js` calls it
+  through the module rather than growing a third copy.
+- **A check that would have caught it.** Nothing could: `node --check`
+  parses an undefined identifier happily, every assertion in the suite
+  reads source text, and the sandbox render never reached the call
+  because the staged demo cards had no tracks. `test_defined.mjs` now
+  collects every bare `name(` call in `app.js` and asks whether that
+  name is declared in the file, imported into it, or a known global.
+  Reverting the fix makes it fail by name.
+- Getting that check honest took four passes, each a false positive
+  worth recording: English prose in comments read as calls; so did
+  prose in template literals; so did prose in templates nested inside
+  `${...}`; and a regex literal containing a quote (`replace(/"/g,
+  "")`) desynced the string scanner, so a constant several lines away
+  surfaced as a call. It strips comments, strings, regex literals and
+  template text now, keeping only `${...}` expressions, recursively.
+
 ## 2.9.116
 - **The mix cards show the music in them.** They were gradient fills
   with a hue rotating per card, which Part 19 bans on whole cards, and
