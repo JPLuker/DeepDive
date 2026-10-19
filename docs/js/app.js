@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.115";
+export const BUILD = "2.9.116";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -699,8 +699,10 @@ async function renderFeaturedMixes() {
   const sampler = _samplerPool.length >= 2 ? `
     <button class="pcard is-sampler" data-featured-sampler>
       <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg></span>
-      <span class="pcard-title">Sampler</span>
+      <span class="pcard-text">
+        <span class="pcard-title">Sampler</span>
       <span class="pcard-sub">a few tracks each from artists you've barely heard</span>
+      </span>
     </button>` : "";
 
   if (!sampler && !cards.length) { el.innerHTML = ""; return; }
@@ -709,14 +711,12 @@ async function renderFeaturedMixes() {
     <div class="card-row featured-mix-row">
       ${sampler}
       ${cards.map((c, i) => `
-        <button class="pcard" data-featured-card="${esc(c.id)}" style="--h:${(225 + i * 61) % 360};">
-          <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${c.isGenre
-            ? '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'
-            : c.isRecommendation
-              ? '<path d="M12 3v3"/><path d="M12 18v3"/><path d="M5 12H2"/><path d="M22 12h-3"/><circle cx="12" cy="12" r="5"/>'
-              : '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>'}</svg></span>
-          <span class="pcard-title">${esc(c.title)}</span>
-          <span class="pcard-sub">${esc(c.subtitle)}</span>
+        <button class="pcard" data-featured-card="${esc(c.id)}">
+          ${cardArtBlock(c)}
+          <span class="pcard-text">
+            <span class="pcard-title">${esc(c.title)}</span>
+            <span class="pcard-sub">${esc(c.subtitle)}</span>
+          </span>
         </button>`).join("")}
     </div>`;
 
@@ -809,6 +809,55 @@ async function loadPlaylistCards({ into = "playlist-cards", limit = 0, headHtml 
  * total here implied the card was a fixed playlist rather than a
  * starting point.
  */
+/**
+ * Up to four distinct album covers from a mix's own tracks.
+ *
+ * The cards used to carry a gradient keyed to a rotating hue, which was
+ * standing in for artwork they didn't have. They do have artwork: these
+ * are the user's liked songs, already fetched, so the covers cost
+ * nothing extra — no request, no cache, just the urls already on the
+ * track objects.
+ *
+ * Deduped by album, because "Albums that landed" is by definition
+ * several tracks from the same record and four identical covers reads
+ * as a bug. Returns fewer than four, or none, rather than padding.
+ */
+function cardArt(card, want = 4) {
+  const seen = new Set();
+  const out = [];
+  for (const t of card.tracks || []) {
+    const album = t && t.album;
+    // Two album shapes exist in this codebase: the library cache keeps
+    // Spotify's raw object with images[], while the demo and catalogue
+    // paths normalise to a single album.image_url. A field present on
+    // one shape and absent on the other fails silently and is how
+    // Multi-Dip lost its artist photos, so read both.
+    const url = album && (tileImage(album.images) || album.image_url || null);
+    const key = (album && album.id) || url;
+    if (!url || seen.has(key)) continue;
+    seen.add(key);
+    out.push(url);
+    if (out.length === want) break;
+  }
+  return out;
+}
+
+/**
+ * The art block for a card, or "" when there is nothing to show.
+ *
+ * One cover fills the square; two or three stack; four make the mosaic.
+ * A count that isn't a clean grid would leave a hole, so anything
+ * between is laid out to fill. `loading="lazy"` because a full Mixes
+ * page is a few dozen covers and none of them are above the fold.
+ */
+function cardArtBlock(card) {
+  const art = cardArt(card);
+  if (!art.length) return `<span class="pcard-art is-blank" aria-hidden="true"></span>`;
+  return `<span class="pcard-art pcard-art-${art.length}" aria-hidden="true">${
+    art.map((u) => `<img src="${esc(u)}" alt="" loading="lazy">`).join("")
+  }</span>`;
+}
+
 function renderCardRow(el) {
   // Mixes shows the lot; Home shows a few with a way through to the
   // rest, so its preview doesn't read as the whole set.
@@ -832,14 +881,18 @@ function renderCardRow(el) {
   const customCard = `
     <button class="pcard is-custom" data-custom>
       <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></span>
-      <span class="pcard-title">Build your own</span>
+      <span class="pcard-text">
+        <span class="pcard-title">Build your own</span>
       <span class="pcard-sub">pick an era, a length, an artist, any combination</span>
+      </span>
     </button>`;
   const samplerCard = _samplerPool.length >= 2 ? `
     <button class="pcard is-sampler" data-sampler>
       <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"/></svg></span>
-      <span class="pcard-title">Sampler</span>
+      <span class="pcard-text">
+        <span class="pcard-title">Sampler</span>
       <span class="pcard-sub">a few tracks each from artists you've barely heard</span>
+      </span>
     </button>` : "";
   el.innerHTML = `
     ${head}
@@ -847,10 +900,12 @@ function renderCardRow(el) {
       ${limit ? "" : customCard}
       ${samplerCard}
       ${shown.map((c, i) => `
-        <button class="pcard" data-card="${esc(c.id)}" style="--h:${(200 + i * 47) % 360};">
-          <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
-          <span class="pcard-title">${esc(c.title)}</span>
-          <span class="pcard-sub">${esc(c.subtitle)}</span>
+        <button class="pcard" data-card="${esc(c.id)}">
+          ${cardArtBlock(c)}
+          <span class="pcard-text">
+            <span class="pcard-title">${esc(c.title)}</span>
+            <span class="pcard-sub">${esc(c.subtitle)}</span>
+          </span>
         </button>`).join("")}
     </div>`;
   el.querySelector("[data-sampler]")?.addEventListener("click", () => openSampler(samplerSourceArtists()));
@@ -4072,10 +4127,12 @@ function paintGenreCards(row, cards) {
     return;
   }
   row.innerHTML = cards.map((c, i) => `
-    <button class="pcard" data-genre-card="${esc(c.id)}" style="--h:${(20 + i * 53) % 360};">
-      <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
-      <span class="pcard-title">${esc(c.title)}</span>
-      <span class="pcard-sub">${esc(c.subtitle)}</span>
+    <button class="pcard" data-genre-card="${esc(c.id)}">
+      ${cardArtBlock(c)}
+      <span class="pcard-text">
+        <span class="pcard-title">${esc(c.title)}</span>
+        <span class="pcard-sub">${esc(c.subtitle)}</span>
+      </span>
     </button>`).join("");
   row.querySelectorAll("[data-genre-card]").forEach((btn) =>
     btn.addEventListener("click", () =>
@@ -4349,14 +4406,18 @@ async function renderRecommendations() {
   const askCard = `
     <button class="pcard is-custom" data-rec-ask>
       <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-      <span class="pcard-title">If you like&hellip;</span>
+      <span class="pcard-text">
+        <span class="pcard-title">If you like&hellip;</span>
       <span class="pcard-sub">name any artist, even one you don't own</span>
+      </span>
     </button>`;
   row.innerHTML = askCard + cards.map((c, i) => `
-    <button class="pcard" data-rec-card="${esc(c.id)}" style="--h:${(150 + i * 41) % 360};">
-      <span class="pcard-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3"/><path d="M12 18v3"/><path d="M5 12H2"/><path d="M22 12h-3"/><circle cx="12" cy="12" r="5"/></svg></span>
-      <span class="pcard-title">${esc(c.title)}</span>
-      <span class="pcard-sub">${esc(c.subtitle)}</span>
+    <button class="pcard" data-rec-card="${esc(c.id)}">
+      ${cardArtBlock(c)}
+      <span class="pcard-text">
+        <span class="pcard-title">${esc(c.title)}</span>
+        <span class="pcard-sub">${esc(c.subtitle)}</span>
+      </span>
     </button>`).join("");
   row.querySelectorAll("[data-rec-card]").forEach((btn) =>
     btn.addEventListener("click", () =>

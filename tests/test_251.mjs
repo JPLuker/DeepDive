@@ -64,9 +64,16 @@ check('and a missing card is not opened as undefined', /if \(card\) openCardModa
 
 // --- pill styling ---
 // 2.8 replaced pill cards with gradient tiles.
-check('cards are gradient tiles', /\.pcard::before \{[\s\S]{0,160}linear-gradient/.test(html));
+// Superseded in 2.9.116. The gradient was standing in for artwork the
+// cards didn't have; they now show the covers of the tracks in the mix,
+// which is what P7 means by "content is the color" and removes the
+// Part 19 gradient-fill-on-a-whole-card problem. Joseph's call: he
+// found the cards ugly and asked to revisit them.
+check('cards show their own artwork', /\.pcard-art \{/.test(html) && !/\.pcard::before \{[\s\S]{0,160}linear-gradient/.test(html));
 check('cards carry a title and subtitle', /pcard-title/.test(src) && /pcard-sub/.test(src));
-check('subtitle is muted against the gradient', /\.pcard-sub \{[^}]*rgba\(255,255,255/.test(html));
+// The card is a surface now, not a dark gradient, so hard-coded white
+// at 72% would be near-invisible in the light theme.
+check('subtitle is muted against the surface', /\.pcard-sub \{[^}]*color:var\(--muted\)/.test(html));
 check('cards still sit in their own section', /id="playlist-cards"/.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);

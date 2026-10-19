@@ -36,6 +36,49 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   check('and the toggle, when on', /input:checked \+ \.switch-track \{ background:var\(--accent\);/.test(shell));
 }
 
+// --- P7: content is the color (2.9.116) ------------------------------
+// The mix cards were gradient fills with a hue rotating per card,
+// standing in for artwork they didn't have. They do have artwork: the
+// mixes are built from the user's liked songs, so the covers are
+// already fetched and cost nothing extra. Joseph's call — he found the
+// cards ugly and asked to revisit them.
+{
+  check('no gradient fill on a whole card', !/\.pcard::before \{[\s\S]{0,160}linear-gradient/.test(shell));
+  check('no per-card hue left in markup', !/--h:\$\{/.test(src));
+  check('cards carry their own covers', /function cardArtBlock\(/.test(src) && /\.pcard-art \{/.test(shell));
+  check('the art is square', /\.pcard-art \{[\s\S]{0,160}aspect-ratio:1/.test(shell));
+
+  // Concentric rule, 7.3: inner radius = outer minus the padding
+  // between them. The card is --r-lg (20px) with 10px of padding, so
+  // the art is 10px, which is --r-sm exactly.
+  const card = (shell.match(/\n  \.pcard \{[^}]*\}/) || [''])[0];
+  const art = (shell.match(/\n  \.pcard-art \{[^}]*\}/) || [''])[0];
+  check('card is --r-lg with 10px padding', /border-radius:var\(--r-lg\)/.test(card) && /padding:10px/.test(card));
+  check('and its art is --r-sm, which is the concentric answer', /border-radius:var\(--r-sm\)/.test(art));
+  // A phone override used to set padding:8px 14px, which breaks that
+  // relationship and pinches the corners.
+  check('no override re-pads the card', !/\.pcard \{ [^}]*padding:(?!10px)/.test(shell));
+
+  // Every count has to fill the square or a cell is left empty.
+  for (const n of [1, 2, 3]) check(`${n} cover(s) lay out`, shell.includes(`.pcard-art-${n}`));
+  check('a card with no art degrades rather than breaking', /\.pcard-art\.is-blank/.test(shell) && /is-blank/.test(src));
+
+  // Two album shapes exist in this codebase and a field on one but not
+  // the other fails silently — that is how Multi-Dip lost its photos.
+  check('both album shapes are read', /tileImage\(album\.images\) \|\| album\.image_url/.test(src));
+  check('covers are deduped by album', /seen\.has\(key\)/.test(src));
+  // Text sits on a surface now, so white-on-gradient would vanish in
+  // the light theme.
+  check('card text is themed, not hard-coded white', !/\.pcard \{[^}]*color:#fff/.test(shell));
+}
+
+// A two-word action link wrapped to two lines at phone width, beside a
+// heading whose subtitle had already taken the room.
+// Matched inside the rule rather than within a fixed character span:
+// a comment added to the rule pushed the declaration past the window
+// and the check failed on a rule that was correct.
+check('the row action does not wrap', /white-space:nowrap/.test((shell.match(/\n  \.row-more \{[^}]*\}/) || [''])[0]));
+
 // --- Part 19: outlined-everything -----------------------------------
 // 1.5px is heavier than the hairline the standard permits anywhere.
 check('no 1.5px outlines remain', !/1\.5px solid var\(--line\)/.test(shell));

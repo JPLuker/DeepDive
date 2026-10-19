@@ -4,6 +4,40 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.116
+- **The mix cards show the music in them.** They were gradient fills
+  with a hue rotating per card, which Part 19 bans on whole cards, and
+  the comment above them admitted why: standing in for "artwork it
+  doesn't have". It does have artwork. A mix is built from the user's
+  own liked songs, so the covers were already fetched and cost nothing
+  extra — no request, no cache, just urls already on the track objects.
+  Up to four of them, deduped by album, in a mosaic that fills the
+  square at one, two, three or four covers.
+- Cards are a filled surface with the text beneath the art, rather than
+  white text over a dark gradient, which would have been unreadable in
+  the light theme the moment the gradient went.
+- The art's radius is derived from the card's by the concentric rule
+  (7.3): `--r-lg` minus 10px of padding is 10px, which is `--r-sm`. A
+  phone override that re-padded the card to `8px 14px` is gone, since
+  it broke that relationship and pinched the corners.
+- Sampler, Build your own and If you like… have no tracks and no
+  covers, so they take the accent in place of artwork, which also makes
+  them read as the actions they are rather than mixes already decided.
+- `cardArt` reads both album shapes in this codebase — the library
+  cache keeps Spotify's raw object with `images[]`, while the demo and
+  catalogue paths normalise to a single `album.image_url`. A field
+  present on one and absent on the other fails silently, which is how
+  Multi-Dip lost its artist photos.
+- **"All mixes" was wrapping to two lines** at phone width, beside a
+  heading whose subtitle had already taken the room. The link no longer
+  wraps, and the subtitle is hidden on phones. Found by rendering.
+  21.2 bans subtitles that restate a title, so the Part 10 copy pass
+  may remove it entirely.
+- **Settled, 19 Oct: DeepDive keeps its blue accent.** Part 5.1 names
+  one accent and it is violet; Joseph is adjusting the guidelines to
+  allow a project accent instead. No code change — recorded so it is
+  not raised again.
+
 ## 2.9.115
 The app was rendered for the first time. `CLAUDE.md` said the design
 work was "built without being rendered: Chrome won't install in the

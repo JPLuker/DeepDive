@@ -30,8 +30,17 @@ check('pins marked by an edge, not an outline', /\.tile-wrap\.is-pin \.tile \{ b
 check('overflow control at every width', /\.tile-more \{[\s\S]{0,200}display:block/.test(html));
 
 // playlist cards
-check('cards are gradient-filled', /\.pcard::before \{[\s\S]{0,160}linear-gradient/.test(html));
-check('hue rotates per card', /--h:\$\{\(200 \+ i \* 47\) % 360\}/.test(src));
+// Superseded in 2.9.116. The gradient was standing in for artwork the
+// cards didn't have; they now show the covers of the tracks in the mix,
+// which is what P7 means by "content is the color" and removes the
+// Part 19 gradient-fill-on-a-whole-card problem. Joseph's call: he
+// found the cards ugly and asked to revisit them.
+check('cards are artwork-led', /\.pcard-art \{/.test(html));
+check('no rotating hue left', !/--h:\$\{/.test(src) && !/hsl\(var\(--h\)/.test(html));
+// Four covers, deduped by album: "Albums that landed" is several
+// tracks off one record, and four identical covers reads as a bug.
+check('covers come from the mix itself', /function cardArt\(/.test(src) && /for \(const t of card\.tracks/.test(src));
+check('and are deduped by album', /seen\.has\(key\)/.test(src));
 check('three across on desktop', /\.card-row \{ display:grid; grid-template-columns:repeat\(3,1fr\)/.test(html));
 
 // sampler
@@ -44,7 +53,7 @@ check('sampler no longer dashed', !/\.btn-sampler[^}]*border-style:dashed/.test(
 
 // mobile
 check('tiles single-column on phones', /\.tile-grid \{ grid-template-columns:1fr; \}/.test(html));
-check('card grid halves on phones', /\.card-row \{ grid-template-columns:repeat\(2,1fr\); gap:8px; \}/.test(html));
+check('card grid halves on phones', /\.card-row \{ grid-template-columns:repeat\(2,1fr\); gap:10px; \}/.test(html));
 // Superseded in 2.8.32/33: showing them always is what took the
 // width on every row, and in 2.8.34 keeping them in the layout
 // while invisible is what made the overflow unresponsive.

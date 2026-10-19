@@ -130,7 +130,11 @@ check('and scrolls when it has to', /#card-modal \.modal \{[\s\S]{0,240}overflow
 
 // 2.9.58: mix cards read from the top. With the text pushed to the
 // foot, a card beside a taller one opened a gap under its icon.
-check('mix cards start at the top', /\.pcard \{[\s\S]{0,120}justify-content:flex-start/.test(h) && /\.pcard-icon \{ opacity:0\.85; margin-bottom:10px; \}/.test(h));
+// 2.9.58 fixed a gap that opened between icon and title when a card
+// sat beside a taller neighbour. The art-led card has no such gap to
+// open: the square sets the height, and the text follows it.
+check('mix cards lead with a square', /\.pcard-art \{[\s\S]{0,120}aspect-ratio:1/.test(h));
+check('and the text follows it', /\.pcard-text \{ display:flex; flex-direction:column/.test(h));
 
 // --- the floating tab pill (2.9.111) -------------------------------
 // DESIGN.md P2 "float, don't fence" and 14.1. The bar used to span the

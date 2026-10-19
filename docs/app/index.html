@@ -277,10 +277,15 @@
     margin-left:auto; background:none; border:none; cursor:pointer;
     font-family:inherit; font-size:13px; font-weight:600; color:var(--accent);
     padding:4px 2px;
+    /* Nothing stopped this wrapping, so at phone width "All mixes"
+       broke across two lines beside a heading whose subtitle had
+       already taken the room. The link is two words; the subtitle is
+       what should give. */
+    white-space:nowrap; flex-shrink:0;
   }
   .row-more:hover { text-decoration:underline; }
 
-  .row-head .qual { font-size:21px; font-weight:700; letter-spacing:-0.02em; color:var(--muted-soft); }
+  .row-head .qual { font-size:21px; font-weight:700; letter-spacing:-0.02em; color:var(--muted-soft); min-width:0; }
   .row-head .rule { display:none; }
 
   /* Skeletons while suggestions load. An empty area reads as broken;
@@ -420,34 +425,44 @@
   .autofill-pin svg { width:14px; height:14px; }
 
   /* ---- playlist cards ---- */
-  /* Gradient fills rather than outlines. Six identical bordered boxes
-     read as a form; tinted cards read as things to pick between. The
-     hue rotates per card so the row has some variety without needing
-     artwork it doesn't have. */
-  .card-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  /* These used to be gradient fills with a hue rotating per card,
+     because they had no artwork. They do have artwork: a mix is built
+     from the user's own liked songs, so the covers are already paid
+     for. Showing them is both what P7 means by "content is the color"
+     and the answer to Part 19's ban on gradient fills over whole
+     cards — the card now shows what is actually in the mix.
+     FOCAL: the artwork. */
+  .card-row { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
   .pcard {
     position:relative; overflow:hidden;
-    display:flex; flex-direction:column; justify-content:flex-start; gap:3px;
-    min-height:104px; padding:14px;
-    border:none; border-radius:var(--r-md); cursor:pointer;
-    text-align:left; font-family:inherit; color:#fff;
+    display:flex; flex-direction:column; gap:10px;
+    padding:10px;
+    border:none; border-radius:var(--r-lg); cursor:pointer;
+    text-align:left; font-family:inherit; color:var(--ink);
     background:var(--tile);
-    transition:transform .14s ease, filter .14s ease;
+    transition:transform .14s ease, background .14s ease;
   }
-  .pcard::before {
-    content:""; position:absolute; inset:0;
-    background:linear-gradient(145deg, hsl(var(--h) 62% 32%), hsl(calc(var(--h) + 28) 58% 16%));
-    z-index:0;
+  .pcard:hover { transform:translateY(-2px); background:var(--tile-hover); }
+
+  /* Concentric rule (7.3): the card is --r-lg with 10px of padding, so
+     the art inside it is 20 - 10 = 10px, which is --r-sm exactly. */
+  .pcard-art {
+    display:grid; aspect-ratio:1; width:100%;
+    border-radius:var(--r-sm); overflow:hidden;
+    grid-template-columns:1fr 1fr; gap:1px;
+    background:var(--surface);
   }
-  .pcard > * { position:relative; z-index:1; }
-  .pcard:hover { transform:translateY(-2px); filter:brightness(1.12); }
-  /* The sampler leads the row and isn't built from a library rule like
-     the others, so it reads as its own thing without leaving the grid. */
-  .pcard.is-sampler { --h:210; }
-  /* Build-your-own leads the row with the sampler: both are things you
-     start, rather than recipes already decided. */
-  .pcard.is-custom { --h:265; }
-  .pcard.is-custom .pcard-icon { opacity:1; }
+  .pcard-art img { width:100%; height:100%; object-fit:cover; display:block; }
+  /* One cover fills the square; two split it; three give the first
+     cover the full left column so no cell is left empty. */
+  .pcard-art-1 { grid-template-columns:1fr; }
+  .pcard-art-2 { grid-template-rows:1fr; }
+  .pcard-art-3 img:first-child { grid-row:span 2; }
+  .pcard-art.is-blank {
+    background:linear-gradient(150deg, var(--surface), var(--tile-hover));
+  }
+
+  .pcard-text { display:flex; flex-direction:column; gap:2px; padding:0 4px 4px; }
 
   /* The shared search inside a settings row: it carries its own pill,
      so it shouldn't also inherit the page-level centring the dive
@@ -460,16 +475,23 @@
   .cm-range .nav-input { flex:1; min-width:0; }
   .cm-dash { font-size:13px; color:var(--muted-soft); flex-shrink:0; }
   .custom-preview { margin:18px 0 4px; }
-  .pcard.is-sampler .pcard-icon { opacity:1; }
-
-  /* A fixed gap under the icon. It was margin-bottom:auto, which pushed
-     the text to the foot of the card: beside a taller neighbour, a card
-     with a one-line subtitle opened a gap between icon and title. */
-  .pcard-icon { opacity:0.85; margin-bottom:10px; }
-  .pcard-icon svg { width:18px; height:18px; }
-  .pcard-title { font-size:14.5px; font-weight:700; letter-spacing:-0.01em; line-height:1.2; }
-  .pcard-sub { font-size:13px; color:rgba(255,255,255,0.72); line-height:1.35; }
-  .pcard-text { display:contents; }
+  /* Sampler, Build your own and If you like… are things you start
+     rather than mixes already decided, so they have no tracks and no
+     covers. They take the accent in place of artwork, which also makes
+     them read as the actions they are. */
+  .pcard.is-sampler .pcard-art, .pcard.is-custom .pcard-art {
+    background:var(--accent-soft-fill);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pcard-icon {
+    display:flex; align-items:center; justify-content:center;
+    aspect-ratio:1; width:100%;
+    border-radius:var(--r-sm);
+    background:var(--accent-soft-fill); color:var(--accent);
+  }
+  .pcard-icon svg { width:26px; height:26px; }
+  .pcard-title { font-size:14.5px; font-weight:600; letter-spacing:-0.01em; line-height:1.2; }
+  .pcard-sub { font-size:13px; color:var(--muted); line-height:1.35; }
 
   .card-len { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:4px; }
   .len-opt { font-family:inherit; font-size:13px; padding:8px 13px; border-radius:var(--r-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
@@ -1447,9 +1469,11 @@
 
     /* Cards were 190px minimum, which forced horizontal overflow on a
        narrow screen. One per row reads better anyway. */
-    .card-row { gap:8px; }
-    .pcard { padding:8px 14px; }
-    .pcard-title { font-size:13px; }
+    .card-row { gap:10px; }
+    /* Padding stays 10px at every width: the art's radius is derived
+       from it by the concentric rule (--r-lg minus the padding), so an
+       override here would pinch the corners. Only the type shrinks. */
+    .pcard-title { font-size:13.5px; }
 
     .row-head { margin:26px auto 12px; }
 
@@ -1459,10 +1483,14 @@
     /* No hover on touch, so the overflow button is how these are
        reached — showing them always is what took the width. */
     .tile-wrap.show-actions .tile { padding-right:0; }
-    .card-row { grid-template-columns:repeat(2,1fr); gap:8px; }
-    .pcard { min-height:92px; padding:12px; }
+    .card-row { grid-template-columns:repeat(2,1fr); gap:10px; }
     .row-head { margin:28px auto 12px; }
     .row-head h2, .row-head .qual { font-size:18px; }
+    /* Two bold 18px strings and a link do not fit one phone line. The
+       heading and its action stay; the qualifier is the part that can
+       be read from the screen it leads to. (The Part 10 copy pass may
+       remove it outright — 21.2 bans subtitles that restate a title.) */
+    .row-head .qual { display:none; }
 
     /* Modals: full-width sheets rather than centred boxes. */
     .modal-backdrop { padding:0; align-items:flex-end; }

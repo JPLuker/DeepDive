@@ -319,15 +319,12 @@ floating tab pill (2.9.111). Next in Phase 1, in this order:
   CLAUDE.md's standing rule against cutting CSS with a line-based
   regex. Remove by brace-matched rule, and compare a render before and
   after.
-- **The accent colour — Joseph's decision, not a code change.**
-  Part 5.1 names one accent, `#6B5CF0` violet; DeepDive's is `#0B54FF`
-  blue, and it is in the logo, the landing page and all nine approved
-  screenshots. Part 22 is explicit: "Changing a core value (accent,
-  radius scale, font)? Change it here first, then in code. This file is
-  the source of truth." So either DeepDive adopts the standard's
-  accent, or `DESIGN.md` gains a per-project accent provision and
-  records blue. Nothing in the standard currently allows a project to
-  keep its own. **Don't change either repo without asking.**
+- ~~**The accent colour.**~~ **Settled 19 Oct: blue stays.** Joseph is
+  adjusting `DESIGN.md` to allow a project accent, rather than DeepDive
+  adopting the standard's violet. No code change. Don't raise it again.
+- ~~**The mix cards.**~~ **Done in 2.9.116.** Joseph found them ugly
+  and asked to revisit; they show the covers of the tracks in the mix
+  now, which also removes the Part 19 gradient-fill problem.
 - **Type scale against Part 9.2.** The 12px floor landed in 2.9.113;
   the scale itself (display/title-1/…/micro) has not been checked.
 - **Part 10 copy pass**, then the Part 21 self-review.
