@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.114";
+export const BUILD = "2.9.115";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -3678,13 +3678,28 @@ async function startScrub() {
   }
 }
 
+/**
+ * "Checked 412 of 500 artists · " — or nothing at all.
+ *
+ * The counts used to fall back to words: `${scanned ?? "your"} of
+ * ${total ?? "all"}`, which reads as "Checked your of all artists" when
+ * both are missing. A half-filled sentence is worse than no sentence,
+ * so when the numbers aren't there the clause is dropped and the
+ * duplicate count stands on its own.
+ */
+function scanCountLine(r) {
+  const done = r.artists_scanned, all = r.artists_total;
+  if (typeof done !== "number" || typeof all !== "number") return "";
+  return `Checked ${done} of ${all} artists · `;
+}
+
 function renderScrubResults(r) {
   setTitle("DeepDive · Duplicate results");
   const dups = r.duplicate_candidates || [];
   root.innerHTML = `
     <div class="card">
       <h1>Duplicate scan ${r.artists_scanned < r.artists_total ? "cancelled" : "complete"}</h1>
-      <p class="muted">Checked ${r.artists_scanned ?? "your"} of ${r.artists_total ?? "all"} artists · ${dups.length} duplicate cop${dups.length === 1 ? "y" : "ies"} found</p>
+      <p class="muted">${scanCountLine(r)}${dups.length} duplicate cop${dups.length === 1 ? "y" : "ies"} found</p>
       ${dups.length ? `
         <div class="crate-header"><span class="label">Copies to mark as liked</span></div>
         <p class="crate-note">Each one matches a recording already in your Liked Songs. Like the selected copies so they stop appearing as new in future dives.</p>
@@ -6408,7 +6423,7 @@ async function renderDemoResults(artistName = null) {
     const tracks = await demoTracksFor(artist, 10);
     const photo = artist.image_url_large || artist.image_url;
     if (photo) await preloadPhoto(photo);
-    return renderResults(demo.resultsFrom(artist, tracks));
+    return await renderResults(demo.resultsFrom(artist, tracks));
   } catch (e) { return renderDemoError(e); }
 }
 
@@ -6432,11 +6447,11 @@ async function renderDemo(screen) {
   renderDemoLoading();
   try {
     if (screen === "results") {
-      return renderDemoResults();
+      return await renderDemoResults();
     }
     if (screen === "scan") {
       const groups = await demoGroupsFor("scan", 4, 5);
-      return renderScrubResults(demo.scanFrom(groups));
+      return await renderScrubResults(demo.scanFrom(groups));
     }
     if (screen === "sampler") {
       const groups = await demoGroupsFor("sampler", 6, 2);
@@ -6445,8 +6460,8 @@ async function renderDemo(screen) {
       await renderDemoHome();
       return openCardModal(card);
     }
-    if (screen === "chooser") return renderDemoChooser();
-    if (screen === "dive") return renderDemoDiveProgress();
+    if (screen === "chooser") return await renderDemoChooser();
+    if (screen === "dive") return await renderDemoDiveProgress();
     if (screen === "crate") {
       const artists = await demoArtistsFor("crate", 9);
       const entries = artists.map((a, i) => ({
@@ -6455,20 +6470,25 @@ async function renderDemo(screen) {
       }));
       _demoCrateEntries = entries;
       _demoCrateUpNext = entries.slice(0, 3);
-      return renderCrate();
+      return await renderCrate();
     }
     if (screen === "multidip") {
       const artists = await demoArtistsFor("multidip", 4);
       _showBill = artists.map((a, i) => ({ ...a, emphasis: i === artists.length - 1 ? "more" : (i === 0 ? "less" : ""), songs: i === 1 ? 5 : 0 }));
-      return renderShow();
+      return await renderShow();
     }
-    if (screen === "mixes") return renderDemoMixes();
-    return renderDemoHome();
-  } catch (e) { return renderDemoError(e); }
+    if (screen === "mixes") return await renderDemoMixes();
+    return await renderDemoHome();
+  } catch (e) { return await renderDemoError(e); }
 }
 
 async function renderDemoMixes() {
   const groups = await demoGroupsFor("mixes", 9, 4);
+  // The `tracks` helper below already guards a short list, but the
+  // card titles read groups[0].artist.name directly, so an empty one
+  // threw before anything rendered. renderDemoChooser has handled this
+  // since it was written; this is the same check, said the same way.
+  if (!groups.length) throw new Error("Spotify couldn't resolve any approved artists for the mixes screen.");
   _samplerPool = groups.map((g) => g.artist);
   root.innerHTML = `<div id="demo-featured"></div><div id="demo-mix-ideas"></div>`;
   const tracks = (i) => groups[i] ? groups[i].tracks : [];

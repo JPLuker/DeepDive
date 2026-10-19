@@ -4,3 +4,7 @@ watchlist.json
 venv/
 __pycache__/
 *.pyc
+
+# Render output from tools/shoot.mjs — images for looking at, not
+# artefacts to version. Regenerate them, don't commit them.
+shots/

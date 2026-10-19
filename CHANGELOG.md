@@ -4,6 +4,39 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.115
+The app was rendered for the first time. `CLAUDE.md` said the design
+work was "built without being rendered: Chrome won't install in the
+sandbox, so this was written against the stylesheet" — that is no
+longer true. `tools/shoot.mjs` drives the Chromium that ships in the
+sandbox over the `?demo=` screens at phone and desktop width in both
+themes, and reports console errors.
+
+Three bugs in the first run, none of which a source-text assertion can
+see:
+
+- **The demo dispatcher's error handling never worked.** It has a
+  `try`/`catch` whose entire job is to show `renderDemoError` instead
+  of a blank screen. A promise returned from inside a `try` block
+  settles after the block has exited, so `return renderDemoMixes()`
+  rejected where nothing was listening: an unhandled rejection, a blank
+  page and a console error, instead of the readable error card. Ten
+  returns across two routes now `return await`.
+- **`renderDemoMixes` read `groups[0].artist.name` without a guard**,
+  while its own `tracks` helper guarded a short list two lines below,
+  and `renderDemoChooser` has thrown a readable error for this since it
+  was written. Four of the ten demo screens — chooser, dive, mixes and
+  results — fail this way whenever Spotify can't resolve the approved
+  artists, which is how it surfaced.
+- **"Checked your of all artists."** The scan results header read
+  `Checked ${artists_scanned ?? "your"} of ${artists_total ?? "all"}
+  artists`, so with both counts missing it rendered a sentence that
+  isn't English. The clause is all-or-nothing now: real numbers, or the
+  duplicate count on its own.
+
+`shots/` is gitignored — the images are for looking at, not for
+versioning.
+
 ## 2.9.114
 - Radius tokens renamed to the Part 20 scale: `--radius` → `--r-md`,
   `--radius-tile` → `--r-sm`, `--radius-pill` → `--r-pill`, and

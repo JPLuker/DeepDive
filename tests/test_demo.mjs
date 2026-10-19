@@ -36,16 +36,21 @@ check('all screenshot screens are reachable', DEMO_SCREENS.length >= 10);
 check('index lists every screen', DEMO_SCREENS.every(([id]) => typeof id === 'string' && id.length));
 
 // --- real renderers ---------------------------------------------------
-check('chooser is a staged screenshot route', /screen === "chooser"\) return renderDemoChooser\(\)/.test(src) && DEMO_SCREENS.some(([id]) => id === 'chooser'));
+// `return await` since 2.9.115: a promise returned from inside the
+// dispatcher's try{} rejects after the block has exited, so its catch
+// never saw a failure and the screen went blank. The point of these
+// three checks is that the demo drives the real renderers rather than
+// a mock, which is unchanged, so they allow the await.
+check('chooser is a staged screenshot route', /screen === "chooser"\) return await renderDemoChooser\(\)/.test(src) && DEMO_SCREENS.some(([id]) => id === 'chooser'));
 check('demo artist selection opens the real chooser', /function startSearch\(artistName\) \{\s*if \(demo\.demoActive\(\)\) return renderDemoChooser\(artistName\)/.test(src));
 check('chooser actions stay staged in demo', /if \(demo\.demoActive\(\)\) \{\s*if \(dip\) return renderDemoResults\(artist\);\s*return renderDemoDiveProgress\(artist\);/.test(src));
-check('results uses the real renderer', /return renderResults\(demo\.resultsFrom\(artist, tracks\)\)/.test(src));
+check('results uses the real renderer', /return await renderResults\(demo\.resultsFrom\(artist, tracks\)\)/.test(src));
 check('results preloads full Spotify artist artwork', /client\.get\(`artists\/\$\{approved\.id\}`\)\.then\(normaliseArtist\)/.test(src) && /if \(photo\) await preloadPhoto\(photo\)/.test(src));
 check('results stage uneven counts and visible duplicates', /already_liked_count: 11/.test(dsrc) && /usable\.slice\(0, 3\)/.test(dsrc) && /new_tracks: usable\.slice\(3\)/.test(dsrc));
 check('demo artist taps cannot start a live dive', /function startSearch\(artistName\) \{\s*if \(demo\.demoActive\(\)\) return renderDemoChooser\(artistName\)/.test(src) && /onChoose: \(it\) => startSearch\(it\.name\)/.test(src));
 check('home preview leads with a library-wide recipe', /id: "demo-home-random", title: "Surprise me"/.test(src) && !/id: `demo-mix-\$\{i\}`/.test(src));
 check('demo module import is cache-versioned', /import \* as demo from "\.\/demo\.js\?v=2\.9\.106"/.test(src));
-check('scan uses the real renderer', /return renderScrubResults\(demo\.scanFrom\(groups\)\)/.test(src));
+check('scan uses the real renderer', /return await renderScrubResults\(demo\.scanFrom\(groups\)\)/.test(src));
 check('sampler uses the real dialog', /openCardModal\(card\)/.test(src));
 check('home uses the real suggestion row', /renderSuggestionRow\(el, demo\.pinsFrom\(pins\), demo\.suggestionsFrom\(suggestions\)\)/.test(src));
 check('no second copy of tile markup in demo.js', !/class="tile"/.test(dsrc));
@@ -65,6 +70,46 @@ check('demo mixes include date album and library recipes', /title: "Released in 
 // --- session handling --------------------------------------------------
 check('demoScreen tolerates no window', typeof demoScreen() === 'object' || demoScreen() === null || typeof demoScreen() === 'string');
 check('there is a way out', /export function exitDemo/.test(dsrc) && /demo\.exitDemo\(\)/.test(src));
+
+// --- found by rendering, not by reading (2.9.115) -------------------
+// The demo dispatcher has a try/catch whose whole job is to show
+// renderDemoError instead of a blank screen. It could not do that: a
+// promise returned from inside try{} settles after the block exits, so
+// every async failure escaped as an unhandled rejection. Four of the
+// ten demo screens hit it the moment Spotify was unreachable.
+{
+  // Anchored with a regex rather than the literal catch text: the fix
+  // itself rewrote that line to `return await renderDemoError(e)`, so
+  // a literal search for the old wording found nothing, indexOf gave
+  // -1, and the slice ran to the end of the file — picking up boot()
+  // and reporting failures from functions this check has no business
+  // reading. That is the third slice this week to quietly read the
+  // wrong thing.
+  const i = src.indexOf('async function renderDemo(screen) {');
+  const after = src.slice(i);
+  // The catch is indented two spaces, so the newline is followed by
+  // whitespace before the brace. Without \s* this matched nothing and
+  // fell through to the same end-of-file slice it was written to stop.
+  const end = after.search(/\n\s*\} catch \(e\) \{ return (?:await )?renderDemoError\(e\); \}/);
+  check('the dispatcher still has its error path', i > -1 && end > -1);
+  const fn = after.slice(0, end);
+  const tryAt = fn.indexOf('try {');
+  const bare = [...fn.slice(tryAt).matchAll(/return (render[A-Za-z]+\()/g)];
+  check('no unawaited render returns inside the try', tryAt > -1 && bare.length === 0);
+}
+// Same shape, same fix, in the results route's own try/catch.
+check('results route awaits too', /return await renderResults\(demo\.resultsFrom/.test(src));
+
+// renderDemoChooser has always thrown a readable error on an empty
+// artist list; renderDemoMixes read groups[0].artist.name directly and
+// threw a TypeError instead, even though its own `tracks` helper
+// guarded a short list.
+check('mixes guards an empty artist list', /if \(!groups\.length\) throw new Error\(/.test(src));
+
+// "Checked ${scanned ?? "your"} of ${total ?? "all"} artists" renders
+// as "Checked your of all artists" when both are missing.
+check('the scan count line is all-or-nothing', /function scanCountLine/.test(src));
+check('and no longer falls back to words', !/artists_scanned \?\? "your"/.test(src));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

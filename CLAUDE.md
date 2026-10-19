@@ -369,8 +369,37 @@ source and was invisible on the only device that mattered.
 text. They cannot see an element sitting on top of another, a dialog
 that never opens, a stylesheet truncated by a stray brace, or a
 response shaped differently from the documentation. Every serious bug
-here was found by Joseph looking at a screen. Before 2.9, work through
+here was found by Joseph looking at a screen. Before 3.0, work through
 `TESTING.md` deliberately rather than trusting the count.
+
+**You can render it now — do that before claiming anything visual.**
+`node tools/shoot.mjs [screen]` drives the Chromium that ships in the
+sandbox over the `?demo=` routes at phone and desktop width in both
+themes, writes PNGs to `shots/` (gitignored) and reports console
+errors. Serve the site first:
+
+```bash
+cd docs && python3 -m http.server 8231 &
+node tools/shoot.mjs            # everything, ~40 shots
+node tools/shoot.mjs mixes      # one screen
+```
+
+This file used to say the desktop work was "built without being
+rendered: Chrome won't install in the sandbox". That was true when it
+was written and stopped being true without anyone noticing, which cost
+the project three bugs that shipped: the demo error screen never
+worked, four demo screens threw a TypeError instead of showing it, and
+the scan header read "Checked your of all artists". All three were
+found in the first run.
+
+**Spotify is not reachable from the sandbox**, so chooser, dive, mixes
+and results render their error card rather than content. Home, sampler,
+scan, crate, multidip and settings render with empty data. That is
+enough to check layout, chrome, glass and both themes; it is not enough
+to check anything that needs real artwork or counts.
+
+*Look at the images.* A console-error count of zero is the same trap as
+a green suite one level up.
 
 **A skip that predates a feature will hide it.** "Don't ask again" was
 added when the artist dialog only chose how deep a dive went. When Dip
