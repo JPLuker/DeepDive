@@ -14,7 +14,10 @@ check('a throwing handler cannot break the retry', /try \{ this\.onRateLimit\(wa
 
 check('app writes to the dive screen', /getElementById\("dive-stage"\)/.test(src.slice(src.indexOf('client.onRateLimit'))));
 check('that element exists', /id="dive-stage"/.test(app));
-check('says how long the wait is', /waiting \$\{secs\}s/.test(src));
+// Case-insensitive: the string became a sentence of its own when the
+// em dash joining it to the previous clause was removed, so the w is
+// now capital. The assertion is about the seconds being shown.
+check('says how long the wait is', /waiting \$\{secs\}s/i.test(src));
 check('shows repeated attempts', /attempt \$\{attempt\}/.test(src));
 check('falls back to a toast outside a dive', /else flash\(msg\)/.test(src));
 

@@ -4,6 +4,46 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.121
+First pass of the Part 10 copy rewrite, read on rendered screens rather
+than in a list. `tools/copy-dump.mjs` prints every visible string per
+screen in reading order, which is the only way to answer Part 10.1 —
+"if I delete this, does the user lose the ability to understand,
+decide, or act?"
+
+- **The empty duplicate scan said it twice.** "0 duplicate copies
+  found" sat directly above "No duplicate recordings found." Joseph's
+  own list of tells opens with the same message written twice,
+  differently.
+- **Em dashes: 20 down to 8.** CLAUDE.md counted sixteen at 2.8.65, so
+  they had been accumulating. The eight left are separators — "Artist ·
+  2 of 4", "Album tracklist — the bulk of a dive" — not the clause-join
+  habit the note is about.
+- **First-person app voice removed.** "Spotify is rate-limiting us"
+  appeared as a diagnostic headline; 10.4 bans "we" and "us" inside the
+  tool. The banner beside it had already been reworded, so the same
+  event was described in two voices.
+- **A ♪ character was standing in for missing album art.** Part 19
+  bans emoji as icons in app chrome, and it rendered differently on
+  every platform. It is the same inline SVG the rest of the app uses.
+- Empty states and settings notes stopped explaining the architecture:
+  the home screen no longer says suggestions "are built from your
+  library once it's been read", the Last.fm note lost "optional but
+  recommended" and "simply", and Reset pacing describes what the button
+  does instead of how pacing works.
+- Hedging out of errors: "waiting a few minutes usually clears it"
+  became "wait a few minutes". The advice is the same either way, and
+  10.4 asks for specifics over adjectives.
+
+New `tests/test_copy.mjs`: no exclamation marks, no emoji in chrome, no
+first-person voice, no "click here", no hedged advice in errors, and a
+cap on the em-dash count so the drift is visible next time. Three
+assertions elsewhere pinned exact wording this changed and now assert
+the meaning instead.
+
+Still to do: onboarding, the modals and confirmations, and the dive
+stage lines.
+
 ## 2.9.120
 - **The app shell drops its dead stylesheet too.** 50 rules, 5,875
   bytes: the slide-out drawer the tab bar replaced, the progress card

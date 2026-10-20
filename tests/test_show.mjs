@@ -79,7 +79,10 @@ check('it uses the shared artist search', /inputId: "artist-input"[\s\S]{0,300}_
 // Now on the dive screen, with the bill's overall progress rather
 // than one artist's — one of three being finished says nothing about
 // the night.
-check('the cost is stated as it runs', src.includes('${a.name} — ${i + 1} of ${_showBill.length}'));
+// The separator moved from an em dash to the middle dot used
+// everywhere else in this app (show-count, track meta). The check is
+// that the line names the artist and their position in the bill.
+check('the cost is stated as it runs', src.includes('${a.name} · ${i + 1} of ${_showBill.length}'));
 check('on the full screen', src.includes('showDiveScreen("Building your night…"'));
 check('and it can be stopped', src.includes('() => { cancelled = true; }'));
 // Still the whole bill, but each artist's share is now their progress

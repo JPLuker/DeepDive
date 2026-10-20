@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.120";
+export const BUILD = "2.9.121";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -57,7 +57,7 @@ client.onCatalogAlbum = (entry) => {
 client.onRateLimit = (waitMs, attempt) => {
   const secs = Math.max(1, Math.round(waitMs / 1000));
   const el = document.getElementById("dive-stage");
-  const msg = `Spotify is rate-limiting us — waiting ${secs}s, then carrying on…`
+  const msg = `Spotify is rate-limiting. Waiting ${secs}s, then carrying on…`
     + (attempt > 1 ? ` (attempt ${attempt})` : "");
   if (el) el.textContent = msg;
   // Also surface it outside a dive, where there's no stage line to write
@@ -965,7 +965,7 @@ function renderSamplerIntro(artists) {
   root.innerHTML = `
     <div class="card">
       <h1>Sampler</h1>
-      <p class="muted">A few tracks each from ${artists.length} artists you've barely heard — one song you already liked, then two you haven't.</p>
+      <p class="muted">A few tracks each from ${artists.length} artists you've barely heard. One song you already liked, then two you haven't.</p>
       <div class="sampler-faces" id="sampler-faces">
         ${artists.slice(0, 8).map((a) => a.image_url
           ? `<img src="${esc(a.image_url)}" alt="" class="sampler-face">`
@@ -1482,7 +1482,7 @@ async function renderCustomMix() {
     const typedMiss = f.artistTyped && !f.artistId;
     const reqs = Math.ceil(n / 100);
     document.getElementById("cm-preview").innerHTML = typedMiss
-      ? `<p class="empty-note">No artist called “${esc(document.getElementById("cm-artist").value.trim())}” in your library — the rest of the filters still apply.</p>`
+      ? `<p class="empty-note">No artist called “${esc(document.getElementById("cm-artist").value.trim())}” in your library. The rest of the filters still apply.</p>`
       : n
       ? `<p class="nav-hint"><strong>${n}</strong> track${n === 1 ? "" : "s"} match — ${esc(insights.describeCustom(f))}.
          ${n > 300 ? `<br>Creating this would take about ${reqs} requests, one per hundred tracks. Building the list costs nothing; only creating the playlist talks to Spotify.` : ""}</p>`
@@ -1701,7 +1701,7 @@ const INTENTS = [
   {
     id: "studio",
     name: "Studio recordings only",
-    desc: "Skips live takes, radio edits, instrumentals and a cappellas — just the proper studio versions.",
+    desc: "Skips live takes, radio edits, instrumentals and a cappellas. Studio versions only.",
     opts: { excludeLive: true, excludeCensored: true, excludeInstrumental: true, excludeAcappella: true },
   },
   {
@@ -1713,7 +1713,7 @@ const INTENTS = [
   {
     id: "everything",
     name: "Everything they've touched",
-    desc: "Adds compilations plus records they only guest on. Can be many times slower — for prolific artists this means hundreds of extra requests, so DeepDive will pace itself and may pause when Spotify asks it to. Only the tracks they're credited on are kept.",
+    desc: "Adds compilations plus records they only guest on. Much slower for prolific artists, and it may pause when Spotify asks it to. Only tracks they're credited on are kept.",
     opts: { includeCompilations: true, includeAppearsOn: true },
   },
   {
@@ -2511,8 +2511,8 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
         </div>`;
     } else if (!shownPins.length) {
       const why = state.listeningFailed
-        ? "Couldn't reach Spotify for listening-based suggestions right now."
-        : "Run a search first — suggestions are built from your library once it's been read.";
+        ? "Couldn't reach Spotify for suggestions."
+        : "Suggestions appear after your first search.";
       emptyHtml = `<p class="crate-note row-label">${esc(why)} Add an artist to your crate to keep them here.</p>`;
     }
   }
@@ -3199,8 +3199,8 @@ function explainError(err) {
   }
   if (status === 429) {
     return {
-      headline: "Spotify is rate-limiting us",
-      detail: "Too many requests in a short period. Waiting a few minutes usually clears it.",
+      headline: "Spotify is rate-limiting",
+      detail: "Too many requests in a short period. Wait a few minutes.",
       canRetry: true,
     };
   }
@@ -3277,7 +3277,7 @@ function diagnosticsHtml() {
     </div>
     <div class="diag-block">
       <div class="diag-label">Pacing</div>
-      <div>${client._throttleMs ? `${client._throttleMs}ms between requests (learned from rate limiting)` : "none — running at full speed"}</div>
+      <div>${client._throttleMs ? `${client._throttleMs}ms between requests (learned from rate limiting)` : "none, running at full speed"}</div>
     </div>`;
 }
 
@@ -3352,7 +3352,7 @@ function dupRow(d) {
 function trackRow(t, { checkbox = true, cls = "newt", sub = "", match = "", attr = "data-tid" } = {}) {
   const art = (t.album && t.album.image_url)
     ? `<img src="${esc(t.album.image_url)}" alt="" class="track-art" loading="lazy">`
-    : `<span class="track-art-fallback">♪</span>`;
+    : `<span class="track-art-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>`;
   return `
     <label class="track-row ${cls}" data-rd="${esc((t.album && t.album.release_date) || "")}" data-title="${esc((t.name || "").toLowerCase())}">
       ${art}
@@ -3757,11 +3757,11 @@ function renderScrubResults(r) {
       <p class="muted">${scanCountLine(r)}${dups.length} duplicate cop${dups.length === 1 ? "y" : "ies"} found</p>
       ${dups.length ? `
         <div class="crate-header"><span class="label">Copies to mark as liked</span></div>
-        <p class="crate-note">Each one matches a recording already in your Liked Songs. Like the selected copies so they stop appearing as new in future dives.</p>
+        <p class="crate-note">Each of these is already in your Liked Songs under another release. Liking the copy stops it showing up as new.</p>
         <div id="dup-list">${dups.map((d) => dupRow(d)).join("")}</div>
         <div class="actions"><button class="btn btn-primary" id="scrub-like">Like selected copies</button><button class="btn btn-ghost" data-home>Back to Dives</button></div>
         <div class="flash hidden" id="result-msg" style="margin-top:18px;"></div>
-      ` : `<p class="empty-note">No duplicate recordings found.</p><div class="actions"><button class="btn btn-ghost" data-home>Back to Dives</button></div>`}
+      ` : `<div class="actions"><button class="btn btn-ghost" data-home>Back to Dives</button></div>`}
     </div>`;
   root.querySelector("[data-home]")?.addEventListener("click", () => renderDives());
 
@@ -4027,7 +4027,7 @@ async function renderGenreSection() {
     el.innerHTML = `
       <div class="crate-header"><span class="label">Genres</span></div>
       <p class="nav-hint" style="margin-top:0;">DeepDive can ask Last.fm what your artists sound like, then build mixes from it. One request per artist, <strong>${n}</strong> of them, about <strong>${secs} seconds</strong>, starting with the artists you own the most of. Stop at any point and keep what was found.</p>
-      ${knownTags ? `<p class="crate-note">${knownTags} artist${knownTags === 1 ? "" : "s"} already looked up and remembered — those cost nothing to reuse.</p>` : ""}
+      ${knownTags ? `<p class="crate-note">${knownTags} artist${knownTags === 1 ? "" : "s"} already looked up. Reusing those costs nothing.</p>` : ""}
       <div class="actions">
         <button class="btn btn-ghost btn-small" id="genre-go">Find my genres</button>
         ${artists.length > n ? `<button class="btn btn-ghost btn-small" id="genre-go-all">All ${artists.length} artists</button>` : ""}
@@ -4653,7 +4653,7 @@ async function runDipViaSearch(artist, artistName, opts) {
  * present the shorter search-built dip rather than nothing.
  */
 async function wholeDiscographyDip(artist, artistName, built, likedIds, opts) {
-  updateDiveScreen(20, `Only ${Math.round(built.totalMs / 60000)} minutes are well known — reading everything…`);
+  updateDiveScreen(20, `Only ${Math.round(built.totalMs / 60000)} minutes are well known. Reading everything…`);
   let result;
   try {
     const catalogResume = await loadDiveCheckpoint(artist, opts);
@@ -4766,12 +4766,12 @@ async function renderShow() {
       </div>
       <div class="show-hero-text">
         <h2>Multi-Dip</h2>
-        <p class="show-sub">One playlist for the whole bill, in the order they play.</p>
+        <p class="show-sub">One playlist for the whole bill, in running order.</p>
         <p class="show-count">${n ? `${n} artist${n === 1 ? "" : "s"} · ${esc(lengthName)}` : "Nobody on the bill yet"}</p>
       </div>
     </div>
     ${searchShellHtml({ options: false })}
-    <div id="show-bill">${rows || `<p class="empty-note">Search for everyone playing. Drag them into running order, and tag who you're there for as More.</p>`}</div>
+    <div id="show-bill">${rows || `<p class="empty-note">Search for everyone playing. Drag to reorder, and tag who you're there for as More.</p>`}</div>
     <div class="show-settings">
       <label class="show-setting">
         <span>Songs you already own</span>
@@ -5064,7 +5064,7 @@ async function buildShowNow() {
           // search count was never the thing being worked toward.
           const frac = target ? Math.min(1, ms / target) : 0;
           const overall = Math.round(((i + frac) / _showBill.length) * 100);
-          updateDiveScreen(overall, `${a.name} — ${i + 1} of ${_showBill.length} — ${kept} song${kept === 1 ? "" : "s"}`);
+          updateDiveScreen(overall, `${a.name} · ${i + 1} of ${_showBill.length} · ${kept} song${kept === 1 ? "" : "s"}`);
         },
       });
       if (built && built.tracks.length) {
@@ -5111,7 +5111,7 @@ async function buildShowNow() {
   prog.innerHTML = `
     ${failed.length ? `<div class="api-banner">
       <div class="api-banner-head">${quotaStopped ? "Spotify's limit stopped this part-way" : "Some of the bill is missing"}</div>
-      <p class="api-banner-detail">Built from ${show.sets.length} of ${_billSize} artists, so the night is shared between fewer people than you asked for.${quotaStopped ? " The limit refills on its own — try again later." : ""}</p>
+      <p class="api-banner-detail">Built from ${show.sets.length} of ${_billSize} artists, so the night is shared between fewer people than you asked for.${quotaStopped ? " The limit refills on its own. Try again later." : ""}</p>
       <p class="api-banner-detail">${esc(failed.join(" · "))}</p>
     </div>` : ""}
     <p class="nav-hint">${show.tracks.length} tracks, about ${Math.round(show.totalMs / 60000)} minutes — ${show.sets.map((s) => `${esc(s.artist.name)} ${s.tracks.length} tracks/${Math.round(s.totalMs / 60000)}min`).join(", ")}</p>
@@ -5259,7 +5259,7 @@ function wireApiBanner() {
     if (!slot) return;
     if (d.code === "DD-OK" || d.code === "DD-FIXED") {
       clearApiBanner();
-      flash(d.repaired ? "Fixed — try that again." : "Spotify is responding again.");
+      flash(d.repaired ? "Fixed. Try that again." : "Spotify is responding again.");
       return;
     }
     slot.innerHTML = renderDiagnosisBlock(d);
@@ -5325,7 +5325,7 @@ async function diagnose({ deep = false } = {}) {
     if (check.ok) {
       client.resetPacing();
       repaired = true;
-      notes.push(`Cleared ${pacing}ms of pacing left over from an earlier rate limit — dives were slower than they needed to be.`);
+      notes.push(`Cleared ${pacing}ms of pacing left over from an earlier rate limit. Dives were slower than they needed to be.`);
     }
   }
 
@@ -5364,7 +5364,7 @@ function diagnosisAdvice(d) {
     case "DD-FIXED":
       return "The checks found something and cleared it. Try again.";
     case "DD-QUOTA":
-      return "Your Spotify app has used up its request budget. Waiting is the only fix — it refills on its own. Dives that include compilations and guest appearances spend it far faster.";
+      return "Your Spotify app has used up its request budget. It refills on its own; waiting is the only fix. Dives that include compilations and guest appearances spend it far faster.";
     case "DD-RATE":
       return "Too many requests too quickly. This clears on its own within a minute or two; nothing is broken.";
     case "DD-AUTH":
@@ -5571,7 +5571,7 @@ function renderSettings() {
 
     <div class="set-group">
       <div class="set-group-label">Suggestions</div>
-      ${navRow('id="go-blocked"', "Blocked artists", "Anyone you've told DeepDive to stop suggesting, and where.")}
+      ${navRow('id="go-blocked"', "Blocked artists", "Anyone you've told DeepDive to stop suggesting.")}
     </div>
 
     <div class="set-group">
@@ -5600,7 +5600,7 @@ function renderSettings() {
       })}
       ${settingRow({
         title: "Tidy up playlists",
-        detail: "Find playlists DeepDive created, including ones made before it kept a record.",
+        detail: "Includes ones made before DeepDive kept a record.",
         control: `<button class="btn btn-ghost btn-small" id="find-playlists">Find them</button>`,
       })}
       <div id="playlist-cleanup"></div>
@@ -5620,7 +5620,7 @@ function renderSettings() {
         <div class="set-group-label">Speed</div>
         ${settingRow({
           title: "Reset pacing",
-          detail: "DeepDive slows down after Spotify rate-limits it and remembers that between sessions. Clear it if dives are crawling and nothing is failing.",
+          detail: "Clears the slowdown remembered after a rate limit. Use it if dives crawl and nothing fails.",
           control: `<button class="btn btn-ghost btn-small" id="set-reset-pacing">Reset</button>`,
         })}
       </div>
@@ -5637,7 +5637,7 @@ function renderSettings() {
 
       <div class="set-group">
         <div class="set-group-label">Last.fm</div>
-        <p class="set-note">Optional but recommended. Powers genre and subgenre mixes, and an artist's most popular tracks, which Spotify no longer provides. Leave it empty and those features simply don't appear.</p>
+        <p class="set-note">Adds genre mixes and an artist's most popular tracks. Those features don't appear without a key.</p>
         <div class="set-row set-row-block">
           <div class="set-row-text">
             <div class="set-row-title">API key</div>
@@ -6197,7 +6197,7 @@ function renderCrate() {
         <button class="btn btn-ghost btn-small" id="crate-sampler">Sampler from your crate</button>
       </div>
       <div id="crate-body"></div>`
-      : `<p class="empty-note">Your crate is empty. Add an artist from any tile's menu, or from the search box, and they'll wait here.</p>`}
+      : `<p class="empty-note">Your crate is empty. Add an artist from the search box or a tile's menu.</p>`}
     <div class="actions"><button class="btn btn-ghost" data-tab="dives">Back</button></div>`;
 
   if (!all.length) return;

@@ -212,7 +212,12 @@
   .track-art-fallback {
     width:56px; height:56px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
     background:var(--surface); color:var(--muted-soft);
+    border-radius:var(--r-sm);
   }
+  /* Was a ♪ character, which Part 19 bans as an emoji-icon and which
+     renders differently on every platform. Every other icon here is an
+     inline SVG. */
+  .track-art-fallback svg { width:20px; height:20px; }
   .track-meta { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; padding:8px 0; }
   .track-name { font-weight:600; font-size:14px; letter-spacing:-0.01em; }
   .track-sub { font-size:13px; color:var(--muted-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

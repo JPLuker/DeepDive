@@ -235,7 +235,10 @@ check('and is wired in', /insights\.neglectedNeighboursCard\(cached, _similarByS
 // promises, so the list has to be expandable.
 check('all genres are reachable', /id="genre-expand"/.test(src));
 check('and collapsible again', /id="genre-collapse"/.test(src));
-check('the prompt says what is already cached', /already looked up and remembered/.test(src));
+// Pinned the full phrase "already looked up and remembered"; the copy
+// pass dropped the second half as it said nothing the first didn't.
+// The point is that the prompt states the cached count, so match that.
+check('the prompt says what is already cached', /already looked up/.test(src));
 
 // Liking three albums shouldn't put "look up 3 more artists" under a
 // wall of genres every time the page opens — that reads as unfinished
