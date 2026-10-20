@@ -13,7 +13,12 @@ check('body uses the deeper base', /body \{ margin:0; background:var\(--bg\)/.te
 check('accent blue preserved', /--accent:#3E7BFF/.test(html));
 
 // headers
-check('headers are bold sans, not mono labels', /\.row-head h2 \{[^}]*font-weight:700/.test(html));
+// Was pinned to 700. 9.3 lists the weights in use as 400, 500 and
+// 600, so 2.9.125 normalised every 700 and 650 to 600. The point of
+// this check is that the header is a bold sans heading rather than the
+// uppercase mono label it replaced, which still holds.
+check('headers are bold sans, not mono labels', /\.row-head h2 \{[^}]*'Geist'[^}]*font-weight:600/.test(html)
+  && !/\.row-head h2 \{[^}]*Geist Mono/.test(html));
 check('muted qualifier styled', /\.row-head \.qual \{[^}]*var\(--muted-soft\)/.test(html));
 check('old rule hidden', /\.row-head \.rule \{ display:none; \}/.test(html));
 check('markup uses h2 headers', /<h2>Suggested<\/h2><span class="qual">for you<\/span>/.test(src));

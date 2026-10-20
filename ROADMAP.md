@@ -307,22 +307,14 @@ waiting.
 
 ### 1. Claude's queue — do these in order, unattended
 
-1. **Part 10 copy pass, then the Part 21 self-review.** The largest
-   remaining piece of Phase 1 and the most user-visible. Do it against
-   *rendered screens*, not a string dump: the fillable-PDF attempt
-   failed because 488 strings out of context are unreadable on a
-   phone, and the one copy bug Joseph caught himself ("9 of 30
-   checked", 2.9.119) was only visible in place, beside a progress bar
-   that disagreed with it. `tools/shoot.mjs` renders every demo screen.
-2. **Spacing onto the 4px grid** (Part 20; 21.2 asks for it). 244 of
-   441 padding/margin/gap values are off it — commonly 10, 14, 6 and
-   18px. Sub-4px values (1, 1.5, 2, 3px) are hairlines and optical
-   nudges, not spacing: leave those. The pixel diff cannot *prove*
-   this one, since changing spacing is meant to change pixels; use it
-   to see where things moved and review by eye.
-3. **Type scale against Part 9.2.** The 12px floor landed in 2.9.113;
-   the scale itself (display / title-1 / … / micro) is unchecked.
-4. **Phase 2, repo furniture.** `SECURITY.md`,
+**Phase 1 (issue #14) is done.** The copy pass and self-review landed
+in 2.9.121–123, the 4px spacing grid in 2.9.124 and the Part 9.2 type
+scale in 2.9.125. `node tools/review.mjs` reports nothing against
+21.2's measurable half. What it cannot measure — whether each screen
+has the right focal point, and whether the copy earns its place — is
+in TESTING.md for a real device.
+
+1. **Phase 2, repo furniture.** `SECURITY.md`,
    `.github/ISSUE_TEMPLATE/` (MAINTENANCE.md Part 3), README Support
    section and the privacy/network table (PRIVACY.md Part 9), "Report
    a problem" on the landing page, licence named there. All writable

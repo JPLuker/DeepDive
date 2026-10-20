@@ -4,6 +4,21 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.125
+The Part 9.2 type scale. 52 sizes mapped onto it and 16 weights
+normalised; nothing is off the scale now.
+
+- Thirteen distinct off-scale sizes were in use — 30, 28, 26, 22, 21,
+  19, 18, 15.5, 14.5, 13.5, 12.8 and 12.5 — which is not a scale, it
+  is a habit of nudging a number until a screen looks right. The
+  scale's own steps replace them: the dive and chooser heroes take
+  `title-1` at 32, headings `title-3` at 20, and the 12.5 and 13.5
+  labels become `caption` at 13 (9.2 reserves 12 for badges).
+- 16px stays everywhere it appears. 9.2 puts mobile body at 16–17px,
+  and it is also what stops iOS zooming a focused input.
+- Weights: 9.3 lists 400, 500 and 600 as the ones in use. There were
+  thirteen 700s and three 650s. All are 600 now.
+
 ## 2.9.124
 Spacing onto the 4px grid (Part 8.1, and 21.2 asks for it explicitly).
 185 values across 120 selectors. Sub-4px values stayed: 1, 1.5, 2 and
