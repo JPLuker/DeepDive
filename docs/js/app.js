@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.126";
+export const BUILD = "2.9.127";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -3653,15 +3653,39 @@ function renderScrubForm() {
       <h1>Find duplicate songs</h1>
       <p class="muted">Checks each artist's releases for other Spotify copies of songs already in your Liked Songs. Like those copies so future dives know they are not new. It never builds a playlist. Progress is saved as it works, and if Spotify pauses the app the scan waits it out and carries on, so nothing has to be scanned twice.</p>
       <p class="crate-note hidden" id="scrub-resume-note"></p>
+      <div class="set-group" style="margin-top:20px;">
+        <div class="set-group-label">How much to spend</div>
+        <p class="set-note">One request per release, for every artist you've liked. Spotify never says how much budget is left, so a scan can stop early and pick up where it left off.</p>
+        ${settingRow({
+          title: "Stop after",
+          detail: "Most-liked artists are checked first, so a short run still does the useful part.",
+          control: `<select class="sort-select" id="scrub-budget">
+            <option value="500">500 requests</option>
+            <option value="1500" selected>1,500 requests</option>
+            <option value="4000">4,000 requests</option>
+            <option value="0">No limit</option>
+          </select>`,
+        })}
+      </div>
       <div class="actions" style="margin-top:0;">
         <button class="btn btn-primary" id="scrub-go">Find duplicate copies</button>
         <button class="btn btn-ghost" data-home>Cancel</button>
       </div>
     </div>`;
   root.querySelector("[data-home]").addEventListener("click", () => renderHome());
-  document.getElementById("scrub-go").addEventListener("click", startScrub);
+  document.getElementById("scrub-go").addEventListener("click", () => {
+    // Read before startScrub replaces this screen with the dive view.
+    const sel = document.getElementById("scrub-budget");
+    _scrubBudget = sel ? Number(sel.value) || 0 : 0;
+    startScrub();
+  });
   showScrubCheckpoint();
 }
+
+// Chosen on the scan screen, read when the run starts. Not persisted:
+// what is affordable today is a judgement about a budget Spotify will
+// not report, not a preference.
+let _scrubBudget = 1500;
 
 async function showScrubCheckpoint() {
   const saved = await appStore.get(SCRUB_CHECKPOINT_KEY);
@@ -3719,6 +3743,7 @@ async function startScrub() {
       onArtist: (artist) => { const photo = crateArtistPhoto(artist); if (photo) showOnlyDiveImage(photo); },
       onArtwork: (url) => showOnlyDiveImage(url),
       resume,
+      requestBudget: _scrubBudget,
       onCheckpoint: (state) => appStore.set(SCRUB_CHECKPOINT_KEY, state),
     });
     if (result.artists_scanned >= result.artists_total) {
@@ -3748,13 +3773,40 @@ function scanCountLine(r) {
   return `Checked ${done} of ${all} artists · `;
 }
 
+/**
+ * "complete", "paused" or "cancelled".
+ *
+ * Stopping on a budget is not the same as being cancelled, and calling
+ * it that reads as something going wrong. It is the scan doing what it
+ * was asked.
+ */
+function scanHeadline(r) {
+  if (r.stopped_on_budget) return "paused";
+  return r.artists_scanned < r.artists_total ? "cancelled" : "complete";
+}
+
+/**
+ * What the run cost, and what finishing would cost.
+ *
+ * Spotify publishes no remaining-quota header, so the only honest
+ * estimate is an average measured on this library during this run.
+ * Shown only when there is something left to do — on a finished scan
+ * the number is trivia, and Part 10 says to delete trivia.
+ */
+function scanCostNote(r) {
+  if (!r.requests_spent || r.artists_remaining <= 0) return "";
+  const left = r.estimated_remaining_requests;
+  return `<p class="crate-note">${r.requests_spent.toLocaleString()} Spotify requests used, about ${r.requests_per_artist} per artist. Finishing the remaining ${r.artists_remaining.toLocaleString()} would take roughly ${left.toLocaleString()} more.</p>`;
+}
+
 function renderScrubResults(r) {
   setTitle("DeepDive · Duplicate results");
   const dups = r.duplicate_candidates || [];
   root.innerHTML = `
     <div class="card">
-      <h1>Duplicate scan ${r.artists_scanned < r.artists_total ? "cancelled" : "complete"}</h1>
+      <h1>Duplicate scan ${scanHeadline(r)}</h1>
       <p class="muted">${scanCountLine(r)}${dups.length} duplicate cop${dups.length === 1 ? "y" : "ies"} found</p>
+      ${scanCostNote(r)}
       ${dups.length ? `
         <div class="crate-header"><span class="label">Copies to mark as liked</span></div>
         <p class="crate-note">Each of these is already in your Liked Songs under another release. Liking the copy stops it showing up as new.</p>

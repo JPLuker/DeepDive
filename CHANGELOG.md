@@ -4,6 +4,40 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.127
+The duplicate scan takes a request budget. This is the quota attempt,
+and it is not the escalating wait the roadmap called for — that already
+exists in `spotify.js`, and more retrying could not have helped, since
+every retry is itself a request against the budget it is waiting on.
+
+The real shape of the problem is that a scan is one request per release
+across every liked artist: thousands for a large library, against a
+budget Spotify counts per developer account and never reports the size
+of. So the scan either finished or died, and on a spent quota it always
+died.
+
+- **A budget turns it into an incremental job.** Pick 500, 1,500, 4,000
+  or no limit; the scan stops cleanly when it reaches that and leaves a
+  checkpoint. Resuming already worked — 2.9.103 built it for failures
+  — this makes it reachable on purpose.
+- **Checked between artists, not mid-catalogue.** Matching only runs
+  once an artist's catalogue is complete, so stopping halfway through
+  one throws away every release it just paid for.
+- **Most-liked artists first.** A duplicate is a catalogue track
+  matching something already liked, so an artist with nine liked songs
+  has nine chances of yielding one and an artist with one has one. The
+  order used to be whatever the library returned; if a run only covers
+  half the library it should be the productive half.
+- **It reports what it cost.** Requests spent, the average per artist,
+  and what finishing the rest would take — measured on the real
+  library, which is the only honest estimate available.
+- A budget stop reads as "paused", not "cancelled". The scan did what
+  it was asked.
+
+`tests/test_budget.mjs` runs the real `runFullScrub` against a fake
+client, so the budget is proven to stop a run and to stop it in the
+right place, rather than merely to be accepted as an argument.
+
 ## 2.9.126
 Phase 2, the repo furniture a project is meant to have before 1.0 and
 that nothing breaks without.

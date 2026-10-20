@@ -320,10 +320,13 @@ in TESTING.md for a real device.
    a problem" on the landing page, licence named there. All writable
    from here — only *enabling* private vulnerability reporting is a
    GitHub setting, which is on Joseph's list.
-5. **Phase 3 code, the escalating-wait quota attempt.** Write and test
-   the change; the deciding run needs real quota, so the experiment
-   itself is on Joseph's list. Keep the two separate — the code can be
-   ready and waiting.
+5. ~~**Phase 3 code.**~~ **Done in 2.9.127**, though not as an
+   escalating-wait change: that already existed in `spotify.js` and
+   more retrying was never going to help, because every retry is itself
+   a request against the budget it is waiting on. The scan takes a
+   request budget instead, stops cleanly between artists, and reports
+   what it spent and what finishing would cost. Joseph's run decides
+   whether that is enough.
 6. **Phase 4, native apps.** Tauri 2, app id
    `io.github.jpluker.deepdive`, `deepdive://callback` as a second
    redirect URI, GitHub Actions matrix for Windows, Linux and Android,
@@ -338,10 +341,16 @@ in TESTING.md for a real device.
 
 Nothing above blocks on these except where noted.
 
-- **The quota experiment.** Needs real quota on a real account. This
-  is the deciding test for whether duplicate search survives into 3.0,
-  so it is the one item whose outcome changes what 3.0 contains —
-  worth doing early even though the rest can proceed without it.
+- **The quota experiment.** Needs real quota on a real account, and it
+  is the one item whose outcome changes what 3.0 contains.
+  **What to run (2.9.127):** start a duplicate scan with the 500-request
+  budget. It will stop and report what it spent, what that works out
+  at per artist, and what finishing the library would cost. That number
+  is the answer — it is measured on the real library rather than
+  guessed, and Spotify will not supply it any other way. If the
+  projected total is affordable across a few sittings, duplicate search
+  survives; if it is wildly beyond the budget, it does not, and the
+  measurement is the evidence for dropping it.
 - **The `TESTING.md` pass.** 423 items on a real device, after the
   rewrite.
 - **Spotify dashboard**: add `deepdive://callback` as a redirect URI,

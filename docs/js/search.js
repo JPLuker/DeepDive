@@ -309,7 +309,25 @@ export async function runFullScrub(client, opts = {}) {
   const {
     onProgress = () => {}, isCancelled = () => false, libraryCache = null,
     resume = null, onCheckpoint = null, onArtist = () => {}, onArtwork = () => {},
+    // Stop cleanly after roughly this many Spotify requests and leave a
+    // checkpoint to carry on from.
+    //
+    // A full scan is one request per release across every artist in the
+    // library, which for a large one is thousands — against a budget
+    // that Spotify counts per developer account and never reports the
+    // remaining size of. So the scan either finished or died, and on a
+    // spent quota it always died.
+    //
+    // Bounding it turns an all-or-nothing job into an incremental one:
+    // spend what you can afford today, resume tomorrow. The checkpoint
+    // machinery for that already exists (2.9.103); this is what makes
+    // it reachable on purpose rather than only after a failure.
+    requestBudget = 0,
   } = opts;
+  // The client counts every request it makes, so the spend is a
+  // subtraction rather than something this function has to track.
+  const spentAtStart = client?.log?.total || 0;
+  const spent = () => (client?.log?.total || 0) - spentAtStart;
   const includeGroups = buildIncludeGroups(true, false);
   if (typeof client.setMinimumPacing === "function") client.setMinimumPacing(CATALOG_PACING_MS);
 
@@ -359,10 +377,19 @@ export async function runFullScrub(client, opts = {}) {
   // Labelled because the per-artist retry below is a second loop, and a
   // cancel found mid-catalogue has to leave the scan, not move on to the
   // next artist.
+  let stoppedOnBudget = false;
   artists:
   for (const artist of artists) {
     if (completed.has(artist.id)) continue;
     if (isCancelled()) break;
+    // Between artists, not mid-catalogue: the matching only runs once
+    // an artist's catalogue is complete, so stopping halfway through
+    // one throws away every release it just paid for.
+    if (requestBudget > 0 && spent() >= requestBudget) {
+      stoppedOnBudget = true;
+      await checkpoint();
+      break;
+    }
     let pauses = 0;
     while (!isCancelled() && !completed.has(artist.id)) {
     const pct = 5 + Math.round((scanned / Math.max(artists.length, 1)) * 94);
@@ -462,6 +489,7 @@ export async function runFullScrub(client, opts = {}) {
     }
   }
   onProgress(100, "Done");
+  const remaining = artists.length - scanned;
   return {
     mode: "full_scrub",
     duplicate_candidates: duplicates,
@@ -469,6 +497,17 @@ export async function runFullScrub(client, opts = {}) {
     tracks_scanned: likedTracks.length,
     artists_scanned: scanned,
     artists_total: artists.length,
+    // What the run actually cost, and what finishing would cost.
+    // Spotify publishes no remaining-quota header, so an average taken
+    // from this run is the only estimate available — and it is a real
+    // one, measured on this library rather than guessed.
+    requests_spent: spent(),
+    requests_per_artist: scanned ? Math.round((spent() / scanned) * 10) / 10 : null,
+    artists_remaining: remaining,
+    estimated_remaining_requests: scanned && remaining
+      ? Math.round((spent() / scanned) * remaining)
+      : 0,
+    stopped_on_budget: stoppedOnBudget,
   };
 }
 
@@ -487,11 +526,24 @@ function libraryFingerprint(tracks) {
   return `${tracks.length}:${(hash >>> 0).toString(16)}`;
 }
 
+/**
+ * Liked artists, most-liked first.
+ *
+ * The order used to be whatever the library returned. It matters now
+ * that a scan can stop on a budget: a duplicate is a catalogue track
+ * matching something you already liked, so an artist you have liked
+ * twelve songs by has twelve chances of yielding one, and an artist
+ * you have liked once has one. If a run only gets through half the
+ * library, it should be the productive half.
+ */
 function distinctLikedArtists(likedTracks) {
   const seen = new Map();
   for (const track of likedTracks) {
     const artist = (track.artists || [])[0];
-    if (artist?.id && !seen.has(artist.id)) seen.set(artist.id, { id: artist.id, name: artist.name });
+    if (!artist?.id) continue;
+    const entry = seen.get(artist.id);
+    if (entry) entry.liked += 1;
+    else seen.set(artist.id, { id: artist.id, name: artist.name, liked: 1 });
   }
-  return Array.from(seen.values());
+  return Array.from(seen.values()).sort((a, b) => b.liked - a.liked);
 }
