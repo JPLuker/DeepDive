@@ -24,14 +24,18 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
 // chip. 14.3 says primary is a solid accent fill.
 {
   const uses = [...shell.matchAll(/background:var\(--accent-gradient\)/g)].length;
-  // The two that remain are progress fills, which are neither controls
-  // nor in Part 19's list (buttons, whole cards, page backgrounds).
-  check('gradient is not a control fill any more', uses === 2);
-  const progressOnly = ['.progress-fill', '.dive-track-fill'].every((sel) => {
-    const i = shell.indexOf(sel + ' {');
+  // One left, and it is a progress fill — neither a control nor in
+  // Part 19's list (buttons, whole cards, page backgrounds). There
+  // were two until 2.9.120: .progress-fill belonged to the progress
+  // card the full-screen dive replaced, and went with the rest of that
+  // dead family.
+  check('gradient is not a control fill any more', uses === 1);
+  const onlyTrack = (() => {
+    const i = shell.indexOf('.dive-track-fill {');
     return i > -1 && shell.slice(i, shell.indexOf('}', i)).includes('--accent-gradient');
-  });
-  check('the two left are the progress fills', progressOnly);
+  })();
+  check('the one left is the dive track fill', onlyTrack);
+  check('the superseded progress card is gone', !/\.progress-(?:fill|track|meta|stage)\b/.test(shell));
   check('the primary button is a solid accent', /\.btn-primary \{ background:var\(--accent\);/.test(shell));
   check('and the toggle, when on', /input:checked \+ \.switch-track \{ background:var\(--accent\);/.test(shell));
 }

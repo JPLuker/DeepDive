@@ -4,6 +4,39 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.120
+- **The app shell drops its dead stylesheet too.** 50 rules, 5,875
+  bytes: the slide-out drawer the tab bar replaced, the progress card
+  the full-screen dive replaced, an older support-link row, the markup
+  the current artist chooser replaced, and the suggestion pills.
+  Verified by rendering all ten demo screens at phone and desktop width
+  in both themes — 40 screenshots, identical before and after.
+- The harness was checked for determinism first: two independent
+  capture runs produced 40 identical images, so any difference after
+  the deletion would have been real rather than timing.
+- **`setShowBmc` was toggling elements that no longer exist.**
+  `document.querySelectorAll(".bmc-row")` matched nothing every time it
+  ran — the support-link row was replaced by the top-bar button — and
+  because its CSS was still in the sheet, nothing looked wrong. The
+  same pattern CLAUDE.md records under "code left pointing at removed
+  elements".
+- Two near-misses the tool caught before this shipped, both now
+  guarded: `.btn-danger` is written as
+  `class="btn ${danger ? "btn-danger" : "btn-primary"}"`, where the
+  inner quote closes an attribute capture, so it read as dead; and
+  `.pcard-art-1/2/3` are built as `pcard-art-${art.length}`, so
+  deleting them would have broken the album mosaic from 2.9.116. The
+  analyser now reads interpolations, registers prefixes for names built
+  at runtime, and refuses to delete any rule whose class appears
+  anywhere in the source in any form. That last check held back 11
+  more rules, including `.track-row.is-static` and `.tile-btn.is-on`.
+- Three assertions pinned things this removed. `test_css` required both
+  `.nav-switch` and `.set-switch` in one selector list; the drawer
+  wrapper is gone, so it asserts the live one carries every state and
+  that the dead one is absent rather than half-styled. `test_aurora`
+  expected two `--accent-gradient` fills and named `.progress-fill` as
+  one; there is one now.
+
 ## 2.9.119
 - **"9 of 30 checked" was measuring the wrong thing.** A dip stops when
   it has an hour of music; `searched >= 30` is a cost ceiling beside it

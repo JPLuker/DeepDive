@@ -46,8 +46,16 @@ async function shoot(ctxOpts, url, file, theme) {
   try {
     await page.goto(url, { waitUntil: 'load', timeout: 20000 });
     // Demo screens render from staged data, but the slideshow and the
-    // fade-in both animate; give them a beat to settle.
+    // fade-in both animate; give them a beat to settle. Then freeze
+    // everything, so a set captured twice can be compared pixel for
+    // pixel without catching timing instead of CSS.
     await page.waitForTimeout(1500);
+    await page.evaluate(() => {
+      const s = document.createElement('style');
+      s.textContent = '*,*::before,*::after{animation:none!important;transition:none!important;}';
+      document.head.appendChild(s);
+    });
+    await page.waitForTimeout(250);
     await page.screenshot({ path: `${OUT}/${file}.png`, fullPage: false });
   } catch (e) {
     errs.push('navigation: ' + e.message);

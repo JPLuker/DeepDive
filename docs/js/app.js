@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.119";
+export const BUILD = "2.9.120";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -6757,9 +6757,13 @@ function showBmc() {
 }
 function setShowBmc(on) {
   try { localStorage.setItem(BMC_KEY, on ? "1" : "0"); } catch (e) {}
-  // Apply immediately rather than waiting for a re-render — the toggle
-  // is in the drawer, with the button visible right behind it.
-  document.querySelectorAll(".bmc-row").forEach((r) => r.classList.toggle("hidden", !on));
+  // Apply immediately rather than waiting for a re-render: the toggle
+  // is in Settings and the link is visible in the top bar behind it.
+  //
+  // There was a second line here toggling `.bmc-row`, a support-link
+  // row the top-bar button replaced. No markup has carried that class
+  // for a long time, so the query matched nothing every time it ran —
+  // and because its CSS was still in the sheet, nothing looked wrong.
   document.getElementById("coffee-link")?.classList.toggle("hidden", !on);
 }
 

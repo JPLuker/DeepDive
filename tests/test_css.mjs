@@ -66,9 +66,17 @@ check('mixes grid rule survives', /\.card-row \{ display:grid;/.test(html));
 // class. The support-link switch kept toggling its checkbox while the
 // visual never moved, because the checked-state rules were bound to
 // .nav-switch and the settings rebuild used .set-switch.
-check('both switch wrappers get checked styling', /\.nav-switch input:checked \+ \.switch-track,\s*\n\s*\.set-switch input:checked \+ \.switch-track/.test(html));
-check('and both move the thumb', /\.set-switch input:checked \+ \.switch-track \.switch-thumb/.test(html));
-check('and both show focus', /\.set-switch input:focus-visible \+ \.switch-track/.test(html));
+//
+// This used to require both wrappers in the selector list. .nav-switch
+// belonged to the drawer, which no longer exists, and 2.9.120 removed
+// it as dead — so the pairing is gone and the point is now simply that
+// the wrapper in use carries every state. Asserting a dead class
+// alongside a live one would have blocked the cleanup and taught the
+// next person that both were needed.
+check('the live switch wrapper gets checked styling', /\.set-switch input:checked \+ \.switch-track \{/.test(html));
+check('and it moves the thumb', /\.set-switch input:checked \+ \.switch-track \.switch-thumb/.test(html));
+check('and it shows focus', /\.set-switch input:focus-visible \+ \.switch-track/.test(html));
+check('the drawer wrapper is gone, not half-styled', !/\.nav-switch/.test(html));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

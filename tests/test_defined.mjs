@@ -264,5 +264,21 @@ check('the version is also in About', /title: "Version"/.test(src));
   check(`every call in app.js resolves (${[...unknown].slice(0, 6).join(', ') || 'none unresolved'})`, unknown.size === 0);
 }
 
+// --- the app shell's sheet carries only what it uses (2.9.120) ------
+// Families superseded long ago and never removed: the slide-out drawer
+// the tab bar replaced, the progress card the full-screen dive
+// replaced, an older buy-me-a-coffee treatment, and the markup the
+// current artist chooser replaced.
+{
+  for (const cls of ['nav-drawer', 'nav-pane', 'nav-link', 'nav-switch', 'menu-btn',
+                     'bmc-link', 'bmc-row', 'progress-track', 'progress-fill',
+                     'intent-name', 'intent-desc', 'modal-remember', 'pill-wrap']) {
+    check(`.${cls} is gone from the shell`, !new RegExp(`\\.${cls}[\\s,{:.]`).test(shell));
+  }
+  // The live counterparts each family was superseded by.
+  for (const cls of ['tabbar', 'coffee-btn', 'dive-track-fill', 'set-switch', 'intent-choice'])
+    check(`.${cls} survives`, new RegExp(`\\.${cls}[\\s,{:.]`).test(shell));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

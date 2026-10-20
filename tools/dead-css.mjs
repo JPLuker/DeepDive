@@ -176,13 +176,39 @@ for (const r of top) {
   }
 }
 
+// Belt and braces, for a JS-driven shell. Before deleting anything,
+// require that every class in the rule is absent from the source as a
+// bare word, in any form at all — not merely absent as a class token.
+// Two near-misses earned this: .btn-danger, written as
+// `class="btn ${danger ? "btn-danger" : "btn-primary"}"`, where the
+// inner quote closes the attribute capture; and .pcard-art-1/2/3,
+// written as `pcard-art-${art.length}`.
+if (extra) {
+  const held = [];
+  dead = dead.filter((r) => {
+    const names = [...r.sel.matchAll(/\.([\w-]+)/g)].map((m) => m[1]);
+    const seen = names.filter((n) => new RegExp(`(?<![\\w-])${n}(?![\\w-])`).test(extra));
+    if (seen.length) { held.push(`${r.sel.trim().slice(0, 50)}  <- ${seen.join(' ')}`); return false; }
+    return true;
+  });
+  if (held.length) {
+    console.log(`held back ${held.length} rule(s) whose classes appear in the source:`);
+    for (const h of held.slice(0, 10)) console.log(`   ${h}`);
+    console.log('');
+  }
+}
+
 console.log(`${live} live rules, ${atRules} at-rules, ${dead.length} with no possible match, ${trims.length} carrying dead selectors`);
 const bytes = dead.reduce((n, r) => n + (r.end - r.start), 0);
 console.log(`${bytes} bytes of dead css (${(bytes / css.length * 100).toFixed(1)}% of the sheet)\n`);
-for (const r of dead.slice(0, Number(process.argv[3] || 25))) {
+const limit = Number(process.argv[3] ?? 25);
+for (const r of dead.slice(0, limit)) {
   console.log(`  ${r.within ? '[' + r.within.slice(0, 28) + '] ' : ''}${r.sel.replace(/\s+/g, ' ').slice(0, 92)}`);
 }
-if (dead.length > 25) console.log(`  … and ${dead.length - 25} more`);
+// Was hardcoded to 25 whatever the limit, so asking for the whole list
+// still ended with "… and 25 more" and read as truncated when it
+// wasn't.
+if (dead.length > limit) console.log(`  … and ${dead.length - limit} more`);
 
 // --apply rewrites the file. The pixel diff is what proves it; this
 // only has to be exact about where each rule starts and ends.
