@@ -291,66 +291,108 @@ the pacing work. Neither has been looked at properly.
 
 ---
 
-## Stopping point, 18 Oct (build 2.9.111)
+## Stopping point, 20 Oct (build 2.9.120)
 
-Phase 1 of the road to 3.0 (issue #14, Aurora Glass plus the copy pass)
-is under way. Done: Settings → About and Data and storage (2.9.110), the
-floating tab pill (2.9.111). Next in Phase 1, in this order:
+**Phase 1 (issue #14, Aurora Glass + the copy pass) is all but done.**
+What is left of it:
 
-- **Hard dividers out.** `--line` is still doing structural work in
-  several places. Keep `--hairline` separate — it is the glass border,
-  and merging the two is how the fencing returns.
-- **Seven ALL-CAPS labels → sentence case** (Part 9.3).
-- **Spacing onto the 4px grid** (Part 20, and 21.2 asks for it
-  explicitly). 244 of 441 padding/margin/gap values are off it; the
-  common ones are 10px, 14px, 6px and 18px. Held back from 2.9.114 on
-  purpose: it is a second layout-wide change and stacking it on
-  2.9.113's visual pass would make a device report impossible to
-  attribute. **Do it after Joseph has looked at 2.9.113.** Sub-4px
-  values (1, 1.5, 2, 3px) are hairlines and optical nudges, not
-  spacing — leave those.
-- **The landing page's dead stylesheet.** 175 of 209 styled classes
-  have no markup: it carries most of the app's CSS, from when it was
-  derived from the app. That premise is what `regen-app.sh` was built
-  on, and that script was deleted in 2.9.109 for being backwards.
-  Dead rules include the uppercase mono `.crate-header .label` and the
-  `.track-row::before` colour spine, both long gone from the app. This
-  needs its own session: ~160 rules, a live marketing page, and
-  CLAUDE.md's standing rule against cutting CSS with a line-based
-  regex. Remove by brace-matched rule, and compare a render before and
-  after.
-- ~~**The accent colour.**~~ **Settled 19 Oct: blue stays.** Joseph is
-  adjusting `DESIGN.md` to allow a project accent, rather than DeepDive
-  adopting the standard's violet. No code change. Don't raise it again.
-- ~~**The mix cards.**~~ **Done in 2.9.116.** Joseph found them ugly
-  and asked to revisit; they show the covers of the tracks in the mix
-  now, which also removes the Part 19 gradient-fill problem.
+- **Part 10 copy pass**, then the **Part 21 self-review**. The biggest
+  remaining piece of Phase 1 and the one with the most user-visible
+  value. Do it against *rendered screens*, not a string dump: the
+  fillable-PDF attempt failed because 488 strings out of context are
+  unreadable on a phone, and the one copy bug Joseph caught himself
+  ("9 of 30 checked", 2.9.119) was only visible in place, next to a
+  progress bar that disagreed with it. `tools/shoot.mjs` renders every
+  demo screen now, so read the words where they live.
+- **Spacing onto the 4px grid** (Part 20; 21.2 asks for it). 244 of
+  441 padding/margin/gap values are off it — commonly 10, 14, 6 and
+  18px. Sub-4px values (1, 1.5, 2, 3px) are hairlines and optical
+  nudges, not spacing: leave those. Unblocked — Joseph has seen the
+  visual passes on a device and approved them. Note the pixel diff
+  cannot prove this one, because changing spacing is meant to change
+  pixels; use it to see *where* things moved and review by eye.
 - **Type scale against Part 9.2.** The 12px floor landed in 2.9.113;
-  the scale itself (display/title-1/…/micro) has not been checked.
-- **Part 10 copy pass**, then the Part 21 self-review.
+  the scale itself (display / title-1 / … / micro) is unchecked.
 
-Phases 2 to 6 are unchanged: repo furniture (`SECURITY.md`, issue
-templates, README support section), the quota experiment that decides
-whether duplicate search survives, native apps via Tauri, the
-`TESTING.md` rewrite and then the full pass, and finally tagging 3.0.
-Testing stays last — doing it earlier invalidates the 423 items.
+**Phase 2 — repo furniture.** `SECURITY.md` and private vulnerability
+reporting, `.github/ISSUE_TEMPLATE/` (MAINTENANCE.md Part 3), README
+Support section and the privacy/network table, "Report a problem" on
+the landing page, licence named on the landing page. Settings → About
+already covers its share (2.9.110).
 
-Also still open from the previous stopping point:
+**Phase 3 — the quota experiment.** One more attempt at escalating
+waits, and the deciding test for whether duplicate search survives into
+3.0 at all. This is the only phase whose outcome changes the feature
+set, so it should not drift to the end.
 
-- **Duplicate scan needs one real resumed run**: 2.9.103 checkpoints
-  completed artists and the current artist every ten releases. Confirm a
-  deliberately interrupted run offers Resume and does not reread the
-  completed albums.
+**Phase 4 — native apps.** Tauri 2, app id `io.github.jpluker.deepdive`,
+`deepdive://callback` as a second redirect URI, GitHub Actions matrix
+for Windows, Linux and Android, unsigned, released with the
+`-untested-<platform>` convention. Existing web users need do nothing;
+only the installers need the extra redirect URI.
+
+**Phase 5 — testing.** Rewrite `TESTING.md` against the final UI, then
+the full pass on a real device. **Stays last.** Doing it earlier
+invalidates the items, and the UI has changed under it ten times in
+three days.
+
+**Phase 6 — release.** Tag `v3.0.0`, rename the releases to the
+song-title convention, cut the release with notes.
+
+### Carried over, still open
+
+- **Duplicate scan needs one real resumed run.** 2.9.103 checkpoints
+  completed artists and the current artist every ten releases. Confirm
+  an interrupted run offers Resume and does not reread completed
+  albums.
 - **Mixes section of the landing page**: interim copy. Joseph has an
-  idea for it and hasn't said what yet. Ask.
+  idea and hasn't said what yet. Ask.
 - **Not yet checked on a phone**: 2.9.53 Multi-Dip overhaul (partly
-  seen), 2.9.56 to 2.9.58 onboarding, the Last.fm gating. TESTING.md
+  seen), 2.9.56–2.9.58 onboarding, the Last.fm gating. TESTING.md
   sections 32 to 34.
+- **11 CSS rules held back by the dead-code analyser** in the app
+  shell, where the base class is live and only the modifier looks dead
+  (`.track-row.is-static`, `.tile-btn.is-on`, `.watchlist-done`, …).
+  Each needs reading by hand. Low value; mentioned so the 0 in the
+  tool's output isn't mistaken for "nothing left".
 
-## Shipped since — build 2.9.111
+## Shipped since — build 2.9.120
 
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
+
+- Dead stylesheets removed from both files, each proved by a full
+  pixel diff rather than by inspection: the landing page lost 71% of
+  its CSS (282 rules it could never match, carried from when it was
+  derived from the app), and the app shell 50 more — the drawer, the
+  old progress card, the pre-chooser markup (2.9.118, 2.9.120).
+  Along the way: `setShowBmc` was toggling `.bmc-row`, which no markup
+  has carried in a long time
+- Dips report songs found rather than searches against a cost ceiling.
+  "9 of 30 checked" sat beside a bar reading 41% — the text counted
+  requests, the bar measured time toward the hour, and only the bar
+  was right (2.9.119, Joseph's catch)
+- **The app can be rendered now** — `tools/shoot.mjs` drives the
+  sandbox's Chromium over every `?demo=` screen at two widths in both
+  themes, `tools/pixdiff.mjs` compares sets, `tools/dead-css.mjs`
+  finds unreachable rules. CLAUDE.md had said for months that Chrome
+  would not install here. The first run found three shipped bugs
+  (2.9.115)
+- Mix cards show the covers of the tracks in them instead of a
+  rotating gradient (2.9.116), and the crash that shipped with them
+  was fixed an hour later along with the check that would have caught
+  it — a call-resolution audit, since `node --check` parses an
+  undefined identifier happily (2.9.117)
+- A real Aurora Glass pass: gradient fills off every control, thirteen
+  1.5px outlines to filled surfaces, overlays to glass, ALL-CAPS
+  labels to sentence case, hard dividers to space, the 12px type floor,
+  36px touch targets (2.9.113), and the radius tokens onto the Part 20
+  scale (2.9.114)
+- Tab bar is a floating glass pill with a sliding selection (2.9.111)
+- Settings → About, Data and storage out of Advanced, and storage that
+  reports whether it actually persists (2.9.110)
+- The dev build tag, removed in 2.9.110 on circular reasoning and put
+  back at Joseph's word (2.9.112)
 
 - Tab bar is a floating glass pill with a sliding selection, rather than
   a full-width bar with a hard top border (2.9.111, #14: P2 and 14.1).
