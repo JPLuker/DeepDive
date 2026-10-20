@@ -56,5 +56,18 @@ check('the Last.fm note is not hedged', !/Optional but recommended/.test(src));
 check('and does not say "simply"', !/simply don['’]t appear/.test(src));
 check('the crate empty state lost its filler', !/they['’]ll wait here/.test(src));
 
+// 9.3: sentence case for buttons, titles and menu items. Proper nouns
+// stay capitalised, so this looks for a capitalised second word that
+// isn't one — "Create Playlist" beside the sampler's own "Create
+// playlist" was the same action under two capitalisations.
+{
+  const PROPER = /Spotify|Last\.fm|DeepDive|Client ID|Multi-Dip|Dip|Dive|API|URI|ID|Up next|Home|Mixes|Settings|Crate/;
+  const labels = new Set();
+  for (const m of src.matchAll(/(?:confirmLabel|cancelLabel):\s*"([^"]+)"/g)) labels.add(m[1]);
+  for (const m of src.matchAll(/<button[^>]*>([A-Za-z][^<${}]*)</g)) labels.add(m[1].trim());
+  const titled = [...labels].filter((s) => /[a-z] [A-Z]/.test(s) && !PROPER.test(s));
+  check(`buttons are sentence case (${titled.slice(0, 3).join(', ') || 'all clear'})`, titled.length === 0);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

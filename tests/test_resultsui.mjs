@@ -45,11 +45,15 @@ check('playlist field label is not uppercase mono', !/\.playlist-name-field labe
 // --- actions ----------------------------------------------------------
 // Three btn-primary buttons side by side is no hierarchy at all.
 const actions = src.slice(src.indexOf('<div class="results-actions">'), src.indexOf('data-home>Back to home'));
-// Three named actions — Like Songs, Create Playlist, Both — with Both
+// Three named actions — Like songs, Create playlist, Both — with Both
 // as the primary and Back to home on its own row beneath. Joseph's
 // call; the earlier single-primary scheme hid what the alternatives
 // actually did behind "Just…" phrasing.
-check('three named actions', /data-action="like">Like Songs/.test(actions) && /data-action="playlist">Create Playlist/.test(actions) && /data-action="both">Both/.test(actions));
+//
+// Sentence case since 2.9.122 (9.3). The sampler dialog had said
+// "Create playlist" all along, so the two screens were offering the
+// same action under two capitalisations.
+check('three named actions', /data-action="like">Like songs/.test(actions) && /data-action="playlist">Create playlist/.test(actions) && /data-action="both">Both/.test(actions));
 check('both is the primary', /btn btn-primary" data-action="both"/.test(actions));
 check('back to home sits under them', /btn-back" data-home>Back to home/.test(src));
 check('actions are docked, not inline', /<div class="results-actions">/.test(src));

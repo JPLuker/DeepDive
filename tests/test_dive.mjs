@@ -104,7 +104,9 @@ check('and nothing tells a desktop user not to switch apps', !/switch apps/.test
 check('wake status is visible on the dive screen', /id="dive-awake"/.test(app));
 check('ordinary dives persist catalogue checkpoints', /onCatalogCheckpoint: \(catalog\) => saveDiveCheckpoint/.test(src));
 check('ordinary dives resume saved catalogue work', /catalogResume = await loadDiveCheckpoint/.test(src));
-check('reopening offers to continue an unfinished dive', /function offerDiveResume/.test(src) && /Continue Dive/.test(src));
+// Was "Continue Dive"; 9.3 is sentence case for buttons, titles and
+// menu items alike, so the D went lowercase in 2.9.122.
+check('reopening offers to continue an unfinished dive', /function offerDiveResume/.test(src) && /Continue dive/.test(src));
 check('resume prompt reports saved release count', /saved\.catalog\.completed_album_ids\.length/.test(src));
 check('resume restores the original dive options', /runSearchWithOptions\(saved\.artist_name, saved\.options \|\| \{\}\)/.test(src));
 check('discard clears only the dive checkpoint', /appStore\.set\(DIVE_CHECKPOINT_KEY, null\)/.test(src));

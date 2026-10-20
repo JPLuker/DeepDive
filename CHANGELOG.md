@@ -4,6 +4,33 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.122
+Second copy pass: confirmations, flashes, the dive lines and the first
+onboarding screen.
+
+- **"Create Playlist" and "Create playlist" were the same button.** The
+  results screen used title case, the sampler dialog sentence case.
+  9.3 asks for sentence case everywhere, so both now read "Create
+  playlist", and "Like Songs" became "Like songs". The words are
+  Joseph's choice from the earlier rewrite; only the capitals changed.
+- **The resume dialog asked its own question twice**: "Continue
+  <artist>?" above "DeepDive saved progress after 9 releases. Continue
+  from there?", with Continue and Discard beneath. The body states the
+  fact now and the buttons do the asking.
+- "This cannot be undone" sat beside another dialog's "This can't be
+  undone from here". One voice.
+- "Refreshing your library from Spotify…" — there is nowhere else a
+  library comes from. "Not enough of your crate could be found on
+  Spotify" was passive for a one-line flash.
+- The onboarding lede lost "for you to enjoy".
+- `test_copy` gained a sentence-case check for buttons. It knows the
+  proper nouns, including DeepDive's own section names, so "Back to
+  Dives" and "Take off Up next" pass while "Create Playlist" did not.
+
+The rest of onboarding is deliberately left alone: 10.3 allows a
+sentence per step there, and Joseph asked specifically for the
+requirements screen to explain the whole process.
+
 ## 2.9.121
 First pass of the Part 10 copy rewrite, read on rendered screens rather
 than in a list. `tools/copy-dump.mjs` prints every visible string per

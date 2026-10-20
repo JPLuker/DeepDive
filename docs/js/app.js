@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.121";
+export const BUILD = "2.9.122";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -189,7 +189,7 @@ async function refreshLibrary() {
   // for it: the throttle persists across reloads, so without a way to
   // clear it one bad session would slow every later search permanently.
   if (typeof client.resetPacing === "function") client.resetPacing();
-  flash("Refreshing your library from Spotify…");
+  flash("Refreshing your library…");
   try {
     const tracks = await libraryCache.getLikedTracks({ forceFull: true });
     flash(`Library refreshed. ${tracks.length} liked songs synced.`);
@@ -3497,8 +3497,8 @@ function renderResults(r) {
 
     <div class="results-actions">
       <div class="results-actions-row">
-        ${dups.length ? `<button class="btn btn-ghost" data-action="like">Like Songs</button>` : ""}
-        ${news.length ? `<button class="btn btn-ghost" data-action="playlist">Create Playlist</button>` : ""}
+        ${dups.length ? `<button class="btn btn-ghost" data-action="like">Like songs</button>` : ""}
+        ${news.length ? `<button class="btn btn-ghost" data-action="playlist">Create playlist</button>` : ""}
         ${dups.length && news.length ? `<button class="btn btn-primary" data-action="both">Both</button>` : ""}
       </div>
       <button class="btn btn-ghost btn-back" data-home>Back to home</button>
@@ -6068,7 +6068,7 @@ function renderHistory() {
 
   const clearBtn = document.getElementById("clear-dives");
   if (clearBtn) clearBtn.addEventListener("click", async () => {
-    if (!await confirmDialog({ title: "Clear dive history?", body: "This cannot be undone.", confirmLabel: "Clear", danger: true })) return;
+    if (!await confirmDialog({ title: "Clear dive history?", body: "This can't be undone.", confirmLabel: "Clear", danger: true })) return;
     history.clearDives();
     renderHistory();
   });
@@ -6282,7 +6282,7 @@ async function crateSampler(entries) {
     if (id) artists.push({ id, name: e.name, image_url: e.image_url, image_url_large: e.image_url_large });
   }
   if (artists.length < 2) {
-    flash("Not enough of your crate could be found on Spotify for a sampler.", true);
+    flash("Not enough of your crate is on Spotify for a sampler.", true);
     return;
   }
   runSampler(artists);
@@ -6365,7 +6365,7 @@ function renderLanding() {
   root.innerHTML = `
     <div class="onboard onboard-welcome">
       <h1 class="onboard-hero">Hear it all.</h1>
-      <p class="onboard-lede">DeepDive learns what is in your library, finds missing tracks and puts them in a playlist for you to enjoy.</p>
+      <p class="onboard-lede">DeepDive reads your library, finds the tracks missing from it, and puts them in a playlist.</p>
       <div class="onboard-process">
         <p>Setting up takes about two minutes. You make a free app on Spotify's developer site, paste its Client ID here, and sign in with your Spotify account, which has to be <strong>Premium</strong>: Spotify only runs apps like this for Premium accounts.</p>
         <p>A free Last.fm key is optional. It turns on Dips, Multi-Dips, recommendations and genre mixes, and you can add it later.</p>
@@ -6673,8 +6673,8 @@ async function offerDiveResume() {
   const releases = saved.catalog.completed_album_ids.length;
   const keepGoing = await confirmDialog({
     title: `Continue ${saved.artist_name}?`,
-    body: `DeepDive saved progress after ${releases} release${releases === 1 ? "" : "s"}. Continue from there?`,
-    confirmLabel: "Continue Dive",
+    body: `Saved after ${releases} release${releases === 1 ? "" : "s"}.`,
+    confirmLabel: "Continue dive",
     cancelLabel: "Discard",
     dismissible: false,
   });
