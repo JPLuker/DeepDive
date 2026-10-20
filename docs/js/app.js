@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.118";
+export const BUILD = "2.9.119";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -4547,7 +4547,10 @@ async function dipViaSearch(artistName, { artistId = null, targetMs, familiar, l
     // "top track" is barely played, and every one costs a request.
     if (searched >= 30) break;
     searched++;
-    if (onProgress) onProgress(searched, Math.min(top.length, 30), totalMs, targetMs);
+    // kept, not searched: the number that means something to someone
+    // watching is how much music there is, and the bar beside it
+    // already reports progress toward the hour.
+    if (onProgress) onProgress(picked.length, searched, totalMs, targetMs);
 
     const found = await client.searchTrack(artistName, t.name, { artistId });
     if (!found || !found.id) continue;
@@ -4593,10 +4596,12 @@ async function runDipViaSearch(artist, artistName, opts) {
     targetMs: 60 * 60 * 1000,
     familiar: savedFamiliar(),
     likedIds,
-    onProgress: (n, of, ms, target) => {
+    onProgress: (kept, searched, ms, target) => {
       updateDiveScreen(
         Math.min(95, Math.round((ms / target) * 100)),
-        `Finding their most popular tracks… ${n} of ${of} checked`
+        kept
+          ? `Finding their most popular tracks… ${kept} song${kept === 1 ? "" : "s"} so far`
+          : "Finding their most popular tracks…",
       );
     },
   });
@@ -5053,9 +5058,13 @@ async function buildShowNow() {
         targetMs: wantMs,
         familiar: document.getElementById("show-familiar")?.value || savedFamiliar(),
         likedIds,
-        onProgress: (n, of) => {
-          const overall = Math.round(((i + n / of) / _showBill.length) * 100);
-          updateDiveScreen(overall, `${a.name} — ${i + 1} of ${_showBill.length} — ${n} of ${of} checked`);
+        onProgress: (kept, searched, ms, target) => {
+          // Each artist's share of the bar is their own progress
+          // toward their slice of time, for the same reason: the
+          // search count was never the thing being worked toward.
+          const frac = target ? Math.min(1, ms / target) : 0;
+          const overall = Math.round(((i + frac) / _showBill.length) * 100);
+          updateDiveScreen(overall, `${a.name} — ${i + 1} of ${_showBill.length} — ${kept} song${kept === 1 ? "" : "s"}`);
         },
       });
       if (built && built.tracks.length) {

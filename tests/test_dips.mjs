@@ -140,5 +140,28 @@ check('the dive reuses the chooser\'s lookup', /artist = await lookupArtist\(art
   check('a failed lookup is retried', calls === 3);
 }
 
+// --- the dip reports what it is actually doing (2.9.119) ------------
+//
+// "Finding their most popular tracks… 9 of 30 checked" beside a bar
+// reading 41%. Both described the same moment and disagreed: the text
+// counted searches against a ceiling while the bar measured time
+// toward the hour. The ceiling is a cost guard — "past the top thirty
+// a top track is barely played, and every one costs a request" — not a
+// goal, and the loop almost always stops well before it, which is what
+// made the denominator misleading.
+{
+  check('no count against the search ceiling', !/of \$\{of\} checked/.test(src));
+  check('the dip reports songs found', /song\$\{kept === 1 \? "" : "s"\} so far/.test(src));
+  check('singular reads as one song', /kept === 1 \? "" : "s"/.test(src));
+  // The callback leads with what was kept; the searched count is still
+  // passed for anything that wants it.
+  check('onProgress leads with the kept count', /onProgress\(picked\.length, searched, totalMs, targetMs\)/.test(src));
+  // The bar was always right — it measures progress toward the hour.
+  check('the bar still measures time', /Math\.min\(95, Math\.round\(\(ms \/ target\) \* 100\)\)/.test(src));
+  // The ceiling itself stays: it is what stops a dip costing fifty
+  // requests for tracks nobody plays.
+  check('the cost ceiling is still there', /if \(searched >= 30\) break;/.test(src));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

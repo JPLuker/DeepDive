@@ -26,9 +26,53 @@ const body = src.slice(styleEnd) + '\n' + extra;
 // Everything the markup can actually carry: class attributes, ids,
 // tag names, plus anything an inline script adds by name.
 const classes = new Set();
-for (const m of body.matchAll(/class="([^"]*)"/g)) for (const c of m[1].split(/\s+/)) if (c) classes.add(c);
-for (const m of body.matchAll(/classList\.(?:add|remove|toggle)\(\s*['"]([\w-]+)/g)) classes.add(m[1]);
-for (const m of body.matchAll(/className\s*=\s*['"]([^'"]*)/g)) for (const c of m[1].split(/\s+/)) if (c) classes.add(c);
+// Class names built at runtime — `pcard-art-${n}`, `"dive-" + colour`,
+// classList.add(`is-${state}`) — cannot be matched literally. Their
+// fixed prefix is registered instead, and any rule whose class starts
+// with one is treated as live.
+//
+// This is not a nicety. `.pcard-art-1`, `-2` and `-3` are written as
+// `pcard-art-${art.length}` and were all reported dead on the first
+// run; deleting them would have broken the album mosaic shipped the
+// day before.
+const prefixes = new Set();
+const addToken = (c) => {
+  if (!c) return;
+  const cut = c.search(/\$\{|\+/);
+  if (cut > 0) prefixes.add(c.slice(0, cut));
+  else if (cut === -1) classes.add(c);
+};
+for (const m of body.matchAll(/class="([^"]*)"/g)) {
+  for (const c of m[1].split(/\s+/)) addToken(c);
+  // A class attribute in a template often decides between names:
+  //   class="btn ${danger ? "btn-danger" : "btn-primary"}"
+  // Splitting on whitespace leaves those still wearing their quotes,
+  // so they match no rule. .btn-danger was reported dead on the first
+  // run of this tool against the app shell, and is used right there.
+  for (const q of m[1].matchAll(/['"`]([\w-][\w-\s]*)['"`]/g)) {
+    for (const c of q[1].split(/\s+/)) addToken(c);
+  }
+}
+for (const m of body.matchAll(/classList\.(?:add|remove|toggle)\(\s*[`'"]([^`'"]*)/g)) addToken(m[1]);
+for (const m of body.matchAll(/className\s*=\s*[`'"]([^`'"]*)/g)) for (const c of m[1].split(/\s+/)) addToken(c);
+// `"pcard-art-" + n` and `'is-' + state`, where the quote closes
+// before the concatenation.
+for (const m of body.matchAll(/['"`]([\w-]+-)['"`]\s*\+/g)) prefixes.add(m[1]);
+
+// In JS sources, harvest every class-shaped string literal rather than
+// trying to parse class attributes exactly. `class="btn ${danger ?
+// "btn-danger" : "btn-primary"}"` cannot be read by an attribute regex
+// at all — the inner quote closes the capture — and .btn-danger is
+// live, two lines from a confirm dialog.
+//
+// This deliberately over-approximates: a string like "home" counts as
+// a class whether or not it is one. The error it can make is keeping a
+// dead rule, never deleting a live one, which is the right direction
+// for a tool that rewrites a stylesheet.
+for (const m of extra.matchAll(/['"`]([a-z][\w-]*(?:\s+[a-z][\w-]*)*)['"`]/gi)) {
+  for (const c of m[1].split(/\s+/)) addToken(c);
+}
+const known = (n) => classes.has(n) || [...prefixes].some((p) => p && n.startsWith(p));
 const ids = new Set([...body.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]));
 const tags = new Set([...body.matchAll(/<([a-z][\w-]*)/g)].map((m) => m[1]));
 
@@ -83,7 +127,7 @@ function selectorLives(sel) {
   // Every class, id and tag mentioned anywhere in the compound must be
   // present. A descendant selector is dead if any part of it is.
   const names = [...s.matchAll(/\.([\w-]+)/g)].map((m) => m[1]);
-  if (names.length && !names.every((n) => classes.has(n))) return false;
+  if (names.length && !names.every(known)) return false;
   const idNames = [...s.matchAll(/#([\w-]+)/g)].map((m) => m[1]);
   if (idNames.length && !idNames.every((n) => ids.has(n))) return false;
   // A bare tag selector with no class or id: keep unless the tag is absent.

@@ -4,6 +4,25 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.119
+- **"9 of 30 checked" was measuring the wrong thing.** A dip stops when
+  it has an hour of music; `searched >= 30` is a cost ceiling beside it
+  — "past the top thirty a top track is barely played, and every one
+  costs a request" — not a target. The loop almost always stops well
+  before thirty, so the denominator described a limit nobody was
+  working toward. Joseph: "it is usually never 30 songs."
+- It also disagreed with the bar next to it. The bar is
+  `(ms / target) * 100`, progress toward the hour, so the same moment
+  read "9 of 30" (30%) in the text and 41% on the bar. Two different
+  measures side by side, neither labelled.
+- The dip now reports what it has: "9 songs so far", with the bar still
+  measuring time. `onProgress` leads with the kept count rather than
+  the search count, and the search count is still passed for anything
+  that wants it.
+- Multi-Dip had the same line and the same mismatch, plus its overall
+  bar divided searches by the ceiling to work out one artist's share.
+  Each artist's share is now their progress toward their slice of time.
+
 ## 2.9.118
 - **The landing page's stylesheet was 71% dead.** 282 of 380 rules
   could not match anything on the page: it carried most of the app's

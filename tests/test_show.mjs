@@ -82,7 +82,11 @@ check('it uses the shared artist search', /inputId: "artist-input"[\s\S]{0,300}_
 check('the cost is stated as it runs', src.includes('${a.name} — ${i + 1} of ${_showBill.length}'));
 check('on the full screen', src.includes('showDiveScreen("Building your night…"'));
 check('and it can be stopped', src.includes('() => { cancelled = true; }'));
-check('progress is the bill, not one artist', src.includes('(i + n / of) / _showBill.length'));
+// Still the whole bill, but each artist's share is now their progress
+// toward their slice of time rather than searches against a ceiling
+// (2.9.119).
+check('progress is the bill, not one artist', src.includes('(i + frac) / _showBill.length'));
+check('and each share is measured in time', /const frac = target \? Math\.min\(1, ms \/ target\) : 0;/.test(src));
 // It kept the rest, but wrote the failure into the progress line that
 // the next artist immediately overwrote — so a bill of two quietly
 // became a bill of one with nothing said.
