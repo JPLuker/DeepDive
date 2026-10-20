@@ -1,0 +1,22 @@
+name: Bug report
+description: Something isn't working
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+  - type: input
+    attributes:
+      label: App version and OS
+      placeholder: "e.g. 3.0.0 on Android 15, Chrome"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Diagnostic info
+      description: Settings → About → Copy diagnostic info, then paste here. It contains no credentials.

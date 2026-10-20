@@ -4,6 +4,38 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.126
+Phase 2, the repo furniture a project is meant to have before 1.0 and
+that nothing breaks without.
+
+- **`SECURITY.md`** (SECURITY-BASELINE.md 7): latest release only,
+  reports go through GitHub private vulnerability reporting, seven-day
+  acknowledgement. It also says what is worth reporting — DeepDive has
+  no server, so what matters is credentials escaping the browser — and
+  what isn't: the Client ID is public by design, which is the whole
+  point of PKCE, and saying so should save a recurring false report.
+- **Issue templates** (MAINTENANCE.md 3). The bug form asks for the
+  version and points at Settings → About → Copy diagnostic info, noting
+  that the blob carries no credentials, since it gets pasted in public.
+  Blank issues stay enabled for Joseph's own handoff notes.
+- **README**: a Support section, the no-telemetry line, what is stored
+  and where, and the network table PRIVACY.md 3 requires — every host
+  the app can contact, when, and what is sent. Four hosts, audited
+  against the code rather than written from memory. Fonts are bundled,
+  so there is no CDN row.
+- **Landing page**: a "Found a problem?" section above the closing call
+  to action (LANDING-PAGES.md 5), and a Help column in the footer with
+  the issue chooser, private security reporting, and the MIT licence.
+
+`tests/test_furniture.mjs` checks all of it, including that the
+network table lists the hosts the code actually uses.
+
+Caught by the runner rather than by me: an edit replaced the landing
+suite's summary line, so it ran 96 assertions and printed nothing. The
+total fell from 1910 to 1814 and the runner flagged "(no output)",
+which is the check CLAUDE.md describes as the one that caught 30 silent
+suites once before.
+
 ## 2.9.125
 The Part 9.2 type scale. 52 sizes mapped onto it and 16 weights
 normalised; nothing is off the scale now.

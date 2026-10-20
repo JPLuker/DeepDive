@@ -353,6 +353,12 @@ Nothing above blocks on these except where noted.
   on the landing page.
 - **The Mixes section of the landing page** — interim copy; Joseph has
   an idea and hasn't said what yet.
+- **The landing page screenshots are stale.** The approved nine-shot
+  set was taken at 2.9.76 and shows the app before this week: gradient
+  mix cards instead of album mosaics, the full-width tab bar instead of
+  the floating pill, the old type and spacing. They are device shots of
+  approved artists, so only Joseph can retake them. Worth doing late,
+  once the UI has stopped moving — not before the TESTING.md pass.
 - **One interrupted-and-resumed duplicate scan.** 2.9.103 checkpoints
   every ten releases; confirm Resume appears and completed albums are
   not reread.

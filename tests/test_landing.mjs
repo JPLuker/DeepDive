@@ -184,5 +184,20 @@ check('stylesheet balances', depth === 0 && stray === 0);
   check(`sheet is lean (${css.length} bytes)`, css.length < 20000);
 }
 
+// --- Phase 2 repo furniture (2.9.126) -------------------------------
+// MAINTENANCE.md 1.2 and LANDING-PAGES.md Part 5: tell people issues
+// are watched, and give them somewhere to go. The same link belongs in
+// three places — the landing page, the footer, and Settings → About —
+// and security goes privately, never into a public issue.
+{
+  check('the landing page says issues are monitored', /Issues are monitored/.test(html));
+  check('and links the issue chooser, not a blank issue', /issues\/new\/choose/.test(html));
+  check('the footer offers private security reporting', /security\/advisories\/new/.test(html));
+  check('and names the licence', /blob\/main\/LICENSE/.test(html));
+  // Part 5 puts this before the closing CTA, quieter than it: the last
+  // thing on the page should still be "open the app".
+  check('report sits above the closing call to action', html.indexOf('class="report"') < html.indexOf('class="closing"'));
+}
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

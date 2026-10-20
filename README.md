@@ -85,6 +85,28 @@ account system. Your Spotify library stays in your browser and on your
 device, and the only requests that leave it are the ones to Spotify and
 Last.fm that fetch what you asked for.
 
+No telemetry. No accounts required. Nothing is sold or shared.
+
+**What it stores, and where.** Everything lives in your browser's own
+storage for this site: your crate and blocklist, dive history, a cache
+of your Liked Songs, your Spotify Client ID and Last.fm key, and your
+settings. Clearing site data removes all of it. Settings → Data and
+storage will export it to a file, or clear it.
+
+**Every host DeepDive can contact.** If a connection is not in this
+table, the app does not make it.
+
+| Host | When | What's sent |
+|---|---|---|
+| `accounts.spotify.com` | Signing in, and refreshing the session | Your own Client ID, the redirect URI, and a PKCE challenge. No password: you type it on Spotify's page, not DeepDive's |
+| `api.spotify.com` | Every search, dive, scan and playlist action you start | Your Spotify access token, and what you asked for |
+| `i.scdn.co` and other `*.scdn.co` hosts | Showing album art and artist photos | Nothing beyond the request for the image. These are Spotify's image servers; the URLs come from the API responses above |
+| `ws.audioscrobbler.com` | Dips, genre mixes and recommendations — only if you add a Last.fm key | Your Last.fm API key, and the artist or track being looked up |
+
+Fonts and icons are bundled with the app, so there are no requests to
+Google Fonts or a CDN. GitHub, Spotify's dashboard and the support link
+are ordinary links: nothing is fetched from them unless you click.
+
 ### Wherever you listen
 
 ## Put it on your home screen
@@ -171,6 +193,20 @@ bash tests/run.sh                     # the test suite, no network needed
 ```
 
 </details>
+
+---
+
+## Support
+
+Issues are monitored. Report a bug or ask for a feature at
+[Issues](https://github.com/JPLuker/DeepDive/issues/new/choose).
+
+For a bug, Settings → About → **Copy diagnostic info** gives the
+version, browser and storage state in one paste. It reports whether
+your Client ID and Last.fm key are set, never what they are.
+
+Security problems go [privately](https://github.com/JPLuker/DeepDive/security/advisories/new)
+rather than into a public issue. See [SECURITY.md](SECURITY.md).
 
 ---
 

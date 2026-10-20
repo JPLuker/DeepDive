@@ -243,8 +243,14 @@
     line-height:1.62; font-size:15.5px;
   }
 
+  /* Sits above the closing call to action, quieter than it: this is
+     information, not the thing the page is asking you to do. */
+  .report { text-align:center; margin:72px 0 0; }
+  .report h2 { margin:0 0 8px; }
+  .report p { color:var(--muted); margin:0 0 20px; }
+
   .closing {
-    text-align:center; margin:72px 0 0; padding:54px 24px;
+    text-align:center; margin:40px 0 0; padding:54px 24px;
     background:var(--accent-gradient); border-radius:var(--r-lg);
     color:#fff;
   }
@@ -379,6 +385,12 @@
       <p>DeepDive has no backend. There is no server, database or account system. Everything is stored on your device within the browser. The only external requests are to Spotify and Last.fm as needed.</p>
     </section>
 
+    <section class="report">
+      <h2>Found a problem?</h2>
+      <p>Issues are monitored. Report bugs or ask for features on GitHub.</p>
+      <a class="btn btn-ghost" href="https://github.com/JPLuker/DeepDive/issues/new/choose">Report an issue</a>
+    </section>
+
     <section class="closing">
       <h2>Try it out</h2>
       <p>Only takes two minutes to set up.</p>
@@ -389,6 +401,7 @@
       <div class="foot-cols">
         <div><h4>DeepDive</h4><a href="app/">Open the app</a><a href="https://github.com/JPLuker/DeepDive">Source on GitHub</a></div>
         <div><h4>Getting started</h4><a href="app/">Set up DeepDive</a><a href="https://developer.spotify.com/dashboard">Spotify developer dashboard</a><a href="https://www.last.fm/api/account/create">Last.fm API key</a></div>
+        <div><h4>Help</h4><a href="https://github.com/JPLuker/DeepDive/issues/new/choose">Report an issue</a><a href="https://github.com/JPLuker/DeepDive/security/advisories/new">Report a security problem</a><a href="https://github.com/JPLuker/DeepDive/blob/main/LICENSE">MIT licence</a></div>
         <div><h4>Made by Joseph Luker</h4><a href="https://github.com/JPLuker">GitHub</a><a href="https://www.linkedin.com/in/josephluker">LinkedIn</a><a href="https://buymeacoffee.com/OSJoseph">Buy me a coffee</a></div>
       </div>
       <p class="landing-legal">Music metadata and artwork are provided by Spotify. DeepDive is not affiliated with Spotify AB. Tag and popularity data are provided by Last.fm. All copyrighted content, including album artwork and artist photography, remains the property of its respective owners.</p>
