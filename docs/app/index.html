@@ -74,6 +74,7 @@
     --hairline:rgba(10,10,10,0.08);
     --glass-shadow:0 8px 28px rgba(10,10,10,.14), 0 2px 8px rgba(10,10,10,.08);
     --accent-soft-fill:color-mix(in srgb, var(--accent) 14%, transparent);
+    --on-accent:#FFFFFF;
     --glass-thick-bg:rgba(255,255,255,.80); --glass-thick-blur:32px;
     --overlay-shadow:0 24px 60px rgba(10,10,10,.22), 0 4px 16px rgba(10,10,10,.10);
     /* Desktop rail width and content measure; used by the min-width
@@ -107,6 +108,9 @@
        near-black reads as a smudge, and the accent is already carrying
        the selected icon and label. */
     --accent-soft-fill:rgba(255,255,255,.09);
+    /* Near-black on the accent, as Part 5.1 specifies for dark. White
+       measured 3.83:1 on this blue; this is 5.06:1. */
+    --on-accent:#0B0D16;
     --glass-thick-bg:rgba(22,26,40,.82);
     --overlay-shadow:0 24px 60px rgba(0,0,0,.60), 0 4px 16px rgba(0,0,0,.40);
   }
@@ -143,9 +147,9 @@
   .wordmark-icon { height:1.5em; width:auto; display:block; }
   .nav-backdrop.open { opacity:1; pointer-events:auto; }
   .theme-toggle { display:flex; gap:6px; padding:0 12px 4px; }
-  .theme-opt { flex:1; font-family:'Geist',sans-serif; font-size:12.5px; font-weight:600; padding:9px 4px; border-radius:var(--r-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
+  .theme-opt { flex:1; min-height:36px; font-family:'Geist',sans-serif; font-size:12.5px; font-weight:600; padding:9px 4px; border-radius:var(--r-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
   .theme-opt:hover { background:var(--tile-hover); color:var(--ink); }
-  .theme-opt.active { background:var(--accent); color:#fff; border-color:transparent; }
+  .theme-opt.active { background:var(--accent); color:var(--on-accent); border-color:transparent; }
   .switch-track { position:relative; width:38px; height:21px; border-radius:999px; background:var(--surface); border:1px solid var(--hairline); flex-shrink:0; transition:background .15s ease, border-color .15s ease; }
   .switch-thumb { position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:var(--muted); transition:transform .15s ease, background .15s ease; }
   .set-switch input:checked + .switch-track { background:var(--accent); border-color:transparent; }
@@ -165,12 +169,18 @@
   .muted { color:var(--muted); }
   .mono { font-family:'Geist Mono', ui-monospace, monospace; }
 
-  .btn { display:inline-flex; align-items:center; gap:8px; font-family:'Geist',sans-serif; font-weight:600; font-size:14px; padding:12px 22px; border-radius:var(--r-pill); border:1.5px solid var(--ink); cursor:pointer; text-decoration:none; background:none; }
-  .btn-primary { background:var(--accent); color:#fff; border-color:transparent; }
+  .btn {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    font-family:'Geist',sans-serif; font-weight:600; font-size:14px;
+    min-height:40px; padding:10px 22px;
+    border-radius:var(--r-pill); border:none; cursor:pointer;
+    text-decoration:none; background:none;
+  }
+  .btn-primary { background:var(--accent); color:var(--on-accent); border-color:transparent; }
   .btn-primary:hover { filter:brightness(0.92); }
   .btn-ghost { background:var(--tile); border:none; color:var(--ink); }
   .btn-ghost:hover { background:var(--tile-hover); }
-  .btn-small { padding:7px 12px; font-size:12.5px; }
+  .btn-small { min-height:36px; padding:8px 14px; font-size:12.5px; }
   .btn:disabled { opacity:0.5; cursor:default; }
 
   input[type=text], input[type=password] { font-family:'Geist',sans-serif; font-size:16px; padding:13px 14px; border-radius:var(--r-md); border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%; }
@@ -250,6 +260,7 @@
        already taken the room. The link is two words; the subtitle is
        what should give. */
     white-space:nowrap; flex-shrink:0;
+    min-height:36px; display:inline-flex; align-items:center;
   }
   .row-more:hover { text-decoration:underline; }
 
@@ -463,7 +474,7 @@
   .card-len { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:4px; }
   .len-opt { font-family:inherit; font-size:13px; padding:8px 13px; border-radius:var(--r-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
   .len-opt:hover { background:var(--tile-hover); color:var(--ink); }
-  .len-opt.active { background:var(--accent); color:#fff; border-color:transparent; }
+  .len-opt.active { background:var(--accent); color:var(--on-accent); border-color:transparent; }
 
   .checkbox-option { display:flex; align-items:center; gap:9px; font-size:14px; color:var(--ink); cursor:pointer; user-select:none; }
   .checkbox-option input[type=checkbox] { width:16px; height:16px; accent-color:var(--accent); flex-shrink:0; }
@@ -589,9 +600,14 @@
   }
   .show-cover img { width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity .3s ease; }
   .show-cover.has-art img { opacity:1; }
+  /* Hard-coded white sat on a gradient whose pale end is --surface,
+     so in the light theme this was white on near-white: 1.04:1, which
+     is invisible. It read fine in dark, which is why it survived.
+     --ink inverts with the theme and clears 4.5:1 at both ends of the
+     gradient. */
   .show-cover-blank {
     position:absolute; left:10px; bottom:9px; font-size:12px; font-weight:650;
-    color:rgba(255,255,255,0.85);
+    color:var(--ink);
   }
   .show-cover.has-art .show-cover-blank { display:none; }
   .show-hero-text { min-width:0; }
@@ -636,6 +652,7 @@
   .show-footer .show-go { width:100%; justify-content:center; }
   .btn-link {
     border:none; background:none; color:var(--muted); font:inherit; font-size:13.5px;
+    min-height:36px; display:inline-flex; align-items:center;
     padding:6px 10px; cursor:pointer;
   }
   .btn-link:hover { color:var(--ink); }
@@ -664,7 +681,7 @@
   }
   .bill-tag-btn:hover { color:var(--ink); background:var(--tile-hover); }
   .bill-tag-btn.on {
-    background:var(--accent); border-color:transparent; color:#fff;
+    background:var(--accent); border-color:transparent; color:var(--on-accent);
   }
   .bill-btn {
     width:36px; height:36px; border-radius:50%;
@@ -704,7 +721,7 @@
   .search-pill-form:focus-within { border-color:var(--accent); background:var(--paper); }
   .search-pill-form input[type=text] { border:none; padding:10px 0; font-size:16px; }
   .search-pill-form input[type=text]:focus { outline:none; }
-  .search-icon-btn, .settings-icon-btn { display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:50%; border:none; background:var(--accent); color:var(--paper); cursor:pointer; flex-shrink:0; }
+  .search-icon-btn, .settings-icon-btn { display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:50%; border:none; background:var(--accent); color:var(--on-accent); cursor:pointer; flex-shrink:0; }
   .settings-icon-btn { background:var(--tile); color:var(--ink); }
   .settings-icon-btn:hover { background:var(--tile-hover); }
   .search-icon-btn svg, .settings-icon-btn svg { width:20px; height:20px; }
@@ -1095,7 +1112,10 @@
   .demo-approved-artist { display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface); }
   .demo-approved-artist img, .demo-approved-placeholder { width:30px; height:30px; border-radius:50%; object-fit:cover; background:var(--tile); display:grid; place-items:center; font-weight:700; }
   .demo-approved-artist span:nth-child(2) { flex:1; min-width:0; font-weight:600; }
-  .demo-approved-artist button { border:0; background:none; color:var(--muted); font-size:22px; cursor:pointer; }
+  .demo-approved-artist button {
+    border:0; background:none; color:var(--muted); font-size:22px; cursor:pointer;
+    min-width:36px; min-height:36px; display:inline-flex; align-items:center; justify-content:center;
+  }
   .demo-setting-actions { gap:8px; flex-wrap:wrap; }
   .demo-capture-setting { margin-top:16px; }
   .demo-capture-setting > .btn { align-self:flex-end; }
@@ -1110,6 +1130,8 @@
      alignment as a button or a switch, but plainly not interactive. */
   .set-static { font-size:13px; color:var(--muted); align-self:center; }
   .set-static-link {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-height:36px; min-width:36px; padding:0 8px;
     font-size:13px; font-weight:600; color:var(--accent);
     text-decoration:none; align-self:center;
   }
@@ -1133,7 +1155,7 @@
 
   /* Support link lives in the topbar: always findable, never in the way.
      Muted until hovered so it doesn't compete with the wordmark. */
-  .coffee-btn { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; color:var(--muted-soft); transition:color .15s ease, background .15s ease; }
+  .coffee-btn { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; color:var(--muted-soft); transition:color .15s ease, background .15s ease; }
   .coffee-btn:hover { color:var(--gold); background:var(--surface); }
   .coffee-btn svg { width:19px; height:19px; }
   .coffee-btn.hidden { display:none; }

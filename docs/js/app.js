@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.122";
+export const BUILD = "2.9.123";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -5545,7 +5545,7 @@ function renderSettings() {
           <input id="set-demo-chooser-search" class="nav-input" type="search" placeholder="Search Spotify artists" autocomplete="off">
           <div class="autofill-list" id="set-demo-chooser-results"></div>
         </div>
-        <button class="btn btn-primary btn-small" id="set-demo-chooser-open" disabled>Open green screen</button>
+        <button class="btn btn-ghost btn-small" id="set-demo-chooser-open" disabled>Open green screen</button>
       </div>
     </div>` : ""}
 

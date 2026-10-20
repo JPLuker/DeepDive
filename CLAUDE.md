@@ -408,6 +408,20 @@ worked, four demo screens threw a TypeError instead of showing it, and
 the scan header read "Checked your of all artists". All three were
 found in the first run.
 
+**The design checklist can be measured, not just ticked.**
+`node tools/review.mjs` runs DESIGN.md Part 21.2 against every demo
+screen in both themes: contrast (compositing translucent layers, so
+text on glass is scored against what is actually behind it), tap
+targets, computed font sizes, and how many primary buttons a view has.
+It found four contrast failures and 64 undersized targets the first
+time, including white-on-accent at 3.83:1 and a label at **1.04:1**
+that had been invisible in the light theme for weeks. A checklist read
+by eye gets ticked; this does not.
+
+Two other tools in the same family: `tools/copy-dump.mjs` prints every
+visible string per screen in reading order, which is how Part 10 should
+be reviewed, and `tools/dead-css.mjs` finds unreachable rules.
+
 **Spotify is not reachable from the sandbox**, so chooser, dive, mixes
 and results render their error card rather than content. Home, sampler,
 scan, crate, multidip and settings render with empty data. That is

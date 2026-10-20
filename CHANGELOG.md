@@ -4,6 +4,38 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.123
+The Part 21.2 self-review, measured rather than ticked.
+`tools/review.mjs` runs the checkable half against every demo screen in
+both themes: contrast, tap targets, computed font sizes, and how many
+primary actions a view has. 64 findings on the first run, 0 now.
+
+- **A label at 1.04:1.** "Your night" on the Multi-Dip cover was
+  hard-coded white over a gradient whose pale end is `--surface`, so in
+  the light theme it was white on near-white and had been invisible
+  since the Multi-Dip overhaul. It read fine in dark, which is why
+  nobody saw it.
+- **White on the accent measured 3.83:1** on every primary button in
+  the dark theme. One blue cannot do both jobs: anything dark enough to
+  carry white text drops under 4.5:1 as text on the canvas, which is
+  why Part 5.1 names `on-accent` as a role of its own. Added it —
+  white in light, near-black in dark, 5.06:1.
+- **Tap targets.** Buttons measured 31–33px against 14.3's 36px
+  compact and 40px default, and 21.2 asks for platform minimums on
+  mobile. `.btn` is 40px, `.btn-small` 36px, and the coffee link,
+  theme segments, link-buttons and the demo remove buttons all reach
+  36px.
+- `.btn` still carried a **1.5px border** — the last of the outlines
+  2.9.113 removed. That sweep searched for `var(--line)` and this one
+  names `var(--ink)`, so it was missed. No element uses a bare `.btn`,
+  so it had never shown.
+- **Two primary buttons** in the demo-mode settings group. P1 wants one
+  focal action; saving the list is it, so the green-screen button is a
+  ghost.
+- The audit ignores links inside prose: the About credit line's GitHub
+  and LinkedIn links are part of a sentence, and padding them to 36px
+  would break the line. 21.2 is about controls.
+
 ## 2.9.122
 Second copy pass: confirmations, flashes, the dive lines and the first
 onboarding screen.
