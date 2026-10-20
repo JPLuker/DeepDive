@@ -381,6 +381,20 @@ a `@media` block near the end of the stylesheet pins every modal to
 means checking the mobile block too — the fix looked right in the
 source and was invisible on the only device that mattered.
 
+**Anchor a CSS slice on the rule, never on position.** Four checks
+this week sliced onto the wrong rule and asserted nothing, or asserted
+the wrong thing: `.tabbar {` matched the base `display:none` instead of
+the floating rule, `.modal {` matched a chroma-key demo override and
+later a reduced-motion one, and `.bill-btn {` matched a 30px descendant
+override. One of them led to "fixing" a bleed margin that was already
+correct, because the generic `.modal` padding is not what applies to
+`#intent-modal` on a phone — a more specific rule is.
+
+Match on something only that rule contains (`position:fixed`,
+`width:100%`), assert the slice found what you meant, and when a guard
+already exists for the thing you are about to check, read it before
+writing a second one.
+
 **A green suite is not a working app.** The assertions read source
 text. They cannot see an element sitting on top of another, a dialog
 that never opens, a stylesheet truncated by a stray brace, or a

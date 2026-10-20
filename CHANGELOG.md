@@ -4,6 +4,24 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.124
+Spacing onto the 4px grid (Part 8.1, and 21.2 asks for it explicitly).
+185 values across 120 selectors. Sub-4px values stayed: 1, 1.5, 2 and
+3px are hairlines, thumb insets and optical nudges, not spacing.
+
+- Two pairs had to move together rather than be snapped. The mix
+  card's padding is tied to its artwork's radius by the concentric
+  rule, so padding went 10 → 12 and the radius is now written as
+  `calc(var(--r-lg) - 12px)` — there is no 8 on the radius scale, and
+  Part 20.1's own example uses the subtraction. The tab pill's padding
+  appears three times: the bar, the sliding selection's inset, and the
+  figure `app.js` subtracts when it measures; all three went 6 → 8.
+- The pill now floats 16px clear rather than 14px, still inside 14.1's
+  12–16px.
+
+Ties went to even, so 10 → 8 and 14 → 16. That kept the phone card gap
+tighter than the 12px base, which is the right way round.
+
 ## 2.9.123
 The Part 21.2 self-review, measured rather than ticked.
 `tools/review.mjs` runs the checkable half against every demo screen in

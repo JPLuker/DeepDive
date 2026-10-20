@@ -140,14 +140,14 @@
 
   /* Settings left, wordmark centred, an equal-width spacer right so the
      centre is actually centred rather than shoved by the button. */
-  .topbar { position:relative; z-index:1; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:14px 24px 10px; max-width:760px; margin:0 auto; }
+  .topbar { position:relative; z-index:1; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px 24px 8px; max-width:760px; margin:0 auto; }
   .topbar .topbar-left { display:flex; justify-content:flex-start; }
   .topbar .topbar-right { display:flex; justify-content:flex-end; }
   .wordmark { font-family:'Martius','Geist',sans-serif; text-transform:uppercase; letter-spacing:0.01em; color:var(--ink); text-decoration:none; font-size:22px; line-height:1; display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
   .wordmark-icon { height:1.5em; width:auto; display:block; }
   .nav-backdrop.open { opacity:1; pointer-events:auto; }
-  .theme-toggle { display:flex; gap:6px; padding:0 12px 4px; }
-  .theme-opt { flex:1; min-height:36px; font-family:'Geist',sans-serif; font-size:12.5px; font-weight:600; padding:9px 4px; border-radius:var(--r-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
+  .theme-toggle { display:flex; gap:8px; padding:0 12px 4px; }
+  .theme-opt { flex:1; min-height:36px; font-family:'Geist',sans-serif; font-size:12.5px; font-weight:600; padding:8px 4px; border-radius:var(--r-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
   .theme-opt:hover { background:var(--tile-hover); color:var(--ink); }
   .theme-opt.active { background:var(--accent); color:var(--on-accent); border-color:transparent; }
   .switch-track { position:relative; width:38px; height:21px; border-radius:999px; background:var(--surface); border:1px solid var(--hairline); flex-shrink:0; transition:background .15s ease, border-color .15s ease; }
@@ -155,9 +155,9 @@
   .set-switch input:checked + .switch-track { background:var(--accent); border-color:transparent; }
   .set-switch input:checked + .switch-track .switch-thumb { transform:translateX(17px); background:#fff; }
   .set-switch input:focus-visible + .switch-track { outline:2px solid var(--ink); outline-offset:2px; }
-  .nav-input { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; padding:9px 10px; border-radius:var(--r-md); border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%; }
-  .nav-uri { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; color:var(--muted); background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); padding:8px 10px; word-break:break-all; line-height:1.45; }
-  .nav-hint { font-size:13px; color:var(--muted-soft); line-height:1.45; margin:9px 0 0; }
+  .nav-input { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; padding:8px 8px; border-radius:var(--r-md); border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%; }
+  .nav-uri { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; color:var(--muted); background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); padding:8px 8px; word-break:break-all; line-height:1.45; }
+  .nav-hint { font-size:13px; color:var(--muted-soft); line-height:1.45; margin:8px 0 0; }
 
   .flash { max-width:760px; margin:0 auto 20px; padding:12px 16px; background:var(--gold-soft); border:1px solid var(--gold); color:var(--ink); border-radius:var(--r-md); font-size:14px; }
   .flash.error { background:#fbe9e7; border-color:var(--danger); }
@@ -172,7 +172,7 @@
   .btn {
     display:inline-flex; align-items:center; justify-content:center; gap:8px;
     font-family:'Geist',sans-serif; font-weight:600; font-size:14px;
-    min-height:40px; padding:10px 22px;
+    min-height:40px; padding:8px 24px;
     border-radius:var(--r-pill); border:none; cursor:pointer;
     text-decoration:none; background:none;
   }
@@ -180,10 +180,10 @@
   .btn-primary:hover { filter:brightness(0.92); }
   .btn-ghost { background:var(--tile); border:none; color:var(--ink); }
   .btn-ghost:hover { background:var(--tile-hover); }
-  .btn-small { min-height:36px; padding:8px 14px; font-size:12.5px; }
+  .btn-small { min-height:36px; padding:8px 16px; font-size:12.5px; }
   .btn:disabled { opacity:0.5; cursor:default; }
 
-  input[type=text], input[type=password] { font-family:'Geist',sans-serif; font-size:16px; padding:13px 14px; border-radius:var(--r-md); border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%; }
+  input[type=text], input[type=password] { font-family:'Geist',sans-serif; font-size:16px; padding:12px 16px; border-radius:var(--r-md); border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%; }
   input:focus, button:focus, a:focus, select:focus { outline:2px solid var(--ink); outline-offset:2px; }
 
   /* Section headings. These were a tracked-out uppercase monospace pill
@@ -191,7 +191,7 @@
      still on Settings, History, Pins and results long after Home moved to
      plain Geist headings. Same markup, restyled to match: no pill, no
      rule, no uppercase. */
-  .crate-header { display:flex; align-items:baseline; gap:8px; margin:34px 0 10px; }
+  .crate-header { display:flex; align-items:baseline; gap:8px; margin:32px 0 8px; }
   .crate-header .label {
     font-family:'Geist','SF Pro Text','Segoe UI Variable',system-ui,sans-serif; font-size:19px; font-weight:700;
     letter-spacing:-0.02em; text-transform:none; color:var(--ink);
@@ -208,7 +208,7 @@
   .track-row {
     display:flex; align-items:center; gap:12px;
     background:var(--tile); border:none; border-radius:var(--r-sm);
-    overflow:hidden; margin-bottom:6px; min-height:56px;
+    overflow:hidden; margin-bottom:8px; min-height:56px;
     cursor:pointer; transition:background .15s ease;
     position:relative; width:100%; text-align:left; font-family:inherit; color:var(--ink); padding:0;
   }
@@ -216,7 +216,7 @@
   /* Preview lists aren't selectable, so they shouldn't invite a click. */
   .track-row.is-static { cursor:default; }
   .track-row.is-static:hover { background:var(--tile); }
-  .track-row.is-static .track-meta { padding-left:14px; }
+  .track-row.is-static .track-meta { padding-left:16px; }
   .track-row:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
   .track-art { width:56px; height:56px; flex-shrink:0; object-fit:cover; display:block; background:var(--surface); }
   .track-art-fallback {
@@ -237,9 +237,9 @@
   .track-dur { font-size:12px; color:var(--muted-soft); flex-shrink:0; font-variant-numeric:tabular-nums; }
   .track-row input[type=checkbox] {
     width:19px; height:19px; accent-color:var(--accent); flex-shrink:0;
-    margin:0 14px 0 0; cursor:pointer;
+    margin:0 16px 0 0; cursor:pointer;
   }
-  .pill { display:inline-flex; align-items:center; gap:6px; font-family:'Geist',sans-serif; font-size:13px; font-weight:500; padding:8px 14px; border-radius:var(--r-pill); border:none; background:var(--tile); color:var(--ink); cursor:pointer; }
+  .pill { display:inline-flex; align-items:center; gap:8px; font-family:'Geist',sans-serif; font-size:13px; font-weight:500; padding:8px 16px; border-radius:var(--r-pill); border:none; background:var(--tile); color:var(--ink); cursor:pointer; }
   .pill:hover { background:var(--tile-hover); }
   .pill-avatar { width:20px; height:20px; border-radius:50%; object-fit:cover; margin-right:2px; vertical-align:middle; background:var(--surface); }
 
@@ -247,7 +247,7 @@
   /* Big bold sans with a muted qualifier, the way modern music apps do
      it. The old mono-uppercase-plus-rule was a record-shop idiom and sat
      oddly next to artwork. */
-  .row-head { display:flex; align-items:baseline; gap:8px; margin:38px auto 14px; max-width:760px; }
+  .row-head { display:flex; align-items:baseline; gap:8px; margin:40px auto 16px; max-width:760px; }
   .row-head h2 { font-family:'Geist','SF Pro Text','Segoe UI Variable',system-ui,sans-serif; font-size:21px; font-weight:700; letter-spacing:-0.02em; margin:0; }
   /* A way through to the destination that owns the row, so a preview on
      Home doesn't read as the whole set. */
@@ -271,7 +271,7 @@
      a placeholder in the shape of the answer reads as working. */
   .tile-skeleton { display:flex; align-items:center; gap:12px; background:var(--tile); border-radius:var(--r-sm); min-height:56px; overflow:hidden; }
   .sk-art { width:56px; height:56px; flex-shrink:0; background:var(--surface); }
-  .sk-lines { flex:1; display:flex; flex-direction:column; gap:6px; padding-right:14px; }
+  .sk-lines { flex:1; display:flex; flex-direction:column; gap:8px; padding-right:16px; }
   .sk-line { height:9px; border-radius:var(--r-pill); background:var(--surface); }
   .sk-line.short { width:45%; height:7px; }
   .tile-skeleton, .sk-art, .sk-line { animation:sk-pulse 1.4s ease-in-out infinite; }
@@ -299,25 +299,25 @@
     position:absolute; inset:0;
     background:linear-gradient(to bottom, rgba(0,0,0,0) 38%, rgba(0,0,0,0.35) 62%, rgba(0,0,0,0.82) 100%);
   }
-  .results-hero-text { position:absolute; left:0; right:0; bottom:0; padding:0 24px 18px; }
+  .results-hero-text { position:absolute; left:0; right:0; bottom:0; padding:0 24px 16px; }
   .results-hero-text h1 {
     color:#fff; margin:0 0 8px; font-size:30px; font-weight:700; letter-spacing:-0.025em;
     text-shadow:0 1px 14px rgba(0,0,0,0.4);
   }
   /* Counts carry colour so the three categories are readable at a
      glance, and the same colours key the rows below. */
-  .results-stats { display:flex; flex-wrap:wrap; gap:6px; margin:0; }
+  .results-stats { display:flex; flex-wrap:wrap; gap:8px; margin:0; }
   .results-stat {
-    font-size:12px; font-weight:600; padding:4px 9px; border-radius:var(--r-pill);
+    font-size:12px; font-weight:600; padding:4px 8px; border-radius:var(--r-pill);
     background:rgba(255,255,255,0.14); color:#fff;
     backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   }
-  .results-stat .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:baseline; }
+  .results-stat .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:8px; vertical-align:baseline; }
   .results-stat .dot.dup { background:var(--teal); }
   .results-stat .dot.new { background:var(--gold); }
   .results-stat .dot.liked { background:rgba(255,255,255,0.75); }
 
-  .results-body { padding-top:22px; }
+  .results-body { padding-top:24px; }
   /* The summary copy used to absorb this section heading's top margin.
      With that copy gone, the first heading otherwise stacks 34px of its
      own margin on top of the body's 22px padding. */
@@ -329,7 +329,7 @@
      screen, and scrolling back to the bottom to make it is friction. */
   .results-actions {
     position:fixed; left:0; right:0; bottom:0; z-index:35;
-    padding:12px 16px calc(14px + env(safe-area-inset-bottom));
+    padding:12px 16px calc(16px + env(safe-area-inset-bottom));
     background:var(--glass-bg);
     backdrop-filter:blur(var(--glass-blur)) saturate(160%);
     -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(160%);
@@ -338,8 +338,8 @@
     display:flex; flex-direction:column; gap:8px; align-items:stretch;
   }
   .results-actions-row { display:flex; gap:8px; }
-  .results-actions-row .btn { flex:1; justify-content:center; padding:12px 10px; }
-  .results-actions .btn-back { justify-content:center; padding:9px; font-weight:500; }
+  .results-actions-row .btn { flex:1; justify-content:center; padding:12px 8px; }
+  .results-actions .btn-back { justify-content:center; padding:8px; font-weight:500; }
 
   /* ---- artwork tiles ---- */
   /* Two columns, artwork flush to the edge and doing the work. A 26px
@@ -371,7 +371,7 @@
   .tile-actions { display:none; gap:4px; padding-right:8px; }
   .tile-more {
     position:absolute; right:6px; top:50%; transform:translateY(-50%);
-    background:none; border:none; cursor:pointer; padding:6px;
+    background:none; border:none; cursor:pointer; padding:8px;
     color:var(--muted-soft); display:block; border-radius:var(--r-pill); z-index:2;
   }
   .tile-more:hover { color:var(--ink); background:var(--tile-hover); }
@@ -413,8 +413,8 @@
   .card-row { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
   .pcard {
     position:relative; overflow:hidden;
-    display:flex; flex-direction:column; gap:10px;
-    padding:10px;
+    display:flex; flex-direction:column; gap:12px;
+    padding:12px;
     border:none; border-radius:var(--r-lg); cursor:pointer;
     text-align:left; font-family:inherit; color:var(--ink);
     background:var(--tile);
@@ -426,7 +426,10 @@
      the art inside it is 20 - 10 = 10px, which is --r-sm exactly. */
   .pcard-art {
     display:grid; aspect-ratio:1; width:100%;
-    border-radius:var(--r-sm); overflow:hidden;
+    /* Concentric: the card is --r-lg with 12px of padding. Written as
+       the subtraction rather than a token, because the answer is 8px
+       and the radius scale has no 8. Part 20.1 does it this way. */
+    border-radius:calc(var(--r-lg) - 12px); overflow:hidden;
     grid-template-columns:1fr 1fr; gap:1px;
     background:var(--surface);
   }
@@ -441,18 +444,21 @@
   }
 
   .pcard-text { display:flex; flex-direction:column; gap:2px; padding:0 4px 4px; }
+  /* The tab pill's sliding selection is inset by the bar's own
+     padding, and app.js subtracts the same number when it measures.
+     All three move together or the pill sits off-centre. */
 
   /* The shared search inside a settings row: it carries its own pill,
      so it shouldn't also inherit the page-level centring the dive
      search uses. */
   .cm-search { max-width:none; margin:0; }
-  .cm-search .search-pill-form { padding:4px 4px 4px 14px; }
+  .cm-search .search-pill-form { padding:4px 4px 4px 16px; }
   .cm-search input { font-size:14.5px; }
 
-  .cm-range { display:flex; align-items:center; gap:10px; }
+  .cm-range { display:flex; align-items:center; gap:8px; }
   .cm-range .nav-input { flex:1; min-width:0; }
   .cm-dash { font-size:13px; color:var(--muted-soft); flex-shrink:0; }
-  .custom-preview { margin:18px 0 4px; }
+  .custom-preview { margin:16px 0 4px; }
   /* Sampler, Build your own and If you like… are things you start
      rather than mixes already decided, so they have no tracks and no
      covers. They take the accent in place of artwork, which also makes
@@ -464,25 +470,25 @@
   .pcard-icon {
     display:flex; align-items:center; justify-content:center;
     aspect-ratio:1; width:100%;
-    border-radius:var(--r-sm);
+    border-radius:calc(var(--r-lg) - 12px);
     background:var(--accent-soft-fill); color:var(--accent);
   }
   .pcard-icon svg { width:26px; height:26px; }
   .pcard-title { font-size:14.5px; font-weight:600; letter-spacing:-0.01em; line-height:1.2; }
   .pcard-sub { font-size:13px; color:var(--muted); line-height:1.35; }
 
-  .card-len { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:4px; }
-  .len-opt { font-family:inherit; font-size:13px; padding:8px 13px; border-radius:var(--r-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
+  .card-len { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:4px; }
+  .len-opt { font-family:inherit; font-size:13px; padding:8px 12px; border-radius:var(--r-pill); border:none; background:var(--tile); color:var(--muted); cursor:pointer; }
   .len-opt:hover { background:var(--tile-hover); color:var(--ink); }
   .len-opt.active { background:var(--accent); color:var(--on-accent); border-color:transparent; }
 
-  .checkbox-option { display:flex; align-items:center; gap:9px; font-size:14px; color:var(--ink); cursor:pointer; user-select:none; }
+  .checkbox-option { display:flex; align-items:center; gap:8px; font-size:14px; color:var(--ink); cursor:pointer; user-select:none; }
   .checkbox-option input[type=checkbox] { width:16px; height:16px; accent-color:var(--accent); flex-shrink:0; }
-  .filter-options { display:flex; flex-direction:column; gap:10px; margin-top:16px; }
+  .filter-options { display:flex; flex-direction:column; gap:8px; margin-top:16px; }
 
-  .sort-row { display:flex; align-items:center; gap:10px; margin:4px 0 14px; }
+  .sort-row { display:flex; align-items:center; gap:8px; margin:4px 0 16px; }
   .sort-row label { font-size:13px; color:var(--muted); }
-  .sort-select { font-family:'Geist',sans-serif; font-size:13px; padding:8px 10px; border-radius:var(--r-pill); border:1px solid var(--hairline); background:var(--field); color:var(--ink); }
+  .sort-select { font-family:'Geist',sans-serif; font-size:13px; padding:8px 8px; border-radius:var(--r-pill); border:1px solid var(--hairline); background:var(--field); color:var(--ink); }
 
   /* Filled rows rather than a bordered list — the same treatment track
      rows and settings rows got. The actions stay visible: unlike a tile,
@@ -501,7 +507,7 @@
   }
   .genre-clear:hover { color:var(--ink); }
   .genre-filter input {
-    width:100%; box-sizing:border-box; padding:11px 14px;
+    width:100%; box-sizing:border-box; padding:12px 16px;
     font-family:inherit; font-size:14.5px;
     border-radius:999px; border:1px solid var(--line);
     background:var(--tile); color:var(--ink);
@@ -515,9 +521,9 @@
   /* The crate. Built for a hundred: a two-column grid on a phone that
      widens with the screen, each tile its photo, name and one line of
      where you are with them. */
-  .crate-tools { display:flex; gap:8px; margin:6px 0 4px; }
+  .crate-tools { display:flex; gap:8px; margin:8px 0 4px; }
   .crate-tools input[type=search] {
-    flex:1; min-width:0; padding:11px 14px; font:inherit; font-size:14.5px;
+    flex:1; min-width:0; padding:12px 16px; font:inherit; font-size:14.5px;
     border-radius:999px; border:1px solid var(--line);
     background:var(--tile); color:var(--ink);
   }
@@ -525,8 +531,8 @@
   /* Tight under the search row, with room before the list. Two classes
      so it outranks .actions, which comes later and sets a 32px top
      margin; with one class that margin won and the button floated. */
-  .actions.crate-sampler-actions { margin:8px 0 14px; }
-  .crate-section { margin:22px 0 10px; }
+  .actions.crate-sampler-actions { margin:8px 0 16px; }
+  .crate-section { margin:24px 0 8px; }
   .crate-section .label {
     font-size:13px; font-weight:500; color:var(--muted);
   }
@@ -534,12 +540,12 @@
      phone screen, which made a crate of 74 thirty-odd screens long.
      Rows fit about eight. On a wide screen the rows sit side by side. */
   .crate-grid {
-    display:grid; gap:6px;
+    display:grid; gap:8px;
     grid-template-columns:repeat(auto-fill, minmax(min(340px, 100%), 1fr));
   }
   .crate-tile {
     position:relative; background:var(--tile); border-radius:var(--r-sm);
-    display:flex; align-items:center; gap:8px; padding:8px 10px 8px 8px;
+    display:flex; align-items:center; gap:8px; padding:8px 8px 8px 8px;
     min-width:0;
   }
   .crate-open {
@@ -558,7 +564,7 @@
   .crate-text { flex:1 1 auto; display:flex; flex-direction:column; gap:2px; min-width:0; }
   .crate-name { font-weight:650; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .crate-sub { font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .crate-actions { flex:0 0 auto; display:flex; gap:6px; }
+  .crate-actions { flex:0 0 auto; display:flex; gap:8px; }
   .crate-btn {
     width:36px; height:36px; border-radius:50%; flex:0 0 auto;
     border:none; background:var(--tile); color:var(--muted);
@@ -569,10 +575,10 @@
 
   /* The question after a playlist: done with this artist, or not. */
   .action-result-upnext {
-    margin:14px 0 4px; padding:12px 14px; border-radius:var(--r-md);
+    margin:16px 0 4px; padding:12px 16px; border-radius:var(--r-md);
     background:var(--tile); font-size:13.5px;
   }
-  .action-result-upnext p { margin:0 0 10px; color:var(--ink); }
+  .action-result-upnext p { margin:0 0 8px; color:var(--ink); }
   .action-result-upnext p:only-child { margin:0; color:var(--muted); }
   .action-result-upnext-btns { display:flex; gap:8px; flex-wrap:wrap; }
 
@@ -591,7 +597,7 @@
      The cover the night will get, drawn as the bill fills, beside the
      title. Rows follow the crate: photo, name, and the controls on a
      second line so a long name has the whole width. */
-  .show-hero { display:flex; gap:16px; align-items:center; margin:4px 0 18px; }
+  .show-hero { display:flex; gap:16px; align-items:center; margin:4px 0 16px; }
   .show-cover {
     position:relative; flex:0 0 auto; width:112px; aspect-ratio:1;
     border-radius:var(--r-md); overflow:hidden;
@@ -617,9 +623,9 @@
   #show-bill { margin-top:12px; }
 
   .bill-row {
-    display:flex; align-items:center; gap:10px;
+    display:flex; align-items:center; gap:8px;
     background:var(--tile); border-radius:var(--r-sm);
-    padding:8px 8px 8px 6px; margin-bottom:6px;
+    padding:8px 8px 8px 8px; margin-bottom:8px;
   }
   .bill-art {
     flex:0 0 auto; width:48px; height:48px; border-radius:var(--r-sm);
@@ -629,7 +635,7 @@
     display:flex; align-items:center; justify-content:center;
     font-size:18px; font-weight:700; color:var(--muted);
   }
-  .bill-body { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:6px; }
+  .bill-body { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:8px; }
   .bill-seg { display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; }
   .bill-seg .bill-tag-btn { border:none; border-radius:0; }
   .bill-seg .bill-tag-btn + .bill-tag-btn { border-left:1px solid var(--line); }
@@ -638,22 +644,22 @@
 
   .show-settings {
     background:var(--tile); border-radius:var(--r-sm);
-    margin:22px 0 0; padding:4px 14px;
+    margin:24px 0 0; padding:4px 16px;
   }
   .show-setting {
     display:flex; align-items:center; justify-content:space-between; gap:12px;
-    padding:10px 0; font-size:14px;
+    padding:8px 0; font-size:14px;
   }
   .show-setting + .show-setting { margin-top:4px; }
   /* One width for both, whatever their options say. Sized to their
      content they came out different, which read as a mistake. */
   .show-setting .sort-select { flex:0 0 50%; width:50%; }
-  .show-footer { margin-top:22px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .show-footer { margin-top:24px; display:flex; flex-direction:column; align-items:center; gap:8px; }
   .show-footer .show-go { width:100%; justify-content:center; }
   .btn-link {
     border:none; background:none; color:var(--muted); font:inherit; font-size:13.5px;
     min-height:36px; display:inline-flex; align-items:center;
-    padding:6px 10px; cursor:pointer;
+    padding:8px 8px; cursor:pointer;
   }
   .btn-link:hover { color:var(--ink); }
   /* Takes the slack so the controls sit hard right, and truncates
@@ -673,10 +679,10 @@
     flex:1 1 auto; min-width:0; font-size:15px; font-weight:600;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
-  .bill-actions { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .bill-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .bill-tag-btn {
     font-family:inherit; font-size:12.5px; font-weight:600;
-    padding:7px 12px; border-radius:999px; cursor:pointer;
+    padding:8px 12px; border-radius:999px; cursor:pointer;
     border:none; background:var(--tile); color:var(--muted);
   }
   .bill-tag-btn:hover { color:var(--ink); background:var(--tile-hover); }
@@ -694,32 +700,32 @@
   .watchlist-row {
     display:flex; align-items:center; justify-content:space-between; gap:12px;
     background:var(--tile); border-radius:var(--r-sm);
-    padding:12px 14px; margin-bottom:6px;
+    padding:12px 16px; margin-bottom:8px;
   }
   .watchlist-row.watchlist-done .watchlist-name { color:var(--muted-soft); text-decoration:line-through; }
-  .watchlist-name { font-weight:600; font-size:14.5px; display:flex; align-items:center; gap:10px; min-width:0; }
+  .watchlist-name { font-weight:600; font-size:14.5px; display:flex; align-items:center; gap:8px; min-width:0; }
   .block-scope {
-    display:inline-flex; align-items:center; gap:5px;
+    display:inline-flex; align-items:center; gap:4px;
     font-size:12.5px; color:var(--muted); cursor:pointer;
   }
   .block-scope input { width:15px; height:15px; accent-color:var(--accent); cursor:pointer; }
 
   .watchlist-actions { display:flex; gap:8px; flex-wrap:wrap; flex-shrink:0; }
 
-  .empty-note { font-size:14px; color:var(--muted); padding:10px 0 4px; font-style:italic; }
+  .empty-note { font-size:14px; color:var(--muted); padding:8px 0 4px; font-style:italic; }
   .actions { margin-top:32px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
   .playlist-name-field { margin:28px 0 20px; }
-  .playlist-name-field label { display:block; font-size:13px; color:var(--muted); margin-bottom:7px; }
+  .playlist-name-field label { display:block; font-size:13px; color:var(--muted); margin-bottom:8px; }
 
-  code.env { background:var(--surface); padding:2px 6px; border-radius:var(--r-xs); font-family:'Geist Mono', ui-monospace, monospace; font-size:13px; }
+  code.env { background:var(--surface); padding:2px 8px; border-radius:var(--r-xs); font-family:'Geist Mono', ui-monospace, monospace; font-size:13px; }
 
   .search-shell { position:relative; max-width:620px; margin:0 auto; }
   /* A filled field rather than a 2.5px outline. Heavy borders are the
      single most dated thing in an interface like this; modern apps use
      a raised surface and let focus do the signalling. */
-  .search-pill-form { display:flex; align-items:center; gap:8px; border:1px solid transparent; border-radius:var(--r-md); padding:7px 8px 7px 18px; background:var(--surface); transition:border-color .15s ease, background .15s ease; }
+  .search-pill-form { display:flex; align-items:center; gap:8px; border:1px solid transparent; border-radius:var(--r-md); padding:8px 8px 8px 16px; background:var(--surface); transition:border-color .15s ease, background .15s ease; }
   .search-pill-form:focus-within { border-color:var(--accent); background:var(--paper); }
-  .search-pill-form input[type=text] { border:none; padding:10px 0; font-size:16px; }
+  .search-pill-form input[type=text] { border:none; padding:8px 0; font-size:16px; }
   .search-pill-form input[type=text]:focus { outline:none; }
   .search-icon-btn, .settings-icon-btn { display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:50%; border:none; background:var(--accent); color:var(--on-accent); cursor:pointer; flex-shrink:0; }
   .settings-icon-btn { background:var(--tile); color:var(--ink); }
@@ -728,12 +734,12 @@
 
   .autofill-list { position:absolute; top:calc(100% + 8px); left:8px; right:8px; background:var(--paper); border:1.5px solid var(--ink); border-radius:var(--r-md); overflow:hidden; z-index:20; display:none; }
   .autofill-list.open { display:block; }
-  .autofill-item { display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; font-size:14px; border-bottom:1px solid var(--hairline); }
+  .autofill-item { display:flex; align-items:center; gap:8px; padding:8px 16px; cursor:pointer; font-size:14px; border-bottom:1px solid var(--hairline); }
   .autofill-item:last-child { border-bottom:none; }
   .autofill-item:hover, .autofill-item.active { background:var(--surface); }
   .autofill-item img { width:24px; height:24px; border-radius:50%; object-fit:cover; background:var(--surface); }
   .settings-panel.open { display:block; }
-  .settings-panel-title { font-size:13px; font-weight:500; color:var(--muted); margin-bottom:10px; }
+  .settings-panel-title { font-size:13px; font-weight:500; color:var(--muted); margin-bottom:8px; }
 
   /* ---- intent modal ---- */
   .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.55); display:flex; align-items:flex-start; justify-content:center; z-index:60; padding:20px; }
@@ -750,7 +756,7 @@
     -webkit-backdrop-filter:blur(var(--glass-thick-blur)) saturate(160%);
     border:1px solid var(--hairline);
     box-shadow:var(--overlay-shadow), var(--glass-highlight);
-    border-radius:var(--r-lg); padding:26px;
+    border-radius:var(--r-lg); padding:24px;
     width:min(520px,100%); max-height:88vh; overflow-y:auto;
     /* Roughly where the search bar sits, so the choices appear under
        the thing that produced them. */
@@ -765,7 +771,7 @@
     .modal { animation:none; }
   }
   .modal h2 { margin:0 0 4px; font-size:20px; }
-  .modal .modal-sub { font-size:13.5px; color:var(--muted); margin:0 0 18px; }
+  .modal .modal-sub { font-size:13.5px; color:var(--muted); margin:0 0 16px; }
 
   /* The two things you can do, side by side, as the first thing in the
      dialog. They were buttons in a footer below a page of options,
@@ -776,7 +782,7 @@
      name sits over the fade. Space is held while the photo loads so
      nothing jumps; with no photo the chooser is the plain one. */
   .intent-hero {
-    position:relative; margin:-26px -26px 0; height:200px;
+    position:relative; margin:-24px -24px 0; height:200px;
     background:var(--surface); overflow:hidden;
   }
   .intent-hero img {
@@ -789,7 +795,7 @@
     background:linear-gradient(to bottom, transparent 35%, var(--paper) 100%);
   }
   .modal.has-hero #intent-title {
-    position:relative; z-index:1; margin-top:-46px;
+    position:relative; z-index:1; margin-top:-48px;
     font-size:30px; letter-spacing:-0.02em;
     text-shadow:0 2px 14px rgba(0,0,0,0.55);
   }
@@ -797,7 +803,7 @@
      subtitle was clipped by the fade until it was lifted too. */
   .modal.has-hero .modal-sub { position:relative; z-index:1; }
   @media (prefers-reduced-motion: reduce) { .intent-hero img { transition:none; } }
-  .intent-choices { display:flex; flex-direction:column; gap:10px; margin:16px 0 4px; }
+  .intent-choices { display:flex; flex-direction:column; gap:8px; margin:16px 0 4px; }
   /* Dip, Multi-Dip and Dive are not three unrelated options — they are
      one scale, from a handful of songs to a whole catalogue. The gauge
      on the left says which end of it you're choosing, so the structure
@@ -805,9 +811,9 @@
      words alone. */
   .intent-choice {
     display:grid; grid-template-columns:18px 1fr; align-items:center;
-    column-gap:14px; row-gap:2px; text-align:left;
+    column-gap:16px; row-gap:2px; text-align:left;
     background:var(--tile); border:none; border-radius:var(--r-md);
-    padding:14px 16px; cursor:pointer; font-family:inherit; color:var(--ink);
+    padding:16px 16px; cursor:pointer; font-family:inherit; color:var(--ink);
     width:100%; transition:background .15s ease;
   }
   .intent-choice:hover { background:var(--tile-hover); }
@@ -837,9 +843,9 @@
   .intent-choice-title { font-size:15.5px; font-weight:650; letter-spacing:-0.01em; }
   .intent-choice-sub { font-size:12.5px; color:var(--muted); line-height:1.4; }
 
-  .intent-adjust { margin-top:14px; }
+  .intent-adjust { margin-top:16px; }
   .intent-mode-label {
-    display:block; font-size:12.5px; color:var(--muted); margin-bottom:6px;
+    display:block; font-size:12.5px; color:var(--muted); margin-bottom:8px;
   }
   .intent-adjust .sort-select { width:100%; }
   /* One line about the mode that's actually chosen, rather than a
@@ -847,11 +853,11 @@
   .intent-mode-desc {
     margin:8px 0 0; font-size:13px; line-height:1.45; color:var(--muted);
   }
-  .intent-familiar { margin-top:14px; }
-  .intent-familiar label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+  .intent-familiar { margin-top:16px; }
+  .intent-familiar label { display:block; font-size:13px; color:var(--muted); margin-bottom:8px; }
   .intent-familiar .sort-select { width:100%; }
 
-  .intent-list { display:flex; flex-direction:column; gap:9px; }
+  .intent-list { display:flex; flex-direction:column; gap:8px; }
 
   .intent-custom { margin-top:24px; }
   .intent-custom.hidden { display:none; }
@@ -860,15 +866,15 @@
   .diag summary { cursor:pointer; font-size:12.5px; color:var(--muted); font-family:'Geist Mono', ui-monospace, monospace; letter-spacing:0.04em; }
   .diag summary:hover { color:var(--ink); }
   .diag-block { margin-top:20px; font-size:12.5px; line-height:1.6; }
-  .diag-label { font-size:13px; font-weight:500; color:var(--muted); margin-bottom:5px; }
+  .diag-label { font-size:13px; font-weight:500; color:var(--muted); margin-bottom:4px; }
   .diag-mono { font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; word-break:break-all; color:var(--muted); margin-top:3px; }
   .diag-table { width:100%; border-collapse:collapse; font-family:'Geist Mono', ui-monospace, monospace; font-size:12px; }
   .diag-table td { padding:3px 0; border-bottom:1px solid var(--hairline); }
 
-  .intent-warning { display:flex; gap:10px; align-items:flex-start; margin-top:16px; padding:13px 15px; border-radius:var(--r-md); background:var(--gold-soft); border:1px solid var(--gold); font-size:12.8px; line-height:1.5; color:var(--ink); }
+  .intent-warning { display:flex; gap:8px; align-items:flex-start; margin-top:16px; padding:12px 16px; border-radius:var(--r-md); background:var(--gold-soft); border:1px solid var(--gold); font-size:12.8px; line-height:1.5; color:var(--ink); }
   .intent-warning.hidden { display:none; }
   .intent-warning svg { width:17px; height:17px; flex-shrink:0; margin-top:1px; color:var(--gold); }
-  .modal-actions { display:flex; gap:10px; align-items:center; margin-top:22px; flex-wrap:wrap; }
+  .modal-actions { display:flex; gap:8px; align-items:center; margin-top:24px; flex-wrap:wrap; }
   .modal-actions .spacer { flex:1; }
 
   /* Support link — styled from the site's own tokens rather than a
@@ -889,51 +895,51 @@
   .onboard { max-width:560px; margin:8px auto 40px; }
   .onboard-top { display:flex; justify-content:flex-end; margin:0 0 8px; }
   .onboard-step { font-size:12.5px; font-weight:600; color:var(--muted); letter-spacing:0.02em; }
-  .onboard-dots { display:flex; gap:6px; margin:0 0 26px; }
+  .onboard-dots { display:flex; gap:8px; margin:0 0 24px; }
   .onboard-dots i { flex:1; height:4px; border-radius:var(--r-pill); background:var(--line); }
   .onboard-dots i.on { background:var(--accent); }
-  .onboard-title { font-size:26px; margin:0 0 10px; letter-spacing:-0.02em; }
+  .onboard-title { font-size:26px; margin:0 0 8px; letter-spacing:-0.02em; }
   .onboard-hero {
     font-family:'Martius','Geist',sans-serif; text-transform:uppercase;
-    font-size:clamp(44px, 13vw, 72px); line-height:0.95; margin:12px 0 14px; text-align:center;
+    font-size:clamp(44px, 13vw, 72px); line-height:0.95; margin:12px 0 16px; text-align:center;
   }
-  .onboard-optional { font-size:14px; font-weight:500; color:var(--muted); margin-left:6px; letter-spacing:0; }
-  .onboard-lede { font-size:15px; line-height:1.55; color:var(--muted); margin:0 0 18px; }
-  .onboard-hint { font-size:13px; line-height:1.5; color:var(--muted-soft); margin:10px 0 0; }
+  .onboard-optional { font-size:14px; font-weight:500; color:var(--muted); margin-left:8px; letter-spacing:0; }
+  .onboard-lede { font-size:15px; line-height:1.55; color:var(--muted); margin:0 0 16px; }
+  .onboard-hint { font-size:13px; line-height:1.5; color:var(--muted-soft); margin:8px 0 0; }
   .onboard-hint a { color:var(--accent); }
-  .onboard-list { margin:0 0 14px; padding-left:20px; font-size:14.5px; line-height:1.55; }
+  .onboard-list { margin:0 0 16px; padding-left:20px; font-size:14.5px; line-height:1.55; }
   .onboard-list li + li { margin-top:8px; }
   .onboard-copy {
-    display:flex; align-items:center; gap:10px;
-    background:var(--tile); border-radius:var(--r-sm); padding:10px 10px 10px 14px;
+    display:flex; align-items:center; gap:8px;
+    background:var(--tile); border-radius:var(--r-sm); padding:8px 8px 8px 16px;
   }
   .onboard-copy code {
     flex:1 1 auto; min-width:0; font-size:13px; overflow-x:auto; white-space:nowrap;
     font-family:'Geist Mono', ui-monospace, monospace;
   }
   .onboard-copy .btn { flex:0 0 auto; }
-  .onboard-field { display:flex; flex-direction:column; gap:6px; margin:6px 0 0; }
+  .onboard-field { display:flex; flex-direction:column; gap:8px; margin:8px 0 0; }
   .onboard-field span { font-size:12.5px; font-weight:600; color:var(--muted); }
   .onboard-field input {
     font-family:'Geist Mono', ui-monospace, monospace; font-size:15px;
-    padding:13px 14px; border-radius:var(--r-sm);
+    padding:12px 16px; border-radius:var(--r-sm);
     border:1px solid var(--hairline); background:var(--field); color:var(--ink); width:100%;
   }
   .onboard-check { min-height:1.4em; font-size:13px; margin:8px 0 0; color:var(--muted); }
   .onboard-check.good { color:#4fbf87; }
   .onboard-check.bad { color:#e58a8a; }
-  .onboard-actions { display:flex; gap:10px; margin-top:26px; }
+  .onboard-actions { display:flex; gap:8px; margin-top:24px; }
   .onboard-actions .btn { flex:1 1 0; justify-content:center; }
   .onboard-actions-center { justify-content:center; }
   .onboard-actions-center .btn { flex:0 1 320px; }
   .onboard-welcome, .onboard-connect { text-align:center; }
   .onboard-welcome .onboard-lede, .onboard-connect .onboard-lede { max-width:440px; margin-left:auto; margin-right:auto; }
   .onboard-process {
-    background:var(--tile); border-radius:var(--r-sm); padding:14px 16px;
-    margin:22px 0 0; text-align:left;
+    background:var(--tile); border-radius:var(--r-sm); padding:16px 16px;
+    margin:24px 0 0; text-align:left;
   }
   .onboard-process p { margin:0; font-size:14px; line-height:1.55; color:var(--muted); }
-  .onboard-process p + p { margin-top:10px; }
+  .onboard-process p + p { margin-top:8px; }
   .onboard-process strong { color:var(--ink); }
 
   /* Always on screen. Confirming which build is loaded was taking a trip
@@ -956,7 +962,7 @@
 
   .topnav { display:none; }
   .topnav-btn {
-    background:none; border:none; cursor:pointer; padding:7px 12px;
+    background:none; border:none; cursor:pointer; padding:8px 12px;
     border-radius:var(--r-pill); color:var(--muted);
     font-family:inherit; font-size:13.5px; font-weight:600; letter-spacing:-0.01em;
   }
@@ -983,7 +989,7 @@
   .advanced[open] > summary { color:var(--ink); }
   /* The first heading inside shouldn't push away from the summary the
      way a mid-page section does. */
-  .advanced .crate-header:first-of-type { margin-top:18px; }
+  .advanced .crate-header:first-of-type { margin-top:16px; }
 
   /* A verdict, not a wall of status codes: green when it's fine, and
      an error code short enough to quote when it isn't. */
@@ -996,7 +1002,7 @@
   }
   .action-result-card {
     background:var(--paper); color:var(--ink);
-    border-radius:var(--r-lg); padding:26px 24px 20px;
+    border-radius:var(--r-lg); padding:24px 24px 20px;
     width:min(420px, 100%); box-shadow:0 18px 50px rgba(0,0,0,0.45);
   }
   .action-result-head { font-size:21px; font-weight:700; letter-spacing:-0.02em; }
@@ -1008,12 +1014,12 @@
      Spotify on every load and is the first thing to go quiet. Without
      it the row simply came back short and nothing said why. */
   .api-banner {
-    margin:0 0 18px; padding:14px 16px;
+    margin:0 0 16px; padding:16px 16px;
     border:1px solid var(--danger); border-radius:var(--r-md);
     background:color-mix(in srgb, var(--danger) 12%, transparent);
   }
   .api-banner-head { font-weight:700; font-size:14.5px; letter-spacing:-0.01em; }
-  .api-banner-detail { margin:6px 0 0; font-size:13px; color:var(--muted); line-height:1.5; }
+  .api-banner-detail { margin:8px 0 0; font-size:13px; color:var(--muted); line-height:1.5; }
   .api-banner-actions { display:flex; align-items:center; gap:12px; margin-top:12px; }
   .api-banner-code {
     font-family:'Geist Mono', ui-monospace, monospace; font-size:12px;
@@ -1030,20 +1036,20 @@
   .row-head .row-icon:first-of-type { margin-left:auto; }
   .row-head .row-more { margin-left:8px; }
 
-  .diag-verdict { margin-top:14px; padding:14px 16px; border-radius:var(--r-md); border:1px solid var(--line); }
+  .diag-verdict { margin-top:16px; padding:16px 16px; border-radius:var(--r-md); border:1px solid var(--line); }
   .diag-verdict.is-good { border-color:var(--teal); background:var(--teal-soft); }
   .diag-verdict.is-bad { border-color:var(--gold); background:var(--gold-soft); }
   .diag-verdict-head { font-weight:700; font-size:15px; letter-spacing:-0.015em; }
-  .diag-notes { margin:8px 0 0; padding-left:18px; font-size:13px; color:var(--muted); }
+  .diag-notes { margin:8px 0 0; padding-left:16px; font-size:13px; color:var(--muted); }
   .diag-notes li { margin-bottom:4px; }
   .diag-code {
-    margin-top:10px; font-family:'Geist Mono', ui-monospace, monospace; font-size:12px;
+    margin-top:8px; font-family:'Geist Mono', ui-monospace, monospace; font-size:12px;
     letter-spacing:0.08em; color:var(--muted-soft); user-select:all;
   }
 
   .probe-paced { color:var(--gold); }
-  .probe-table { width:100%; margin-top:10px; font-size:12.5px; }
-  .probe-table td { padding:5px 8px 5px 0; vertical-align:top; }
+  .probe-table { width:100%; margin-top:8px; font-size:12.5px; }
+  .probe-table td { padding:4px 8px 4px 0; vertical-align:top; }
   .probe-table td:first-child { width:18px; color:var(--muted-soft); }
   .probe-table td:last-child { color:var(--muted); text-align:right; white-space:nowrap; }
 
@@ -1052,11 +1058,11 @@
      list of things you can change, with every description floating
      unattached to the control it described. Rows on filled surfaces,
      same vocabulary as tiles and track rows. */
-  .set-group { margin:0 0 26px; }
+  .set-group { margin:0 0 24px; }
   /* Following a tile grid rather than another group, so it needs real
      clearance — it was sitting hard against the tiles above. */
-  .set-group-spaced { margin-top:34px; }
-  .dive-feature-group { margin-top:18px; }
+  .set-group-spaced { margin-top:32px; }
+  .dive-feature-group { margin-top:16px; }
   .set-group-label {
     font-size:12px; font-weight:600; letter-spacing:0.02em;
     color:var(--muted-soft); margin:0 0 8px 2px;
@@ -1064,7 +1070,7 @@
   .set-row {
     display:flex; align-items:center; gap:16px;
     background:var(--tile); border-radius:var(--r-sm);
-    padding:14px 16px; margin-bottom:6px;
+    padding:16px 16px; margin-bottom:8px;
   }
   /* Where the control needs its own line rather than sitting alongside:
      a segmented theme picker or a text field can't share a row with a
@@ -1105,11 +1111,11 @@
   .set-row-chevron { flex-shrink:0; color:var(--muted-soft); display:flex; }
   .set-row-chevron svg { width:18px; height:18px; }
 
-  .set-row-actions { display:flex; justify-content:flex-end; margin:-2px 0 6px; }
+  .set-row-actions { display:flex; justify-content:flex-end; margin:-2px 0 8px; }
   .demo-artist-search { position:relative; width:100%; }
   .demo-artist-search .autofill-list { left:0; right:0; }
-  .demo-artist-list { width:100%; display:grid; gap:7px; }
-  .demo-approved-artist { display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface); }
+  .demo-artist-list { width:100%; display:grid; gap:8px; }
+  .demo-approved-artist { display:flex; align-items:center; gap:8px; padding:8px 8px; border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface); }
   .demo-approved-artist img, .demo-approved-placeholder { width:30px; height:30px; border-radius:50%; object-fit:cover; background:var(--tile); display:grid; place-items:center; font-weight:700; }
   .demo-approved-artist span:nth-child(2) { flex:1; min-width:0; font-weight:600; }
   .demo-approved-artist button {
@@ -1141,14 +1147,14 @@
      through the API to be attributed; the landing page said so and the
      app itself never did until 2.9.85. */
   .set-legal {
-    margin:14px 2px 0; max-width:62ch; font-size:13px; line-height:1.5;
+    margin:16px 2px 0; max-width:62ch; font-size:13px; line-height:1.5;
     color:var(--muted-soft);
   }
   .set-legal a { color:var(--muted); text-decoration:underline; }
 
   /* Sampler intro: the artists it's about to fetch, so the page shows
      what it's going to do rather than describing it. */
-  .sampler-faces { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0; }
+  .sampler-faces { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }
   .sampler-face { width:48px; height:48px; border-radius:var(--r-sm); object-fit:cover; display:block; }
   .sampler-face-blank { display:flex; align-items:center; justify-content:center; background:var(--surface); color:var(--muted); font-weight:600; }
   .btn-danger { background:var(--danger); color:#fff; }
@@ -1166,12 +1172,12 @@
      only looked like it worked on short pages. Floating fixes that. */
   #flash-slot { position:fixed; left:0; right:0; bottom:0; z-index:60; pointer-events:none; display:flex; justify-content:center; }
   #flash-slot .flash {
-    pointer-events:auto; margin:0 16px calc(18px + env(safe-area-inset-bottom));
+    pointer-events:auto; margin:0 16px calc(16px + env(safe-area-inset-bottom));
     background:var(--glass-thick-bg); color:var(--ink);
     backdrop-filter:blur(var(--glass-thick-blur)) saturate(160%);
     -webkit-backdrop-filter:blur(var(--glass-thick-blur)) saturate(160%);
     border:1px solid var(--hairline);
-    border-radius:var(--r-pill); padding:12px 18px; font-size:13.5px;
+    border-radius:var(--r-pill); padding:12px 16px; font-size:13.5px;
     box-shadow:var(--overlay-shadow), var(--glass-highlight); max-width:min(460px,calc(100vw - 32px));
     animation:toast-in .18s ease;
   }
@@ -1236,13 +1242,13 @@
       var(--bg) 100%);
   }
 
-  .dive-foot { position:absolute; left:0; right:0; bottom:0; padding:0 24px calc(34px + env(safe-area-inset-bottom)); }
+  .dive-foot { position:absolute; left:0; right:0; bottom:0; padding:0 24px calc(32px + env(safe-area-inset-bottom)); }
   .dive-foot-inner { max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:8px; }
   .dive-heading { font-size:28px; font-weight:700; letter-spacing:-0.02em; line-height:1.15; text-shadow:0 2px 20px rgba(0,0,0,0.55); }
   .dive-stage { font-size:13.5px; color:var(--muted); min-height:19px; }
   .dive-awake { font-size:13px; line-height:1.35; color:var(--muted-soft); }
   .dive-awake.is-warning { color:#f0bd62; }
-  .dive-track { height:3px; border-radius:999px; background:rgba(255,255,255,0.16); overflow:hidden; margin-top:6px; }
+  .dive-track { height:3px; border-radius:999px; background:rgba(255,255,255,0.16); overflow:hidden; margin-top:8px; }
   .dive-track-fill { height:100%; width:0%; background:var(--accent-gradient); border-radius:999px; transition:width .4s ease; }
   /* Right-aligned under the bar: present when wanted, out of the way of
      the artist name and the stage line otherwise. */
@@ -1250,7 +1256,7 @@
   .dive-cancel { align-self:flex-start; margin-top:12px; }
 
   @media (max-width: 640px) {
-    .dive-foot { padding:0 18px calc(28px + env(safe-area-inset-bottom)); }
+    .dive-foot { padding:0 16px calc(28px + env(safe-area-inset-bottom)); }
     .dive-heading { font-size:24px; }
   }
 
@@ -1270,8 +1276,8 @@
          there are, rather than leaving empty columns on the right. */
       display:grid; grid-auto-flow:column; grid-auto-columns:1fr;
       position:fixed; z-index:40;
-      left:14px; right:14px; bottom:calc(14px + env(safe-area-inset-bottom));
-      padding:6px;
+      left:16px; right:16px; bottom:calc(16px + env(safe-area-inset-bottom));
+      padding:8px;
       border-radius:var(--r-pill);
       background:var(--glass-bg);
       backdrop-filter:blur(var(--glass-blur)) saturate(160%);
@@ -1291,7 +1297,7 @@
        tabs stack above the pill. */
     .tabbar::before {
       content:""; position:absolute; z-index:0;
-      top:6px; bottom:6px; left:6px;
+      top:8px; bottom:8px; left:8px;
       width:var(--tab-w, 0px);
       transform:translateX(var(--tab-x, 0px));
       border-radius:var(--r-pill);
@@ -1303,7 +1309,7 @@
     .tabbar:not(.has-selection)::before { opacity:0; }
     .tab {
       display:flex; flex-direction:column; align-items:center; gap:3px;
-      padding:8px 0 7px; background:none; border:none; cursor:pointer;
+      padding:8px 0 8px; background:none; border:none; cursor:pointer;
       border-radius:var(--r-pill);
       color:var(--muted); font-family:inherit; font-size:12px; font-weight:500;
       -webkit-tap-highlight-color:transparent;
@@ -1327,7 +1333,7 @@
     .tab.active svg { color:var(--accent); }
     /* Clear the pill so the last row isn't trapped underneath it. */
     .wrap { padding-bottom:calc(92px + env(safe-area-inset-bottom)); }
-    #flash-slot .flash { margin-bottom:calc(98px + env(safe-area-inset-bottom)); }
+    #flash-slot .flash { margin-bottom:calc(96px + env(safe-area-inset-bottom)); }
     /* On result screens the contextual actions replace the global tab
        bar. That used to work by covering it: both were full-width and
        docked to bottom:0, so the higher z-index hid the lower one. The
@@ -1336,12 +1342,12 @@
     body:has(.results-actions) .tabbar { display:none; }
     .results-actions {
       position:fixed; left:0; right:0; bottom:0; z-index:45;
-      padding:12px 16px calc(14px + env(safe-area-inset-bottom));
+      padding:12px 16px calc(16px + env(safe-area-inset-bottom));
     }
     .results-actions .btn-back { display:flex; }
     .results-body { padding-bottom:132px; }
-    .results-hero { margin:0 -18px 0; }
-    .results-hero-text { padding:0 18px 16px; }
+    .results-hero { margin:0 -16px 0; }
+    .results-hero-text { padding:0 16px 16px; }
   }
 
   /* ---- desktop ---------------------------------------------------
@@ -1375,7 +1381,7 @@
     /* Auto-fill means the column count follows the available width
        instead of jumping at a breakpoint, so nothing is ever stretched
        to fill a row it can't fill. */
-    .tile-grid { grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:10px; }
+    .tile-grid { grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:8px; }
     .card-row { grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px; }
 
     .results-actions-row, .results-actions .btn-back {
@@ -1393,8 +1399,8 @@
      rather than a scale-down — spacing and type sizes that read well
      at 1200px are simply wrong at 380px. */
   @media (max-width: 640px) {
-    .wrap { padding:0 14px 60px; }
-    .topbar { padding:10px 14px 8px; }
+    .wrap { padding:0 16px 60px; }
+    .topbar { padding:8px 16px 8px; }
     .wordmark { font-size:19px; }
 
     h1 { font-size:22px; }
@@ -1402,22 +1408,22 @@
 
     /* Search stays the priority; tighten it so the input keeps room. */
     .search-shell { margin:0 auto; }
-    .search-pill-form { padding:5px 6px 5px 16px; gap:6px; }
+    .search-pill-form { padding:4px 8px 4px 16px; gap:8px; }
     .search-pill-form input[type=text] { font-size:16px; }  /* 16px avoids iOS zoom-on-focus */
     .search-icon-btn, .settings-icon-btn { width:40px; height:40px; }
-    .pill { padding:7px 13px 7px 8px; gap:8px; max-width:100%; }
+    .pill { padding:8px 12px 8px 8px; gap:8px; max-width:100%; }
     .pill-avatar { width:26px; height:26px; }
     .pill-reason { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
 
     /* Cards were 190px minimum, which forced horizontal overflow on a
        narrow screen. One per row reads better anyway. */
-    .card-row { gap:10px; }
+    .card-row { gap:8px; }
     /* Padding stays 10px at every width: the art's radius is derived
        from it by the concentric rule (--r-lg minus the padding), so an
        override here would pinch the corners. Only the type shrinks. */
     .pcard-title { font-size:13.5px; }
 
-    .row-head { margin:26px auto 12px; }
+    .row-head { margin:24px auto 12px; }
 
     /* Artwork tiles go single-column; two 56px thumbnails plus text
        don't fit side by side at phone width. */
@@ -1425,7 +1431,7 @@
     /* No hover on touch, so the overflow button is how these are
        reached — showing them always is what took the width. */
     .tile-wrap.show-actions .tile { padding-right:0; }
-    .card-row { grid-template-columns:repeat(2,1fr); gap:10px; }
+    .card-row { grid-template-columns:repeat(2,1fr); gap:8px; }
     .row-head { margin:28px auto 12px; }
     .row-head h2, .row-head .qual { font-size:18px; }
     /* Two bold 18px strings and a link do not fit one phone line. The
@@ -1439,20 +1445,20 @@
     /* Except the artist chooser, which belongs to the search bar it
        came from. A sheet at the far edge of the screen made picking an
        artist feel like being sent somewhere unrelated. */
-    #intent-modal, #card-modal { align-items:flex-start; padding:0 10px; }
+    #intent-modal, #card-modal { align-items:flex-start; padding:0 8px; }
     #intent-modal .modal, #card-modal .modal {
       width:100%; margin-top:clamp(52px, 12vh, 132px);
       border-radius:var(--r-lg);
-      padding:20px 18px;
+      padding:20px 16px;
       max-height:calc(100vh - clamp(52px, 12vh, 132px) - 24px);
       overflow-y:auto;
     }
     #intent-modal .modal-actions { position:static; }
     /* Matches the phone padding above; without it the photo would stop
        short of the edges. */
-    #intent-modal .intent-hero { margin:-20px -18px 0; height:180px; }
-    .modal { width:100%; max-height:92vh; border-radius:var(--r-lg) var(--r-lg) 0 0; padding:22px 18px calc(22px + env(safe-area-inset-bottom)); }
-    .modal-actions { position:sticky; bottom:0; background:var(--paper); padding-top:14px; margin-top:18px; }
+    #intent-modal .intent-hero { margin:-20px -16px 0; height:180px; }
+    .modal { width:100%; max-height:92vh; border-radius:var(--r-lg) var(--r-lg) 0 0; padding:24px 16px calc(24px + env(safe-area-inset-bottom)); }
+    .modal-actions { position:sticky; bottom:0; background:var(--paper); padding-top:16px; margin-top:16px; }
     /* Don't stretch every action to equal width: with three buttons
        that squeezed each label until it truncated. The primary action
        takes the room it needs, the rest size to their text. */
@@ -1461,10 +1467,10 @@
     .modal-actions #card-go, .modal-actions [data-action] { flex:1 1 auto; justify-content:center; }
     .modal-actions .spacer { display:none; }
 
-    .len-opt { padding:8px 13px; }
+    .len-opt { padding:8px 12px; }
 
     /* Results rows need the space more than the padding. */
-    .track-row { gap:10px; }
+    .track-row { gap:8px; }
     .track-name { font-size:13.5px; }
     .actions .btn { flex:1; justify-content:center; }
 

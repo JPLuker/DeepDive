@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.123";
+export const BUILD = "2.9.124";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -6823,12 +6823,13 @@ function moveTabSelection() {
     // Rects, not offsetLeft: that is measured from the offsetParent's
     // border box in some engines and its padding box in others, and
     // this bar has a border. Subtracting two rects has no such
-    // ambiguity. The 6px is the bar's padding, which is where the
-    // pill's own `left` already puts it.
+    // ambiguity. The 8px is the bar's padding, which is where the
+    // pill's own `left` already puts it — change one and change all
+    // three, or the selection sits off-centre.
     const barBox = bar.getBoundingClientRect();
     const tabBox = active.getBoundingClientRect();
     bar.style.setProperty("--tab-w", `${tabBox.width}px`);
-    bar.style.setProperty("--tab-x", `${tabBox.left - barBox.left - 6}px`);
+    bar.style.setProperty("--tab-x", `${tabBox.left - barBox.left - 8}px`);
     bar.classList.add("has-selection");
   });
 }

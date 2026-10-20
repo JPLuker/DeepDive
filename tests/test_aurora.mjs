@@ -57,8 +57,12 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   // the art is 10px, which is --r-sm exactly.
   const card = (shell.match(/\n  \.pcard \{[^}]*\}/) || [''])[0];
   const art = (shell.match(/\n  \.pcard-art \{[^}]*\}/) || [''])[0];
-  check('card is --r-lg with 10px padding', /border-radius:var\(--r-lg\)/.test(card) && /padding:10px/.test(card));
-  check('and its art is --r-sm, which is the concentric answer', /border-radius:var\(--r-sm\)/.test(art));
+  // The padding moved 10 -> 12 with the grid, so the concentric answer
+  // moved 10 -> 8. There is no 8 on the radius scale, so it is written
+  // as the subtraction, which is how Part 20.1's own example does it —
+  // and it keeps the two in step if either changes again.
+  check('card is --r-lg with 12px padding', /border-radius:var\(--r-lg\)/.test(card) && /padding:12px/.test(card));
+  check('and its art derives its radius from that padding', /border-radius:calc\(var\(--r-lg\) - 12px\)/.test(art));
   // A phone override used to set padding:8px 14px, which breaks that
   // relationship and pinches the corners.
   check('no override re-pads the card', !/\.pcard \{ [^}]*padding:(?!10px)/.test(shell));

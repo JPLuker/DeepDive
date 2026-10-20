@@ -115,7 +115,8 @@ check('entering them re-evaluates it', /else paint\(\);/.test(src));
 // --- The chooser shows the artist (2.9.50) ---
 check('chooser has a photo header', /id="intent-hero"[^>]*><img id="intent-photo"/.test(shell));
 check('it is painted when the chooser opens', /paintIntentHero\(artistName\);/.test(src));
-check('it bleeds to the edges on desktop', /\.intent-hero \{[^}]*margin:-26px -26px 0/.test(shell));
+// Values moved onto the 4px grid in 2.9.124 (Part 8.1, 21.2).
+check('it bleeds to the edges on desktop', /\.intent-hero \{[^}]*margin:-24px -24px 0/.test(shell));
 {
   // The phone chooser has different padding; the photo must follow it.
   const m = shell.match(/#intent-modal \.modal, #card-modal \.modal \{[^}]*padding:(\d+)px (\d+)px/);

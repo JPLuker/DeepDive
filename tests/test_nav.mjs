@@ -150,7 +150,8 @@ check('and the text follows it', /\.pcard-text \{ display:flex; flex-direction:c
   const bar = (h.match(/\.tabbar \{[^}]*position:fixed[^}]*\}/) || [''])[0];
   const mob = h;
   check('the floating rule is the one being read', /position:fixed/.test(bar) && !/display:none/.test(bar));
-  check('the bar floats clear of every edge', /left:14px; right:14px; bottom:calc\(14px \+ env\(safe-area-inset-bottom\)\)/.test(bar));
+  // 14.1 wants the pill 12-16px clear; the grid put it at 16.
+  check('the bar floats clear of every edge', /left:16px; right:16px; bottom:calc\(16px \+ env\(safe-area-inset-bottom\)\)/.test(bar));
   check('it is a pill', /border-radius:var\(--r-pill\)/.test(bar));
   check('it is glass, not a tinted bar', /background:var\(--glass-bg\)/.test(bar) && /saturate\(160%\)/.test(bar));
   check('the hard top border is gone', !/border-top:/.test(bar));

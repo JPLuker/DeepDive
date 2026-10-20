@@ -53,7 +53,7 @@ check('tiles can move to the top', /data-top="\$\{esc\(e\.name\)\}"/.test(src));
   // It has to outrank .actions, not just exist: in 2.9.45 it lost to
   // .actions' 32px top margin and this check still passed.
   check('sampler button sits under the search row', /class="actions crate-sampler-actions"/.test(src)
-    && /margin:8px 0 14px/.test(rule('.actions.crate-sampler-actions'))
+    && /margin:8px 0 16px/.test(rule('.actions.crate-sampler-actions'))
     && !/\n  \.crate-sampler-actions \{/.test(shell));
   check('no mobile override reshapes the crate', !/@media[^{]*\{[^@]*\.crate-(tile|art|grid)\b/.test(shell));
 }

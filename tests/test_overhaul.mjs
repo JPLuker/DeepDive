@@ -53,7 +53,8 @@ check('sampler no longer dashed', !/\.btn-sampler[^}]*border-style:dashed/.test(
 
 // mobile
 check('tiles single-column on phones', /\.tile-grid \{ grid-template-columns:1fr; \}/.test(html));
-check('card grid halves on phones', /\.card-row \{ grid-template-columns:repeat\(2,1fr\); gap:10px; \}/.test(html));
+// Values moved onto the 4px grid in 2.9.124 (Part 8.1, 21.2).
+check('card grid halves on phones', /\.card-row \{ grid-template-columns:repeat\(2,1fr\); gap:8px; \}/.test(html));
 // Superseded in 2.8.32/33: showing them always is what took the
 // width on every row, and in 2.8.34 keeping them in the layout
 // while invisible is what made the overflow unresponsive.
