@@ -4,6 +4,39 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.118
+- **The landing page's stylesheet was 71% dead.** 282 of 380 rules
+  could not match anything on the page: it carried most of the app's
+  CSS, left from when it was derived from the app — the premise behind
+  the `regen-app.sh` deleted in 2.9.109 for being backwards. The nav
+  drawer, the tab bar, playlist cards, track rows, the dive screen, the
+  settings panel and the whole superseded chooser were all still being
+  downloaded by every visitor. 45,910 bytes of CSS down to 12,894.
+- Rules kept because one of their selectors still matched were trimmed
+  too: `body, .card, .nav-drawer, input, .pill, .autofill-list,
+  .settings-panel { … }` survived on `body` and `input` while listing
+  five classes the page has no markup for.
+- **Proved by pixel diff, not by hope.** `tools/landing-shot.mjs` takes
+  full-page screenshots at phone, tablet and desktop width in both
+  themes with animations disabled; `tools/pixdiff.mjs` compares them.
+  All six identical, pixel for pixel, before and after.
+- That mattered immediately. The first attempt deleted the entire dark
+  theme: a rule's documentation comment came back as part of its
+  selector, so `:root[data-theme="dark"]` was tested as
+  `/* Dark theme … */ :root[...]` and the `^:root` anchor never
+  matched. The diff showed three dark screenshots differing by 60–80%
+  and all three light ones identical, which named the cause on sight.
+  Selectors are tested with comments stripped now.
+- `tools/dead-css.mjs` does the analysis, brace-matched rather than
+  line-based, per the standing rule about never cutting CSS with a line
+  regex. It reports by default and only rewrites with `--apply`.
+
+Recorded, not acted on: the same tool reports **101 dead rules in the
+app shell**, 10.7KB or 12.8% of its sheet, largely the same nav-drawer
+family. The app's markup is built in JS, so verifying that deletion
+needs a render diff across the demo screens, and only six of the ten
+render in the sandbox.
+
 ## 2.9.117
 - **Fixes a crash shipped in 2.9.116.** `cardArt` called `tileImage`,
   which lives in `insights.js` and was never exported, so building the

@@ -145,5 +145,44 @@ for (const ch of css) {
 }
 check('stylesheet balances', depth === 0 && stray === 0);
 
+// --- the sheet carries only what the page uses (2.9.118) ------------
+//
+// The landing page used to hold most of the app's stylesheet: it was
+// derived from the app, which is the premise regen-app.sh was built on
+// and the reason that script was deleted in 2.9.109 for being
+// backwards. 282 of 380 rules could not match anything on the page.
+//
+// It is fully static — no <script> anywhere — so a class absent from
+// the markup genuinely cannot appear. That is what made the deletion
+// provable rather than hopeful, and the proof was a full-page pixel
+// diff at three widths in both themes.
+{
+  const body = html.slice(html.indexOf('</style>'));
+  check('the landing page is still script-free', !/<script/.test(body));
+
+  // Whole families of app chrome that the page has no markup for.
+  for (const cls of ['nav-drawer', 'tabbar', 'pcard', 'track-row', 'crate-header',
+                     'sk-line', 'intent-opt', 'dive-screen', 'settings-panel',
+                     'watchlist-row', 'autofill-list', 'switch-track']) {
+    check(`no .${cls} rules left`, !new RegExp(`\\.${cls}[\\s,{:.]`).test(css));
+  }
+
+  // The things it does have must survive, and the pixel diff only
+  // proves what was rendered at the moment it ran.
+  for (const cls of ['screen', 'feature-card', 'hero-screens', 'choice-shot']) {
+    check(`.${cls} is still styled`, new RegExp(`\\.${cls}[\\s,{:.]`).test(css));
+  }
+  check('both themes still defined', /:root\[data-theme="dark"\]/.test(css) && /:root\s*\{/.test(css));
+  // The first deletion attempt judged the dark theme dead, because the
+  // comment above it came back as part of the selector and the ^:root
+  // anchor never matched. It took the whole dark theme with it and the
+  // pixel diff caught it: three dark screenshots differed by 60-80%,
+  // all three light ones identical.
+  check('dark theme carries real values', /--bg:#[0-9A-Fa-f]{6}/.test(css.slice(css.indexOf(':root[data-theme="dark"]'))));
+
+  // It was 45,910 bytes of css for a page with 98 live rules.
+  check(`sheet is lean (${css.length} bytes)`, css.length < 20000);
+}
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
