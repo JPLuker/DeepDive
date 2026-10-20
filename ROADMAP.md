@@ -293,68 +293,92 @@ the pacing work. Neither has been looked at properly.
 
 ## Stopping point, 20 Oct (build 2.9.120)
 
-**Phase 1 (issue #14, Aurora Glass + the copy pass) is all but done.**
-What is left of it:
+**Ordering rule, Joseph's call on 20 Oct: everything Claude can do
+alone comes first.** He is usually at work while a session runs, so a
+roadmap that interleaves his tasks with Claude's stalls the session on
+a question nobody is there to answer. Work down the first list without
+stopping; the second list is what genuinely cannot move without him,
+collected in one place so he can clear several at once when he sits
+down. When something in the first list turns out to need him, move it
+to the second with the reason and carry on down the list rather than
+waiting.
 
-- **Part 10 copy pass**, then the **Part 21 self-review**. The biggest
-  remaining piece of Phase 1 and the one with the most user-visible
-  value. Do it against *rendered screens*, not a string dump: the
-  fillable-PDF attempt failed because 488 strings out of context are
-  unreadable on a phone, and the one copy bug Joseph caught himself
-  ("9 of 30 checked", 2.9.119) was only visible in place, next to a
-  progress bar that disagreed with it. `tools/shoot.mjs` renders every
-  demo screen now, so read the words where they live.
-- **Spacing onto the 4px grid** (Part 20; 21.2 asks for it). 244 of
-  441 padding/margin/gap values are off it — commonly 10, 14, 6 and
-  18px. Sub-4px values (1, 1.5, 2, 3px) are hairlines and optical
-  nudges, not spacing: leave those. Unblocked — Joseph has seen the
-  visual passes on a device and approved them. Note the pixel diff
-  cannot prove this one, because changing spacing is meant to change
-  pixels; use it to see *where* things moved and review by eye.
-- **Type scale against Part 9.2.** The 12px floor landed in 2.9.113;
-  the scale itself (display / title-1 / … / micro) is unchecked.
+---
 
-**Phase 2 — repo furniture.** `SECURITY.md` and private vulnerability
-reporting, `.github/ISSUE_TEMPLATE/` (MAINTENANCE.md Part 3), README
-Support section and the privacy/network table, "Report a problem" on
-the landing page, licence named on the landing page. Settings → About
-already covers its share (2.9.110).
+### 1. Claude's queue — do these in order, unattended
 
-**Phase 3 — the quota experiment.** One more attempt at escalating
-waits, and the deciding test for whether duplicate search survives into
-3.0 at all. This is the only phase whose outcome changes the feature
-set, so it should not drift to the end.
+1. **Part 10 copy pass, then the Part 21 self-review.** The largest
+   remaining piece of Phase 1 and the most user-visible. Do it against
+   *rendered screens*, not a string dump: the fillable-PDF attempt
+   failed because 488 strings out of context are unreadable on a
+   phone, and the one copy bug Joseph caught himself ("9 of 30
+   checked", 2.9.119) was only visible in place, beside a progress bar
+   that disagreed with it. `tools/shoot.mjs` renders every demo screen.
+2. **Spacing onto the 4px grid** (Part 20; 21.2 asks for it). 244 of
+   441 padding/margin/gap values are off it — commonly 10, 14, 6 and
+   18px. Sub-4px values (1, 1.5, 2, 3px) are hairlines and optical
+   nudges, not spacing: leave those. The pixel diff cannot *prove*
+   this one, since changing spacing is meant to change pixels; use it
+   to see where things moved and review by eye.
+3. **Type scale against Part 9.2.** The 12px floor landed in 2.9.113;
+   the scale itself (display / title-1 / … / micro) is unchecked.
+4. **Phase 2, repo furniture.** `SECURITY.md`,
+   `.github/ISSUE_TEMPLATE/` (MAINTENANCE.md Part 3), README Support
+   section and the privacy/network table (PRIVACY.md Part 9), "Report
+   a problem" on the landing page, licence named there. All writable
+   from here — only *enabling* private vulnerability reporting is a
+   GitHub setting, which is on Joseph's list.
+5. **Phase 3 code, the escalating-wait quota attempt.** Write and test
+   the change; the deciding run needs real quota, so the experiment
+   itself is on Joseph's list. Keep the two separate — the code can be
+   ready and waiting.
+6. **Phase 4, native apps.** Tauri 2, app id
+   `io.github.jpluker.deepdive`, `deepdive://callback` as a second
+   redirect URI, GitHub Actions matrix for Windows, Linux and Android,
+   unsigned, released with the `-untested-<platform>` convention.
+   Scaffolding, config and workflow are all doable here; registering
+   the redirect URI in Spotify's dashboard is Joseph's.
+7. **Rewrite `TESTING.md` against the final UI.** The rewrite is
+   Claude's; the pass itself is Joseph's. Do this only once 1–6 have
+   settled, or it is rewritten twice.
 
-**Phase 4 — native apps.** Tauri 2, app id `io.github.jpluker.deepdive`,
-`deepdive://callback` as a second redirect URI, GitHub Actions matrix
-for Windows, Linux and Android, unsigned, released with the
-`-untested-<platform>` convention. Existing web users need do nothing;
-only the installers need the extra redirect URI.
+### 2. Joseph's queue — collected, so they can go in one sitting
 
-**Phase 5 — testing.** Rewrite `TESTING.md` against the final UI, then
-the full pass on a real device. **Stays last.** Doing it earlier
-invalidates the items, and the UI has changed under it ten times in
-three days.
+Nothing above blocks on these except where noted.
 
-**Phase 6 — release.** Tag `v3.0.0`, rename the releases to the
-song-title convention, cut the release with notes.
+- **The quota experiment.** Needs real quota on a real account. This
+  is the deciding test for whether duplicate search survives into 3.0,
+  so it is the one item whose outcome changes what 3.0 contains —
+  worth doing early even though the rest can proceed without it.
+- **The `TESTING.md` pass.** 423 items on a real device, after the
+  rewrite.
+- **Spotify dashboard**: add `deepdive://callback` as a redirect URI,
+  for the native builds only. Existing web users need do nothing.
+- **GitHub settings**: enable private vulnerability reporting
+  (SECURITY-BASELINE.md Part 7).
+- **Artist permission** for the Leisure Hour, VIAL, Houseghost and
+  Maciann photography. Until then it appears only inside device frames
+  on the landing page.
+- **The Mixes section of the landing page** — interim copy; Joseph has
+  an idea and hasn't said what yet.
+- **One interrupted-and-resumed duplicate scan.** 2.9.103 checkpoints
+  every ten releases; confirm Resume appears and completed albums are
+  not reread.
+- **Phone checks still outstanding**: 2.9.53 Multi-Dip (partly seen),
+  2.9.56–2.9.58 onboarding, the Last.fm gating. TESTING.md 32–34.
 
-### Carried over, still open
+### 3. Then the release
 
-- **Duplicate scan needs one real resumed run.** 2.9.103 checkpoints
-  completed artists and the current artist every ten releases. Confirm
-  an interrupted run offers Resume and does not reread completed
-  albums.
-- **Mixes section of the landing page**: interim copy. Joseph has an
-  idea and hasn't said what yet. Ask.
-- **Not yet checked on a phone**: 2.9.53 Multi-Dip overhaul (partly
-  seen), 2.9.56–2.9.58 onboarding, the Last.fm gating. TESTING.md
-  sections 32 to 34.
+Tag `v3.0.0`, rename the releases to the song-title convention, cut the
+release with notes. Version numbers are Joseph's to take.
+
+### Low priority, noted so it isn't mistaken for done
+
 - **11 CSS rules held back by the dead-code analyser** in the app
   shell, where the base class is live and only the modifier looks dead
   (`.track-row.is-static`, `.tile-btn.is-on`, `.watchlist-done`, …).
-  Each needs reading by hand. Low value; mentioned so the 0 in the
-  tool's output isn't mistaken for "nothing left".
+  Each needs reading by hand, and the tool reporting 0 dead rules does
+  not mean there are none.
 
 ## Shipped since — build 2.9.120
 

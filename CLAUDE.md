@@ -90,6 +90,22 @@ and has been claimed early twice — the second time by deciding a
 session's completion amounted to it. Finishing a session is not
 finishing the rework. Bump patches and let him say when.
 
+**Order every roadmap by who can do the work, Claude first.**
+Joseph's call, 20 Oct: he is usually at work while a session runs, so a
+plan that interleaves his tasks with Claude's stalls on a question
+nobody is there to answer. A roadmap gets two lists — what Claude can
+finish unattended, in the order to do it, and what genuinely needs
+Joseph, collected in one place so he can clear several at once.
+
+Split a phase if it spans both. The quota work is the example: writing
+the escalating-wait change is Claude's and can be ready and waiting,
+while the deciding run needs real quota and is his. Don't park the
+whole phase behind him.
+
+When something in Claude's list turns out to need him, move it to his
+list **with the reason** and carry on down the queue. Don't stop and
+wait, and don't guess at an answer that can't be undone.
+
 **Ideas go in the roadmap; bugs get fixed now.** When Joseph describes
 something broken, fix it in the moment. When he describes something he
 wants, the job is to find the right place for it in `ROADMAP.md` and
