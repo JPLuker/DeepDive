@@ -72,10 +72,38 @@ function base64url(buf) {
     .replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
 
-// The redirect URI is this page's own origin+path. A client-side app has
-// to satisfy Spotify's redirect rule (HTTPS or literal 127.0.0.1); both
-// are fine here since we just reuse wherever the app is actually served.
+/**
+ * True when running inside the Tauri shell rather than a browser.
+ *
+ * Tauri injects `window.__TAURI_INTERNALS__` (v2) before any app code
+ * runs. Checked rather than assumed, because every branch below has to
+ * leave the web path exactly as it was: the web app is the one people
+ * actually use, and a native build must not be able to change it.
+ */
+export function isNativeShell() {
+  try {
+    return typeof window !== "undefined"
+      && (!!window.__TAURI_INTERNALS__ || !!window.__TAURI__);
+  } catch (e) {
+    return false;
+  }
+}
+
+/** The custom scheme the desktop and Android builds come back through. */
+export const NATIVE_REDIRECT_URI = "deepdive://callback";
+
+// On the web the redirect URI is this page's own origin+path. A
+// client-side app has to satisfy Spotify's redirect rule (HTTPS or
+// literal 127.0.0.1); both are fine since we reuse wherever the app is
+// actually served.
+//
+// A native shell cannot: its origin is tauri://localhost (or
+// http://tauri.localhost on Windows), which Spotify will not accept as
+// a redirect. Those builds use a custom scheme instead, which has to be
+// registered once in the Spotify dashboard. Existing web users are
+// unaffected and need do nothing.
 export function redirectUri() {
+  if (isNativeShell()) return NATIVE_REDIRECT_URI;
   return window.location.origin + window.location.pathname;
 }
 
@@ -144,8 +172,28 @@ export async function beginLogin({ extraScopes = "" } = {}) {
  * Cleans the auth params out of the URL either way, so a refresh doesn't
  * re-trigger the exchange with a stale code.
  */
+/**
+ * A callback URL handed over by the native deep-link plugin.
+ *
+ * On the web the browser navigates back to the app and the code is in
+ * `location.search`. A custom scheme does not navigate anything: the
+ * OS wakes the app and passes the whole URL, so it is parked here for
+ * `handleRedirectCallback` to find on its next run.
+ */
+let _pendingNativeCallback = null;
+export function acceptNativeCallback(url) {
+  try {
+    const q = String(url).split("?")[1];
+    if (q) _pendingNativeCallback = q;
+    return !!q;
+  } catch (e) {
+    return false;
+  }
+}
+
 export async function handleRedirectCallback() {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(_pendingNativeCallback || window.location.search);
+  _pendingNativeCallback = null;
   const code = params.get("code");
   const returnedState = params.get("state");
   const error = params.get("error");

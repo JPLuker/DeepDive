@@ -327,12 +327,23 @@ in TESTING.md for a real device.
    request budget instead, stops cleanly between artists, and reports
    what it spent and what finishing would cost. Joseph's run decides
    whether that is enough.
-6. **Phase 4, native apps.** Tauri 2, app id
-   `io.github.jpluker.deepdive`, `deepdive://callback` as a second
-   redirect URI, GitHub Actions matrix for Windows, Linux and Android,
-   unsigned, released with the `-untested-<platform>` convention.
-   Scaffolding, config and workflow are all doable here; registering
-   the redirect URI in Spotify's dashboard is Joseph's.
+6. **Phase 4, native apps.** Desktop scaffolding landed in 2.9.128:
+   Tauri 2, app id `io.github.jpluker.deepdive`,
+   `deepdive://callback`, hardened CSP and a capability allowlist, and
+   a hand-triggered GitHub Actions job for Windows and Linux that names
+   its output per RELEASES.md Part 5. **Nothing has been compiled** —
+   there is no Rust toolchain here — so the first CI run is the first
+   real test.
+
+   Still to do here:
+   - **Android.** Left out deliberately rather than scaffolded badly:
+     Tauri 2 needs `tauri android init`, the Android SDK and NDK in CI,
+     and a keystore even for an unsigned-for-distribution build. Worth
+     its own pass once the desktop builds are known to work.
+   - **An app icon.** `src-tauri/icons/icon.png` is referenced and does
+     not exist; the bundle step will fail without it. The wordmark
+     asset exists at `docs/assets/dd-logo.png` and needs exporting at
+     the sizes Tauri wants.
 7. **Rewrite `TESTING.md` against the final UI.** The rewrite is
    Claude's; the pass itself is Joseph's. Do this only once 1–6 have
    settled, or it is rewritten twice.
@@ -354,7 +365,13 @@ Nothing above blocks on these except where noted.
 - **The `TESTING.md` pass.** 423 items on a real device, after the
   rewrite.
 - **Spotify dashboard**: add `deepdive://callback` as a redirect URI,
-  for the native builds only. Existing web users need do nothing.
+  for the native builds only. Existing web users need do nothing — the
+  app only asks for that URI when it detects a native shell, and the
+  web path is unchanged and tested.
+- **Run the native workflow once.** Actions → "Native builds" → Run,
+  with a version number. It is hand-triggered on purpose: a tag push
+  should not quietly spend twenty minutes of runners. The first run
+  answers whether any of this compiles.
 - **GitHub settings**: enable private vulnerability reporting
   (SECURITY-BASELINE.md Part 7).
 - **Artist permission** for the Leisure Hour, VIAL, Houseghost and

@@ -1,0 +1,11 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Only what DeepDive actually calls. SECURITY-BASELINE.md Part 6: enable the commands and plugins the app uses, nothing else.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "deep-link:default",
+    "opener:allow-open-url"
+  ]
+}

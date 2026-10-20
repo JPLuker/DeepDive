@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.127";
+export const BUILD = "2.9.128";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -6940,7 +6940,35 @@ function registerServiceWorker() {
   });
 }
 
+/**
+ * In a native build, the OAuth callback arrives as an event rather
+ * than a navigation.
+ *
+ * The shell emits "deep-link" with the whole deepdive://callback URL;
+ * auth.js owns the PKCE state and the exchange, so this hands the URL
+ * straight over and re-runs the same callback handler the web path
+ * uses. No-ops in a browser, where the import is absent.
+ */
+async function listenForNativeCallback() {
+  if (!auth.isNativeShell()) return;
+  try {
+    const { listen } = await import("@tauri-apps/api/event");
+    await listen("deep-link", async (event) => {
+      if (!auth.acceptNativeCallback(event.payload)) return;
+      const res = await auth.handleRedirectCallback();
+      if (res && res.ok) renderHome();
+      else if (res && res.error) renderConnect(res.error);
+    });
+  } catch (e) {
+    // A native shell without the event API is a broken build, not a
+    // broken browser. Say so where it will be read rather than failing
+    // silently into a sign-in that never completes.
+    console.error("[DeepDive] native callback listener unavailable:", e && e.message);
+  }
+}
+
 async function boot() {
+  await listenForNativeCallback();
   // Put the build on screen before anything else can fail, so a stale
   // cached bundle is visible rather than inferred.
   applyBuildTagVisibility();

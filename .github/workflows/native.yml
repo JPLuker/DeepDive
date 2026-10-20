@@ -1,0 +1,96 @@
+# Native builds for a tag.
+#
+# Everything this produces is UNTESTED in the sense RELEASES.md Part 2
+# means: CI compiled it, nobody ran it. So it goes to its own
+# pre-release tagged -untested-<platform>, never alongside the tested
+# web release, and the notes open with the required warning.
+#
+# Triggered by hand. A tag push should not quietly spend twenty minutes
+# of runners before anyone has decided the tag is good.
+name: Native builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build, without the v (e.g. 3.0.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            label: Linux
+            arch: x64
+          - os: windows-latest
+            label: Windows
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      # VERSIONING.md Part 4: the version lives in one place. It is not
+      # typed into tauri.conf.json or Cargo.toml, which both carry
+      # 0.0.0 in the repo; the tag being built is the source of truth
+      # and is written in here.
+      - name: Stamp the version
+        shell: bash
+        run: |
+          V="${{ github.event.inputs.version }}"
+          python3 - "$V" <<'PY'
+          import json, re, sys, pathlib
+          v = sys.argv[1]
+          conf = pathlib.Path("src-tauri/tauri.conf.json")
+          data = json.loads(conf.read_text())
+          data["version"] = v
+          conf.write_text(json.dumps(data, indent=2) + "\n")
+          cargo = pathlib.Path("src-tauri/Cargo.toml")
+          cargo.write_text(re.sub(r'^version = "0\.0\.0"$', f'version = "{v}"', cargo.read_text(), count=1, flags=re.M))
+          PY
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: .
+          tauriScript: npx --yes @tauri-apps/cli@2
+          args: ${{ matrix.os == 'ubuntu-22.04' && '--bundles deb,rpm,appimage' || '--bundles msi,nsis' }}
+
+      # RELEASES.md Part 5: <AppName>-<version>-<OS>-<arch>.<ext>, with
+      # UNTESTED before the extension (Part 2.2). OS comes straight
+      # after the version so GitHub's alphabetical listing groups them.
+      - name: Rename for release
+        shell: bash
+        run: |
+          V="${{ github.event.inputs.version }}"
+          mkdir -p dist
+          find src-tauri/target/release/bundle -type f \
+            \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' -o -name '*.msi' -o -name '*.exe' \) \
+            -print0 | while IFS= read -r -d '' f; do
+              ext="${f##*.}"
+              cp "$f" "dist/DeepDive-${V}-${{ matrix.label }}-${{ matrix.arch }}-UNTESTED.${ext}"
+            done
+          ls -la dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.label }}-${{ matrix.arch }}
+          path: dist/*

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DeepDive",
+  "version": "0.0.0",
+  "identifier": "io.github.jpluker.deepdive",
+  "build": {
+    "frontendDist": "../docs/app"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "DeepDive",
+        "width": 1100,
+        "height": 800,
+        "minWidth": 380,
+        "minHeight": 560,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' https://*.scdn.co data:; connect-src 'self' https://api.spotify.com https://accounts.spotify.com https://ws.audioscrobbler.com; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "nsis", "deb", "rpm", "appimage"],
+    "icon": ["icons/icon.png"],
+    "category": "Music",
+    "shortDescription": "Find what's missing from your Spotify library",
+    "longDescription": "DeepDive reconciles an artist's Spotify catalogue against your Liked Songs, finds the tracks you're missing, and builds playlists from your own library. No account, no server: everything stays on your device."
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["deepdive"]
+      }
+    }
+  }
+}

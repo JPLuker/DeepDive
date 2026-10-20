@@ -4,6 +4,40 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.128
+Phase 4, desktop scaffolding. **None of it has been compiled** — there
+is no Rust toolchain in the sandbox — so the first CI run is the first
+real test of whether it builds at all.
+
+- Tauri 2 shell: app id `io.github.jpluker.deepdive`, pointing at the
+  same `docs/app` the web version serves, so the native builds cannot
+  drift away from it. `main.rs` does two things only: receive the deep
+  link, and open external links in the system browser.
+- **OAuth.** A native shell's origin is `tauri://localhost`, which
+  Spotify will not accept as a redirect, so native builds use
+  `deepdive://callback` and the shell hands the URL to the web layer,
+  which still owns PKCE and the token exchange. The web path is
+  untouched: `redirectUri()` only changes behind a runtime check for
+  the Tauri globals, and the callback still reads `location.search`
+  when nothing has been handed over.
+- Hardening per SECURITY-BASELINE.md Part 6: a CSP with no remote
+  scripts and no `eval`, `connect-src` limited to exactly the three
+  hosts in the README's network table, images to Spotify's CDN, and a
+  capability allowlist naming only the plugins the shell calls.
+- A hand-triggered workflow builds Windows and Linux bundles and names
+  them per RELEASES.md Part 5 — OS straight after the version so
+  GitHub groups them, `UNTESTED` before the extension. Triggered by
+  hand rather than on a tag push, because a tag should not quietly
+  spend twenty minutes of runners.
+- VERSIONING.md Part 4 says the version lives in one file. It is in
+  neither `tauri.conf.json` nor `Cargo.toml`: both carry `0.0.0` and CI
+  stamps the tag being built.
+
+Not done, and recorded rather than half-built: **Android** needs
+`tauri android init`, the SDK and NDK in CI and a keystore, which is
+its own pass; and the bundle references an icon that does not exist
+yet.
+
 ## 2.9.127
 The duplicate scan takes a request budget. This is the quota attempt,
 and it is not the escalating wait the roadmap called for — that already
