@@ -335,15 +335,10 @@ in TESTING.md for a real device.
    there is no Rust toolchain here — so the first CI run is the first
    real test.
 
-   Still to do here:
-   - **Android.** Left out deliberately rather than scaffolded badly:
-     Tauri 2 needs `tauri android init`, the Android SDK and NDK in CI,
-     and a keystore even for an unsigned-for-distribution build. Worth
-     its own pass once the desktop builds are known to work.
-   - **An app icon.** `src-tauri/icons/icon.png` is referenced and does
-     not exist; the bundle step will fail without it. The wordmark
-     asset exists at `docs/assets/dd-logo.png` and needs exporting at
-     the sizes Tauri wants.
+   Android and the icons landed in 2.9.129. Nothing is compiled yet;
+   the first CI run is the first real test. If it fails, the likely
+   places are the Tauri action's arguments, the NDK version pin, and
+   whether `android init` needs anything else in a clean runner.
 7. **Rewrite `TESTING.md` against the final UI.** The rewrite is
    Claude's; the pass itself is Joseph's. Do this only once 1–6 have
    settled, or it is rewritten twice.

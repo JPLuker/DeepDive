@@ -66,6 +66,19 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   check('and CI stamps the real one', /Stamp the version/.test(wf) && /data\["version"\] = v/.test(wf));
 }
 
+// --- icons -----------------------------------------------------------
+// The bundle step fails outright without these, which would have
+// wasted the first CI run — the one that exists to find out whether
+// any of this compiles.
+{
+  const icons = conf?.bundle?.icon || [];
+  check('the bundle names an icon set, not one file', icons.length >= 4);
+  // Windows bundles need the .ico; Linux takes the PNGs.
+  check('a Windows .ico is included', icons.some((i) => i.endsWith('.ico')));
+  check('and PNGs for Linux', icons.filter((i) => i.endsWith('.png')).length >= 3);
+  for (const f of icons) check(`${f} exists`, existsSync(at('src-tauri/' + f)));
+}
+
 // --- release conventions (RELEASES.md) ------------------------------
 {
   check('builds are labelled UNTESTED in the filename', /-UNTESTED\.\$\{ext\}|UNTESTED\.\$\{?ext/.test(wf) || /UNTESTED\./.test(wf));
@@ -73,6 +86,27 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   // listing groups a platform together.
   check('the name puts the OS after the version', /DeepDive-\$\{V\}-\$\{\{ matrix\.label \}\}-\$\{\{ matrix\.arch \}\}/.test(wf));
   check('it is run by hand, not on every tag push', /workflow_dispatch/.test(wf) && !/on:\s*\n\s*push:\s*\n\s*tags:/.test(wf));
+}
+
+// --- Android ---------------------------------------------------------
+// Joseph named Android as a target alongside Windows and Linux. It is
+// its own job because it needs a JDK, the SDK, the NDK, four Rust
+// targets and a Gradle project that is generated rather than
+// committed.
+{
+  check('there is an Android job', /^  android:/m.test(wf));
+  check('it installs an NDK', /NDK_HOME=/.test(wf));
+  check('and the four Android Rust targets',
+    ['aarch64-linux-android', 'armv7-linux-androideabi', 'i686-linux-android', 'x86_64-linux-android']
+      .every((t) => wf.includes(t)));
+  check('the Gradle project is generated, not committed', /android init/.test(wf));
+  // The important one. An unsigned *release* APK is rejected by
+  // Android before it runs, so "no signing yet" and "release" cannot
+  // both be true — a debug build is the only installable option, and
+  // it is signed with Android's debug key.
+  check('the APK is a debug build, so it can actually be installed', /android build --apk --debug/.test(wf));
+  check('and its name says so', /Android-universal-debug-UNTESTED\.apk/.test(wf));
+  check('the version is stamped there too', (wf.match(/Stamp the version/g) || []).length === 2);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

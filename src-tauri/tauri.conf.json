@@ -23,8 +23,20 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["msi", "nsis", "deb", "rpm", "appimage"],
-    "icon": ["icons/icon.png"],
+    "targets": [
+      "msi",
+      "nsis",
+      "deb",
+      "rpm",
+      "appimage"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
     "category": "Music",
     "shortDescription": "Find what's missing from your Spotify library",
     "longDescription": "DeepDive reconciles an artist's Spotify catalogue against your Liked Songs, finds the tracks you're missing, and builds playlists from your own library. No account, no server: everything stays on your device."
@@ -32,7 +44,9 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": ["deepdive"]
+        "schemes": [
+          "deepdive"
+        ]
       }
     }
   }

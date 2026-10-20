@@ -94,3 +94,74 @@ jobs:
         with:
           name: ${{ matrix.label }}-${{ matrix.arch }}
           path: dist/*
+
+  # Android is its own job rather than a matrix row: it needs a JDK,
+  # the SDK and the NDK, four Rust targets, and a generated Gradle
+  # project that does not live in the repo.
+  android:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install the NDK
+        run: |
+          sdkmanager --install "ndk;26.1.10909125"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> "$GITHUB_ENV"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Stamp the version
+        shell: bash
+        run: |
+          V="${{ github.event.inputs.version }}"
+          python3 - "$V" <<'PY'
+          import json, re, sys, pathlib
+          v = sys.argv[1]
+          conf = pathlib.Path("src-tauri/tauri.conf.json")
+          data = json.loads(conf.read_text())
+          data["version"] = v
+          conf.write_text(json.dumps(data, indent=2) + "\n")
+          cargo = pathlib.Path("src-tauri/Cargo.toml")
+          cargo.write_text(re.sub(r'^version = "0\.0\.0"$', f'version = "{v}"', cargo.read_text(), count=1, flags=re.M))
+          PY
+
+      # The Gradle project is generated rather than committed, so it
+      # cannot go stale against tauri.conf.json.
+      - name: Generate the Android project
+        run: npx --yes @tauri-apps/cli@2 android init
+
+      # Debug, deliberately. An unsigned *release* APK cannot be
+      # installed on Android at all — it is rejected before it runs —
+      # so "no signing yet" and "release" are incompatible. A debug
+      # build is signed with Android's debug key, installs by
+      # sideloading, and is exactly as untested either way.
+      - name: Build the APK
+        run: npx --yes @tauri-apps/cli@2 android build --apk --debug
+
+      - name: Rename for release
+        shell: bash
+        run: |
+          V="${{ github.event.inputs.version }}"
+          mkdir -p dist
+          find src-tauri/gen/android -name '*.apk' -print0 | while IFS= read -r -d '' f; do
+            cp "$f" "dist/DeepDive-${V}-Android-universal-debug-UNTESTED.apk"
+          done
+          ls -la dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Android
+          path: dist/*

@@ -4,6 +4,27 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.129
+The two things 2.9.128 left undone, both of which would have wasted the
+first CI run.
+
+- **Icons.** The bundle referenced one file that did not exist, so the
+  bundle step would have failed on the run whose whole purpose is to
+  find out whether this compiles. Generated from the app's own PWA
+  icon, so the native builds carry the same mark as the installed web
+  app: 32, 128 and 256px PNGs for Linux, and a seven-size `.ico` for
+  Windows, which needs one and would not have taken a PNG.
+- **Android.** Its own job rather than a matrix row: it needs a JDK,
+  the SDK, the NDK, four Rust targets, and a Gradle project that is
+  generated in CI rather than committed, so it cannot go stale against
+  `tauri.conf.json`.
+- **The APK is a debug build, and that is the point.** An unsigned
+  *release* APK is rejected by Android before it runs, so "no signing
+  yet" and "release" cannot both be true. A debug build is signed with
+  Android's debug key, sideloads normally, and is exactly as untested
+  either way. The filename says `debug` so nobody mistakes it for a
+  shippable artifact.
+
 ## 2.9.128
 Phase 4, desktop scaffolding. **None of it has been compiled** — there
 is no Rust toolchain in the sandbox — so the first CI run is the first
