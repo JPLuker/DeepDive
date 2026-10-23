@@ -25,6 +25,35 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 tauri-plugin-deep-link = "2"
 tauri-plugin-opener = "2"
+# tauri::generate_context! expands to code that names ::serde_json, so
+# the crate has to be a direct dependency even though nothing here
+# mentions it. Without it the macro fails with E0433 "cannot find
+# serde_json in the list of imported crates", which reads as a problem
+# with main.rs rather than with the manifest.
+serde_json = "1"
+
+# Pinned below 0.21.3, and only where it is used.
+#
+# tauri-plugin-deep-link depends on rust-ini "^0.21" on Linux only.
+# rust-ini 0.21.3 added two public fields to ParseOption, which is
+# semver-compatible but source-breaking for anyone constructing it
+# with a struct literal — which the plugin does. So cargo resolved to
+# the newest 0.21.x and the *plugin* failed to compile:
+#
+#   error[E0063]: missing fields `enabled_indented_mutiline_value`
+#   and `enabled_preserve_key_leading_whitespace` in initializer of
+#   `ParseOption`
+#
+# Nothing in this repo was wrong and nothing in this repo could be
+# changed to fix it. 0.21.0 and 0.21.1 were checked directly and have
+# neither field; 0.21.3 has both. The upper bound is the whole point,
+# so it is written as a range rather than "=0.21.1" — any future
+# 0.21.2-style release is fine, 0.21.3 is not.
+#
+# Remove this once tauri-plugin-deep-link releases a version that
+# builds against 0.21.3; it is pinning someone else's bug.
+[target.'cfg(target_os = "linux")'.dependencies]
+rust-ini = ">=0.21, <0.21.3"
 
 [profile.release]
 codegen-units = 1

@@ -173,6 +173,31 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   check('deep-link is registered in the library', /tauri_plugin_deep_link::init\(\)/.test(lib));
   check('opener is registered in the library', /tauri_plugin_opener::init\(\)/.test(lib));
   check('the deep link is forwarded to the web layer', /emit\("deep-link"/.test(lib));
+
+  // app.deep_link() is a trait method. Without the trait in scope the
+  // build fails with "no method named `deep_link`", which points at
+  // the call site rather than at the missing import.
+  check('DeepLinkExt is in scope', /use tauri_plugin_deep_link::DeepLinkExt;/.test(lib));
+  // Manager is not: App::handle() is inherent, and importing it only
+  // earns an unused-import warning.
+  check('Manager is not imported', !/use tauri::\{[^}]*Manager/.test(lib));
+
+  // tauri::generate_context! expands to code naming ::serde_json, so
+  // it must be a direct dependency despite nothing here mentioning
+  // it. Easy to "clean up" as unused; it is not.
+  check('serde_json is a direct dependency', /^serde_json\s*=/m.test(cargo));
+
+  // rust-ini 0.21.3 added public fields to ParseOption — semver
+  // compatible, source-breaking for the struct literal inside
+  // tauri-plugin-deep-link. Checked directly: 0.21.0 and 0.21.1 have
+  // neither field, 0.21.3 has both. The upper bound is the point.
+  //
+  // This pins around someone else's bug, so it is asserted rather
+  // than left as a comment: dropping it silently restores a Linux
+  // build failure that nothing in this repo appears to cause.
+  check('rust-ini is pinned below the breaking release', /rust-ini\s*=\s*">=0\.21,\s*<0\.21\.3"/.test(cargo));
+  check('and only for Linux, where the plugin uses it',
+    /\[target\.'cfg\(target_os = "linux"\)'\.dependencies\]/.test(cargo));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

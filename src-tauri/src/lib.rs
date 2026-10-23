@@ -27,7 +27,11 @@
 // definition of what the shell does, not a desktop one and a mobile
 // one that can drift apart.
 
-use tauri::{Emitter, Manager};
+// Emitter for handle.emit; DeepLinkExt for app.deep_link(), which is
+// a trait method and fails with "no method named `deep_link`" if the
+// trait is not in scope. Manager is deliberately not imported —
+// App::handle() is inherent, and importing it only earns a warning.
+use tauri::Emitter;
 use tauri_plugin_deep_link::DeepLinkExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
