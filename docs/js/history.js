@@ -154,6 +154,11 @@ const PORTABLE_KEYS = [
   "deepdive_intent_custom",
 ];
 
+// The backup format's own version, written into every export and
+// checked on every import. Bump it only when the shape changes in a
+// way this version cannot read.
+export const BACKUP_VERSION = 1;
+
 export function exportData() {
   const data = {};
   for (const k of PORTABLE_KEYS) {
@@ -164,7 +169,7 @@ export function exportData() {
   }
   return {
     format: "deepdive-backup",
-    version: 1,
+    version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
     data,
   };
@@ -180,6 +185,15 @@ export function exportData() {
 export function importData(payload, { mode = "merge" } = {}) {
   if (!payload || payload.format !== "deepdive-backup" || !payload.data) {
     throw new Error("That doesn't look like a DeepDive backup file.");
+  }
+  // DATA-AND-UPDATES.md Part 4: a file from a newer version is not
+  // opened or modified. The version was written into every export from
+  // the start and never read, so a future format change would have
+  // been merged field by field into an app that could not understand
+  // it — the silent half-import that section exists to prevent.
+  const incomingVersion = Number(payload.version) || 1;
+  if (incomingVersion > BACKUP_VERSION) {
+    throw new Error("This backup was saved by a newer version of DeepDive. Update DeepDive to open it.");
   }
   const incoming = payload.data;
   const summary = { pins: 0, blocked: 0, dives: 0, settings: 0 };

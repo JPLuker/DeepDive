@@ -64,5 +64,28 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   check('it notes fonts are bundled', /Fonts and icons are bundled/.test(r));
 }
 
+// --- saved data has a migration path (DATA-AND-UPDATES.md Part 4) ---
+// A 1.0 criterion (VERSIONING.md 2.1), and it was half-built: every
+// export has carried a version since the format was written, and
+// import never read it. A future format change would have been merged
+// field by field into an app that could not understand it.
+{
+  const h = await import('../docs/js/history.js');
+  check('exports carry a format version', h.exportData().version === h.BACKUP_VERSION);
+  check('and name the format', h.exportData().format === 'deepdive-backup');
+
+  const refuse = (payload) => {
+    try { h.importData(payload); return null; } catch (e) { return e.message; }
+  };
+  check('a backup from a newer version is refused',
+    /newer version/.test(refuse({ format: 'deepdive-backup', version: h.BACKUP_VERSION + 1, data: {} }) || ''));
+  check('and the message says what to do', /Update DeepDive/.test(refuse({ format: 'deepdive-backup', version: 99, data: {} }) || ''));
+  check('the current version still imports', refuse({ format: 'deepdive-backup', version: h.BACKUP_VERSION, data: {} }) === null);
+  // Older files must keep working; that is the point of a migration
+  // path rather than a version wall.
+  check('and so does a file with no version at all', refuse({ format: 'deepdive-backup', data: {} }) === null);
+  check('something that is not a backup is still refused', /doesn't look like/.test(refuse({ nope: true }) || ''));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

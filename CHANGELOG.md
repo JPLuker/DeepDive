@@ -4,6 +4,21 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.131
+- **A backup from a newer version is refused instead of half-applied.**
+  Every export has carried a `version` since the format was written,
+  and `importData` never read it — it checked `format` and then merged
+  field by field. A future format change would have been silently
+  applied by an app that could not understand it, which is exactly the
+  failure DATA-AND-UPDATES.md Part 4 exists to prevent. It now says
+  "This backup was saved by a newer version of DeepDive. Update
+  DeepDive to open it." Older files, and files with no version at all,
+  still import.
+
+Found while checking DeepDive against the 1.0 criteria rather than by
+anything going wrong, which is the only way this one could have been
+found before it mattered.
+
 ## 2.9.130
 - **The whole-library duplicate scan is off by default**, behind
   Settings → Advanced → Unfinished → "Show incomplete features".
