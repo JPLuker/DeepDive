@@ -200,6 +200,24 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   // it is signed with Android's debug key.
   check('the APK is a debug build, so it can actually be installed', /android build --apk --debug/.test(wf));
   check('and its name says so', /Android-universal-debug-UNTESTED\.apk/.test(wf));
+
+  // The shipped APK must come from build/outputs, not from anywhere
+  // under gen/android. The old step searched the whole tree and
+  // copied every match onto one filename, so the artifact was
+  // whichever .apk find happened to reach last — and intermediates/
+  // holds unsigned ones, which Android refuses to install.
+  check('the APK comes from build/outputs', /build\/outputs\/apk\/universal\/debug/.test(wf));
+  check('and the build fails if it is not there', /::error title=APK missing/.test(wf));
+  const renameBlock = wf.slice(wf.indexOf('SRC="src-tauri/gen/android'));
+  check('it no longer copies every apk it can find',
+    !/find src-tauri\/gen\/android -name '\*\.apk'/.test(wf));
+
+  // android init copies the template's stock ic_launcher into every
+  // mipmap folder and never looks at bundle.icon, so without this the
+  // APK ships with the default Tauri icon.
+  check('launcher icons are generated', /cargo tauri icon/.test(wf));
+  check('after init, which creates the folders it writes into',
+    wf.indexOf('cargo tauri icon') > wf.indexOf('cargo tauri android init'));
   check('the version is stamped there too', (wf.match(/Stamp the version/g) || []).length === 2);
 }
 

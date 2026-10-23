@@ -226,6 +226,20 @@ jobs:
       # user back and Android finds no handler for the scheme. The
       # script verifies its own work and fails the build if the scheme
       # is not there afterwards.
+      # `android init` copies the Tauri template's own stock
+      # ic_launcher.png into every mipmap folder; it does not derive
+      # them from bundle.icon, so the APK ships with the default Tauri
+      # icon regardless of what this project's icons are. `tauri icon`
+      # regenerates the Android mipmaps from the source image, so it
+      # has to run after init, which creates the folders it writes to.
+      #
+      # The source is 512x512. Tauri asks for 1024x1024 and will scale
+      # up, so the launcher icon is correct but softer than it should
+      # be until a 1024px master exists.
+      - name: Generate the launcher icons
+        shell: bash
+        run: tools/ci-capture.sh "Icon generation" cargo tauri icon src-tauri/icons/icon.png
+
       - name: Register the OAuth scheme in the Android manifest
         shell: bash
         run: |
@@ -248,9 +262,25 @@ jobs:
         run: |
           V="${{ github.event.inputs.version }}"
           mkdir -p dist
-          find src-tauri/gen/android -name '*.apk' -print0 | while IFS= read -r -d '' f; do
-            cp "$f" "dist/DeepDive-${V}-Android-universal-debug-UNTESTED.apk"
-          done
+          # Only build/outputs/apk, and only the universal debug one.
+          #
+          # This used to search all of gen/android and copy EVERY match
+          # onto the same destination name, so the shipped artifact was
+          # whichever .apk came last in find order. gen/android also
+          # contains app/build/intermediates, which holds unsigned and
+          # unaligned intermediate APKs — and an unsigned APK is
+          # refused by Android at install time, which is exactly the
+          # symptom reported. Nondeterministic besides: the same commit
+          # could ship an installable APK one run and not the next.
+          SRC="src-tauri/gen/android/app/build/outputs/apk/universal/debug"
+          APK="$SRC/app-universal-debug.apk"
+          if [ ! -f "$APK" ]; then
+            echo "::error title=APK missing::No APK at $APK"
+            echo "What the build actually produced under build/outputs:"
+            find src-tauri/gen/android -path '*build/outputs*' -name '*.apk' || true
+            exit 1
+          fi
+          cp "$APK" "dist/DeepDive-${V}-Android-universal-debug-UNTESTED.apk"
           ls -la dist
 
       - uses: actions/upload-artifact@v4
