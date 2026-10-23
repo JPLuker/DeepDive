@@ -3,9 +3,34 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.133.** If the build in `js/app.js` is well
+**Last updated at build 2.9.134.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Android follow-up — build 2.9.134
+
+Joseph's screenshots showed content beneath the Android status bar and
+`ERR_UNKNOWN_URL_SCHEME` during OAuth. The latest native workflow was
+still `39994429428` at `1d39048`: **2.9.133 had only deployed to Pages**.
+Do not infer that an APK contains a source fix because the push passed.
+
+`src-tauri/android/MainActivity.kt` now applies measured Android insets
+to the native content container, consuming them to avoid CSS applying
+another safe-area gap. It handles system bars, cutouts and the IME.
+`tools/android-activity.mjs` installs it into the generated project after
+init; a package mismatch, missing activity or multiple activities fails
+the build rather than guessing where to write.
+
+**Build delivery:** the Native builds workflow also listens for pushes,
+but only an explicit `[native-build]` commit runs the Android job.
+Desktop jobs remain manual, and normal pushes skip compilation. Marked
+builds take the version from `app.js`; manual runs use their validated
+input. This session requests a 2.9.134 APK with the inset change and
+2.9.133 OAuth fixes. Check the run result and artifact before claiming
+that Android is ready. Device checks, including keyboard and rotation,
+remain Joseph's. No on-device verification is claimed here.
 
 ---
 
@@ -813,7 +838,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.133**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.134**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.

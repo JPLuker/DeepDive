@@ -340,8 +340,13 @@ in TESTING.md for a real device.
    duplicate intents, state mismatch, denial, opener failure, and the
    web path. **The changed build has not been run on an Android device.**
 
-   Next: compile 2.9.133 and work through the Android checks at the top
-   of `TESTING.md`. Stable Android release signing remains outstanding;
+   **2.9.134:** Android content now fits measured system insets rather
+   than sitting behind the status bar. Marked `[native-build]` pushes
+   request an Android APK automatically; normal pushes skip compilation
+   and desktop remains manual. The previous APK predates 2.9.133.
+
+   Next: confirm the requested 2.9.134 APK builds and work through the
+   Android checks at the top of `TESTING.md`. Stable signing remains outstanding;
    ephemeral debug keys are not a reliable cross-run update identity.
 7. **Rewrite `TESTING.md` against the final UI.** The rewrite is
    Claude's; the pass itself is Joseph's. Do this only once 1–6 have
@@ -368,8 +373,8 @@ Nothing above blocks on these except where noted.
   app only asks for that URI when it detects a native shell, and the
   web path is unchanged and tested.
 - **Test the native build on a device.** Compilation is confirmed for
-  Windows, Linux and Android. Build 2.9.133 needs a new workflow run and
-  the Android sign-in checklist in `TESTING.md`; a successful compiler
+  Windows, Linux and Android. Install the newly requested 2.9.134 APK
+  and run the Android checklist in `TESTING.md`; a successful compiler
   run is not a device test.
 - **GitHub settings**: enable private vulnerability reporting
   (SECURITY-BASELINE.md Part 7).

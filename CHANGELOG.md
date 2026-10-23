@@ -4,6 +4,20 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.134
+- Android fits the WebView around measured system-bar, display-cutout
+  and keyboard insets. The generated Tauri activity enabled
+  edge-to-edge without applying those insets, placing the logo beneath
+  the clock and status icons. Our activity is installed after every
+  `android init`, with package/ambiguity checks before replacement.
+- An explicit `[native-build]` commit now requests an Android test APK.
+  Ordinary pushes skip native compilation; manual runs still build all
+  platforms. Automatic builds stamp the version from `app.js`, keeping
+  the artifact name, native package and About screen in agreement.
+- This APK also includes 2.9.133's OAuth fixes. The previously available
+  APK was built from `1d39048`, before those fixes; pushing the web
+  deployment did not update the already-installed binary.
+
 ## 2.9.133
 - Native Spotify sign-in calls the opener through Tauri's core IPC API.
   `withGlobalTauri` exposes the core API, not `__TAURI__.opener`.

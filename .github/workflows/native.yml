@@ -1,15 +1,18 @@
-# Native builds for a tag.
+# Native test builds.
 #
 # Everything this produces is UNTESTED in the sense RELEASES.md Part 2
 # means: CI compiled it, nobody ran it. So it goes to its own
 # pre-release tagged -untested-<platform>, never alongside the tested
 # web release, and the notes open with the required warning.
 #
-# Triggered by hand. A tag push should not quietly spend twenty minutes
-# of runners before anyone has decided the tag is good.
+# Manual builds cover all platforms. An explicit [native-build] commit
+# requests an Android test APK, so a web-only deployment cannot be
+# mistaken for an updated installed app. Ordinary pushes skip compilation.
 name: Native builds
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       version:
@@ -21,6 +24,7 @@ permissions:
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -50,17 +54,23 @@ jobs:
         with:
           workspaces: src-tauri
 
-      # VERSIONING.md Part 4: the version lives in one place. It is not
-      # typed into tauri.conf.json or Cargo.toml, which both carry
-      # 0.0.0 in the repo; the tag being built is the source of truth
-      # and is written in here.
+      # Manual builds use the requested version. Marked Android builds
+      # take BUILD from app.js, so the installed binary and About agree.
+      # Validate before stamping and pass inputs as data, not shell code.
       - name: Stamp the version
         shell: bash
+        env:
+          REQUESTED_VERSION: ${{ github.event.inputs.version }}
         run: |
-          V="${{ github.event.inputs.version }}"
-          python3 - "$V" <<'PY'
-          import json, re, sys, pathlib
-          v = sys.argv[1]
+          python3 - <<'PY'
+          import json, re, os, pathlib
+          app = pathlib.Path("docs/js/app.js").read_text()
+          match = re.search(r'export const BUILD = "([^"]+)"', app)
+          v = os.environ.get("REQUESTED_VERSION") or (match.group(1) if match else "")
+          if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", v):
+              raise SystemExit("A numeric major.minor.patch version is required")
+          with open(os.environ["GITHUB_ENV"], "a") as env:
+              env.write(f"BUILD_VERSION={v}\n")
           conf = pathlib.Path("src-tauri/tauri.conf.json")
           data = json.loads(conf.read_text())
           data["version"] = v
@@ -99,7 +109,7 @@ jobs:
       - name: Rename for release
         shell: bash
         run: |
-          V="${{ github.event.inputs.version }}"
+          V="$BUILD_VERSION"
           mkdir -p dist
           find src-tauri/target/release/bundle -type f \
             \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' -o -name '*.msi' -o -name '*.exe' \) \
@@ -118,6 +128,7 @@ jobs:
   # the SDK and the NDK, four Rust targets, and a generated Gradle
   # project that does not live in the repo.
   android:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[native-build]')
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -170,11 +181,18 @@ jobs:
 
       - name: Stamp the version
         shell: bash
+        env:
+          REQUESTED_VERSION: ${{ github.event.inputs.version }}
         run: |
-          V="${{ github.event.inputs.version }}"
-          python3 - "$V" <<'PY'
-          import json, re, sys, pathlib
-          v = sys.argv[1]
+          python3 - <<'PY'
+          import json, re, os, pathlib
+          app = pathlib.Path("docs/js/app.js").read_text()
+          match = re.search(r'export const BUILD = "([^"]+)"', app)
+          v = os.environ.get("REQUESTED_VERSION") or (match.group(1) if match else "")
+          if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", v):
+              raise SystemExit("A numeric major.minor.patch version is required")
+          with open(os.environ["GITHUB_ENV"], "a") as env:
+              env.write(f"BUILD_VERSION={v}\n")
           conf = pathlib.Path("src-tauri/tauri.conf.json")
           data = json.loads(conf.read_text())
           data["version"] = v
@@ -220,6 +238,12 @@ jobs:
         shell: bash
         run: tools/ci-capture.sh "android init" cargo tauri android init
 
+      - name: Fit the WebView around Android system bars
+        shell: bash
+        run: |
+          tools/ci-capture.sh "Activity installation" \
+            node tools/android-activity.mjs src-tauri/gen/android/app/src/main
+
       # The generated manifest knows nothing about deepdive://, and the
       # deep-link plugin's config covers desktop only. Without this the
       # APK installs, opens, and can never sign in — Spotify sends the
@@ -260,7 +284,7 @@ jobs:
       - name: Rename for release
         shell: bash
         run: |
-          V="${{ github.event.inputs.version }}"
+          V="$BUILD_VERSION"
           mkdir -p dist
           # Only build/outputs/apk, and only the universal debug one.
           #

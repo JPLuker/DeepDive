@@ -1,10 +1,16 @@
 # Testing notes
 
-## Android native sign-in — build 2.9.133
+## Android native checks — build 2.9.134
 
 Use the native APK, with `deepdive://callback` registered in your own
 Spotify app's dashboard. These checks remain unverified on a device.
 
+- [ ] Install the APK built from 2.9.134; About shows that build
+- [ ] Logo and page content sit below the status icons, in both themes
+- [ ] Bottom controls clear gesture navigation and three-button navigation
+- [ ] Rotate the device; the content clears any cutout and navigation bar
+- [ ] Open the keyboard in setup/search; the focused input stays reachable
+      and closing the keyboard restores the content height
 - [ ] Connect Spotify opens the system browser and keeps DeepDive open
 - [ ] Approve access; Android returns to DeepDive and Home loads
 - [ ] Close and reopen DeepDive; the connection remains available
