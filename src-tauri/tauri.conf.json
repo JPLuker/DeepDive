@@ -4,11 +4,12 @@
   "version": "0.0.0",
   "identifier": "io.github.jpluker.deepdive",
   "build": {
-    "frontendDist": "../docs/app"
+    "frontendDist": "../dist-native"
   },
   "app": {
     "windows": [
       {
+        "url": "app/index.html",
         "title": "DeepDive",
         "width": 1100,
         "height": 800,

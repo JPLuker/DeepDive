@@ -146,6 +146,54 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   check('and the CLI is installed for it', /cargo install tauri-cli/.test(androidJob));
   check('pinned to a 2.x line', /tauri-cli --locked --version "\^2/.test(androidJob));
   check('there is still no package.json', !existsSync(at('package.json')));
+}
+
+// --- the shipped web root contains the whole app --------------------
+//
+// frontendDist pointed at docs/app, which holds index.html,
+// manifest.json and sw.js. The page loads ../js/app.js and
+// ../assets/* — one level up, outside the bundle. On the web that is
+// right, because Pages serves all of docs/. In a native shell nothing
+// above frontendDist exists, so every module and font 404'd, no
+// JavaScript ran, and the app opened to its static header and tab bar
+// and nothing else. All three platforms, all three builds green.
+//
+// The repair is not frontendDist: "../docs" — that also ships the
+// landing page, two diagnostic pages and img/, which holds artist
+// photography cleared only for the landing page while permission is
+// pending. A bundle must not widen the scope of someone else's
+// photographs by accident.
+{
+  const conf = JSON.parse(read('src-tauri/tauri.conf.json'));
+  const wf2 = read('.github/workflows/native.yml');
+
+  check('frontendDist is the staged root', conf.build.frontendDist === '../dist-native');
+  check('and not docs/app, which omits js and assets', conf.build.frontendDist !== '../docs/app');
+  check('nor all of docs, which ships img/ and the dev pages', conf.build.frontendDist !== '../docs');
+  // The staged root keeps the app one level down so the page's own
+  // ../js and ../assets resolve without rewriting any markup.
+  check('the window opens the app, not the bundle root', conf.app.windows[0].url === 'app/index.html');
+
+  // Staged in every job, before anything reads frontendDist.
+  check('both jobs stage the web root',
+    (wf2.match(/node tools\/stage-native\.mjs/g) || []).length === 2);
+  // Comments stripped before comparing positions: the block above the
+  // CLI install discusses `android init` at length, and an ordering
+  // check against the raw file compares against the prose rather than
+  // the command. It did exactly that on the first attempt.
+  const cmds = wf2.replace(/^\s*#.*$/gm, '');
+  const androidStart = cmds.indexOf('\n  android:');
+  check('android stages before init',
+    cmds.indexOf('stage-native.mjs', androidStart) < cmds.indexOf('android init', androidStart));
+
+  // The staged root is generated, so it must not be committed.
+  check('the staged root is gitignored', /dist-native/.test(read('.gitignore')));
+  check('and is not in the repo', !existsSync(at('dist-native')));
+
+  // The photography hold, asserted rather than remembered.
+  const stager = read('tools/stage-native.mjs');
+  check('staging is an allow-list, not an exclude-list', /const INCLUDE = \['app', 'js', 'assets'\]/.test(stager));
+  check('img/ is not staged', !/'img'/.test(stager.replace(/^\s*\/\/.*$/gm, '')));
   // The important one. An unsigned *release* APK is rejected by
   // Android before it runs, so "no signing yet" and "release" cannot
   // both be true — a debug build is the only installable option, and

@@ -77,6 +77,15 @@ jobs:
       # wrapped. Its failure reported exactly "Command npx [...] failed
       # with exit code 1" and nothing about why, which is the entire
       # problem ci-capture.sh exists to solve.
+      # frontendDist points at dist-native, which is assembled here
+      # rather than committed. See tools/stage-native.mjs: pointing it
+      # straight at docs/app shipped a page whose scripts and fonts
+      # lived one directory up and were not in the bundle at all, so
+      # every build was green and every app was blank.
+      - name: Stage the web root
+        shell: bash
+        run: tools/ci-capture.sh "Stage web root" node tools/stage-native.mjs dist-native
+
       - name: Build the desktop bundles
         shell: bash
         run: |
@@ -201,6 +210,11 @@ jobs:
       - name: Install the Tauri CLI
         shell: bash
         run: tools/ci-capture.sh "tauri-cli install" cargo install tauri-cli --locked --version "^2.12"
+
+      # Before `android init`, which reads frontendDist.
+      - name: Stage the web root
+        shell: bash
+        run: tools/ci-capture.sh "Stage web root" node tools/stage-native.mjs dist-native
 
       - name: Generate the Android project
         shell: bash
