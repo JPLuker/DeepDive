@@ -4,6 +4,24 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.130
+- **The whole-library duplicate scan is off by default**, behind
+  Settings → Advanced → Unfinished → "Show incomplete features".
+  Joseph's call: it is the one feature Spotify's quota could never
+  reliably pay for — about one request per release across every artist
+  you've liked, against a budget counted per developer account and
+  never reported. 2.9.127 made it affordable in instalments, which is
+  the best the API allows and still not something to hand a stranger.
+- **Nothing is deleted.** `runFullScrub`, the request budget, the
+  checkpoint and their tests all stay and all still run. The rule that
+  killed it is Spotify's and could change, and turning the switch on
+  brings the whole thing back.
+- **Dives are unaffected.** A dive finding another release of a song
+  you already own is `runSearch`'s own ISRC matching, which is what
+  DeepDive was built for and is untouched. Only the
+  sweep-the-whole-library mode hides. A test now pins that, because
+  "we hid duplicate search" could very easily have meant losing it.
+
 ## 2.9.129
 The two things 2.9.128 left undone, both of which would have wasted the
 first CI run.

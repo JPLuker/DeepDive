@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.129";
+export const BUILD = "2.9.130";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -536,10 +536,11 @@ async function renderDives() {
       ${navRow('id="go-pins"', "Crate", "Everyone you've put aside to get to, with Up next at the top.", { tone: "teal" })}
       ${navRow('id="go-history"', "Dive history", "What you've dived, what DeepDive built, and how to undo it.", { tone: "purple" })}
     </div>
+    ${showIncomplete() ? `
     <div class="set-group">
-      <div class="set-group-label">Go further</div>
-      ${navRow('id="go-scrub"', "Duplicate scan", "Find alternate releases of songs you already like, then mark those copies as liked too.", { tone: "gold" })}
-    </div>`;
+      <div class="set-group-label">Unfinished</div>
+      ${navRow('id="go-scrub"', "Duplicate scan", "Find alternate releases of songs you already like, then mark those copies as liked too. Costs roughly one request per release across every artist you've liked.", { tone: "gold" })}
+    </div>` : ""}`;
 
   wireSearchBar();
   wireApiBanner();
@@ -5678,6 +5679,16 @@ function renderSettings() {
       </div>
 
       <div class="set-group">
+        <div class="set-group-label">Unfinished</div>
+        <p class="set-note">Features that work but aren't finished. Right now that's the whole-library duplicate scan, which costs about one Spotify request per release across every artist you've liked — more than the quota reliably allows.</p>
+        ${settingRow({
+          title: "Show incomplete features",
+          detail: "Adds them back to the Dives screen.",
+          control: setSwitch('id="set-show-incomplete"', showIncomplete()),
+        })}
+      </div>
+
+      <div class="set-group">
         <div class="set-group-label">Diagnostics</div>
         ${settingRow({
           title: "Test endpoints",
@@ -5763,6 +5774,12 @@ function renderSettings() {
     if (!el) return;
     el.textContent = await storageKindLabel();
   })();
+
+  const incompleteSwitch = document.getElementById("set-show-incomplete");
+  if (incompleteSwitch) {
+    incompleteSwitch.checked = showIncomplete();
+    incompleteSwitch.addEventListener("change", () => setShowIncomplete(incompleteSwitch.checked));
+  }
 
   const buildSwitch = document.getElementById("set-show-build");
   if (buildSwitch) {
@@ -6802,6 +6819,33 @@ async function diagnosticInfo() {
   return lines.join("\n");
 }
 
+
+/**
+ * Features that work but aren't finished enough to hand someone.
+ *
+ * Joseph's call, 23 Oct. The whole-library duplicate scan is the one
+ * feature Spotify's quota could never reliably pay for: one request
+ * per release across every liked artist, against a budget counted per
+ * developer account and never reported. 2.9.127 made it affordable in
+ * instalments, which is the best the API allows, and that still isn't
+ * something to put in front of a stranger.
+ *
+ * So it is off by default rather than gone. Nothing is deleted —
+ * runFullScrub, the budget, the checkpoint and their tests all stay —
+ * because the rule that killed it is Spotify's and could change, and
+ * because the matching it shares with dives is the heart of the app.
+ *
+ * Dives are unaffected either way: runSearch does its own ISRC
+ * duplicate detection per artist, which is what DeepDive was built
+ * for. What hides is only the sweep-everything mode.
+ */
+const INCOMPLETE_KEY = "deepdive_show_incomplete";
+export function showIncomplete() {
+  try { return localStorage.getItem(INCOMPLETE_KEY) === "1"; } catch (e) { return false; }
+}
+function setShowIncomplete(on) {
+  try { localStorage.setItem(INCOMPLETE_KEY, on ? "1" : "0"); } catch (e) {}
+}
 
 const BMC_KEY = "deepdive_show_bmc";
 function showBmc() {

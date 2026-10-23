@@ -98,5 +98,32 @@ function fakeClient({ perArtistRequests = 10 } = {}) {
   check('and suppressed when none does', /r\.artists_remaining <= 0\) return ""/.test(app));
 }
 
+// --- hidden, not removed (2.9.130) ----------------------------------
+//
+// Joseph's call, 23 Oct: the whole-library scan is off by default. It
+// is the one feature Spotify's quota could never reliably pay for, and
+// 2.9.127's instalments are the best the API allows without being
+// something you hand a stranger.
+//
+// Everything above this comment still runs, which is the point: the
+// code, the budget, the checkpoint and these tests all stay, because
+// the rule that killed it is Spotify's and could change.
+{
+  const app = readFileSync(new URL('../docs/js/app.js', import.meta.url), 'utf8');
+  check('the scan is still built and routable', /renderScrubForm/.test(app) && /runFullScrub/.test(app));
+  check('its row is behind the flag', /\$\{showIncomplete\(\) \? `/.test(app));
+  check('the flag is off unless explicitly set', /getItem\(INCOMPLETE_KEY\) === "1"/.test(app));
+  check('and there is a switch for it', /id="set-show-incomplete"/.test(app));
+  check('which lives in Advanced', app.indexOf('set-show-incomplete') > app.indexOf('<details class="advanced"'));
+
+  // The thing DeepDive was built for is a dive finding another release
+  // of a song you already own. That is runSearch's own matching and is
+  // untouched by any of this — worth pinning, because "we hid
+  // duplicate search" could very easily have meant losing it.
+  const search = readFileSync(new URL('../docs/js/search.js', import.meta.url), 'utf8');
+  const dive = search.slice(search.indexOf('export async function runSearch'), search.indexOf('export async function runFullScrub'));
+  check('dives still detect duplicates', /matching\.findCandidates/.test(dive) && /matching\.confirmCandidates/.test(dive));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
