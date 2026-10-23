@@ -32,8 +32,14 @@
 // Usage: node tools/stage-native.mjs <outDir>
 import { cpSync, rmSync, mkdirSync, existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { join, dirname, resolve, relative } from 'path';
+import { fileURLToPath } from 'url';
 
-const root = resolve(new URL('..', import.meta.url).pathname);
+// fileURLToPath, not .pathname. On Windows a file URL's pathname is
+// "/D:/a/DeepDive/tools/" — with a leading slash before the drive
+// letter — which resolve() turns into a path that does not exist.
+// This failed the Windows job with "docs/app does not exist" while
+// Linux and Android were fine.
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const out = resolve(process.argv[2] || join(root, 'dist-native'));
 
 // Exactly what the app references, and nothing else. Deliberately a
