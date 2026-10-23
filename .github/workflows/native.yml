@@ -311,3 +311,12 @@ jobs:
         with:
           name: Android
           path: dist/*
+
+      # Releases serve the APK itself. Actions artifacts always download
+      # as ZIP archives, which Joseph explicitly does not want to extract.
+      - name: Publish the direct APK download
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tools/ci-capture.sh "APK publication" bash tools/publish-android.sh

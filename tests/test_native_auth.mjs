@@ -9,6 +9,17 @@ function check(label, condition) {
   if (condition) pass++;
   else { fail++; console.log('FAIL:', label); }
 }
+// The Android plugin filters intents against mobile configuration even
+// when AndroidManifest.xml has already routed the URL to MainActivity.
+// Mocking get_current alone misses that admission step (2.9.134).
+const config = JSON.parse(readFileSync(new URL('../src-tauri/tauri.conf.json', import.meta.url)));
+const callbackRules = config.plugins?.['deep-link']?.mobile || [];
+const mobileCallback = callbackRules.find(rule => rule.scheme?.includes('deepdive') && rule.host === 'callback');
+check('Android runtime admits the OAuth callback', !!mobileCallback);
+check('custom callback does not request HTTPS app-link verification', mobileCallback?.appLink === false);
+check('callback rule has no path requirement that rejects the empty callback path',
+  !!mobileCallback && !['path', 'pathPrefix', 'pathSuffix', 'pathPattern'].some(key => mobileCallback[key]?.length));
+
 const store = new Map();
 globalThis.localStorage = {
   getItem: (key) => store.get(key) ?? null,

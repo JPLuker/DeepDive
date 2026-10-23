@@ -49,7 +49,16 @@
         "schemes": [
           "deepdive"
         ]
-      }
+      },
+      "mobile": [
+        {
+          "scheme": [
+            "deepdive"
+          ],
+          "host": "callback",
+          "appLink": false
+        }
+      ]
     }
   }
 }

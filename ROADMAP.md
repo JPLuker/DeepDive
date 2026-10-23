@@ -345,8 +345,15 @@ in TESTING.md for a real device.
    request an Android APK automatically; normal pushes skip compilation
    and desktop remains manual. The previous APK predates 2.9.133.
 
-   Next: confirm the requested 2.9.134 APK builds and work through the
-   Android checks at the top of `TESTING.md`. Stable signing remains outstanding;
+   **2.9.136:** 2.9.134 compiled and installed, but Joseph confirmed
+   Spotify approval returns to Connect Spotify. The manifest received
+   the intent while the plugin's empty mobile allowlist discarded it.
+   Registered `deepdive://callback` in the mobile plugin configuration.
+   Android builds now publish direct APK assets on separate untested
+   prereleases, as Joseph requested, instead of requiring ZIP extraction.
+
+   Next: verify the 2.9.136 APK build and direct download, then Joseph
+   retries approval and the Android checks at the top of `TESTING.md`. Stable signing remains outstanding;
    ephemeral debug keys are not a reliable cross-run update identity.
 7. **Rewrite `TESTING.md` against the final UI.** The rewrite is
    Claude's; the pass itself is Joseph's. Do this only once 1–6 have
@@ -373,7 +380,7 @@ Nothing above blocks on these except where noted.
   app only asks for that URI when it detects a native shell, and the
   web path is unchanged and tested.
 - **Test the native build on a device.** Compilation is confirmed for
-  Windows, Linux and Android. Install the newly requested 2.9.134 APK
+  Windows, Linux and Android. Install the newly requested 2.9.136 APK
   and run the Android checklist in `TESTING.md`; a successful compiler
   run is not a device test.
 - **GitHub settings**: enable private vulnerability reporting

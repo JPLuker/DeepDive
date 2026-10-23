@@ -3,9 +3,32 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.134.** If the build in `js/app.js` is well
+**Last updated at build 2.9.136.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Android callback admission — build 2.9.136
+
+Joseph installed 2.9.134 successfully but approving Spotify returned to
+Connect Spotify without an error. Android routed the intent, but the
+plugin discarded it: `DeepLinkPlugin.isDeepLink` rejects every URL when
+`plugins.deep-link.mobile` is empty. A manifest filter alone is not
+runtime registration. Configure mobile `scheme: ["deepdive"]`,
+`host: "callback"`, `appLink: false`; leave paths unconstrained so the
+empty callback path is accepted. Source verified in the plugin's
+Android `DeepLinkPlugin.kt` and Rust `config.rs` on 23 Oct.
+
+Three regression checks failed on 2.9.134 before adding that configuration.
+The earlier mocked callback tests bypassed the Android admission filter
+and could not detect this bug. Device sign-in remains unverified until
+Joseph tests the new APK.
+
+Joseph requested direct APKs: Android CI now publishes the APK as an
+asset on `v<version>-untested-android` prereleases, in addition to its
+internal Actions artifact. Give him the releases/download APK link,
+not the Actions ZIP. Stable signing remains outstanding.
 
 ---
 
@@ -838,7 +861,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.134**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.136**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.

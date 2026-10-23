@@ -324,6 +324,16 @@ has to be checked on its own.
 by CI and has been run by a human only where ticked. An untested
 platform is untested, per `RELEASES.md` Part 2.
 
+### Android sign-in regression — build 2.9.136
+
+2.9.134 installed, but approving Spotify returned Joseph to Connect
+Spotify. 2.9.136 registers the callback with the mobile plugin runtime.
+This fix still needs on-device verification.
+
+- [ ] Download the APK directly from the Android prerelease (no ZIP)
+- [ ] About shows build 2.9.136 after installing
+- [ ] Approve Spotify access; Home loads instead of Connect Spotify
+
 ### Installing
 - [ ] Windows: the installer runs and the app launches
 - [ ] Linux: the `.deb`, `.rpm` or `.AppImage` installs and launches
