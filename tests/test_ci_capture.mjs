@@ -116,6 +116,26 @@ const wf = read('.github/workflows/native.yml');
   check('gradle task lines are dropped', !aptAnn.includes('compileDebugKotlin'));
   check('but the gradle failure is kept', aptAnn.includes('FAILURE: Build failed'));
 
+  // One enormous line must not spend the whole budget.
+  //
+  // The Tauri CLI reports a failed subcommand by printing its entire
+  // environment as a single nested Io(Env(...)) line thousands of
+  // characters long. It is the last line, so it survived the tail and
+  // the character cap intact and pushed Gradle's "What went wrong"
+  // block out of the message — a build failure reported as a list of
+  // linker paths.
+  let monsterOut = '';
+  try {
+    execFileSync('bash', [script, 'monster', 'bash', '-c',
+      'echo "* What went wrong:"; echo "Execution failed for task :app:mergeDebugResources"; ' +
+      'python3 -c "print(\'Io(Env(\\\"PATH\\\", \\\"x\\\"), \' * 400)"; exit 1'], { encoding: 'utf8' });
+  } catch (e) { monsterOut = String(e.stdout || ''); }
+  const mAnn = (monsterOut.split('\n').find((l) => l.startsWith('::error')) || '');
+
+  check('a giant line is truncated', mAnn.includes('line truncated'));
+  check('and the gradle failure survives it', mAnn.includes('What went wrong'));
+  check('including the failing task', mAnn.includes('mergeDebugResources'));
+
   // The filter is anchored to the progress verbs at line start, so an
   // error that happens to name a crate is not swallowed with them.
   let kept = '';

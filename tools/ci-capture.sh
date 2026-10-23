@@ -77,10 +77,19 @@ fi
 #      because the filter is anchored to the progress verbs.
 #   3. Whatever is left, tail-limited, then hard-capped by character
 #      count keeping the END — because the end is where the error is.
+#   4. Individual lines truncated. The Tauri CLI reports a failed
+#      subcommand by printing its entire environment as one nested
+#      Io(Env(...)) line thousands of characters long. Being the last
+#      line, it survived every cap and pushed Gradle's actual "What
+#      went wrong" block out of the message — a single line spending
+#      the whole budget to say which linker paths were set.
+MAX_LINE="${CI_CAPTURE_MAX_LINE:-300}"
+
 CLEANED="$(
   tr -d '\r' < "$LOG" \
     | sed -e 's/\x1b\[[0-9;]*[A-Za-z]//g' \
     | grep -vE '^\s*(Downloaded|Downloading|Compiling|Checking|Fresh|Updating|Installing|Removing|Unpacking|Selecting|Preparing|Get:|Hit:|Ign:|Reading|Building dependency|> Task)\b' \
+    | awk -v m="$MAX_LINE" '{ if (length($0) > m) print substr($0, 1, m) " …[line truncated]"; else print }' \
     | tail -n "$TAIL_LINES"
 )"
 
