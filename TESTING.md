@@ -1,5 +1,26 @@
 # Testing notes
 
+## Android native sign-in — build 2.9.133
+
+Use the native APK, with `deepdive://callback` registered in your own
+Spotify app's dashboard. These checks remain unverified on a device.
+
+- [ ] Connect Spotify opens the system browser and keeps DeepDive open
+- [ ] Approve access; Android returns to DeepDive and Home loads
+- [ ] Close and reopen DeepDive; the connection remains available
+- [ ] Start a fresh sign-in, background DeepDive, kill its process with
+      Android/ADB (not Force stop), then approve access in the browser;
+      the callback reopens DeepDive and connects successfully
+- [ ] Deny access; DeepDive shows the error and Connect works on retry
+- [ ] Repeated delivery of the same callback does not produce a second
+      token exchange or a state-mismatch screen
+- [ ] Open a playlist/result with Open in Spotify; the system handles
+      the link without replacing the DeepDive screen
+- [ ] Spotify dashboard, Last.fm, GitHub and support links open outside
+      DeepDive
+- [ ] Web/PWA sign-in still returns to its HTTPS app address
+
+
 > ## ⛔ Full pass required before 2.9
 >
 > Joseph's call, 7 Sept: most of this is believed to work from daily

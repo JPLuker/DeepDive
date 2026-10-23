@@ -3,9 +3,40 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.111.** If the build in `js/app.js` is well
+**Last updated at build 2.9.133.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Android / native handoff — 23 Oct, build 2.9.133
+
+The native workflow **has compiled successfully**, most recently run
+39994429428 at commit `1d39048` (Windows, Linux and Android). The older
+queue saying nothing has compiled is superseded. Compilation does not
+establish that sign-in works on a device.
+
+This session corrected native OAuth in `docs/js/auth.js`,
+`docs/js/native.js`, and the app controller. Use Tauri's global
+`core.invoke` for plugin commands: `withGlobalTauri` does not create an
+`opener` namespace. Opening a URL needs both `opener:allow-open-url` and
+its URL scope. Never fall back to navigating the native WebView when
+opening the browser fails. Never replace its history with the custom
+callback scheme: that changes origin and throws before token exchange.
+
+The web layer listens to `deep-link://new-url` and calls
+`plugin:deep-link|get_current` after subscribing, so a cold-start intent
+is recovered. Duplicate intent deliveries are filtered. PKCE data stays
+in localStorage across process death; no credentials are logged. Boot
+consumes early callbacks before queued event handlers can render.
+
+**Next:** build 2.9.133 with the Native builds workflow and run the
+Android checklist at the top of `TESTING.md`: normal sign-in, return
+following process death, denial/retry, and Open in Spotify. Runtime
+checks use mocked Tauri interfaces; this environment has no Android SDK
+or device and cannot establish an on-device result. Current APKs are
+debug signed; a stable release signing key is still needed before
+reliable upgrades across clean CI runners can be promised.
 
 ---
 
@@ -782,7 +813,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.111**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.133**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.

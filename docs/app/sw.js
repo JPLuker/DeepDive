@@ -30,7 +30,7 @@ const CACHE = `deepdive-shell-${VERSION}`;
 const SHELL = [
   "./",
   "./index.html",
-  "../js/app.js?v=2.9.106",
+  "../js/app.js?v=2.9.133",
   "../assets/icon-192.png",
 ];
 

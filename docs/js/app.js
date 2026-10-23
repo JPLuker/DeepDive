@@ -9,6 +9,7 @@
  */
 
 import * as auth from "./auth.js";
+import { openNativeUrl, watchNativeCallbacks } from "./native.js";
 import { SpotifyClient, limitedUntil, normaliseArtist } from "./spotify.js";
 import * as search from "./search.js";
 import * as watchlist from "./watchlist.js";
@@ -26,7 +27,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.132";
+export const BUILD = "2.9.133";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -3153,6 +3154,10 @@ let _haveArtistPhoto = false;
  */
 function openInSpotify(webUrl) {
   if (!webUrl) return;
+  if (auth.isNativeShell()) {
+    openNativeUrl(webUrl).catch(() => flash("Couldn't open Spotify. Try again.", true));
+    return;
+  }
   window.open(webUrl, "_blank", "noopener");
 }
 
@@ -6988,23 +6993,22 @@ function registerServiceWorker() {
  * In a native build, the OAuth callback arrives as an event rather
  * than a navigation.
  *
- * The shell emits "deep-link" with the whole deepdive://callback URL;
- * auth.js owns the PKCE state and the exchange, so this hands the URL
- * straight over and re-runs the same callback handler the web path
- * uses. No-ops in a browser, where the import is absent.
+ * Listen to the plugin's own event and recover a cold-start intent.
+ * Startup consumes anything delivered before boot completes. Later
+ * callbacks wait for startup so two render paths cannot race sign-in.
  */
+let completeNativeBoot;
+const nativeBootReady = new Promise((resolve) => { completeNativeBoot = resolve; });
 async function listenForNativeCallback() {
   if (!auth.isNativeShell()) return;
   try {
-    // window.__TAURI__, not a bare import: see the note in auth.js —
-    // there is no bundler here to resolve "@tauri-apps/api/event".
-    const listen = window.__TAURI__?.event?.listen;
-    if (typeof listen !== "function") throw new Error("event API unavailable");
-    await listen("deep-link", async (event) => {
-      if (!auth.acceptNativeCallback(event.payload)) return;
-      const res = await auth.handleRedirectCallback();
-      if (res && res.ok) renderHome();
-      else if (res && res.error) renderConnect(res.error);
+    await watchNativeCallbacks((url) => {
+      if (!auth.acceptNativeCallback(url)) return;
+      nativeBootReady.then(async () => {
+        const res = await auth.handleRedirectCallback();
+        if (res && res.ok) await renderHome();
+        else if (res && res.error) renderConnect(res.error);
+      }).catch(() => renderConnect("Couldn't finish connecting. Try again"));
     });
   } catch (e) {
     // A native shell without the event API is a broken build, not a
@@ -7042,4 +7046,4 @@ async function boot() {
   await offerDiveResume();
 }
 
-boot();
+boot().finally(completeNativeBoot);

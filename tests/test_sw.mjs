@@ -21,7 +21,10 @@ check('GET only', /request\.method !== "GET"/.test(sw));
 // Update behaviour.
 check('takes over immediately', /skipWaiting\(\)/.test(sw) && /clients\.claim\(\)/.test(sw));
 check('clears old caches on activate', /keys\.filter\(\(k\) => k\.startsWith\("deepdive-shell-"\)/.test(sw));
-check('application entry point is cache-versioned', /src="\.\.\/js\/app\.js\?v=2\.9\.106"/.test(shell));
+const build = src.match(/export const BUILD = "([^"]+)"/)?.[1];
+const entry = `../js/app.js?v=${build}`;
+check('entry point and offline shell use the current build',
+  !!build && shell.includes(`src="${entry}"`) && sw.includes(`"${entry}"`));
 check('install tolerates a missing asset', /Promise\.allSettled/.test(sw));
 check('navigation has an offline fallback', /request\.mode === "navigate"/.test(sw));
 

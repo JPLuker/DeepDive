@@ -17,6 +17,7 @@ const app = read('docs/js/app.js');
 const conf = existsSync(at('src-tauri/tauri.conf.json')) ? JSON.parse(read('src-tauri/tauri.conf.json')) : null;
 const caps = existsSync(at('src-tauri/capabilities/default.json')) ? JSON.parse(read('src-tauri/capabilities/default.json')) : null;
 const wf = read('.github/workflows/native.yml');
+const native = read('docs/js/native.js');
 
 let pass = 0, fail = 0;
 function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } }
@@ -42,12 +43,10 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
 // redirect then has no page to return to. The system browser does it
 // and the custom scheme hands the result back.
 {
-  check('native sign-in uses the opener plugin', /__TAURI__\?\.opener\?\.openUrl/.test(auth));
-  check('only in a native shell', /if \(isNativeShell\(\)\) \{[\s\S]{0,400}openUrl/.test(auth));
+  check('native sign-in uses the opener command', /plugin:opener\|open_url/.test(native));
+  check('only in a native shell', /if \(isNativeShell\(\)\) \{\s*await openNativeUrl\(url\)/.test(auth));
   check('the web path still navigates', /window\.location\.href = url;/.test(auth));
-  // A missing plugin should fail loudly on Spotify's own page rather
-  // than leave a button that does nothing.
-  check('a missing plugin falls through rather than dead-ending', /opener plugin unavailable/.test(auth));
+  check('a missing bridge reports an error in the app', /throw new Error/.test(native));
 
   // The app is plain ES modules served statically: no bundler, no
   // import map. A bare specifier like "@tauri-apps/plugin-opener"
@@ -55,7 +54,7 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   // window — which only exists when withGlobalTauri is set.
   check('no bare tauri imports in app code',
     !/import\(["']@tauri-apps/.test(auth) && !/import\(["']@tauri-apps/.test(app));
-  check('the deep-link listener uses the global too', /__TAURI__\?\.event\?\.listen/.test(app));
+  check('the deep-link listener uses the global too', /__TAURI__\?\.event\?\.listen/.test(native));
   check('and the config turns the global on', conf?.app?.withGlobalTauri === true);
 }
 

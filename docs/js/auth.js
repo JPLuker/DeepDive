@@ -19,6 +19,8 @@
  *     SpotifyClient this function, so a token can refresh mid-run.
  */
 
+import { openNativeUrl } from "./native.js";
+
 const SCOPE = (
   "user-library-read user-library-modify playlist-read-private " +
   "playlist-modify-private playlist-modify-public user-top-read " +
@@ -171,23 +173,11 @@ export async function beginLogin({ extraScopes = "" } = {}) {
   // browser handles it, the user authenticates there, and the custom
   // scheme hands the result back through the deep-link listener.
   //
-  // If the opener plugin is missing the build is broken, but falling
-  // back to navigation at least produces a visible failure on
-  // Spotify's own page rather than a button that does nothing.
+  // A failed opener stays in the app and reaches the caller's visible
+  // error message. Navigating the webview as a fallback strands login.
   if (isNativeShell()) {
-    try {
-      // window.__TAURI__ rather than an import. This app is plain ES
-      // modules served statically — no bundler, no import map — so a
-      // bare specifier like "@tauri-apps/plugin-opener" cannot
-      // resolve in the webview. `withGlobalTauri` puts the same API
-      // on the window instead.
-      const openUrl = window.__TAURI__?.opener?.openUrl;
-      if (typeof openUrl !== "function") throw new Error("opener plugin unavailable");
-      await openUrl(url);
-      return;
-    } catch (e) {
-      console.error("[DeepDive] couldn't open the system browser:", e && e.message);
-    }
+    await openNativeUrl(url);
+    return;
   }
   window.location.href = url;
 }
@@ -212,9 +202,16 @@ export async function beginLogin({ extraScopes = "" } = {}) {
 let _pendingNativeCallback = null;
 export function acceptNativeCallback(url) {
   try {
-    const q = String(url).split("?")[1];
-    if (q) _pendingNativeCallback = q;
-    return !!q;
+    const callback = new URL(url);
+    if (callback.protocol !== "deepdive:" || callback.host !== "callback"
+        || callback.username || callback.password || callback.hash
+        || (callback.pathname && callback.pathname !== "/")) return false;
+    if (!callback.searchParams.has("code") && !callback.searchParams.has("error")) return false;
+    // get_current can retain a previous login's URL after a reload.
+    // With no outstanding login it is not a new callback to consume.
+    if (!localStorage.getItem(LS.state)) return false;
+    _pendingNativeCallback = callback.search;
+    return true;
   } catch (e) {
     return false;
   }
@@ -267,6 +264,9 @@ export async function handleRedirectCallback() {
 }
 
 function cleanUrl() {
+  // The webview stays on its bundled page. replaceState cannot change
+  // its origin to deepdive:// and throws before the token exchange.
+  if (isNativeShell()) return;
   window.history.replaceState({}, document.title, redirectUri());
 }
 

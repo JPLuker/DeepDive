@@ -4,6 +4,24 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.133
+- Native Spotify sign-in calls the opener through Tauri's core IPC API.
+  `withGlobalTauri` exposes the core API, not `__TAURI__.opener`.
+  The opener also has its URL scope now; command permission alone
+  rejected every URL. If opening fails, the error stays in DeepDive
+  instead of navigating the WebView away from the bundled app.
+- Native callbacks keep the bundled page's URL. Trying to replace its
+  history with `deepdive://callback` raised a cross-origin SecurityError
+  before the token exchange could start.
+- Listen to the deep-link plugin's own event and recover its current
+  intent on startup. Android can close the app while Spotify is open;
+  callbacks no longer depend on a Rust event reaching an already-loaded
+  page. Duplicate startup/event deliveries are consumed once, and only
+  the expected callback route is accepted. The PKCE state check remains.
+- Native Open in Spotify buttons use the system opener as well.
+- Added executable native/web PKCE regression tests and an Android
+  device checklist. No Android device run is claimed by these tests.
+
 ## 2.9.132
 Three things that would each, on their own, have made the Android build
 install, open, and be impossible to sign in to. None of them would have

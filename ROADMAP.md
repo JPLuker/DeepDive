@@ -327,18 +327,22 @@ in TESTING.md for a real device.
    request budget instead, stops cleanly between artists, and reports
    what it spent and what finishing would cost. Joseph's run decides
    whether that is enough.
-6. **Phase 4, native apps.** Desktop scaffolding landed in 2.9.128:
-   Tauri 2, app id `io.github.jpluker.deepdive`,
-   `deepdive://callback`, hardened CSP and a capability allowlist, and
-   a hand-triggered GitHub Actions job for Windows and Linux that names
-   its output per RELEASES.md Part 5. **Nothing has been compiled** —
-   there is no Rust toolchain here — so the first CI run is the first
-   real test.
+6. **Phase 4, native apps.** Tauri shells for Windows, Linux and
+   Android compile successfully: workflow run `39994429428`, 23 Oct,
+   commit `1d39048`. The bundle now contains the full app and fonts,
+   the Android artifact is the signed universal debug APK, and its
+   launcher icons come from DeepDive's source image.
 
-   Android and the icons landed in 2.9.129. Nothing is compiled yet;
-   the first CI run is the first real test. If it fails, the likely
-   places are the Tauri action's arguments, the NDK version pin, and
-   whether `android init` needs anything else in a clean runner.
+   **2.9.133 fixes the next runtime blockers:** opener IPC and its URL
+   scope, cross-origin history rewriting during callback, and recovery
+   of a callback after Android closes the app. Native Spotify buttons
+   use the system opener. Executable PKCE tests cover cold/warm returns,
+   duplicate intents, state mismatch, denial, opener failure, and the
+   web path. **The changed build has not been run on an Android device.**
+
+   Next: compile 2.9.133 and work through the Android checks at the top
+   of `TESTING.md`. Stable Android release signing remains outstanding;
+   ephemeral debug keys are not a reliable cross-run update identity.
 7. **Rewrite `TESTING.md` against the final UI.** The rewrite is
    Claude's; the pass itself is Joseph's. Do this only once 1–6 have
    settled, or it is rewritten twice.
@@ -363,10 +367,10 @@ Nothing above blocks on these except where noted.
   for the native builds only. Existing web users need do nothing — the
   app only asks for that URI when it detects a native shell, and the
   web path is unchanged and tested.
-- **Run the native workflow once.** Actions → "Native builds" → Run,
-  with a version number. It is hand-triggered on purpose: a tag push
-  should not quietly spend twenty minutes of runners. The first run
-  answers whether any of this compiles.
+- **Test the native build on a device.** Compilation is confirmed for
+  Windows, Linux and Android. Build 2.9.133 needs a new workflow run and
+  the Android sign-in checklist in `TESTING.md`; a successful compiler
+  run is not a device test.
 - **GitHub settings**: enable private vulnerability reporting
   (SECURITY-BASELINE.md Part 7).
 - **Artist permission** for the Leisure Hour, VIAL, Houseghost and
