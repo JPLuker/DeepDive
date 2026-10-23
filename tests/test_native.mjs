@@ -278,8 +278,18 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   // to an anchor is discarded with it.
   check('the handler is delegated from the document',
     /interceptExternalLinks[\s\S]{0,400}document\.addEventListener\("click"/.test(app));
-  check('it hands off to the opener plugin',
-    /interceptExternalLinks[\s\S]{0,700}__TAURI__\?\.opener\?\.openUrl/.test(app));
+  // openNativeUrl, not window.__TAURI__.opener: withGlobalTauri
+  // exposes core.invoke and event.listen but not the opener plugin's
+  // own API, so the plugin command is invoked directly. Established
+  // on a device, and the reason this asserts the helper rather than
+  // the global.
+  check('it hands off through openNativeUrl',
+    /interceptExternalLinks[\s\S]{0,900}openNativeUrl\(href\)/.test(app));
+  // Spotify links have their own delegated handler on the same node,
+  // and preventDefault there does not stop this one — without the
+  // guard a single tap opens the link twice.
+  check('spotify links are left to their own handler',
+    /interceptExternalLinks[\s\S]{0,600}hasAttribute\("data-spotify"\)/.test(app));
   check('and runs at boot', /async function boot\(\)\s*\{\s*interceptExternalLinks\(\);/.test(app));
 
   // "../" is the bundle root in a native shell, and the native builds
