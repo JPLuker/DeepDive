@@ -131,7 +131,28 @@ batch of notes mixing both; sort them and say which went where.
 - Give instructions one step at a time.
 - He handles all testing on real devices and manages his own tokens. Do
   not lecture him about token hygiene; he's asked for that explicitly.
-- He pushes via personal access tokens he pastes in. **Verify the push
+- **Do not ask him for a token, and do not use one he pasted earlier.**
+  This sandbox injects GitHub credentials through the agent proxy:
+  `GH_TOKEN=proxy-injected`, and `gh api user` returns `JPLuker`. That
+  covers push, `gh run`, `gh release`, and workflow dispatch. A pasted
+  PAT is not needed for anything.
+
+  Two traps, both of which cost a session:
+  - **Never `unset GH_TOKEN`** to "test whether proxy auth works". That
+    removes the credential and `gh` replies "please run gh auth login",
+    which reads exactly like proof that the proxy has no auth. It is
+    not; it is self-inflicted.
+  - His PATs are **fine-grained**, so `X-OAuth-Scopes` comes back empty
+    and `gh auth status` declares the token invalid even while `git
+    push` with it succeeds. Do not conclude from `gh auth status` that
+    a token is dead — and do not then reach for `curl` as a
+    workaround, because the real fix is to stop passing the token.
+
+  He asked once why a token was still being used after this was
+  discovered; the honest answer was that no one had tried the proxy.
+  Try it first.
+
+- If a push does go out by URL for any reason: **verify the push
   landed**, because a failed auth still prints success if you echo on
   the wrong condition. That has happened.
 
