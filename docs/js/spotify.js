@@ -1,3 +1,5 @@
+import { backgroundDelay, checkBackgroundWork } from "./background-work.js";
+
 /**
  * spotify.js — client-side port of spotify_client.py.
  *
@@ -83,7 +85,7 @@ const SCOPE = (
 );
 export { SCOPE };
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const sleep = backgroundDelay;
 
 function chunk(arr, size) {
   const out = [];
@@ -293,6 +295,7 @@ export class SpotifyClient {
   // One HTTP request. Throws SpotifyApiError on >=400 so the retry
   // wrapper can branch. Honors a hard per-attempt timeout via AbortController.
   async _request(method, pathOrUrl, { params = null, jsonBody = null, rawBody = null, contentType = null } = {}) {
+    checkBackgroundWork();
     let url = pathOrUrl.startsWith("http") ? pathOrUrl : API_BASE + pathOrUrl;
     if (params) {
       const qs = new URLSearchParams(params).toString();

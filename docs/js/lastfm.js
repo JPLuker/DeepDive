@@ -1,3 +1,5 @@
+import { backgroundDelay } from "./background-work.js";
+
 /**
  * Last.fm — the data Spotify stopped giving us.
  *
@@ -68,7 +70,7 @@ let _lastCallAt = 0;
 
 async function pace() {
   const since = Date.now() - _lastCallAt;
-  if (since < PACING_MS) await new Promise((r) => setTimeout(r, PACING_MS - since));
+  if (since < PACING_MS) await backgroundDelay(PACING_MS - since);
   _lastCallAt = Date.now();
 }
 

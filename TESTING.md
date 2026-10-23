@@ -324,6 +324,28 @@ has to be checked on its own.
 by CI and has been run by a human only where ticked. An untested
 platform is untested, per `RELEASES.md` Part 2.
 
+### Android background work — build 2.9.137
+
+- [ ] Start a library read, allow notifications, then use another app for
+      at least five minutes; DeepDive keeps reading and finishes
+- [ ] Repeat with the screen locked for ten minutes, using mobile data
+      and Wi-Fi separately; progress advances while the screen is off
+- [ ] Repeat for a full dive, duplicate scan, sampler and Multi-Dip
+- [ ] The ongoing notification names the work; tapping it returns to
+      the same run without restarting it
+- [ ] Run a library read and dive together; finishing one keeps the
+      notification/service alive for the remaining job
+- [ ] Completion, cancellation and errors remove the notification once
+      no jobs remain; starting/cancelling immediately does not orphan it
+- [ ] Denying notification permission does not crash or block work;
+      Android still lists the foreground service under Active apps
+- [ ] Force-closing stops work; reopening offers saved dive/scan progress
+      where a checkpoint exists (library reads restart if interrupted)
+- [ ] Backup's description and buttons fit; the file picker stays hidden
+      until Import is tapped
+- [ ] Web/PWA continues using screen wake lock and does not claim native
+      background execution
+
 ### Android sign-in regression — build 2.9.136
 
 2.9.134 installed, but approving Spotify returned Joseph to Connect

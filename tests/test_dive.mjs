@@ -100,7 +100,8 @@ check('the warning is scoped to touch devices', /function diveNeedsScreenAwake\(
   && /\(pointer: coarse\) and \(hover: none\)/.test(src));
 check('unsupported browsers warn, but only where it matters', /if \(matters\) setDiveAwakeMessage\("Keep this screen open\.", true\);/.test(src));
 check('a working lock says nothing at all', !/Screen will stay awake/.test(code));
-check('and nothing tells a desktop user not to switch apps', !/switch apps/.test(code));
+// Android now explicitly confirms background support after its service starts.
+check('nothing tells a desktop user not to switch apps', !/do not switch apps/i.test(code));
 check('wake status is visible on the dive screen', /id="dive-awake"/.test(app));
 check('ordinary dives persist catalogue checkpoints', /onCatalogCheckpoint: \(catalog\) => saveDiveCheckpoint/.test(src));
 check('ordinary dives resume saved catalogue work', /catalogResume = await loadDiveCheckpoint/.test(src));

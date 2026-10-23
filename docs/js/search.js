@@ -1,3 +1,5 @@
+import { backgroundDelay } from "./background-work.js";
+
 /**
  * search.js — orchestration layer.
  *
@@ -62,7 +64,7 @@ export function buildIncludeGroups(includeCompilations, includeAppearsOn) {
   return groups.join(",");
 }
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = backgroundDelay;
 
 /** How long a pause has left, in words. */
 function fmtWait(ms) {

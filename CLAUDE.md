@@ -3,9 +3,43 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.136.** If the build in `js/app.js` is well
+**Last updated at build 2.9.137.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Android background jobs — build 2.9.137
+
+Joseph requested real background library reads/scans/dives on Android.
+`BackgroundWorkService` in the installed MainActivity.kt is a private
+`dataSync` foreground service with an ongoing notification and bounded
+partial CPU wake lock. The activity resumes its WebView after Wry pauses
+it, only while this service is running. An origin-checked JS interface
+on the bundled app page manages task tokens and native Handler timers.
+`background-work.js` owns leases, duplicate releases and startup races;
+Spotify, Last.fm and scan pacing use its clock during active work.
+LibraryCache.getLikedTracks owns a lease even without the progress UI;
+showDiveScreen/hideDiveScreen own another for dives, scans and mixes.
+Overlapping jobs keep separate tokens, so finishing one cannot stop another.
+
+Browser/PWA keeps the previous wake-lock fallback and cannot promise
+Android background execution. The native service starts while the app
+is visible, stops after work, and does not restart after process death.
+Force-stop/swipe-away still stops work; catalogue/duplicate checkpoints
+remain the recovery mechanism. Android 15+ limits dataSync services;
+onTimeout stops cleanly and pending native waits reject. A 5h55 bound
+also protects older releases. Stable signing is still outstanding.
+This is not a replacement native task engine surviving WebView destruction.
+
+Backup now puts its buttons below its description, and the file input
+uses the hidden class so the native file chooser cannot steal row width
+(the screenshot had squeezed the description to one word per line).
+
+Regression suite exercises leases, native timers, concurrent jobs,
+startup cancellation, library failure cleanup, timeout and retry. Fourteen
+checks fail against 2.9.136. Native compilation and phone screen-off tests
+must be checked separately; mocked JS does not prove Android execution.
 
 ---
 
@@ -861,7 +895,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.136**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.137**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.

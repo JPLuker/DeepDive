@@ -60,6 +60,15 @@ export function patchManifest(xml) {
     notes.push('INTERNET permission already present');
   }
 
+  for (const permission of ['FOREGROUND_SERVICE', 'FOREGROUND_SERVICE_DATA_SYNC', 'WAKE_LOCK', 'POST_NOTIFICATIONS']) {
+    if (!xml.includes(`android.permission.${permission}"`)) {
+      xml = xml.replace('<application', `<uses-permission android:name="android.permission.${permission}" />\n    <application`);
+    }
+  }
+  if (!xml.includes('android:name=".BackgroundWorkService"')) {
+    xml = xml.replace('</application>', `<service android:name=".BackgroundWorkService" android:exported="false" android:foregroundServiceType="dataSync" android:stopWithTask="true" />\n    </application>`);
+  }
+  notes.push('registered data-sync service and its required permissions');
   return { xml, notes };
 }
 

@@ -1079,7 +1079,7 @@
   .set-row-text { flex:1; min-width:0; }
   .set-row-title { font-size:14px; font-weight:600; letter-spacing:-0.01em; }
   .set-row-detail { font-size:13px; color:var(--muted); margin-top:3px; line-height:1.45; }
-  .set-row-control { display:flex; gap:8px; flex-shrink:0; }
+  .set-row-control { display:flex; flex-wrap:wrap; gap:8px; flex-shrink:0; }
   /* A row that navigates rather than holding a control. Whole row is
      the target — a chevron is not a button, it's a hint. */
   .set-row-nav {
@@ -1636,6 +1636,6 @@
   <div id="flash-slot"></div>
   <div class="wrap" id="view-root"><!-- views render here --></div>
 
-  <script type="module" src="../js/app.js?v=2.9.136"></script>
+  <script type="module" src="../js/app.js?v=2.9.137"></script>
 </body>
 </html>

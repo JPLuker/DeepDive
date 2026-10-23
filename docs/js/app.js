@@ -1,3 +1,5 @@
+import { beginBackgroundWork } from "./background-work.js";
+
 /**
  * app.js — the DeepDive client controller.
  *
@@ -27,7 +29,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.136";
+export const BUILD = "2.9.137";
 
 // The public site. Needed only where a relative link cannot work: in a
 // native shell "../" is the bundle root, which has no landing page in
@@ -2878,6 +2880,8 @@ function diveNeedsScreenAwake() {
  * the resting state and needs no text; the warning earns its place only
  * when the screen can sleep and that would stop the run.
  */
+let _diveBackground = null;
+let _diveBackgroundActive = false;
 async function requestDiveWakeLock() {
   if (_diveWakePending || _diveWakeLock) return;
   const matters = diveNeedsScreenAwake();
@@ -2912,6 +2916,7 @@ async function requestDiveWakeLock() {
 }
 
 document.addEventListener("visibilitychange", () => {
+  if (_diveBackgroundActive) return;
   const screen = document.getElementById("dive-screen");
   if (document.visibilityState === "visible" && screen && !screen.hidden && !_diveWakeLock) {
     requestDiveWakeLock();
@@ -2957,7 +2962,18 @@ function showDiveScreen(heading, onCancel) {
   const pc0 = document.getElementById("dive-pct");
   if (pc0) pc0.textContent = "0%";
   el.hidden = false;
-  requestDiveWakeLock();
+  // A screen can be cancelled while Android is still starting its service.
+  // Keep this exact promise so a late start is released, never orphaned.
+  const background = beginBackgroundWork(heading);
+  _diveBackgroundActive = false;
+  _diveBackground = background;
+  background.then(lease => {
+    if (_diveBackground !== background || el.hidden) return lease.release();
+    if (lease.active) {
+      _diveBackgroundActive = true;
+      setDiveAwakeMessage("You can switch apps or lock your phone.");
+    } else requestDiveWakeLock();
+  }).catch(() => requestDiveWakeLock());
 
   const cancel = document.getElementById("dive-cancel");
   if (cancel) {
@@ -3119,6 +3135,10 @@ function setDiveHeading(text) {
 }
 
 function hideDiveScreen() {
+  const background = _diveBackground;
+  _diveBackground = null;
+  _diveBackgroundActive = false;
+  if (background) background.then(lease => lease.release()).catch(() => {});
   const el = document.getElementById("dive-screen");
   if (el) el.hidden = true;
   clearInterval(_diveSlideTimer);
@@ -5555,9 +5575,9 @@ function probeVerdict(rows) {
  * description floating unattached to the control it described. Rows are
  * the same filled-surface vocabulary as tiles and track rows.
  */
-function settingRow({ title, detail = "", control = "", id = "" }) {
+function settingRow({ title, detail = "", control = "", id = "", block = false }) {
   return `
-    <div class="set-row"${id ? ` id="${id}"` : ""}>
+    <div class="set-row${block ? " set-row-block" : ""}"${id ? ` id="${id}"` : ""}>
       <div class="set-row-text">
         <div class="set-row-title">${esc(title)}</div>
         ${detail ? `<div class="set-row-detail">${esc(detail)}</div>` : ""}
@@ -5643,10 +5663,11 @@ function renderSettings() {
       <p class="set-note">Everything stays in this browser. Clearing site data loses it, and a backup is the only way to move it to another browser or device.</p>
       ${settingRow({
         title: "Backup",
+        block: true,
         detail: "Export everything to a file, or restore from one.",
         control: `<button class="btn btn-ghost btn-small" id="set-export">Export</button>
           <button class="btn btn-ghost btn-small" id="set-import">Import</button>
-          <input type="file" id="set-import-file" accept="application/json,.json" style="display:none;">`,
+          <input type="file" id="set-import-file" accept="application/json,.json" class="hidden">`,
       })}
       ${settingRow({
         title: "Storage",

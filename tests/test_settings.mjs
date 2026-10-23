@@ -60,7 +60,7 @@ check('default disclosure marker is hidden', /details-marker \{ display:none; \}
 
 // The rebuild: grouped rows on filled surfaces, matching tiles and
 // track rows, rather than headings above loose buttons.
-check('rows are a shared shape', /function settingRow\(\{ title, detail = "", control = "", id = "" \}\)/.test(src));
+check('rows are a shared shape', /function settingRow\(\{ title, detail = "", control = "", id = "", block = false \}\)/.test(src));
 check('rows are filled surfaces', /\.set-row \{[\s\S]{0,160}background:var\(--tile\)/.test(css));
 check('groups are labelled', /\.set-group-label \{/.test(css));
 check('controls that need a line get one', /\.set-row-block \{ flex-direction:column/.test(css));

@@ -352,8 +352,17 @@ in TESTING.md for a real device.
    Android builds now publish direct APK assets on separate untested
    prereleases, as Joseph requested, instead of requiring ZIP extraction.
 
-   Next: verify the 2.9.136 APK build and direct download, then Joseph
-   retries approval and the Android checks at the top of `TESTING.md`. Stable signing remains outstanding;
+   **2.9.137:** Android foreground data-sync service for library reads
+   and the shared dive/scan/mix progress flow. Native timers preserve
+   request pacing while hidden; overlapping jobs own separate leases.
+   Notification and CPU wake lock stop when the final lease ends, with
+   bounded timeout handling. Browser/PWA retains the wake-lock fallback.
+   Backup controls now stack below their description on phones.
+
+   Next: verify the 2.9.137 APK build and direct download, then Joseph
+   tests switching apps, locking the screen, overlapping library/dive
+   work, completion, cancellation and notification permissions in
+   `TESTING.md`. 2.9.136 compiled and published its direct APK successfully. Stable signing remains outstanding;
    ephemeral debug keys are not a reliable cross-run update identity.
 7. **Rewrite `TESTING.md` against the final UI.** The rewrite is
    Claude's; the pass itself is Joseph's. Do this only once 1–6 have
@@ -380,7 +389,7 @@ Nothing above blocks on these except where noted.
   app only asks for that URI when it detects a native shell, and the
   web path is unchanged and tested.
 - **Test the native build on a device.** Compilation is confirmed for
-  Windows, Linux and Android. Install the newly requested 2.9.136 APK
+  Windows, Linux and Android. Install the newly requested 2.9.137 APK
   and run the Android checklist in `TESTING.md`; a successful compiler
   run is not a device test.
 - **GitHub settings**: enable private vulnerability reporting

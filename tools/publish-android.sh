@@ -7,7 +7,7 @@ UNTESTED Android build. Compiled by CI; on-device verification is still required
 
 Download and open the APK below directly. No ZIP extraction is needed.
 
-This build registers the Spotify callback with the Android deep-link runtime so approving access can complete sign-in instead of returning to Connect Spotify.
+This build adds Android background execution for library reads, scans, dives and mixes, with an ongoing notification while work is active. It also fixes the Backup row layout. Switching apps and locking the screen require device testing. Force-closing the app still stops work.
 
 Debug signed. If Android reports an incompatible signature, uninstall the previous test APK before installing this build. Export any existing app data before uninstalling.
 NOTES

@@ -1,3 +1,5 @@
+import { withBackgroundWork } from "./background-work.js";
+
 /**
  * library-cache.js — incremental liked-songs cache with a correctness
  * checksum. NOT YET WIRED INTO THE APP — standalone, tested in isolation.
@@ -139,7 +141,11 @@ export class LibraryCache {
    * @param forceFull  skip incremental, always full-read (e.g. a manual
    *                   "refresh library" button).
    */
-  async getLikedTracks({ onProgress = null, forceFull = false } = {}) {
+  async getLikedTracks(options = {}) {
+    return withBackgroundWork("Reading your Spotify library", () => this._getLikedTracks(options));
+  }
+
+  async _getLikedTracks({ onProgress = null, forceFull = false } = {}) {
     const cached = forceFull ? null : await this._load();
     const now = this._now();
 
