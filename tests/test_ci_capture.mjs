@@ -71,6 +71,61 @@ const wf = read('.github/workflows/native.yml');
   check('double colons in the message survive', ann.includes('c::d'));
 }
 
+// --- the budget is spent on the error, not on progress --------------
+//
+// This is the lesson from run #2. The wrapper worked and the
+// annotation was still useless: 150 lines of cargo output blew past
+// GitHub's message cap, GitHub truncated from the END, and what
+// survived was the crate download list while the compiler error — the
+// last thing printed, and the only thing wanted — was cut off.
+//
+// So the useful property is not "reports the tail". It is "the error
+// is still in the message after the cap".
+{
+  const noisy =
+    'for i in $(seq 1 400); do printf "\\033[1m\\033[92m  Downloaded\\033[0m crate-%s v1.0\\n" "$i"; done; ' +
+    'printf "\\033[31merror[E0433]: failed to resolve\\033[0m\\n"; ' +
+    'echo "error: could not compile deepdive (bin) due to 1 error"; exit 101';
+
+  let out = '';
+  try {
+    execFileSync('bash', [script, 'noisy', 'bash', '-c', noisy], { encoding: 'utf8' });
+  } catch (e) { out = String(e.stdout || ''); }
+  const ann = (out.split('\n').find((l) => l.startsWith('::error')) || '');
+
+  check('the compiler error survives', ann.includes('E0433'));
+  check('and so does the final summary line', ann.includes('could not compile'));
+  check('cargo download chatter is dropped', !ann.includes('Downloaded'));
+  check('ANSI colour codes are stripped', !/\u001b\[/.test(ann) && !ann.includes('[92m'));
+  // Under GitHub's cap with room to spare. The exact cap is not
+  // documented and has changed; the point is to stay well clear of it
+  // rather than to sit on the edge of it.
+  check('the annotation fits in the cap', ann.length < 3200);
+
+  // apt and Gradle produce their own progress formats; they cost the
+  // same budget and carry the same amount of information.
+  let aptOut = '';
+  try {
+    execFileSync('bash', [script, 'apt', 'bash', '-c',
+      'echo "Get:1 http://archive.ubuntu.com jammy InRelease"; ' +
+      'echo "> Task :app:compileDebugKotlin"; ' +
+      'echo "FAILURE: Build failed with an exception."; exit 1'], { encoding: 'utf8' });
+  } catch (e) { aptOut = String(e.stdout || ''); }
+  const aptAnn = (aptOut.split('\n').find((l) => l.startsWith('::error')) || '');
+  check('apt progress lines are dropped', !aptAnn.includes('Get:1'));
+  check('gradle task lines are dropped', !aptAnn.includes('compileDebugKotlin'));
+  check('but the gradle failure is kept', aptAnn.includes('FAILURE: Build failed'));
+
+  // The filter is anchored to the progress verbs at line start, so an
+  // error that happens to name a crate is not swallowed with them.
+  let kept = '';
+  try {
+    execFileSync('bash', [script, 'anchor', 'bash', '-c',
+      'echo "error: failed Compiling the thing"; exit 1'], { encoding: 'utf8' });
+  } catch (e) { kept = String(e.stdout || ''); }
+  check('an error mentioning a progress verb is kept', kept.includes('failed Compiling the thing'));
+}
+
 // --- every command step is wrapped ----------------------------------
 //
 // Parsed rather than grepped: a `run:` step that quietly bypasses the

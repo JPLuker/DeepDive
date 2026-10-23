@@ -31,12 +31,19 @@ set -uo pipefail
 LABEL="${1:?usage: ci-capture.sh <label> <command> [args...]}"
 shift
 
-# How much of the tail to report. A Rust or Gradle failure puts the
-# real error within the last hundred lines or so; the rest is progress
-# output. Annotations are size-capped by GitHub, so this stays modest
-# deliberately rather than sending a whole log and being truncated at
-# an arbitrary point.
-TAIL_LINES="${CI_CAPTURE_TAIL:-150}"
+# How much of the tail to report.
+#
+# GitHub caps an annotation message and truncates it FROM THE END,
+# which is the opposite of what is wanted: the first attempt sent 150
+# lines, the cap cut it mid-word, and what survived was the cargo
+# download list while the actual error — the last thing printed — was
+# the part thrown away. So the budget is enforced here instead, and
+# what gets spent on it is chosen rather than taken in log order.
+TAIL_LINES="${CI_CAPTURE_TAIL:-40}"
+
+# Characters of escaped message to send, kept under GitHub's cap with
+# room to spare. Measured after escaping, since %0A costs three.
+MAX_CHARS="${CI_CAPTURE_MAX_CHARS:-2600}"
 
 LOG="$(mktemp 2>/dev/null || echo "./ci-capture-$$.log")"
 
@@ -57,12 +64,37 @@ fi
 # Carriage returns are stripped rather than escaped — Windows runners
 # produce CRLF, and %0D%0A renders as a blank line between every real
 # line, which doubles the size for nothing.
+#
+# Three passes before escaping, each paying for itself in budget:
+#
+#   1. ANSI colour codes stripped. Cargo wraps every line in them and
+#      they are pure cost — roughly a fifth of the message was escape
+#      sequences on the first attempt.
+#   2. Cargo and Gradle progress chatter dropped. "Downloaded x v1.2"
+#      and "Compiling y" repeated for 400 crates says only that the
+#      build got as far as it got, which the step name already says.
+#      An error line mentioning one of those crates still survives,
+#      because the filter is anchored to the progress verbs.
+#   3. Whatever is left, tail-limited, then hard-capped by character
+#      count keeping the END — because the end is where the error is.
+CLEANED="$(
+  tr -d '\r' < "$LOG" \
+    | sed -e 's/\x1b\[[0-9;]*[A-Za-z]//g' \
+    | grep -vE '^\s*(Downloaded|Downloading|Compiling|Checking|Fresh|Updating|Installing|Removing|Unpacking|Selecting|Preparing|Get:|Hit:|Ign:|Reading|Building dependency|> Task)\b' \
+    | tail -n "$TAIL_LINES"
+)"
+
 ESCAPED="$(
-  tail -n "$TAIL_LINES" "$LOG" \
-    | tr -d '\r' \
+  printf '%s\n' "$CLEANED" \
     | sed -e 's/%/%25/g' \
     | awk 'BEGIN { ORS="%0A" } { print }'
 )"
+
+# Keep the tail, not the head: GitHub would otherwise cut exactly the
+# part worth reading.
+if [ "${#ESCAPED}" -gt "$MAX_CHARS" ]; then
+  ESCAPED="...(earlier output trimmed)%0A${ESCAPED: -$MAX_CHARS}"
+fi
 
 # One annotation holding the whole tail, not one per line: GitHub caps
 # how many annotations a step may produce, and a cap reached halfway
