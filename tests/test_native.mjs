@@ -264,6 +264,29 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   // build fails with "no method named `deep_link`", which points at
   // the call site rather than at the missing import.
   check('DeepLinkExt is in scope', /use tauri_plugin_deep_link::DeepLinkExt;/.test(lib));
+
+  // External links. Every outbound link is written target="_blank",
+  // which is right on the web and inert in a Tauri webview — there is
+  // no tab to open. That silently killed the two links onboarding
+  // depends on: the Spotify dashboard, where the Client ID comes
+  // from, and the Last.fm key page. SECURITY-BASELINE.md Part 6 also
+  // requires external links to leave the app window.
+  check('external links are intercepted natively', /function interceptExternalLinks/.test(app));
+  check('and only inside a native shell', /interceptExternalLinks\(\)[\s\S]{0,120}isNativeShell\(\)/.test(app)
+    || /function interceptExternalLinks\(\) \{\s*if \(!auth\.isNativeShell\(\)\) return;/.test(app));
+  // Delegated, because screens re-render wholesale and a handler bound
+  // to an anchor is discarded with it.
+  check('the handler is delegated from the document',
+    /interceptExternalLinks[\s\S]{0,400}document\.addEventListener\("click"/.test(app));
+  check('it hands off to the opener plugin',
+    /interceptExternalLinks[\s\S]{0,700}__TAURI__\?\.opener\?\.openUrl/.test(app));
+  check('and runs at boot', /async function boot\(\)\s*\{\s*interceptExternalLinks\(\);/.test(app));
+
+  // "../" is the bundle root in a native shell, and the native builds
+  // ship the app without the landing page by design, so the link has
+  // to be absolute there.
+  check('the landing hint is absolute natively', /isNativeShell\(\) \? SITE_URL : "\.\.\/"/.test(app));
+  check('SITE_URL is the public site', /SITE_URL = "https:\/\/jpluker\.github\.io\/DeepDive\/"/.test(app));
   // Manager is not: App::handle() is inherent, and importing it only
   // earns an unused-import warning.
   check('Manager is not imported', !/use tauri::\{[^}]*Manager/.test(lib));

@@ -27,7 +27,13 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.134";
+export const BUILD = "2.9.135";
+
+// The public site. Needed only where a relative link cannot work: in a
+// native shell "../" is the bundle root, which has no landing page in
+// it and never will, since the native builds deliberately ship the app
+// and nothing else.
+export const SITE_URL = "https://jpluker.github.io/DeepDive/";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -6447,7 +6453,7 @@ function renderLanding() {
       <div class="onboard-actions onboard-actions-center">
         <button class="btn btn-primary" id="landing-start">Get started</button>
       </div>
-      <p class="onboard-hint"><a href="../" target="_blank" rel="noopener">See what DeepDive does</a></p>
+      <p class="onboard-hint"><a href="${auth.isNativeShell() ? SITE_URL : "../"}" target="_blank" rel="noopener">See what DeepDive does</a></p>
     </div>`;
   document.getElementById("landing-start").addEventListener("click", () => { markLandingSeen(); renderSetup(); });
 }
@@ -7018,7 +7024,49 @@ async function listenForNativeCallback() {
   }
 }
 
+/**
+ * Make external links work inside a native shell.
+ *
+ * `target="_blank"` is how every outbound link here is written, which
+ * is correct on the web and does nothing in a Tauri webview: there is
+ * no tab to open. So the links that matter most to a new user — the
+ * Spotify dashboard, where the Client ID comes from, and the Last.fm
+ * key page — are dead exactly where onboarding depends on them.
+ * SECURITY-BASELINE.md Part 6 also requires external links to leave
+ * the app window rather than navigate it.
+ *
+ * Delegated from the document rather than bound per link, because the
+ * screens are re-rendered wholesale and any handler attached to an
+ * anchor would be thrown away with it.
+ */
+function interceptExternalLinks() {
+  if (!auth.isNativeShell()) return;
+  document.addEventListener("click", (e) => {
+    const a = e.target && e.target.closest && e.target.closest("a[href]");
+    if (!a) return;
+    // Spotify links have their own handler, also delegated from the
+    // document. preventDefault there does not stop this listener —
+    // both are on the same node — so without this guard one tap would
+    // open the link twice.
+    if (a.hasAttribute("data-spotify")) return;
+    const href = a.getAttribute("href") || "";
+    if (!/^https?:\/\//i.test(href)) return;
+    e.preventDefault();
+    // openNativeUrl, not window.__TAURI__.opener: withGlobalTauri
+    // exposes core.invoke and event.listen but does not expose the
+    // opener plugin's own API, so the plugin command is invoked
+    // directly. Established on a device during the Android work.
+    openNativeUrl(href).catch((err) => {
+      // Navigating the webview would strand the user in a page with
+      // no way back to the app, so this fails quietly rather than
+      // falling back to navigation.
+      console.error("[DeepDive] couldn't open an external link:", err && err.message);
+    });
+  });
+}
+
 async function boot() {
+  interceptExternalLinks();
   await listenForNativeCallback();
   // Put the build on screen before anything else can fail, so a stale
   // cached bundle is visible rather than inferred.
