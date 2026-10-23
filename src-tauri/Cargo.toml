@@ -7,6 +7,17 @@ license = "MIT"
 edition = "2021"
 rust-version = "1.77"
 
+# Android loads a shared library rather than running an executable, so
+# the Tauri CLI builds this crate with `cargo build --lib`. Without a
+# library target that fails outright ("no library targets found in
+# package `deepdive`"), which is what stopped the first APK builds.
+#
+# The _lib suffix is not cosmetic: on Windows a library target sharing
+# the binary's name collides over deepdive.pdb during linking.
+[lib]
+name = "deepdive_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 

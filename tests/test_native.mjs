@@ -134,5 +134,46 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   check('the version is stamped there too', (wf.match(/Stamp the version/g) || []).length === 2);
 }
 
+// --- the crate has a library target --------------------------------
+//
+// Android never runs an executable: the APK loads a shared library and
+// calls into it, so the Tauri CLI builds this crate with `cargo build
+// --lib`. With only a main.rs that fails immediately — "no library
+// targets found in package `deepdive`" — which is exactly how the
+// first APK builds died, after the manifest patch had already worked.
+//
+// The risk this guards against is subtler than the file going missing.
+// Desktop builds fine from main.rs alone, so if the app logic ever
+// migrates back there, every desktop build stays green and only
+// Android breaks — and Android is the build nobody runs locally.
+{
+  const cargo = read('src-tauri/Cargo.toml');
+  const lib = read('src-tauri/src/lib.rs');
+  const main = read('src-tauri/src/main.rs');
+
+  check('there is a lib.rs', lib.length > 0);
+  check('Cargo.toml declares a [lib] target', /^\[lib\]/m.test(cargo));
+  // cdylib is the one Android actually loads; the others keep desktop
+  // and any future test harness linking normally.
+  check('the lib is a cdylib', /crate-type\s*=\s*\[[^\]]*"cdylib"/.test(cargo));
+  // Sharing the binary's name collides over deepdive.pdb on Windows.
+  check('the lib target is named deepdive_lib', /name\s*=\s*"deepdive_lib"/.test(cargo));
+
+  check('the app lives in lib.rs', /pub fn run\(\)/.test(lib));
+  check('and lib.rs builds the Tauri app', /tauri::Builder::default\(\)/.test(lib));
+  check('with a mobile entry point', /mobile_entry_point/.test(lib));
+
+  // main.rs must stay a shim. If it regrows the builder, desktop keeps
+  // working and Android silently loses whatever was added.
+  check('main.rs delegates to the library', /deepdive_lib::run\(\)/.test(main));
+  check('and does not build the app itself', !/tauri::Builder/.test(main));
+  check('the Windows subsystem attribute stayed on the binary', /windows_subsystem = "windows"/.test(main));
+
+  // Both plugins have to be registered where mobile can see them.
+  check('deep-link is registered in the library', /tauri_plugin_deep_link::init\(\)/.test(lib));
+  check('opener is registered in the library', /tauri_plugin_opener::init\(\)/.test(lib));
+  check('the deep link is forwarded to the web layer', /emit\("deep-link"/.test(lib));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
