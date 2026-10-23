@@ -26,7 +26,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.131";
+export const BUILD = "2.9.132";
 
 const client = new SpotifyClient(auth.getToken);
 const appStore = bestStore();
@@ -6996,7 +6996,10 @@ function registerServiceWorker() {
 async function listenForNativeCallback() {
   if (!auth.isNativeShell()) return;
   try {
-    const { listen } = await import("@tauri-apps/api/event");
+    // window.__TAURI__, not a bare import: see the note in auth.js —
+    // there is no bundler here to resolve "@tauri-apps/api/event".
+    const listen = window.__TAURI__?.event?.listen;
+    if (typeof listen !== "function") throw new Error("event API unavailable");
     await listen("deep-link", async (event) => {
       if (!auth.acceptNativeCallback(event.payload)) return;
       const res = await auth.handleRedirectCallback();

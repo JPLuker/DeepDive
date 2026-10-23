@@ -19,7 +19,8 @@
     ],
     "security": {
       "csp": "default-src 'self'; img-src 'self' https://*.scdn.co data:; connect-src 'self' https://api.spotify.com https://accounts.spotify.com https://ws.audioscrobbler.com; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
-    }
+    },
+    "withGlobalTauri": true
   },
   "bundle": {
     "active": true,

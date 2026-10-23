@@ -4,6 +4,37 @@
 > stops at the Flask era. The 2.x record lives in the git log and
 > `ROADMAP.md`'s "Shipped since".
 
+## 2.9.132
+Three things that would each, on their own, have made the Android build
+install, open, and be impossible to sign in to. None of them would have
+failed the build — they fail at the moment a person tries to use it.
+
+- **Nothing registered `deepdive://` on Android.** The deep-link
+  plugin's `desktop.schemes` config covers desktop only, and
+  `gen/android` is generated in CI from a template that knows nothing
+  about this app. Spotify would have sent the user back and Android
+  would have found no handler. `tools/android-manifest.mjs` adds the
+  intent filter after `android init`, checks its own work, and fails
+  the build if the scheme is not there afterwards. It is a script
+  rather than inline YAML so it can be tested without an Android SDK,
+  and it is idempotent, places the filter inside the launcher activity
+  rather than wherever it fits, and refuses a manifest it does not
+  recognise instead of writing something that looks patched.
+- **Sign-in navigated the webview to Spotify.** That works in a
+  browser and cannot work in a native shell: it leaves the app behind,
+  and the `deepdive://` redirect then has no page to return to. Native
+  sign-in opens the system browser and the custom scheme brings the
+  result back.
+- **Both Tauri calls used bare module specifiers.** This app is plain
+  ES modules served statically — no bundler, no import map — so
+  `import("@tauri-apps/plugin-opener")` could never have resolved in
+  the webview. `withGlobalTauri` is on and both calls come off
+  `window.__TAURI__`.
+
+The web path is unchanged throughout and still tested: `beginLogin`
+navigates, the callback reads `location.search`, and the listener
+returns immediately outside a native shell.
+
 ## 2.9.131
 - **A backup from a newer version is refused instead of half-applied.**
   Every export has carried a `version` since the format was written,

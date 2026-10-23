@@ -160,7 +160,36 @@ export async function beginLogin({ extraScopes = "" } = {}) {
     redirect_uri: redirectUri(),
     state,
   });
-  window.location.href = `${AUTH_URL}?${params.toString()}`;
+  const url = `${AUTH_URL}?${params.toString()}`;
+
+  // On the web, navigate: the browser goes to Spotify and comes back
+  // to this same page with ?code=.
+  //
+  // A native shell cannot do that. Navigating the webview to Spotify
+  // leaves the app shell behind, and the deepdive:// redirect then has
+  // no page to return to — the sign-in dead-ends. So the system
+  // browser handles it, the user authenticates there, and the custom
+  // scheme hands the result back through the deep-link listener.
+  //
+  // If the opener plugin is missing the build is broken, but falling
+  // back to navigation at least produces a visible failure on
+  // Spotify's own page rather than a button that does nothing.
+  if (isNativeShell()) {
+    try {
+      // window.__TAURI__ rather than an import. This app is plain ES
+      // modules served statically — no bundler, no import map — so a
+      // bare specifier like "@tauri-apps/plugin-opener" cannot
+      // resolve in the webview. `withGlobalTauri` puts the same API
+      // on the window instead.
+      const openUrl = window.__TAURI__?.opener?.openUrl;
+      if (typeof openUrl !== "function") throw new Error("opener plugin unavailable");
+      await openUrl(url);
+      return;
+    } catch (e) {
+      console.error("[DeepDive] couldn't open the system browser:", e && e.message);
+    }
+  }
+  window.location.href = url;
 }
 
 /**

@@ -143,6 +143,15 @@ jobs:
       - name: Generate the Android project
         run: npx --yes @tauri-apps/cli@2 android init
 
+      # The generated manifest knows nothing about deepdive://, and the
+      # deep-link plugin's config covers desktop only. Without this the
+      # APK installs, opens, and can never sign in — Spotify sends the
+      # user back and Android finds no handler for the scheme. The
+      # script verifies its own work and fails the build if the scheme
+      # is not there afterwards.
+      - name: Register the OAuth scheme in the Android manifest
+        run: node tools/android-manifest.mjs src-tauri/gen/android/app/src/main/AndroidManifest.xml
+
       # Debug, deliberately. An unsigned *release* APK cannot be
       # installed on Android at all — it is rejected before it runs —
       # so "no signing yet" and "release" are incompatible. A debug
