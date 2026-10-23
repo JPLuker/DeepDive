@@ -176,9 +176,35 @@ jobs:
 
       # The Gradle project is generated rather than committed, so it
       # cannot go stale against tauri.conf.json.
+      # The Tauri CLI as a cargo binary, not through npx, and this is
+      # not a style preference — it is the fix for the APK build.
+      #
+      # `android init` bakes the command that invoked it into the
+      # generated Gradle project, so Gradle can call back into the CLI
+      # for each Rust target. Invoked through npx, npm sets
+      # npm_execpath, the CLI detects npm, and it writes:
+      #
+      #   npm run -- tauri android android-studio-script --target ...
+      #
+      # which needs a package.json with a "tauri" script. This repo has
+      # no package.json at all and should not grow one: the web app is
+      # plain ES modules served statically, with no bundler and no
+      # install step, and a package.json carrying devDependencies
+      # invites exactly the build pipeline that was deliberately
+      # avoided. npm exited 254 and Gradle reported it as a failed
+      # :app:rustBuildArm64Debug task, which points at Rust rather
+      # than at a missing npm script.
+      #
+      # Invoked as cargo-tauri, the same code bakes "cargo tauri ..."
+      # instead, which depends on nothing but the toolchain already
+      # installed above.
+      - name: Install the Tauri CLI
+        shell: bash
+        run: tools/ci-capture.sh "tauri-cli install" cargo install tauri-cli --locked --version "^2.12"
+
       - name: Generate the Android project
         shell: bash
-        run: tools/ci-capture.sh "android init" npx --yes @tauri-apps/cli@2 android init
+        run: tools/ci-capture.sh "android init" cargo tauri android init
 
       # The generated manifest knows nothing about deepdive://, and the
       # deep-link plugin's config covers desktop only. Without this the
@@ -201,7 +227,7 @@ jobs:
         shell: bash
         run: |
           tools/ci-capture.sh "APK build" \
-            npx --yes @tauri-apps/cli@2 android build --apk --debug
+            cargo tauri android build --apk --debug
 
       - name: Rename for release
         shell: bash

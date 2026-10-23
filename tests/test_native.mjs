@@ -125,6 +125,27 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
     ['aarch64-linux-android', 'armv7-linux-androideabi', 'i686-linux-android', 'x86_64-linux-android']
       .every((t) => wf.includes(t)));
   check('the Gradle project is generated, not committed', /android init/.test(wf));
+
+  // `android init` bakes the command that invoked it into the Gradle
+  // project, so Gradle can call back into the CLI per Rust target.
+  // Through npx that becomes "npm run -- tauri ...", which needs a
+  // package.json with a "tauri" script — and this repo has none by
+  // design. npm exited 254 and Gradle blamed :app:rustBuildArm64Debug.
+  //
+  // So the Android job must not reach the CLI through npm or npx, and
+  // the repo must not acquire a package.json to make npm work. Both
+  // are asserted, because either one alone would be undone by a
+  // plausible tidy-up.
+  // Comments stripped: the block above this step explains the npx
+  // problem at length, and a check for "no npx" would match the
+  // explanation rather than the commands.
+  const androidJob = wf.slice(wf.indexOf('\n  android:')).replace(/^\s*#.*$/gm, '');
+  check('Android invokes the CLI as cargo tauri', /cargo tauri android init/.test(androidJob));
+  check('and builds the APK the same way', /cargo tauri android build/.test(androidJob));
+  check('the Android job never calls npx', !/npx/.test(androidJob));
+  check('and the CLI is installed for it', /cargo install tauri-cli/.test(androidJob));
+  check('pinned to a 2.x line', /tauri-cli --locked --version "\^2/.test(androidJob));
+  check('there is still no package.json', !existsSync(at('package.json')));
   // The important one. An unsigned *release* APK is rejected by
   // Android before it runs, so "no signing yet" and "release" cannot
   // both be true — a debug build is the only installable option, and
