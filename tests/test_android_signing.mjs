@@ -38,8 +38,10 @@ try {
   const before=readdirSync(root).length;
   const bad=rejects('wrong keystore password fails during preparation',()=>prepareSigning(gradle,{...env,ANDROID_KEYSTORE_PASSWORD:'incorrect-password'}));
   check('failed preparation removes its temporary key',readdirSync(root).length===before);
+  check('wrong-password diagnosis is specific', bad.message.includes('ANDROID_KEYSTORE_PASSWORD does not unlock'));
   check('failure messages do not print supplied credentials',!bad.message.includes('incorrect-password')&&!bad.message.includes(env.ANDROID_KEYSTORE_BASE64));
-  rejects('wrong alias fails during preparation',()=>prepareSigning(gradle,{...env,ANDROID_KEY_ALIAS:'missing-alias'}));
+  const aliasError=rejects('wrong alias fails during preparation',()=>prepareSigning(gradle,{...env,ANDROID_KEY_ALIAS:'missing-alias'}));
+  check('wrong-alias diagnosis is specific',aliasError.message.includes('ANDROID_KEY_ALIAS is not present'));
   const cert=execFileSync('keytool',['-exportcert','-keystore',key,'-storepass:env','ANDROID_KEYSTORE_PASSWORD','-alias',env.ANDROID_KEY_ALIAS],{env,stdio:['ignore','pipe','pipe']});
   const fingerprint=createHash('sha256').update(cert).digest('hex');
   const signer=`Signer #1 certificate SHA-256 digest: ${fingerprint}\n`;

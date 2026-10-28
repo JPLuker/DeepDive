@@ -3,9 +3,27 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.138.** If the build in `js/app.js` is well
+**Last updated at build 2.9.139.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Signing credential diagnosis — build 2.9.139
+
+The first permanent-key run (40701922061, build 2.9.138) failed at
+keystore validation before compilation. Four secrets were present and
+Base64 was syntactically valid, but keytool could not open the key with
+the provided store password/alias. No signed APK was published.
+The original generic failure did not establish which input was wrong.
+
+2.9.139 classifies keytool errors into fixed safe messages for password,
+alias or unreadable file. Raw keytool output and secret values remain
+suppressed. Full keystore validation now runs immediately after Java
+setup, before downloading the SDK/NDK or compiling. Disposable keys
+verify password/alias diagnosis and cleanup. Check the new run before
+asking Joseph to change a particular secret; do not guess or request
+that he paste credentials into chat.
 
 ---
 
@@ -929,7 +947,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.138**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.139**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.

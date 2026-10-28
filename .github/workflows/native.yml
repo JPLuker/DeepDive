@@ -133,6 +133,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
       - name: Validate permanent Android signing credentials
         shell: bash
         env:
@@ -141,11 +146,6 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: tools/ci-capture.sh "Signing preflight" node tools/android-signing.mjs --check
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
 
       # android-actions/setup-android@v3 used to be here and failed in
       # 14 seconds, before any of this project's own code ran, and

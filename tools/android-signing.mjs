@@ -41,6 +41,37 @@ export function configureSigning(gradle) {
             proguardFiles(file("deepdive-signing.pro"))`);
 }
 
+export function validateKeystore(key, env) {
+  try {
+    execFileSync('keytool', ['-list', '-keystore', key, '-storepass:env', 'ANDROID_KEYSTORE_PASSWORD', '-alias', env.ANDROID_KEY_ALIAS],
+      { env, stdio: ['ignore', 'pipe', 'pipe'] });
+  } catch (error) {
+    // Inspect tool output privately, then emit a fixed diagnosis only.
+    // Never print raw keytool output, the alias, or supplied credentials.
+    const detail = String(error.stdout || '') + String(error.stderr || '');
+    if (/password was incorrect|password verification failed|password is incorrect/i.test(detail)) {
+      throw new Error('ANDROID_KEYSTORE_PASSWORD does not unlock the uploaded keystore. Update that GitHub secret with the original keystore password.');
+    }
+    if (/alias .* does not exist|alias .* not found/i.test(detail)) {
+      throw new Error('ANDROID_KEY_ALIAS is not present in the uploaded keystore. Check that secret against the alias used when generating the key.');
+    }
+    if (/invalid keystore format|unrecognized keystore format|keystore file does not exist|keystore was tampered/i.test(detail)) {
+      throw new Error('The uploaded keystore cannot be read. Re-encode the original JKS and replace ANDROID_KEYSTORE_BASE64.');
+    }
+    throw new Error('keytool could not validate the Android keystore. Check the same file, password and alias locally.');
+  }
+}
+
+export function checkSigningKey(env = process.env) {
+  const bytes = signingEnvironment(env);
+  const dir = mkdtempSync(join(env.RUNNER_TEMP || tmpdir(), 'deepdive-signing-check-'));
+  try {
+    const key = join(dir, 'release.jks');
+    writeFileSync(key, bytes, { mode: 0o600 });
+    validateKeystore(key, env);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+}
+
 export function prepareSigning(gradlePath, env = process.env) {
   const bytes = signingEnvironment(env);
   const original = readFileSync(gradlePath, 'utf8');
@@ -52,12 +83,7 @@ export function prepareSigning(gradlePath, env = process.env) {
     writeFileSync(key, bytes, { mode: 0o600 });
     // keytool validates both the password and alias, without printing
     // keystore contents or passing a password on its command line.
-    try {
-      execFileSync('keytool', ['-list', '-keystore', key, '-storepass:env', 'ANDROID_KEYSTORE_PASSWORD', '-alias', env.ANDROID_KEY_ALIAS],
-        { env, stdio: ['ignore', 'pipe', 'pipe'] });
-    } catch {
-      throw new Error('Cannot open the Android keystore with the supplied store password and alias. Check the signing secrets.');
-    }
+    validateKeystore(key, env);
     writeFileSync(gradlePath, configured);
     writeFileSync(join(resolve(gradlePath, '..'), 'deepdive-signing.pro'),
       '-keepclassmembers class * { @android.webkit.JavascriptInterface <methods>; }\n');
@@ -71,7 +97,7 @@ export function prepareSigning(gradlePath, env = process.env) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    if (process.argv[2] === '--check') signingEnvironment(process.env);
+    if (process.argv[2] === '--check') checkSigningKey(process.env);
     else prepareSigning(process.argv[2]);
     console.log('Android signing credentials validated' + (process.argv[2] === '--check' ? '' : '; release signing configured'));
   } catch (error) {

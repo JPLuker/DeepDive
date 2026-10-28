@@ -366,6 +366,12 @@ in TESTING.md for a real device.
    and signing failures cannot fall back to temporary debug keys.
    2.9.137 compiled and published successfully.
 
+   **2.9.139:** the first signing attempt (run 40701922061) stopped at
+   keystore validation, so 2.9.138 did not publish an APK. Added safe,
+   specific password/alias/file diagnoses and moved full key validation
+   ahead of SDK/NDK work. The next run must establish which credential
+   needs correction before requesting a change from Joseph.
+
    Next: confirm the first permanently signed release compiles and its
    APK certificate matches the configured key. Joseph installs it after
    a one-time migration from the old debug-key app, imports his backup,
