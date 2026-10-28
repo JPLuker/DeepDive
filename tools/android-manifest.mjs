@@ -13,7 +13,8 @@
 // YAML so it can be tested without an Android SDK.
 //
 // Usage: node tools/android-manifest.mjs <path-to-AndroidManifest.xml>
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { dirname, join } from 'node:path';
 
 export const SCHEME = 'deepdive';
 
@@ -60,13 +61,16 @@ export function patchManifest(xml) {
     notes.push('INTERNET permission already present');
   }
 
-  for (const permission of ['FOREGROUND_SERVICE', 'FOREGROUND_SERVICE_DATA_SYNC', 'WAKE_LOCK', 'POST_NOTIFICATIONS']) {
+  for (const permission of ['FOREGROUND_SERVICE', 'FOREGROUND_SERVICE_DATA_SYNC', 'WAKE_LOCK', 'POST_NOTIFICATIONS', 'REQUEST_INSTALL_PACKAGES']) {
     if (!xml.includes(`android.permission.${permission}"`)) {
       xml = xml.replace('<application', `<uses-permission android:name="android.permission.${permission}" />\n    <application`);
     }
   }
   if (!xml.includes('android:name=".BackgroundWorkService"')) {
     xml = xml.replace('</application>', `<service android:name=".BackgroundWorkService" android:exported="false" android:foregroundServiceType="dataSync" android:stopWithTask="true" />\n    </application>`);
+  }
+  if (!xml.includes('android:authorities="${applicationId}.updates"')) {
+    xml = xml.replace('</application>', `<provider android:name="androidx.core.content.FileProvider" android:authorities="\${applicationId}.updates" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/update_paths" /></provider>\n    </application>`);
   }
   notes.push('registered data-sync service and its required permissions');
   return { xml, notes };
@@ -78,6 +82,9 @@ if (process.argv[1] && process.argv[1].endsWith('android-manifest.mjs')) {
   if (!path) { console.error('usage: android-manifest.mjs <AndroidManifest.xml>'); process.exit(2); }
   const { xml, notes } = patchManifest(readFileSync(path, 'utf8'));
   writeFileSync(path, xml);
+  const resources = join(dirname(path), "res/xml");
+  mkdirSync(resources, { recursive: true });
+  writeFileSync(join(resources, "update_paths.xml"), '<?xml version="1.0" encoding="utf-8"?><paths xmlns:android="http://schemas.android.com/apk/res/android"><files-path name="updates" path="updates/" /></paths>\n');
   for (const n of notes) console.log('  ' + n);
   // Verified rather than assumed: this is the difference between a
   // build that cannot sign in and one that can, and it is invisible

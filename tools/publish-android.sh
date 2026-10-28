@@ -7,9 +7,11 @@ UNTESTED Android build. Compiled by CI; on-device verification is still required
 
 Download and open the APK below directly. No ZIP extraction is needed.
 
-This build fixes bottom-navigation overlap and import feedback, gives library reads a full-screen shared progress job, adds live notification progress, and fills blank progress screens with cached artist photos/album art. CI verifies the permanent signing certificate, package and version before publishing.
+Includes an Android in-app updater in Settings → Updates (Testing channel), a genre shelf and searchable genre browser, backup controls under Advanced, automatic playlist names, clearer notification percentages, and results/chooser layout fixes.
 
-Signed release APK. Switching from an older temporary debug key requires a one-time uninstall; export existing app data first. Future builds using this permanent key can update the installed app without clearing its data.
+Install over the previous permanent-key release to keep app data. This is the manual install that adds the updater; later compatible releases can be downloaded from inside DeepDive. Installation still uses Android's confirmation screen.
+
+CI verifies the permanent signing certificate, package and version before publishing. On-device layout, notification and updater installation checks are still required.
 NOTES
 if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
   gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \

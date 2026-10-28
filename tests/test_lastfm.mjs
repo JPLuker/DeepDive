@@ -232,9 +232,9 @@ check('it needs enough to be a mix', !neglectedNeighboursCard(negTracks, negSim,
 check('and is wired in', /insights\.neglectedNeighboursCard\(cached, _similarBySeed\)/.test(src));
 
 // Genres: the broad tags always outrank the subgenres the landing page
-// promises, so the list has to be expandable.
-check('all genres are reachable', /id="genre-expand"/.test(src));
-check('and collapsible again', /id="genre-collapse"/.test(src));
+// promises, so the dedicated browser must include the full list.
+check('all genres are reachable in the browser', /renderGenreBrowser\(everyGenre\)/.test(src));
+check('inline expansion is removed', !/id="genre-(expand|collapse)"/.test(src));
 // Pinned the full phrase "already looked up and remembered"; the copy
 // pass dropped the second half as it said nothing the first didn't.
 // The point is that the prompt states the cached count, so match that.
@@ -246,11 +246,10 @@ check('the prompt says what is already cached', /already looked up/.test(src));
 check('a handful of new artists is topped up quietly', /untagged > 0 && untagged <= GENRE_AUTO_TOPUP/.test(src));
 check('and the button only appears above the threshold', /untagged > GENRE_AUTO_TOPUP \? `<button/.test(src));
 check('it does not fire while a fetch is running', /&& !_genreFetching\) \{/.test(src));
-// Expanding while a search was active kept the filter, so "show all
-// 173" showed the four that matched and there was no way back out.
-check('expanding clears the search', /_genresExpanded = true;\s*\n\s*_genreQuery = "";/.test(src));
-check('and so does collapsing', /_genresExpanded = false;\s*\n\s*_genreQuery = "";/.test(src));
-check('a search can also be cleared directly', /id="genre-clear"/.test(src));
+// Search filters the complete list while keeping the same input mounted.
+check('browser has a labelled search', /for="genre-search">Search genres/.test(src));
+check('browser filters every available genre', /const matches = genres.filter/.test(src));
+check('browser uses a native search field that can clear its query', /type="search" id="genre-search"/.test(src));
 // 1044 tracks is eleven requests and a playlist nobody plays end to
 // end — the real count was the same open-ended option wearing a number.
 check('only standard lengths are offered', /if \(!lengths\.length && total > 0\) lengths\.push\(total\);/.test(src));

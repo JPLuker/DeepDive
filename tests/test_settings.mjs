@@ -26,9 +26,8 @@ check('and is collapsed by default', !/<details class="advanced"[^>]*\sopen/.tes
 // What belongs behind it.
 check('credentials are advanced', /id="set-client-id"/.test(adv));
 check('redirect uri is advanced', /id="set-redirect-uri"/.test(adv));
-// Backup came out of Advanced in 2.9.110: it is the only copy that
-// outlives this browser, so it can't sit behind a disclosure triangle.
-check('backup is not buried in advanced', !/id="set-export"/.test(adv));
+// Joseph moved backups under Advanced during the 2.9.143 phone review.
+check('backup lives under Advanced as requested', /id="set-export"/.test(adv));
 check('pacing reset is advanced', /id="set-reset-pacing"/.test(adv));
 
 // What must stay in front.
@@ -93,10 +92,10 @@ check('credited', /Made by Joseph Luker/.test(src));
   const i = src.indexOf('<div class="set-group-label">Data and storage</div>');
   check('data and storage is its own group', i > -1);
   const advAt = src.indexOf('<details class="advanced"');
-  check('and sits above Advanced', i > -1 && advAt > -1 && i < advAt);
+  check('and sits inside Advanced', i > -1 && advAt > -1 && i > advAt);
   const grp = src.slice(i, src.indexOf('</div>`', i));
   check('export and import are both offered', /id="set-export"/.test(grp) && /id="set-import"/.test(grp));
-  check('it says where the data lives', /Everything stays in this browser/.test(grp));
+  check('backup copy stays concise', /Back up your crate, history and settings/.test(src));
   check('and surfaces whether storage actually works', /id="set-storage-kind"/.test(grp));
 }
 

@@ -3,9 +3,63 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.142.** If the build in `js/app.js` is well
+**Last updated at build 2.9.143.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Testing feedback and Android updater — 2.9.143
+
+Joseph ended the collect-only testing phase and explicitly requested implementation
+and a build. This batch covers all collected 2.9.142 feedback.
+
+- Backup/data controls now live under Advanced (Joseph's explicit deviation from
+  DESIGN.md 14.19's top-level Data & storage category). Export/import are filled,
+  wrapped buttons with success feedback beside them. Do not move them back out.
+- Generated playlist names are automatic everywhere; the editable fields in
+  results and mix dialogs are removed. Naming rules and playlist reuse remain.
+- Mixes shows six top genres on a horizontal artwork shelf. Browse genres opens
+  a dedicated full-screen searchable list of all available genres; each opens
+  its mix. No inline Show all/Show fewer wall, and no multi-select genre picker.
+- The artist chooser footer is transparent instead of a hard rectangular slab.
+  Results use a detached rounded glass action dock, measured clearance (including
+  font scaling), a scroll reset before hero fade, and a compact missing-image
+  header. The dive's already downloaded photo is reused if needed.
+- The native background reassurance is removed. Collapsed scan/dive notifications
+  start with the percentage, before potentially long stage details; expanded
+  stage and count text stays available.
+
+AndroidUpdater.kt is installed beside MainActivity by android-activity.mjs. It
+fetches only the fixed GitHub release listing; selects numeric newer versions,
+exact universal APK names and repo URLs, and requires GitHub's SHA-256 asset
+digest. Testing includes prereleases; Stable excludes them. Drafts, old debug
+APKs, missing hashes and incomplete uploads are ignored. HTTPS redirects are
+limited to exact GitHub asset hosts. Downloads are size/time bounded, cancelable,
+and written to a private .part file before verification and atomic rename.
+
+Before staging AND installation: validate byte length/hash, package, version,
+higher versionCode, and the installed/candidate certificate against our permanent
+SHA-256 pin. Installation is blocked during active work both in JS and native,
+requires a foreground window, and launches Android's installer through a private
+FileProvider exposing only files/updates. Unknown-source permission opens Android
+settings with an explicit return-and-tap-install-again instruction. No silent
+installation, arbitrary URL bridge or external storage permission. Installed app
+data remains in place during a same-key upgrade. One manual APK install is needed
+to acquire this updater; the next newer release will test its actual upgrade flow.
+
+Settings → Updates has automatic checks, Stable/Testing channel, manual check,
+plain-text release notes, download percent/MB, cancel, verification and install
+states. Automatic checks run once per launch and expose a quiet Update header
+button only when a newer APK exists. Defaults: checks on, Testing channel for
+this testing distribution. Downloads do not promise process-death recovery or a
+foreground service of their own; restart/retry if Android kills the process.
+
+Verification: 2,346 checks across 77 suites, including real bridge state/retry/
+permission flows and an executed genre-search/drill-in regression. The previous
+build fails the new visual/genre/naming regression. Browser installation failed
+(truncated Chromium download), so actual phone layout and notification/updater
+installation remain device checks. CI must compile/sign and verify before release.
 
 ---
 

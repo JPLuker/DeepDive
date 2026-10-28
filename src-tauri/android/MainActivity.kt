@@ -25,6 +25,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : TauriActivity() {
+  private var updater: AndroidUpdater? = null
   private var workWebView: WebView? = null
   private val workHandler = Handler(Looper.getMainLooper())
 
@@ -44,6 +45,8 @@ class MainActivity : TauriActivity() {
   override fun onWebViewCreate(webView: WebView) {
     super.onWebViewCreate(webView)
     workWebView = webView
+    updater = AndroidUpdater(this, webView, { bundledPage() }, { BackgroundWorkService.instance != null })
+    webView.addJavascriptInterface(updater!!, "DeepDiveUpdates")
     // No credentials or network methods are exposed. The native side
     // checks the current bundled URL before accepting any command.
     webView.addJavascriptInterface(object {
@@ -126,6 +129,7 @@ class MainActivity : TauriActivity() {
   }
 
   override fun onDestroy() {
+    updater?.close()
     workHandler.removeCallbacksAndMessages(null)
     BackgroundWorkService.instance?.stopSelf()
     BackgroundWorkService.ready.clear()
@@ -200,8 +204,8 @@ class BackgroundWorkService : Service() {
     val known = active != null && active.total > 0.0
     val ratio = active?.let { if (it.total > 0.0) (it.current / it.total).coerceIn(0.0, 1.0) else 0.0 } ?: 0.0
     val percent = (ratio * 100).toInt()
-    fun description(job: WorkStatus): String = job.detail +
-      if (job.total > 0.0) " · ${(job.current / job.total * 100).toInt().coerceIn(0, 100)}%" else ""
+    fun description(job: WorkStatus): String =
+      (if (job.total > 0.0) "${(job.current / job.total * 100).toInt().coerceIn(0, 100)}% · " else "") + job.detail
     val all = jobs.values.joinToString("\n\n") { it.label + "\n" + description(it) }
     return builder.setSmallIcon(android.R.drawable.stat_notify_sync)
       .setContentTitle(if (jobs.size == 1) active?.label ?: "DeepDive is working" else "DeepDive · ${jobs.size} jobs")

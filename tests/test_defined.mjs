@@ -141,7 +141,7 @@ check('the version is also in About', /title: "Version"/.test(src));
     'if','for','while','switch','catch','return','typeof','function','await','super',
     'Promise','Array','Object','String','Number','Boolean','Date','Map','Set','JSON','Math',
     'RegExp','Error','TypeError','URL','URLSearchParams','Intl','AbortController','Blob','File',
-    'FileReader','FormData','Image','Audio','CustomEvent','Event','IntersectionObserver',
+    'FileReader','FormData','Image','Audio','CustomEvent','Event','IntersectionObserver','ResizeObserver',
     'setTimeout','clearTimeout','setInterval','clearInterval','requestAnimationFrame',
     'cancelAnimationFrame','fetch','alert','confirm','prompt','structuredClone','queueMicrotask',
     'encodeURIComponent','decodeURIComponent','parseInt','parseFloat','isNaN','isFinite',

@@ -1,7 +1,7 @@
 // Install our activity after `tauri android init`. Keep gen/android
 // generated, but do not lose the system-inset fix on every clean runner.
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export function installActivity(root, source) {
@@ -30,5 +30,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const root = process.argv[2];
   if (!root) throw new Error('usage: android-activity.mjs <generated app/src/main directory>');
   const source = readFileSync(new URL('../src-tauri/android/MainActivity.kt', import.meta.url), 'utf8');
-  console.log('Installed inset-aware activity: ' + installActivity(root, source));
+  const target = installActivity(root, source);
+  writeFileSync(join(dirname(target), 'AndroidUpdater.kt'), readFileSync(new URL('../src-tauri/android/AndroidUpdater.kt', import.meta.url)));
+  console.log('Installed activity and Android updater: ' + target);
 }

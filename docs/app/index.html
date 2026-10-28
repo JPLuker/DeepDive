@@ -323,18 +323,18 @@
      own margin on top of the body's 22px padding. */
   .results-body > .crate-header:first-child { margin-top:0; }
   /* Clears the docked actions so the last row isn't trapped under them. */
-  .results-body { padding-bottom:132px; }
+  .results-body { padding-bottom:calc(var(--results-action-height, 144px) + 32px); }
 
   /* Stays put while the lists scroll: the decision is the point of the
      screen, and scrolling back to the bottom to make it is friction. */
   .results-actions {
-    position:fixed; left:0; right:0; bottom:0; z-index:35;
-    padding:12px 16px calc(16px + env(safe-area-inset-bottom));
+    position:fixed; left:16px; right:16px; bottom:calc(16px + env(safe-area-inset-bottom)); z-index:35;
+    padding:12px;
     background:var(--glass-bg);
     backdrop-filter:blur(var(--glass-blur)) saturate(160%);
     -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(160%);
-    border-top:1px solid var(--hairline);
-    box-shadow:var(--glass-highlight);
+    border:1px solid var(--hairline); border-radius:var(--r-lg);
+    box-shadow:var(--glass-shadow), var(--glass-highlight);
     display:flex; flex-direction:column; gap:8px; align-items:stretch;
   }
   .results-actions-row { display:flex; gap:8px; }
@@ -1343,11 +1343,11 @@
        longer hides it — it has to actually go. */
     body:has(.results-actions) .tabbar { display:none; }
     .results-actions {
-      position:fixed; left:0; right:0; bottom:0; z-index:45;
-      padding:12px 16px calc(16px + env(safe-area-inset-bottom));
+      position:fixed; left:16px; right:16px; bottom:calc(16px + env(safe-area-inset-bottom)); z-index:45;
+      padding:12px;
     }
     .results-actions .btn-back { display:flex; }
-    .results-body { padding-bottom:132px; }
+    .results-body { padding-bottom:calc(var(--results-action-height, 144px) + 32px); }
     .results-hero { margin:0 -16px 0; }
     .results-hero-text { padding:0 16px 16px; }
   }
@@ -1455,7 +1455,7 @@
       max-height:calc(100vh - clamp(52px, 12vh, 132px) - 24px);
       overflow-y:auto;
     }
-    #intent-modal .modal-actions { position:static; }
+    #intent-modal .modal-actions { position:static; background:transparent; padding-top:0; }
     /* Matches the phone padding above; without it the photo would stop
        short of the edges. */
     #intent-modal .intent-hero { margin:-20px -16px 0; height:180px; }
@@ -1487,6 +1487,36 @@
   /* Very narrow phones — the wordmark is still the first thing to
      overflow, so give it one more step down. */
   
+
+  /* FOCAL: genre artwork on Mixes; search on the dedicated browser. */
+  [hidden] { display:none !important; }
+  body:has(.results-actions) .wrap { padding-bottom:0; }
+  .results-hero.no-art { height:auto; min-height:0; background:transparent; margin-top:24px; }
+  .results-hero.no-art .results-hero-photo, .results-hero.no-art .results-hero-veil { display:none; }
+  .results-hero.no-art .results-hero-text { position:relative; }
+  .results-hero.no-art h1 { color:var(--ink); text-shadow:none; }
+  .results-hero.no-art .results-stat { color:var(--ink); background:var(--tile); }
+  .backup-buttons { display:flex; flex-wrap:wrap; gap:8px; width:100%; }
+  .backup-buttons .btn { min-height:48px; }
+  .set-row-block .set-row-control { width:100%; }
+  .backup-status { flex-basis:100%; margin:0; }
+  #settings-updates progress { width:100%; height:8px; accent-color:var(--accent); border:0; border-radius:var(--r-pill); overflow:hidden; }
+  #settings-updates progress::-webkit-progress-bar { background:var(--surface); border-radius:var(--r-pill); }
+  #settings-updates progress::-webkit-progress-value { background:var(--accent); border-radius:var(--r-pill); }
+  #settings-updates #update-status { margin:8px 0; color:var(--muted); }
+  .update-notes { white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; color:var(--muted); }
+  .genre-shelf { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x proximity; padding:4px 0 12px; }
+  .genre-shelf .pcard { flex:0 0 144px; scroll-snap-align:start; }
+  .genre-search-label { display:block; color:var(--muted); font-size:14px; margin-bottom:8px; }
+  .genre-browser-list { display:grid; gap:8px; }
+  .genre-browse-row { width:100%; display:grid; grid-template-columns:56px 1fr 20px; gap:12px; align-items:center; text-align:left; border:0; border-radius:var(--r-md); padding:8px; background:var(--tile); color:var(--ink); font:inherit; cursor:pointer; }
+  .genre-browse-row:hover { background:var(--tile-hover); }
+  .genre-browse-art .pcard-art { width:56px; height:56px; margin:0; border-radius:var(--r-xs); }
+  .genre-browse-detail { display:block; font-size:14px; color:var(--muted); }
+  .genre-browse-row svg { width:20px; height:20px; }
+  .genre-browse-row:focus-visible, .genre-shelf:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  @media (min-width:900px) { .results-actions { left:calc(50% - min(440px, 40vw)); right:calc(50% - min(440px, 40vw)); } }
+
 </style>
 </head>
 <body>
@@ -1509,6 +1539,7 @@
     <span class="wordmark" data-nav="home"><img src="../assets/dd-logo.png" alt="" class="wordmark-icon">DeepDive</span>
     <span class="topbar-right">
       <span class="build-tag" id="build-tag"></span>
+      <button class="btn btn-ghost btn-small" id="update-hint" hidden>Update</button>
       <a class="coffee-btn" id="coffee-link" href="https://buymeacoffee.com/OSJoseph" target="_blank" rel="noopener" title="Buy me a coffee" aria-label="Buy me a coffee">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 9h1.6a2.4 2.4 0 0 1 0 4.8H17"/><line x1="7" y1="2.5" x2="7" y2="5"/><line x1="11" y1="2.5" x2="11" y2="5"/><line x1="15" y1="2.5" x2="15" y2="5"/></svg>
       </a>
@@ -1582,11 +1613,6 @@
       <h2 id="card-title">Build playlist</h2>
       <p class="modal-sub" id="card-sub"></p>
 
-      <div class="playlist-name-field" style="margin-top:0;">
-        <label for="card-name">Playlist name</label>
-        <input type="text" id="card-name">
-      </div>
-
       <div id="card-len" role="group" aria-label="Playlist options"></div>
 
 
@@ -1638,6 +1664,6 @@
   <div id="flash-slot" role="status" aria-live="polite" aria-atomic="true"></div>
   <div class="wrap" id="view-root"><!-- views render here --></div>
 
-  <script type="module" src="../js/app.js?v=2.9.142"></script>
+  <script type="module" src="../js/app.js?v=2.9.143"></script>
 </body>
 </html>

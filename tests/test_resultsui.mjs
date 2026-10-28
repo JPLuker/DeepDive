@@ -76,15 +76,15 @@ check('hero fades on scroll', /function attachHeroFade/.test(src));
 // handler doing layout is a jank generator.
 check('fade is rAF-throttled', /requestAnimationFrame\(apply\)/.test(src));
 check('scroll listener is passive', /\{ passive: true \}/.test(src));
-check('mobile result actions replace the tab bar', /\.results-actions \{\s*\n\s*position:fixed; left:0; right:0; bottom:0; z-index:45;/.test(html));
+check('mobile result actions replace the tab bar', /\.results-actions \{\s*\n\s*position:fixed; left:16px; right:16px;/.test(html));
 // The dock used to hide the tab bar by covering it: both were
 // full-width on bottom:0, so the higher z-index won. 2.9.111 floats the
 // bar clear of the edge, so overlap no longer hides anything and the
 // bar has to actually be removed.
-check('mobile result actions still dock to the bottom edge', /bottom:0; z-index:45;/.test(html));
+check('mobile result actions float clear of the system edge', /bottom:calc\(16px \+ env\(safe-area-inset-bottom\)\); z-index:45;/.test(html));
 check('the tab bar is hidden on results, not painted over', /body:has\(\.results-actions\) \.tabbar \{ display:none; \}/.test(html));
 check('mobile keeps back-home inside the contextual dock', /\.results-actions \.btn-back \{ display:flex; \}/.test(html));
-check('mobile results body reserves contextual dock clearance', /\.results-body \{ padding-bottom:132px; \}/.test(html));
+check('mobile results body reserves contextual dock clearance', /\.results-body \{ padding-bottom:calc\(var\(--results-action-height, 144px\) \+ 32px\); \}/.test(html));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -461,6 +461,25 @@ release with notes. Version numbers are Joseph's to take.
 
 ## Shipped since — build 2.9.120
 
+
+### 2.9.143 — Testing feedback and Android in-app updates
+
+Implemented the collected 2.9.142 phone feedback: backup/import controls under
+Advanced, automatic playlist names, no background reassurance, a top-genre shelf
+and dedicated searchable genre browser, a transparent chooser footer, a detached
+results dock with measured clearance, and scroll-reset/compact fallback headers.
+Notification percentage now leads the collapsed stage text.
+
+Android Settings → Updates checks the fixed GitHub release feed (Stable or Testing),
+shows release notes, downloads with percent/MB and cancellation, validates asset
+hash/package/version/permanent certificate, and opens Android's installer. Automatic
+checks default on; this testing distribution defaults to Testing. Active jobs block
+installation. One manual install adds the updater; future newer signed APKs can be
+obtained in-app. Full device download/permission/install verification still pending.
+
+Tests: 2,346 passed across 77 suites; native compilation/signature verification is
+required in CI. Local Chromium download failed, so visual phone checks remain.
+
 Delivered while working through Joseph's review notes, ahead of the
 sessions below:
 

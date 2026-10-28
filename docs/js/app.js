@@ -1,3 +1,5 @@
+import { supportsUpdates, mountUpdates, autoCheckUpdates } from "./updates.js";
+
 import { progressArtwork } from "./progress-artwork.js";
 
 import { wireBackupImport } from "./backup-import.js";
@@ -33,7 +35,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.142";
+export const BUILD = "2.9.143";
 
 // The public site. Needed only where a relative link cannot work: in a
 // native shell "../" is the bundle root, which has no landing page in
@@ -1086,7 +1088,6 @@ async function runSampler(artists) {
   // the app rather than over a blank page or a stale sampler intro.
   hideDiveScreen();
   await renderHome();
-  document.querySelector(".playlist-name-field")?.classList.remove("hidden");
   document.querySelector("#card-modal details")?.classList.remove("hidden");
   openCardModal(card);
 }
@@ -1573,14 +1574,13 @@ function openCardModal(card) {
   const modal = document.getElementById("card-modal");
   const title = document.getElementById("card-title");
   const sub = document.getElementById("card-sub");
-  const nameInput = document.getElementById("card-name");
+  const playlistName = card.name || `DeepDive · ${card.title}`;
   const lenRow = document.getElementById("card-len");
   const msg = document.getElementById("card-msg");
   if (!modal) return;
 
   title.textContent = card.title;
   sub.textContent = card.subtitle;
-  nameInput.value = card.name || `DeepDive · ${card.title}`;
   msg.classList.add("hidden");
   msg.textContent = "";
 
@@ -1645,7 +1645,7 @@ function openCardModal(card) {
     btn.addEventListener("click", () => {
       const list = tracksFor();
       if (!list.length) return;
-      const safe = ((nameInput.value || card.title) + "").replace(/[^\w\d\- ]+/g, "").trim() || "deepdive";
+      const safe = ((playlistName || card.title) + "").replace(/[^\w\d\- ]+/g, "").trim() || "deepdive";
       const done = downloadFile(`${safe}.csv`, tracksToCsv(list), "text/csv;charset=utf-8");
       btn.textContent = done ? "Saved" : "Failed";
       setTimeout(() => { btn.textContent = "Export"; }, 1600);
@@ -1659,7 +1659,7 @@ function openCardModal(card) {
     freshGo.textContent = "Creating…";
     try {
       const res = await client.addTracksToPlaylistDeduped(
-        (nameInput.value || "").trim() || `DeepDive · ${card.title}`,
+        (playlistName || "").trim() || `DeepDive · ${card.title}`,
         `${card.subtitle}, built by DeepDive.`,
         list.map((t) => t.id),
         // Reuse by name is the behaviour: running the same mix again
@@ -1668,7 +1668,7 @@ function openCardModal(card) {
         // playlist to reuse, so it creates one either way.
         { forceNew: simple }
       );
-      await maybeSetCover(res, list, (nameInput.value || "").trim() || card.title, card.art);
+      await maybeSetCover(res, list, (playlistName || "").trim() || card.title, card.art);
       close();
       showActionResult({
         headline: res.reused ? "Playlist updated" : "Playlist created",
@@ -1684,7 +1684,7 @@ function openCardModal(card) {
       if (!res.reused && res.id) {
         history.recordAction({
           type: "playlist",
-          label: `Created "${(nameInput.value || card.title).trim()}"`,
+          label: `Created "${(playlistName || card.title).trim()}"`,
           playlistId: res.id,
           playlistUrl: res.url,
           undoable: false,
@@ -2991,7 +2991,7 @@ function showDiveScreen(heading, onCancel) {
     if (lease.active) {
       _diveBackgroundActive = true;
       lease.update(_diveProgress);
-      setDiveAwakeMessage("You can switch apps or lock your phone.");
+      setDiveAwakeMessage("");
     } else requestDiveWakeLock();
   }).catch(() => requestDiveWakeLock());
 
@@ -3464,7 +3464,9 @@ function trackRow(t, { checkbox = true, cls = "newt", sub = "", match = "", attr
  * which Safari still doesn't support. rAF-throttled so it isn't doing
  * layout work on every scroll event.
  */
+let _heroScroll = null;
 function attachHeroFade() {
+  if (_heroScroll) window.removeEventListener?.("scroll", _heroScroll);
   const hero = document.getElementById("results-hero");
   const photo = document.getElementById("results-hero-photo");
   if (!hero || !photo) return;
@@ -3482,6 +3484,7 @@ function attachHeroFade() {
     ticking = true;
     requestAnimationFrame(apply);
   };
+  _heroScroll = onScroll;
   window.addEventListener("scroll", onScroll, { passive: true });
   apply();
 }
@@ -3531,15 +3534,28 @@ async function presentDip(result) {
   });
 }
 
+let _resultsResize = null;
+function measureResultsActions() {
+  _resultsResize?.disconnect();
+  const bar = document.querySelector(".results-actions");
+  if (!bar || typeof ResizeObserver === "undefined") return;
+  _resultsResize = new ResizeObserver(() => {
+    root.style?.setProperty("--results-action-height", `${bar.getBoundingClientRect().height}px`);
+  });
+  _resultsResize.observe(bar);
+}
+
 function renderResults(r) {
+  window.scrollTo?.(0, 0);
   setTitle("DeepDive · Results");
   const dups = r.duplicate_candidates || [];
   const news = r.new_tracks || [];
   const artistName = r.artist ? r.artist.name : "";
 
-  const photo = largestImage(r.artist && r.artist.images);
+  const photo = largestImage(r.artist && r.artist.images)
+    || (_haveArtistPhoto && _divePrimaryArtwork ? _diveImages[0] : null);
   root.innerHTML = `
-    <div class="results-hero" id="results-hero">
+    <div class="results-hero${photo ? "" : " no-art"}" id="results-hero">
       <div class="results-hero-photo${photo ? "" : " is-blank"}" id="results-hero-photo"
            ${photo ? `style="background-image:url('${esc(photo)}')"` : ""}></div>
       <div class="results-hero-veil"></div>
@@ -3574,11 +3590,6 @@ function renderResults(r) {
         <div id="new-list">${sortTracks(news, "album").map((t) => trackRow(t, { cls: "newt" })).join("")}</div>
       ` : `<p class="empty-note">Nothing new. Your library already covers this artist.</p>`}
 
-      <div class="playlist-name-field" id="playlist-name-wrap">
-        <label>Playlist name</label>
-        <input type="text" id="playlist-name" value="DeepDive · ${esc(artistName)}">
-      </div>
-
       <div class="flash hidden" id="result-msg" style="margin-top:18px;"></div>
 
     </div>
@@ -3593,6 +3604,13 @@ function renderResults(r) {
     </div>`;
 
   root.querySelector("[data-home]").addEventListener("click", () => renderHome());
+  if (photo) {
+    const hero = document.getElementById("results-hero");
+    const image = new Image();
+    image.onerror = () => { if (hero?.isConnected) hero.classList.add("no-art"); };
+    image.src = photo;
+  }
+  measureResultsActions();
   attachHeroFade();
 
   // sort — re-render the list from sorted data (preserves which rows are
@@ -3630,7 +3648,7 @@ async function applyResults(r, action) {
   //   both     -> do both
   const dupIds = Array.from(document.querySelectorAll("[data-dup]:checked")).map((c) => c.dataset.dup);
   const newIds = Array.from(document.querySelectorAll("[data-tid]:checked")).map((c) => c.dataset.tid);
-  const playlistName = (document.getElementById("playlist-name")?.value || "").trim() || `DeepDive · ${r.artist ? r.artist.name : ""}`;
+  const playlistName = `DeepDive · ${r.artist ? r.artist.name : ""}`;
 
   const doLike = action === "like" || action === "both";
   const doPlaylist = action === "playlist" || action === "both";
@@ -4152,14 +4170,10 @@ async function renderGenreSection() {
   // nothing to show: the data survives a reload even though the map
   // doesn't.
   const knownTags = await hydrateFromCache("tags", _genreTags);
-  // A "show everything" list as well as the top fourteen: the landing
-  // page promises subgenres, and the broad tags — rock, pop, alternative
-  // — always outrank them by track count. Shoegaze is the point of this
-  // feature and it sits well below "rock".
+  // The shelf stays short; the dedicated browser includes subgenres
+  // that broad tags otherwise outrank by track count.
   const everyGenre = insights.genreCards(cached, _genreTags, { limit: 400 });
-  const q = _genreQuery.trim().toLowerCase();
-  const allGenres = q ? everyGenre.filter((c) => c.title.toLowerCase().includes(q)) : everyGenre;
-  const cards = (_genresExpanded || q) ? allGenres : allGenres.slice(0, 14);
+  const cards = everyGenre.slice(0, 6);
 
   if (!cards.length) {
     const n = Math.min(artists.length, 60);
@@ -4205,7 +4219,7 @@ async function renderGenreSection() {
   }
 
   const untagged = artists.filter((a) => !_genreTags.has(a.name.trim().toLowerCase())).length;
-  const more = allGenres.length - cards.length;
+
 
   // A handful of new artists since the last look isn't worth asking
   // about. Liking three albums shouldn't put a "look up 3 more artists"
@@ -4219,16 +4233,9 @@ async function renderGenreSection() {
       .catch(() => { /* the prompt is still there if it fails */ });
   }
   el.innerHTML = `
-    <div class="row-head"><h2>Genres</h2><span class="qual">from Last.fm</span></div>
-    ${allGenres.length > 8 ? `
-      <div class="genre-filter">
-        <input type="text" id="genre-search" placeholder="Search ${everyGenre.length} genres" autocomplete="off" spellcheck="false" value="${esc(_genreQuery)}">
-        ${_genreQuery ? `<button type="button" class="genre-clear" id="genre-clear" aria-label="Clear search">&times;</button>` : ""}
-      </div>` : ""}
-    <div class="card-row" id="genre-cards"></div>
+    <div class="row-head"><h2>Genres</h2><button class="btn btn-ghost btn-small" id="genre-browse">Browse genres</button></div>
+    <div class="genre-shelf" id="genre-cards" role="region" aria-label="Top genres" tabindex="0"></div>
     <div class="actions">
-      ${more > 0 ? `<button class="btn btn-ghost btn-small" id="genre-expand">Show all ${allGenres.length} genres</button>` : ""}
-      ${_genresExpanded && allGenres.length > 14 ? `<button class="btn btn-ghost btn-small" id="genre-collapse">Show fewer</button>` : ""}
       ${untagged > GENRE_AUTO_TOPUP ? `<button class="btn btn-ghost btn-small" id="genre-more">Look up ${untagged} more artist${untagged === 1 ? "" : "s"}</button>` : ""}
     </div>`;
 
@@ -4238,25 +4245,31 @@ async function renderGenreSection() {
   const row = document.getElementById("genre-cards");
   paintGenreCards(row, cards);
 
-  const gs0 = document.getElementById("genre-search");
-  if (gs0) {
-    // Repaint the cards only. Re-rendering the section rebuilt the
-    // input, and a rebuilt input loses focus — which on a phone closes
-    // the keyboard after every letter.
-    gs0.addEventListener("input", () => {
-      _genreQuery = gs0.value;
-      const q2 = _genreQuery.trim().toLowerCase();
-      const next = q2 ? everyGenre.filter((c) => c.title.toLowerCase().includes(q2)) : everyGenre;
-      paintGenreCards(row, (q2 || _genresExpanded) ? next : next.slice(0, 14));
-    });
-  }
-
-  document.getElementById("genre-clear")?.addEventListener("click", () => {
-    _genreQuery = "";
-    renderGenreSection();
-  });
-
+  document.getElementById("genre-browse")?.addEventListener("click", () => renderGenreBrowser(everyGenre));
   wireGenreControls(artists);
+}
+
+function renderGenreBrowser(genres) {
+  setTitle("DeepDive · Genres");
+  setActiveTab("mixes");
+  root.innerHTML = `<button class="btn btn-ghost" data-tab="mixes">Back to mixes</button>
+    <h1>Genres</h1>
+    <label class="genre-search-label" for="genre-search">Search genres</label>
+    <div class="genre-filter"><input type="search" id="genre-search" autocomplete="off" spellcheck="false" placeholder="Rock, shoegaze…"></div>
+    <div class="genre-browser-list" id="genre-browser-list"></div>`;
+  const input = document.getElementById("genre-search");
+  const list = document.getElementById("genre-browser-list");
+  const paint = () => {
+    const query = input.value.trim().toLowerCase();
+    const matches = genres.filter(g => g.title.toLowerCase().includes(query));
+    list.innerHTML = matches.length ? matches.map((g, i) => `<button class="genre-browse-row" data-genre-index="${i}">
+      <span class="genre-browse-art">${cardArtBlock(g)}</span><span><strong>${esc(g.title)}</strong><span class="genre-browse-detail">${esc(g.subtitle)}</span></span><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button>`).join("")
+      : `<p class="empty-note" role="status">No genres found</p>`;
+    list.querySelectorAll("[data-genre-index]").forEach(button => button.addEventListener("click", () => openCardModal(matches[+button.dataset.genreIndex])));
+  };
+  input.value = _genreQuery;
+  input.addEventListener("input", () => { _genreQuery = input.value; paint(); });
+  paint(); window.scrollTo?.(0, 0);
 }
 
 /** Draws the genre cards into a container and wires them. */
@@ -4281,16 +4294,6 @@ function paintGenreCards(row, cards) {
 
 /** The section's own controls, bound once per render. */
 function wireGenreControls(artists) {
-  document.getElementById("genre-expand")?.addEventListener("click", () => {
-    _genresExpanded = true;
-    _genreQuery = "";
-    renderGenreSection();
-  });
-  document.getElementById("genre-collapse")?.addEventListener("click", () => {
-    _genresExpanded = false;
-    _genreQuery = "";
-    renderGenreSection();
-  });
   document.getElementById("genre-more")?.addEventListener("click", async () => {
     const rest = artists.filter((a) => !_genreTags.has(a.name.trim().toLowerCase()));
     if (!rest.length) return;
@@ -5335,7 +5338,7 @@ async function buildShowNow() {
 // so the first fifty requests produce nearly all the useful mixes.
 let _genreTags = new Map();   // lowercased artist name -> [{name, weight}]
 let _genreFetching = false;
-let _genresExpanded = false;
+
 // Below this many unlooked-up artists, top up quietly rather than
 // asking. Above it the wait is long enough that it should be a choice.
 const GENRE_AUTO_TOPUP = 15;
@@ -5744,25 +5747,6 @@ function renderSettings() {
     </div>
 
     <div class="set-group">
-      <div class="set-group-label">Data and storage</div>
-      <p class="set-note">Everything stays in this browser. Clearing site data loses it, and a backup is the only way to move it to another browser or device.</p>
-      ${settingRow({
-        title: "Backup",
-        block: true,
-        detail: "Export everything to a file, or restore from one.",
-        control: `<button class="btn btn-ghost btn-small" id="set-export">Export</button>
-          <button class="btn btn-ghost btn-small" id="set-import">Import</button>
-          <p class="backup-status hidden" id="set-import-status"></p>
-          <input type="file" id="set-import-file" accept="application/json,.json" class="hidden">`,
-      })}
-      ${settingRow({
-        title: "Storage",
-        detail: "If this says blocked, nothing survives a reload. Export a backup.",
-        control: `<span class="set-static" id="set-storage-kind">checking…</span>`,
-      })}
-    </div>
-
-    <div class="set-group">
       <div class="set-group-label">Spotify</div>
       ${settingRow({
         title: "Refresh library",
@@ -5784,8 +5768,30 @@ function renderSettings() {
       <p class="set-note">Music metadata and artwork are provided by Spotify. DeepDive is not affiliated with Spotify AB.</p>
     </div>
 
+    ${supportsUpdates() ? `<div class="set-group" id="settings-updates"></div>` : ""}
+
     <details class="advanced" id="advanced">
       <summary>Advanced</summary>
+    <div class="set-group">
+      <div class="set-group-label">Data and storage</div>
+      <p class="set-note">Back up your crate, history and settings.</p>
+      ${settingRow({
+        title: "Backup",
+        block: true,
+        detail: "Export everything to a file, or restore from one.",
+        control: `<div class="backup-buttons"><button class="btn btn-secondary" id="set-export">Export backup</button>
+          <button class="btn btn-secondary" id="set-import">Import backup</button></div>
+          <p class="backup-status hidden" role="status" aria-live="polite" id="set-import-status"></p>
+          <input type="file" id="set-import-file" accept="application/json,.json" class="hidden">`,
+      })}
+      ${settingRow({
+        title: "Storage",
+        detail: "If this says blocked, nothing survives a reload. Export a backup.",
+        control: `<span class="set-static" id="set-storage-kind">checking…</span>`,
+      })}
+    </div>
+
+
 
       <div class="set-group">
         <div class="set-group-label">Speed</div>
@@ -5880,6 +5886,9 @@ function renderSettings() {
       <p class="set-note">Made by Joseph Luker. <a href="https://github.com/JPLuker" target="_blank" rel="noopener">GitHub</a> · <a href="https://www.linkedin.com/in/josephluker" target="_blank" rel="noopener">LinkedIn</a></p>
       <p class="set-legal">Music metadata and artwork are provided by Spotify. Artist tags and popularity are provided by Last.fm. Album artwork and artist photographs remain the property of their owners. DeepDive is not affiliated with Spotify AB or Last.fm.</p>
     </div>`;
+
+  const updatesHost = document.getElementById("settings-updates");
+  if (updatesHost) mountUpdates(updatesHost, () => !!_diveBackground || !!_libraryRead);
 
   const msg = document.getElementById("settings-msg");
   const say = (t, err) => { msg.textContent = t; msg.classList.remove("hidden"); msg.classList.toggle("error", !!err); };
@@ -7166,6 +7175,12 @@ async function boot() {
   try { await verifyRateLimit(); } catch (e) {}
   registerServiceWorker();
   applyBmcVisibility();
+  autoCheckUpdates(() => {
+    const hint = document.getElementById("update-hint");
+    if (hint) { hint.hidden = false; hint.onclick = () => {
+      renderSettings(); document.getElementById("settings-updates")?.scrollIntoView({ block: "start" });
+    }; }
+  });
   // Handle a PKCE redirect coming back from Spotify.
   const cb = await auth.handleRedirectCallback();
   if (cb.ok === false) {
