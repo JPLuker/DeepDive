@@ -188,6 +188,7 @@ jobs:
         with:
           workspaces: src-tauri
           cache-on-failure: true
+          shared-key: android-release
 
       - name: Stamp the version
         shell: bash

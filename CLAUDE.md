@@ -3,9 +3,31 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.140.** If the build in `js/app.js` is well
+**Last updated at build 2.9.141.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Verify PEM certificate data — build 2.9.141
+
+Run 40705794291 compiled the 2.9.140 release but parsed zero signers;
+it did not establish that a different key signed the APK. Expected
+public certificate SHA-256 is
+`e729122a7c4ea1ea13385aa29bc5fd9989d57ade818ca4338d21d4123bf18633`.
+
+Verification now explicitly requests --print-certs-pem, captures both
+stdout/stderr, and compares canonical X.509 PEM certificate fingerprints.
+Human-readable label parsing is retained for compatibility tests, but
+the real APK verifier requires PEM data. A successful apksigner exit
+status and matching certificates remain mandatory. Missing certificate
+output now reports the signing tool's public verification output rather
+than another ambiguous zero-signer failure. No private key or password
+is passed to that tool or included in its verification-mode output.
+
+The Android Rust cache uses a dedicated android-release shared key;
+the old cache reported up-to-date despite repeatedly recompiling release
+profiles, so it could not be relied upon to retain the newly built deps.
 
 ---
 
@@ -971,7 +993,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.140**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.141**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.

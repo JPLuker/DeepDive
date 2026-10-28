@@ -378,6 +378,12 @@ in TESTING.md for a real device.
    normalizes X.509 certificates and logs public fingerprints for a
    precise comparison. Failed Android jobs also preserve Rust cache.
 
+   **2.9.141:** 2.9.140 again compiled, but its verifier parsed zero
+   certificates. The real verifier now requests PEM certificate output,
+   captures both streams and compares canonical X.509 fingerprints.
+   Public verification output is preserved if the tool returns no PEM.
+   Release compilation now has its own Rust cache identity.
+
    Next: confirm the first permanently signed release compiles and its
    APK certificate matches the configured key. Joseph installs it after
    a one-time migration from the old debug-key app, imports his backup,

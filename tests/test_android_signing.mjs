@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, existsSync, statSy
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { createHash, X509Certificate } from 'node:crypto';
 let pass=0, fail=0;
 function check(label, ok) { if(ok) pass++; else { fail++; console.log('FAIL:',label); } }
 function rejects(label, run) { let error; try { run(); } catch(e) { error=e; } check(label, !!error); return error; }
@@ -45,6 +45,10 @@ try {
   const cert=execFileSync('keytool',['-exportcert','-keystore',key,'-storepass:env','ANDROID_KEYSTORE_PASSWORD','-alias',env.ANDROID_KEY_ALIAS],{env,stdio:['ignore','pipe','pipe']});
   const fingerprint=createHash('sha256').update(cert).digest('hex');
   const signer=`Signer #1 certificate SHA-256 digest: ${fingerprint}\n`;
+  const pem=new X509Certificate(cert).toString();
+  let pemAccepted=true;try{checkApkCertificate(pem,fingerprint);}catch{pemAccepted=false;}
+  check('PEM certificate is accepted without human-readable signer labels',pemAccepted);
+  rejects('PEM certificate with different expected identity is rejected',()=>checkApkCertificate(pem,'00'.repeat(32)));
   checkApkCertificate(signer,fingerprint);check('expected signer accepted',true);
   rejects('another signer is rejected',()=>checkApkCertificate('Signer #1 certificate SHA-256 digest: aabb\n',fingerprint));
   rejects('unsigned APK is rejected',()=>checkApkCertificate('',fingerprint));
@@ -57,7 +61,7 @@ try {
   // Execute the verifier with the real disposable certificate and fake
   // SDK tools. CI supplies real apksigner/aapt and the compiled APK.
   const sdk=join(root,'sdk','build-tools','36.0.0');mkdirSync(sdk,{recursive:true});
-  writeFileSync(join(sdk,'apksigner'),'#!/usr/bin/env node\nprocess.stdout.write('+JSON.stringify(signer)+');\n',{mode:0o755});
+  writeFileSync(join(sdk,'apksigner'),'#!/usr/bin/env node\nprocess.stdout.write('+JSON.stringify(signer)+');process.stderr.write('+JSON.stringify(pem)+');\n',{mode:0o755});
   const metadata="package: name='io.github.jpluker.deepdive' versionCode='2009138' versionName='2.9.138'\n";
   const aapt=join(sdk,'aapt');
   writeFileSync(aapt,'#!/usr/bin/env node\nprocess.stdout.write('+JSON.stringify(metadata)+');\n',{mode:0o755});

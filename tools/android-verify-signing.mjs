@@ -1,12 +1,17 @@
 // Verify the *finished* APK against the configured key, not merely the
 // presence of a Gradle signing block. Prints only public certificate data.
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { X509Certificate } from 'node:crypto';
 import { readdirSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export function apkSigners(output) {
+  const pem = output.match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g) || [];
+  if (pem.length) return pem.map((certificate, index) => ({
+    label: `PEM certificate ${index + 1}`,
+    fingerprint: new X509Certificate(certificate).fingerprint256.replaceAll(':', '').toLowerCase(),
+  }));
   // apksigner v3.1 uses SDK-range labels instead of numbered signers.
   // Each range must resolve to this same permanent certificate.
   return [...output.matchAll(/^(Signer (?:#\d+|\([^\r\n]+\))) certificate SHA-256 digest:[ \t]*([a-fA-F0-9:]+)[ \t]*\r?$/gm)]
@@ -38,7 +43,15 @@ export function verifyApk(apk, env = process.env) {
       { env, stdio: ['ignore','pipe','pipe'] });
   } catch { throw new Error('Cannot read the configured Android signing certificate'); }
   const fingerprint = new X509Certificate(cert).fingerprint256.replaceAll(':', '').toLowerCase();
-  const output = execFileSync(join(root,version,'apksigner'), ['verify','--verbose','--print-certs',apk], { encoding:'utf8' });
+  const result = spawnSync(join(root,version,'apksigner'),
+    ['verify','--verbose','--print-certs','--print-certs-pem',apk], { encoding:'utf8' });
+  const output = (result.stdout || '') + '\n' + (result.stderr || '');
+  if (result.error || result.status !== 0) throw new Error('apksigner verification failed: ' + output);
+  if (!output.includes('-----BEGIN CERTIFICATE-----')) {
+    // Verification mode exposes only public APK/certificate data. Keep
+    // this output so a future SDK format change is immediately visible.
+    throw new Error('apksigner did not return a PEM certificate: ' + output);
+  }
   console.log(JSON.stringify({ expectedFingerprint: fingerprint, apkSigners: apkSigners(output) }));
   checkApkCertificate(output, fingerprint);
   const metadata = execFileSync(join(root,version,'aapt'), ['dump','badging',apk], { encoding:'utf8' });

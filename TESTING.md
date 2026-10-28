@@ -324,11 +324,11 @@ has to be checked on its own.
 by CI and has been run by a human only where ticked. An untested
 platform is untested, per `RELEASES.md` Part 2.
 
-### Android permanent signing — build 2.9.140
+### Android permanent signing — build 2.9.141
 
 - [ ] Export data from an existing debug-key installation before the
       one-time uninstall needed to switch signing identities
-- [ ] Install the permanent-key release APK; About shows 2.9.140
+- [ ] Install the permanent-key release APK; About shows 2.9.141
 - [ ] Import the backup; connection/settings/history/crate work as expected
 - [ ] Install the next APK signed with the same permanent key over this
       app without uninstalling; data and connection remain available
