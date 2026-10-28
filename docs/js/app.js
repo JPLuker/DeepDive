@@ -1,3 +1,7 @@
+import { progressArtwork } from "./progress-artwork.js";
+
+import { wireBackupImport } from "./backup-import.js";
+
 import { beginBackgroundWork } from "./background-work.js";
 
 /**
@@ -29,7 +33,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.141";
+export const BUILD = "2.9.142";
 
 // The public site. Needed only where a relative link cannot work: in a
 // native shell "../" is the bundle root, which has no landing page in
@@ -43,6 +47,7 @@ const appStore = bestStore();
 // fetch changes on later searches. Persisted in IndexedDB. See
 // library-cache.js for the correctness (checksum) design.
 const libraryCache = new LibraryCache(client, appStore);
+let _libraryRead = null;
 // Last.fm's terms require caching similar-artist and chart data for at
 // least a week, so it shares the same persistent store rather than
 // living in memory and being re-fetched on every reload.
@@ -68,7 +73,7 @@ client.onRateLimit = (waitMs, attempt) => {
   const el = document.getElementById("dive-stage");
   const msg = `Spotify is rate-limiting. Waiting ${secs}s, then carrying on…`
     + (attempt > 1 ? ` (attempt ${attempt})` : "");
-  if (el) el.textContent = msg;
+  if (el) updateDiveScreen(_diveProgress.current, msg);
   // Also surface it outside a dive, where there's no stage line to write
   // to — a stalled search from the home screen otherwise says nothing.
   else flash(msg);
@@ -98,6 +103,15 @@ function flash(msg, isError = false) {
   // first one's expiry.
   clearTimeout(flash._t);
   flash._t = setTimeout(() => { flashSlot.innerHTML = ""; }, 4500);
+}
+function importFeedback(id, text, error, toast) {
+  const status = document.getElementById(id);
+  if (status) {
+    status.textContent = text;
+    status.classList.remove("hidden");
+    status.classList.toggle("error", !!error);
+  }
+  if (toast) flash(text, error);
 }
 function setTitle(t) { document.title = t; }
 
@@ -200,14 +214,15 @@ async function refreshLibrary() {
   if (typeof client.resetPacing === "function") client.resetPacing();
   flash("Refreshing your library…");
   try {
-    const tracks = await libraryCache.getLikedTracks({ forceFull: true });
+    const tracks = await readLibraryFullScreen({ forceFull: true });
     flash(`Library refreshed. ${tracks.length} liked songs synced.`);
   } catch (e) {
-    flash(`Couldn't refresh library: ${e.message || e}`, true);
+    if (e.name !== "AbortError") flash(`Couldn't refresh library: ${e.message || e}`, true);
   }
 }
 
 function navigate(view) {
+  if (_libraryRead && !_libraryRead.controller.signal.aborted) return;
   if (!auth.getClientId()) return renderSetup();
   if (!auth.isLoggedIn()) return renderConnect();
   if (view === "home") return renderHome();
@@ -2882,6 +2897,8 @@ function diveNeedsScreenAwake() {
  */
 let _diveBackground = null;
 let _diveBackgroundActive = false;
+let _divePrimaryArtwork = false, _diveFallbackArtwork = false, _diveArtGeneration = 0;
+let _diveProgress = { current: 0, total: 0, detail: "Starting…" };
 async function requestDiveWakeLock() {
   if (_diveWakePending || _diveWakeLock) return;
   const matters = diveNeedsScreenAwake();
@@ -2949,7 +2966,9 @@ function showDiveScreen(heading, onCancel) {
   const el = document.getElementById("dive-screen");
   if (!el) return;
   _diveCancelled = false;
+  _diveProgress = { current: 0, total: 0, detail: "Starting…" };
   _diveImages = [];
+  _divePrimaryArtwork = false; _diveFallbackArtwork = false; _diveArtGeneration++;
   _diveSlideIndex = 0;
   document.getElementById("dive-slides").innerHTML = "";
   // Back to the loading field: a new dive has no photo yet, and the last
@@ -2971,6 +2990,7 @@ function showDiveScreen(heading, onCancel) {
     if (_diveBackground !== background || el.hidden) return lease.release();
     if (lease.active) {
       _diveBackgroundActive = true;
+      lease.update(_diveProgress);
       setDiveAwakeMessage("You can switch apps or lock your phone.");
     } else requestDiveWakeLock();
   }).catch(() => requestDiveWakeLock());
@@ -2986,6 +3006,7 @@ function showDiveScreen(heading, onCancel) {
     });
   }
   startSlideshow();
+  seedProgressArtwork();
 }
 
 
@@ -2995,6 +3016,16 @@ function showDiveScreen(heading, onCancel) {
  * the dive is full-bleed and opening it before there is a photo means
  * showing either a blank field or a stretched thumbnail.
  */
+function seedProgressArtwork() {
+  const screen = document.getElementById("dive-screen");
+  const run = _diveBackground;
+  libraryCache.peek().then(tracks => {
+    if (_diveBackground !== run || !screen || screen.hidden || _diveImages.length || _divePrimaryArtwork) return;
+    const urls = progressArtwork(tracks, watchlist.listEntries());
+    urls.slice(0, 12).forEach(url => addDiveImage(url, { fallback: true }));
+  }).catch(() => {});
+}
+
 function showDiveSpinner() {
   _diveCancelled = false;
   const el = document.getElementById("dive-spinner");
@@ -3036,13 +3067,26 @@ function preloadPhoto(url, timeoutMs = 5000) {
  * them — showing the first artist while the second was being searched.
  * The screen should be about whoever is being read right now.
  */
+function preparePrimaryArtwork() {
+  _divePrimaryArtwork = true;
+  if (_diveFallbackArtwork) {
+    _diveFallbackArtwork = false; _diveArtGeneration++;
+    _diveImages = []; _diveSlideIndex = 0;
+    const slides = document.getElementById("dive-slides");
+    if (slides) slides.innerHTML = "";
+  }
+}
+
 function showOnlyDiveImage(url) {
   if (!url) return;
+  preparePrimaryArtwork();
+  const run = _diveBackground, generation = _diveArtGeneration;
   const slides = document.getElementById("dive-slides");
   if (!slides) return;
   if (slides.querySelector(".dive-slide.on")?.dataset.url === url) return;
   const probe = new Image();
   probe.onload = () => {
+    if (_diveBackground !== run || generation !== _diveArtGeneration) return;
     if (slides.querySelector(".dive-slide.on")?.dataset.url === url) return;
     _diveImages = [url];
     _diveSlideIndex = 0;
@@ -3071,10 +3115,17 @@ function showOnlyDiveImage(url) {
  * Add a photo to the rotation. Loads it first, so a broken URL never
  * becomes a blank slide in the cycle. The first one to arrive clears the
  * loading field.
- */function addDiveImage(url) {
-  if (!url || _diveImages.includes(url)) return;
+ */function addDiveImage(url, { fallback = false } = {}) {
+  if (!url) return;
+  if (fallback) {
+    if (_divePrimaryArtwork) return;
+    _diveFallbackArtwork = true;
+  } else preparePrimaryArtwork();
+  if (_diveImages.includes(url)) return;
+  const run = _diveBackground, generation = _diveArtGeneration;
   const probe = new Image();
   probe.onload = () => {
+    if (_diveBackground !== run || generation !== _diveArtGeneration) return;
     if (_diveImages.includes(url)) return;
     const slides = document.getElementById("dive-slides");
     if (!slides) return;
@@ -3120,6 +3171,11 @@ function updateDiveScreen(pct, stage) {
   // showing the home screen, which read as stuck rather than cancelled.
   const screen = document.getElementById("dive-screen");
   if (!screen || screen.hidden) return;
+  _diveProgress = { current: pct, total: 100, detail: stage || _diveProgress.detail };
+  const background = _diveBackground;
+  if (background) background.then(lease => {
+    if (_diveBackground === background && !screen.hidden) return lease.update(_diveProgress);
+  }).catch(() => {});
   const fill = document.getElementById("dive-fill");
   const st = document.getElementById("dive-stage");
   const pc = document.getElementById("dive-pct");
@@ -4267,20 +4323,49 @@ function wireGenreControls(artists) {
  * it'll cache in the background" — which Home does not do. That is a
  * loop with no exit, and it is what an empty Mixes page actually meant.
  */
+function readLibraryFullScreen({ forceFull = false } = {}) {
+  if (_libraryRead) return _libraryRead.promise;
+  const job = { controller: new AbortController(), promise: null };
+  _libraryRead = job;
+  showDiveScreen("Reading your library…", () => job.controller.abort());
+  job.screen = _diveBackground;
+  updateDiveScreen(0, "Checking your Liked Songs…");
+  job.promise = (async () => {
+    try {
+      // LibraryCache owns the shared read; callers and tab redraws join
+      // this one operation rather than replacing its paging loop.
+      return await libraryCache.getLikedTracks({
+        onProgress: (done, total) => {
+          updateDiveScreen(total ? Math.min(99, Math.floor(done / total * 100)) : 0,
+            total ? `Reading ${done} of ${total} library entries` : `Reading ${done} library entries`);
+        },
+        onArtwork: url => { if (!_diveFallbackArtwork && _diveImages.length < 12) addDiveImage(url); },
+        backgroundLease: job.screen,
+        forceFull,
+        signal: job.controller.signal,
+      });
+    } finally {
+      if (_libraryRead === job) {
+        _libraryRead = null;
+        if (_diveBackground === job.screen) hideDiveScreen();
+      }
+    }
+  })();
+  return job.promise;
+}
+
 function wireReadLibrary(el, onDone) {
   el.querySelector("[data-read-library]")?.addEventListener("click", async (ev) => {
     const btn = ev.currentTarget;
     btn.disabled = true;
     btn.textContent = "Reading…";
     try {
-      const tracks = await libraryCache.getLikedTracks({
-        onProgress: (done, total) => {
-          btn.textContent = total ? `Reading… ${done} of ${total}` : `Reading… ${done}`;
-        },
-      });
+      const tracks = await readLibraryFullScreen();
       flash(`${tracks.length} liked songs read.`);
-      onDone();
+      if (_currentTab === "home") renderHome();
+      else onDone();
     } catch (e) {
+      if (e.name === "AbortError") { btn.disabled = false; btn.textContent = "Read my library"; return; }
       btn.disabled = false;
       btn.textContent = "Try again";
       flash(`Couldn't read your library: ${e.message || e}`, true);
@@ -5667,6 +5752,7 @@ function renderSettings() {
         detail: "Export everything to a file, or restore from one.",
         control: `<button class="btn btn-ghost btn-small" id="set-export">Export</button>
           <button class="btn btn-ghost btn-small" id="set-import">Import</button>
+          <p class="backup-status hidden" id="set-import-status"></p>
           <input type="file" id="set-import-file" accept="application/json,.json" class="hidden">`,
       })}
       ${settingRow({
@@ -5973,17 +6059,9 @@ function renderSettings() {
       JSON.stringify(history.exportData(), null, 2), "application/json");
     say(ok ? "Backup saved." : "Couldn't save the file.", !ok);
   });
-  const fileInput = document.getElementById("set-import-file");
-  document.getElementById("set-import")?.addEventListener("click", () => fileInput.click());
-  fileInput?.addEventListener("change", async () => {
-    const file = fileInput.files && fileInput.files[0];
-    if (!file) return;
-    try {
-      const sum = history.importData(JSON.parse(await file.text()), { mode: "merge" });
-      say(`Imported: ${sum.pins} pins, ${sum.blocked} blocked, ${sum.dives} dives added.`);
-    } catch (e) {
-      say(e && e.message ? e.message : "Couldn't read that file.", true);
-    } finally { fileInput.value = ""; }
+  wireBackupImport(document.getElementById("set-import-file"), document.getElementById("set-import"), {
+    importData: history.importData,
+    feedback: (text, error, toast) => importFeedback("set-import-status", text, error, toast),
   });
 
   // Cleanup searches by name, because playlists created before DeepDive
@@ -6115,6 +6193,7 @@ function renderHistory() {
       <div class="actions">
         <button class="btn btn-ghost btn-small" id="export-data">Export backup</button>
         <button class="btn btn-ghost btn-small" id="import-data">Import backup</button>
+        <p class="backup-status hidden" id="history-import-status"></p>
         <input type="file" id="import-file" accept="application/json,.json" style="display:none;">
       </div>
       <div class="flash hidden" id="history-msg" style="margin-top:14px;"></div>
@@ -6181,24 +6260,10 @@ function renderHistory() {
     say(ok ? "Backup saved." : "Couldn't save the file.", !ok);
   });
 
-  const fileInput = document.getElementById("import-file");
-  document.getElementById("import-data")?.addEventListener("click", () => fileInput.click());
-  fileInput?.addEventListener("change", async () => {
-    const file = fileInput.files && fileInput.files[0];
-    if (!file) return;
-    try {
-      const text = await file.text();
-      const payload = JSON.parse(text);
-      // Merge by default: importing onto a device that already has pins
-      // shouldn't silently discard them.
-      const sum = history.importData(payload, { mode: "merge" });
-      say(`Imported: ${sum.pins} pins, ${sum.blocked} blocked, ${sum.dives} dives added.`);
-      renderHistory();
-    } catch (e) {
-      say(e && e.message ? e.message : "Couldn't read that file.", true);
-    } finally {
-      fileInput.value = "";
-    }
+  wireBackupImport(document.getElementById("import-file"), document.getElementById("import-data"), {
+    importData: history.importData,
+    onImported: () => renderHistory(),
+    feedback: (text, error, toast) => importFeedback("history-import-status", text, error, toast),
   });
 }
 
@@ -6955,6 +7020,7 @@ function moveTabSelection() {
     // pill's own `left` already puts it — change one and change all
     // three, or the selection sits off-centre.
     const barBox = bar.getBoundingClientRect();
+    document.documentElement.style?.setProperty("--tabbar-height", `${barBox.height}px`);
     const tabBox = active.getBoundingClientRect();
     bar.style.setProperty("--tab-w", `${tabBox.width}px`);
     bar.style.setProperty("--tab-x", `${tabBox.left - barBox.left - 8}px`);
@@ -6971,6 +7037,7 @@ window.addEventListener("resize", moveTabSelection);
   document.addEventListener("click", (e) => {
     const tab = e.target.closest("[data-tab]");
     if (!tab) return;
+    if (_libraryRead && !_libraryRead.controller.signal.aborted) return;
     const name = tab.dataset.tab;
     setActiveTab(name);
     if (demo.demoActive()) {

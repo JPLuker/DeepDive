@@ -324,6 +324,28 @@ has to be checked on its own.
 by CI and has been run by a human only where ticked. An untested
 platform is untested, per `RELEASES.md` Part 2.
 
+### Phone feedback — build 2.9.142
+
+- [ ] Install over 2.9.141 without uninstalling; data and sign-in remain
+- [ ] Scroll Home/Mixes/Settings to the bottom; the last button is fully
+      above the floating tab bar, including larger system font sizes
+- [ ] Import a backup from Settings and History; a busy state is followed
+      by visible success counts beside Import and a toast above navigation
+- [ ] Import it again; feedback explicitly says no new items were added
+- [ ] Invalid backup shows an error and Import remains usable
+- [ ] Read/refresh library opens full-screen progress with changing counts;
+      tab changes cannot replace/reset it and repeated requests share it
+- [ ] Cancel while reading; no further pages start and the old complete
+      cache remains; a later scan starts normally
+- [ ] While a scan/dive/genre job runs, expand the Android notification;
+      percentage, progress bar and current stage/counts advance with the app
+- [ ] Unknown totals show indeterminate progress; multiple jobs show their
+      own stages; completing one does not stop or reset another
+- [ ] Genre/library-wide progress shows cached artist photos/album art;
+      first library sync gains album art as pages arrive
+- [ ] An ordinary artist dive keeps that artist's imagery, and cancelling
+      or starting a new job does not leak the old job's photos
+
 ### Android permanent signing — build 2.9.141
 
 - [ ] Export data from an existing debug-key installation before the

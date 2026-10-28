@@ -384,12 +384,21 @@ in TESTING.md for a real device.
    Public verification output is preserved if the tool returns no PEM.
    Release compilation now has its own Rust cache identity.
 
-   Next: confirm the first permanently signed release compiles and its
-   APK certificate matches the configured key. Joseph installs it after
-   a one-time migration from the old debug-key app, imports his backup,
-   then verifies that a subsequent signed build updates in place. Native
-   runtime checks in `TESTING.md` remain outstanding. Automatic in-app
-   updating is separate work and is not part of stable APK signing.
+   **2.9.142:** 2.9.141 is published and verified with the permanent
+   key (run 40708590022); Joseph has installed it. Fix the mobile rule
+   that covered the last button with the tab bar, and persist import
+   feedback beside the control plus a toast. Explicit library reads
+   now get a full-screen job and one shared paging loop across callers,
+   with cancellation preserving the last complete cache. Notifications
+   receive live counts, percentages and stages. Blank progress views
+   reuse full-size cached artist photos/album art without extra API
+   calls, and first-sync pages supply art as they arrive.
+
+   Next: verify the 2.9.142 signed APK builds, then Joseph installs over
+   2.9.141 without uninstalling. Check retained data, bottom-button
+   clearance, import feedback, uninterrupted library jobs, live native
+   notification progress and artwork on genre/library scans. Native
+   checks remain in `TESTING.md`. Automatic in-app updating is separate.
 7. **Rewrite `TESTING.md` against the final UI.** The rewrite is
    Claude's; the pass itself is Joseph's. Do this only once 1–6 have
    settled, or it is rewritten twice.

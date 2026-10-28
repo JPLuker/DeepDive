@@ -88,6 +88,12 @@ class MainActivity : TauriActivity() {
                     arrayOf("android.permission.POST_NOTIFICATIONS"), 2041)
                 }
               }
+              "progress" -> {
+                BackgroundWorkService.instance?.progress(args.getString("token"),
+                  args.optDouble("current", 0.0), args.optDouble("total", 0.0),
+                  args.optString("detail").take(180))
+                reply(id)
+              }
               "end" -> {
                 BackgroundWorkService.instance?.finish(args.getString("token"))
                 if (BackgroundWorkService.instance == null &&
@@ -165,7 +171,11 @@ class BackgroundWorkService : Service() {
     private const val NOTIFICATION = 2041
     private const val MAX_RUN_MS = 5L * 60 * 60 * 1000 + 55L * 60 * 1000
   }
-  private val jobs = linkedMapOf<String, String>()
+  private data class WorkStatus(val label: String, var detail: String = "Starting…",
+    var current: Double = 0.0, var total: Double = 0.0, var order: Long = 0L)
+  private val jobs = linkedMapOf<String, WorkStatus>()
+  private var progressOrder = 0L
+  private var notificationQueued = false
   private val handler = Handler(Looper.getMainLooper())
   private var wakeLock: PowerManager.WakeLock? = null
 
@@ -186,9 +196,19 @@ class BackgroundWorkService : Service() {
     val tap = PendingIntent.getActivity(this, 0, open,
       PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, CHANNEL) else Notification.Builder(this)
+    val active = jobs.values.maxByOrNull { it.order }
+    val known = active != null && active.total > 0.0
+    val ratio = active?.let { if (it.total > 0.0) (it.current / it.total).coerceIn(0.0, 1.0) else 0.0 } ?: 0.0
+    val percent = (ratio * 100).toInt()
+    fun description(job: WorkStatus): String = job.detail +
+      if (job.total > 0.0) " · ${(job.current / job.total * 100).toInt().coerceIn(0, 100)}%" else ""
+    val all = jobs.values.joinToString("\n\n") { it.label + "\n" + description(it) }
     return builder.setSmallIcon(android.R.drawable.stat_notify_sync)
-      .setContentTitle("DeepDive is working")
-      .setContentText(if (jobs.size == 1) jobs.values.first() else "${jobs.size} jobs running")
+      .setContentTitle(if (jobs.size == 1) active?.label ?: "DeepDive is working" else "DeepDive · ${jobs.size} jobs")
+      .setContentText(active?.let { description(it) } ?: "Starting…")
+      .setStyle(Notification.BigTextStyle().bigText(all))
+      .setProgress(1000, (ratio * 1000).toInt(), !known)
+      .setSubText(if (known) "$percent%" else "Working")
       .setContentIntent(tap).setOngoing(true).setOnlyAlertOnce(true)
       .setCategory(Notification.CATEGORY_PROGRESS).build()
   }
@@ -197,7 +217,7 @@ class BackgroundWorkService : Service() {
     val token = intent?.getStringExtra("token")
     if (token == null) { stopSelf(); return START_NOT_STICKY }
     try {
-      jobs[token] = intent.getStringExtra("label") ?: "Reading Spotify"
+      jobs[token] = WorkStatus(intent.getStringExtra("label") ?: "Reading Spotify", order = ++progressOrder)
       if (Build.VERSION.SDK_INT >= 29) {
         startForeground(NOTIFICATION, notification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
       } else startForeground(NOTIFICATION, notification())
@@ -213,6 +233,24 @@ class BackgroundWorkService : Service() {
       if (jobs.isEmpty()) stopSelf()
     }
     return START_NOT_STICKY
+  }
+
+  fun progress(token: String, current: Double, total: Double, detail: String) {
+    val job = jobs[token] ?: return // late updates must never revive finished work
+    job.total = if (total.isFinite() && total > 0.0) total else 0.0
+    job.current = if (current.isFinite()) current.coerceAtLeast(0.0) else 0.0
+    if (job.total > 0.0) job.current = job.current.coerceAtMost(job.total)
+    job.detail = detail
+    job.order = ++progressOrder
+    if (!notificationQueued) {
+      notificationQueued = true
+      handler.postDelayed({
+        notificationQueued = false
+        if (instance === this && jobs.isNotEmpty()) {
+          getSystemService(NotificationManager::class.java).notify(NOTIFICATION, notification())
+        }
+      }, 500L)
+    }
   }
 
   fun finish(token: String) {

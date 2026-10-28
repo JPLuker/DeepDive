@@ -138,7 +138,8 @@ check('no silent empty returns in the loader', !/\{ el\.innerHTML = ""; return; 
 // background" — which Home does not do. A loop with no exit.
 check('cache can be filled from where you are', /function wireReadLibrary/.test(src));
 check('it actually reads the library', /libraryCache\.getLikedTracks\(\{\s*\n\s*onProgress/.test(src));
-check('with progress on the button', /Reading… \$\{done\} of \$\{total\}/.test(src));
+// Library reads now own the full-screen progress view rather than a transient button.
+check('with progress in the persistent job screen', /Reading \$\{done\} of \$\{total\} library entries/.test(src));
 check('mixes offers it', /data-read-library>Read my library/.test(src));
 check('genres offer it', (src.match(/data-read-library/g) || []).length >= 3);
 check('the wrong advice is gone', !/Open Home and it'll cache in the background/.test(src));

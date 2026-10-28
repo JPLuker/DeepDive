@@ -1079,6 +1079,8 @@
   .set-row-text { flex:1; min-width:0; }
   .set-row-title { font-size:14px; font-weight:600; letter-spacing:-0.01em; }
   .set-row-detail { font-size:13px; color:var(--muted); margin-top:3px; line-height:1.45; }
+  .backup-status { flex-basis:100%; margin:4px 0 0; font-size:13px; line-height:1.5; color:var(--muted); }
+  .backup-status.error { color:var(--danger); }
   .set-row-control { display:flex; flex-wrap:wrap; gap:8px; flex-shrink:0; }
   /* A row that navigates rather than holding a control. Whole row is
      the target — a chevron is not a button, it's a hint. */
@@ -1332,8 +1334,8 @@
     .tab.active { color:var(--accent); }
     .tab.active svg { color:var(--accent); }
     /* Clear the pill so the last row isn't trapped underneath it. */
-    .wrap { padding-bottom:calc(92px + env(safe-area-inset-bottom)); }
-    #flash-slot .flash { margin-bottom:calc(96px + env(safe-area-inset-bottom)); }
+    .wrap { padding-bottom:calc(var(--tabbar-height, 80px) + 32px + env(safe-area-inset-bottom)); }
+    #flash-slot .flash { margin-bottom:calc(var(--tabbar-height, 80px) + 32px + env(safe-area-inset-bottom)); }
     /* On result screens the contextual actions replace the global tab
        bar. That used to work by covering it: both were full-width and
        docked to bottom:0, so the higher z-index hid the lower one. The
@@ -1399,7 +1401,7 @@
      rather than a scale-down — spacing and type sizes that read well
      at 1200px are simply wrong at 380px. */
   @media (max-width: 640px) {
-    .wrap { padding:0 16px 60px; }
+    .wrap { padding:0 16px calc(var(--tabbar-height, 80px) + 32px + env(safe-area-inset-bottom)); }
     .topbar { padding:8px 16px 8px; }
     .wordmark { font-size:20px; }
 
@@ -1633,9 +1635,9 @@
     <button class="tab" data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button>
   </nav>
 
-  <div id="flash-slot"></div>
+  <div id="flash-slot" role="status" aria-live="polite" aria-atomic="true"></div>
   <div class="wrap" id="view-root"><!-- views render here --></div>
 
-  <script type="module" src="../js/app.js?v=2.9.141"></script>
+  <script type="module" src="../js/app.js?v=2.9.142"></script>
 </body>
 </html>

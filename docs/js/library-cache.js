@@ -46,6 +46,10 @@ import { withBackgroundWork } from "./background-work.js";
  * synchronous API). Tests pass an in-memory store.
  */
 
+function checkCancelled(signal) {
+  if (signal?.aborted) throw new DOMException('Library read cancelled.', 'AbortError');
+}
+
 const CACHE_KEY = "deepdive_library_v1";
 const RECONCILE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24h full-reconcile backstop
 
@@ -65,6 +69,10 @@ export class LibraryCache {
     this.store = store;
     this.reconcileMaxAgeMs = opts.reconcileMaxAgeMs || RECONCILE_MAX_AGE_MS;
     this._now = opts.now || (() => Date.now());
+    this._inFlight = null;
+    this._progressListeners = new Set();
+    this._lastProgress = null;
+    this._artworkListeners = new Set();
   }
 
   async _load() {
@@ -80,7 +88,7 @@ export class LibraryCache {
   }
 
   /** Fetch ALL liked tracks, preserving added_at. Returns {tracks, total}. */
-  async _fetchAll(onProgress = null) {
+  async _fetchAll(onProgress = null, signal = null, onArtwork = null) {
     const tracks = [];
     // Spotify's `total` counts saved entries, but some come back with a
     // null track — usually something pulled from the platform or not
@@ -91,14 +99,27 @@ export class LibraryCache {
     // looked permanently stale and every search re-read the whole
     // library.)
     let unavailable = 0;
+    const shownArt = new Set();
+    checkCancelled(signal);
     let results = await this.client.get("me/tracks", { limit: 50 });
     const total = (results && typeof results.total === "number") ? results.total : 0;
     while (results) {
+      checkCancelled(signal);
       for (const item of results.items || []) {
         if (item && item.track) tracks.push(withAddedAt(item));
         else unavailable += 1;
       }
-      if (onProgress) onProgress(tracks.length, total || tracks.length);
+      if (onArtwork && shownArt.size < 12) {
+        for (const item of results.items || []) {
+          const image = item?.track?.album?.images?.[0]?.url;
+          if (image && !shownArt.has(image)) {
+            shownArt.add(image); onArtwork(image);
+            if (shownArt.size >= 12) break;
+          }
+        }
+      }
+      if (onProgress) onProgress(tracks.length + unavailable, total || tracks.length + unavailable);
+      checkCancelled(signal);
       results = results.next ? await this.client.get(results.next) : null;
     }
     return { tracks, total: total || tracks.length, unavailable };
@@ -109,12 +130,14 @@ export class LibraryCache {
    * newest and stopping as soon as we cross that timestamp. Also returns
    * `total` from the first page so the caller can checksum.
    */
-  async _fetchSince(sinceIso, knownIds) {
+  async _fetchSince(sinceIso, knownIds, signal = null) {
     const newTracks = [];
+    checkCancelled(signal);
     let results = await this.client.get("me/tracks", { limit: 50 });
     const total = (results && typeof results.total === "number") ? results.total : 0;
     let done = false;
     while (results && !done) {
+      checkCancelled(signal);
       for (const item of results.items || []) {
         if (!item || !item.track) continue;
         const addedAt = item.added_at || "";
@@ -127,6 +150,7 @@ export class LibraryCache {
         newTracks.push(withAddedAt(item));
       }
       if (done) break;
+      checkCancelled(signal);
       results = results.next ? await this.client.get(results.next) : null;
     }
     return { newTracks, total: total || 0 };
@@ -142,23 +166,56 @@ export class LibraryCache {
    *                   "refresh library" button).
    */
   async getLikedTracks(options = {}) {
-    return withBackgroundWork("Reading your Spotify library", () => this._getLikedTracks(options));
+    const listener = options.onProgress;
+    const artwork = options.onArtwork;
+    if (artwork) this._artworkListeners.add(artwork);
+    if (listener) this._progressListeners.add(listener);
+    if (!this._inFlight) {
+      this._lastProgress = null;
+      this._inFlight = withBackgroundWork("Reading your Spotify library", async (lease) => {
+        const report = (done, total) => {
+          this._lastProgress = [done, total];
+          lease.update({ current: done, total, detail: total
+            ? `Reading ${done} of ${total} library entries` : `Reading ${done} library entries` });
+          for (const notify of this._progressListeners) {
+            try { notify(done, total); } catch (e) { /* one view cannot stop a shared read */ }
+          }
+        };
+        const tracks = await this._getLikedTracks({ ...options, onProgress: report, onArtwork: url => {
+          for (const notify of this._artworkListeners) {
+            try { notify(url); } catch (e) { /* artwork cannot stop a scan */ }
+          }
+        } });
+        checkCancelled(options.signal);
+        const completedTotal = this._lastProgress?.[1] || tracks.length;
+        report(completedTotal, completedTotal);
+        return tracks;
+      }, { lease: options.backgroundLease });
+    } else if (listener && this._lastProgress) { try { listener(...this._lastProgress); } catch (e) {} }
+    const running = this._inFlight;
+    try { return await running; }
+    finally {
+      if (listener) this._progressListeners.delete(listener);
+      if (artwork) this._artworkListeners.delete(artwork);
+      if (this._inFlight === running) this._inFlight = null;
+    }
   }
 
-  async _getLikedTracks({ onProgress = null, forceFull = false } = {}) {
+  async _getLikedTracks({ onProgress = null, forceFull = false, signal = null, onArtwork = null } = {}) {
+    checkCancelled(signal);
     const cached = forceFull ? null : await this._load();
     const now = this._now();
 
     // No usable cache, or a forced/aged-out reconcile → full read.
     const aged = cached && (now - (cached.lastFullReconcile || 0) > this.reconcileMaxAgeMs);
     if (!cached || forceFull || aged) {
-      return await this._fullReadAndStore(onProgress, now);
+      return await this._fullReadAndStore(onProgress, now, signal, onArtwork);
     }
 
     // Incremental path.
     const lastSince = newestAddedAt(cached.tracks);
     const knownIds = new Set(cached.tracks.map((t) => t.id));
-    const { newTracks, total } = await this._fetchSince(lastSince, knownIds);
+    const { newTracks, total } = await this._fetchSince(lastSince, knownIds, signal);
 
     // Merge (dedupe by id; new ones are newer so they go first).
     const mergedById = new Map();
@@ -180,20 +237,22 @@ export class LibraryCache {
         syncedTotal: total,
         unavailable,
       };
+      checkCancelled(signal);
       await this._save(state);
       return stripAddedAt(merged);
     }
 
     // Mismatch → an unlike (or gap) happened. Reconcile fully.
-    return await this._fullReadAndStore(onProgress, now);
+    return await this._fullReadAndStore(onProgress, now, signal, onArtwork);
   }
 
-  async _fullReadAndStore(onProgress, now) {
-    const { tracks, total, unavailable } = await this._fetchAll(onProgress);
+  async _fullReadAndStore(onProgress, now, signal, onArtwork) {
+    const { tracks, total, unavailable } = await this._fetchAll(onProgress, signal, onArtwork);
     const state = {
       tracks, lastFullReconcile: now, syncedTotal: total,
       unavailable: unavailable || 0,
     };
+    checkCancelled(signal);
     await this._save(state);
     return stripAddedAt(tracks);
   }

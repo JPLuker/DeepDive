@@ -7,7 +7,7 @@ UNTESTED Android build. Compiled by CI; on-device verification is still required
 
 Download and open the APK below directly. No ZIP extraction is needed.
 
-This build uses the permanent Android signing key. CI verifies the APK certificate, package and version before publishing. Background execution from the previous build remains included.
+This build fixes bottom-navigation overlap and import feedback, gives library reads a full-screen shared progress job, adds live notification progress, and fills blank progress screens with cached artist photos/album art. CI verifies the permanent signing certificate, package and version before publishing.
 
 Signed release APK. Switching from an older temporary debug key requires a one-time uninstall; export existing app data first. Future builds using this permanent key can update the installed app without clearing its data.
 NOTES

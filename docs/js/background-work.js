@@ -38,27 +38,46 @@ function request(op, args = {}) {
 }
 export function checkBackgroundWork() { if (failure && leases.size) throw failure; }
 export async function beginBackgroundWork(label) {
-  if (!supportsBackgroundWork()) return { active: false, release: async () => {} };
+  if (!supportsBackgroundWork()) return { active: false, update: async () => {}, release: async () => {} };
   const token = `work-${Date.now()}-${++sequence}`;
   // Only clear a timeout when starting a new run, not a nested library read.
   if (!leases.size) failure = null;
   await request('begin', { token, label });
   leases.add(token);
   let released = false;
-  return { active: true, release: async () => {
+  let latest = null, sending = null;
+  const update = (progress) => {
+    if (released || failure) return Promise.resolve();
+    const total = Number.isFinite(progress.total) && progress.total > 0 ? progress.total : 0;
+    const current = Number.isFinite(progress.current) ? Math.max(0, progress.current) : 0;
+    latest = { current: total ? Math.min(current, total) : current, total,
+      detail: String(progress.detail || '').slice(0, 180) };
+    if (!sending) sending = (async () => {
+      while (latest && !released) {
+        const next = latest; latest = null;
+        await request('progress', { token, ...next });
+      }
+    })().catch(() => {}).finally(() => {
+      sending = null;
+      if (latest && !released) { const next = latest; latest = null; return update(next); }
+    });
+    return sending;
+  };
+  return { active: true, update, release: async () => {
     if (released) return;
     released = true;
+    latest = null;
     leases.delete(token);
     await request('end', { token });
   } };
 }
-export async function withBackgroundWork(label, run) {
+export async function withBackgroundWork(label, run, { lease: parent = null } = {}) {
   // A denied/unsupported service should not prevent foreground use.
   let lease;
-  try { lease = await beginBackgroundWork(label); }
+  try { lease = parent ? await parent : await beginBackgroundWork(label); }
   catch (error) { console.warn('[DeepDive] background work unavailable:', error.message); }
-  try { return await run(); }
-  finally { if (lease) await lease.release().catch(() => {}); }
+  try { return await run(lease || { active: false, update: async () => {} }); }
+  finally { if (lease && !parent) await lease.release().catch(() => {}); }
 }
 export function backgroundDelay(ms) {
   checkBackgroundWork();

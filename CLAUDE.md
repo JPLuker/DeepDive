@@ -3,9 +3,55 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.141.** If the build in `js/app.js` is well
+**Last updated at build 2.9.142.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Phone feedback, library jobs and notification progress — 2.9.142
+
+2.9.141 is the first successfully published permanent-key release:
+run 40708590022, signer SHA-256
+`e729122a7c4ea1ea13385aa29bc5fd9989d57ade818ca4338d21d4123bf18633`,
+versionCode 2009141. Joseph installed it and reported the next phone bugs.
+Do not require another uninstall for updates signed with this same key.
+
+The last max-width:640px .wrap shorthand overwrote the tab-bar clearance
+with 60px. Both mobile rules now reserve measured bar height plus 32px
+and the safe-area inset; toast placement uses the same measure.
+Import feedback is beside the control and in a live-region toast after
+any redraw. History previously discarded its success message during
+renderHistory; Settings' message was far below the import control.
+The shared backup-import module shows a busy state, reports actual added
+counts (or no new items), and resets the picker for retry.
+
+Explicit library reads/refreshes now own the same full-screen view as a
+dive. LibraryCache shares one in-flight paging operation across callers
+and broadcasts counts/artwork to subscribers. Tab changes are blocked
+while that explicit job is active. Cancel stops between requests and
+cannot replace the last complete cache with partial data. Old cancelled
+jobs cannot close a newer screen. The screen's native lease is reused
+by its cache read so it appears as one notification job.
+
+Native progress messages carry a task token, current/total and stage.
+Notifications show a determinate bar and percentage when totals exist,
+or an indeterminate bar otherwise; expanded text shows simultaneous
+jobs separately. Notification redraws are coalesced to 500ms and late
+updates cannot revive completed work. Screen progress, library page
+counts and rate-limit waits feed the service without extra Spotify calls.
+
+Blank progress views now rotate full-size pin photos and cached album
+art, capped at 12 downloads. First-sync pages can supply their own album
+art before the cache is saved. Primary artist photos replace fallback
+art; delayed artwork from a previous job is ignored. No per-artist API
+requests are made for decoration and small pin thumbnails are excluded.
+
+Tests cover shared paging across tab-like subscribers, cancellation,
+cache integrity, progress leases, import success/error/duplicate feedback,
+artwork selection and the winning phone padding rule. Chromium is not
+installed in this environment; phone visual checks and actual Android
+notification presentation remain device checks.
 
 ---
 
@@ -993,7 +1039,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.141**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.142**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.

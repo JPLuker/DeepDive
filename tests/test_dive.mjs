@@ -16,7 +16,7 @@ check('old card progress removed', !/function updateProgress\(/.test(src));
 
 // slideshow
 check('slides crossfade', /\.dive-slide \{[\s\S]{0,140}transition:opacity 1\.1s/.test(html));
-check('images added as discovered', /function addDiveImage\(url\)/.test(src));
+check('images added as discovered', /function addDiveImage\(url, \{ fallback = false \} = \{\}\)/.test(src));
 
 // The tile hand-off is gone. It existed so the dive screen was never
 // blank, but a 56px thumbnail stretched full-screen was pixelated on
@@ -27,7 +27,7 @@ check('no artwork is handed to the dive', !/startSearch\(artistName, artworkUrl/
 check('loading field exists', /id="dive-loading"/.test(html));
 check('loading field clears on first photo', /load\.classList\.add\("off"\)/.test(src));
 check('loading field returns for a new dive', /load0\.classList\.remove\("off"\)/.test(src));
-check('broken urls never become blank slides', /probe\.onload = \(\) => \{[\s\S]{0,200}_diveImages\.push/.test(src));
+check('broken urls never become blank slides', /probe\.onload = \(\) => \{[\s\S]{0,350}_diveImages\.push/.test(src));
 check('no duplicates', /_diveImages\.includes\(url\)/.test(src));
 check('rotation runs on a timer', /_diveSlideTimer = setInterval/.test(src));
 check('rotation stops when hidden', /clearInterval\(_diveSlideTimer\)/.test(src));
