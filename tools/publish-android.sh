@@ -7,9 +7,9 @@ UNTESTED Android build. Compiled by CI; on-device verification is still required
 
 Download and open the APK below directly. No ZIP extraction is needed.
 
-This build adds Android background execution for library reads, scans, dives and mixes, with an ongoing notification while work is active. It also fixes the Backup row layout. Switching apps and locking the screen require device testing. Force-closing the app still stops work.
+This build uses the permanent Android signing key. CI verifies the APK certificate, package and version before publishing. Background execution from the previous build remains included.
 
-Debug signed. If Android reports an incompatible signature, uninstall the previous test APK before installing this build. Export any existing app data before uninstalling.
+Signed release APK. Switching from an older temporary debug key requires a one-time uninstall; export existing app data first. Future builds using this permanent key can update the installed app without clearing its data.
 NOTES
 if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
   gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \

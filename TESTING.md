@@ -324,6 +324,17 @@ has to be checked on its own.
 by CI and has been run by a human only where ticked. An untested
 platform is untested, per `RELEASES.md` Part 2.
 
+### Android permanent signing — build 2.9.138
+
+- [ ] Export data from an existing debug-key installation before the
+      one-time uninstall needed to switch signing identities
+- [ ] Install the permanent-key release APK; About shows 2.9.138
+- [ ] Import the backup; connection/settings/history/crate work as expected
+- [ ] Install the next APK signed with the same permanent key over this
+      app without uninstalling; data and connection remain available
+- [ ] Confirm the release/R8 build still receives OAuth callbacks and
+      starts its background-work bridge/service
+
 ### Android background work — build 2.9.137
 
 - [ ] Start a library read, allow notifications, then use another app for
@@ -360,10 +371,10 @@ This fix still needs on-device verification.
 - [ ] Windows: the installer runs and the app launches
 - [ ] Linux: the `.deb`, `.rpm` or `.AppImage` installs and launches
 - [ ] Android: the APK installs
-- [ ] Android: installing **over an existing DeepDive** succeeds. Until
-      a stable signing key exists this will fail, because each CI run
-      signs with its own debug key — if it fails, uninstall first, and
-      note that signing is still outstanding
+- [ ] Android: installing **over an existing DeepDive** succeeds.
+      2.9.138 uses a permanent release key. Only the first migration
+      from an old debug-key build requires uninstalling; later signed
+      updates must preserve the existing installation
 
 ### It actually renders
 This is the regression that shipped: `frontendDist` omitted the app's

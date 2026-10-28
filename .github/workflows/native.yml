@@ -133,6 +133,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate permanent Android signing credentials
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: tools/ci-capture.sh "Signing preflight" node tools/android-signing.mjs --check
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -270,23 +279,43 @@ jobs:
           tools/ci-capture.sh "Manifest patch" \
             node tools/android-manifest.mjs src-tauri/gen/android/app/src/main/AndroidManifest.xml
 
-      # Debug, deliberately. An unsigned *release* APK cannot be
-      # installed on Android at all — it is rejected before it runs —
-      # so "no signing yet" and "release" are incompatible. A debug
-      # build is signed with Android's debug key, installs by
-      # sideloading, and is exactly as untested either way.
+      # Generated Gradle files are patched each build. Passwords stay in
+      # environment variables; missing/invalid secrets fail without fallback.
+      - name: Configure permanent release signing
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          tools/ci-capture.sh "Signing configuration" node tools/android-signing.mjs \
+            src-tauri/gen/android/app/build.gradle.kts
+
       - name: Build the APK
         shell: bash
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          tools/ci-capture.sh "APK build" \
-            cargo tauri android build --apk --debug
+          tools/ci-capture.sh "APK build" cargo tauri android build --apk
+
+      - name: Verify the permanent signing certificate and APK identity
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          tools/ci-capture.sh "APK signature verification" node tools/android-verify-signing.mjs \
+            src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
 
       - name: Rename for release
         shell: bash
         run: |
           V="$BUILD_VERSION"
           mkdir -p dist
-          # Only build/outputs/apk, and only the universal debug one.
+          # Only build/outputs/apk, and only the verified universal release one.
           #
           # This used to search all of gen/android and copy EVERY match
           # onto the same destination name, so the shipped artifact was
@@ -296,15 +325,15 @@ jobs:
           # refused by Android at install time, which is exactly the
           # symptom reported. Nondeterministic besides: the same commit
           # could ship an installable APK one run and not the next.
-          SRC="src-tauri/gen/android/app/build/outputs/apk/universal/debug"
-          APK="$SRC/app-universal-debug.apk"
+          SRC="src-tauri/gen/android/app/build/outputs/apk/universal/release"
+          APK="$SRC/app-universal-release.apk"
           if [ ! -f "$APK" ]; then
             echo "::error title=APK missing::No APK at $APK"
             echo "What the build actually produced under build/outputs:"
             find src-tauri/gen/android -path '*build/outputs*' -name '*.apk' || true
             exit 1
           fi
-          cp "$APK" "dist/DeepDive-${V}-Android-universal-debug-UNTESTED.apk"
+          cp "$APK" "dist/DeepDive-${V}-Android-universal-UNTESTED.apk"
           ls -la dist
 
       - uses: actions/upload-artifact@v4
@@ -320,3 +349,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tools/ci-capture.sh "APK publication" bash tools/publish-android.sh
+
+      - name: Remove the temporary signing keystore
+        if: always()
+        shell: bash
+        run: |
+          tools/ci-capture.sh "Signing cleanup" bash -c '
+            if [ -n "${ANDROID_KEYSTORE_PATH:-}" ]; then
+              rm -f -- "$ANDROID_KEYSTORE_PATH"
+            fi
+          '

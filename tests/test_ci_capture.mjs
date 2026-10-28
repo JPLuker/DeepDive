@@ -197,7 +197,8 @@ const wf = read('.github/workflows/native.yml');
   // would just mean it does less.
   check('desktop bundles are still deb,rpm,appimage on Linux', /deb,rpm,appimage/.test(wf));
   check('and msi,nsis on Windows', /msi,nsis/.test(wf));
-  check('the APK is still a debug build', /android build --apk --debug/.test(wf));
+  // Permanent release signing supersedes the temporary debug-key build.
+  check('the APK remains installable through release signing', /android build --apk\s*\n/.test(wf) && /android-signing\.mjs/.test(wf));
 }
 
 console.log(`\n  ci-capture: ${pass} passed, ${fail} failed`);

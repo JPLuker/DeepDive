@@ -3,9 +3,43 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.137.** If the build in `js/app.js` is well
+**Last updated at build 2.9.138.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Permanent Android signing — build 2.9.138
+
+Joseph generated and backed up his own JKS in Termux, then added all four
+repository secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD. No private signing material is
+stored in this repo or supplied to this session.
+
+The Android workflow now builds release APKs. `android-signing.mjs`
+validates required secrets/Base64, writes a mode-0600 temporary keystore,
+validates its store password/alias with keytool, and patches generated
+Gradle to read passwords directly from environment variables. Store and
+entry passwords can differ. It also preserves @JavascriptInterface
+members under R8 for the background-work bridge. There is no debug
+fallback if signing fails; the temporary key is removed even on failure.
+
+`android-verify-signing.mjs` runs real apksigner/aapt against the final
+universal release APK before copying or publishing. It compares the
+APK's sole signer against the configured key certificate and checks app
+ID, version and non-debuggable status. It logs only the public certificate
+SHA-256 fingerprint and version. Signing files are ignored by git.
+
+Direct download name: DeepDive-<version>-Android-universal-UNTESTED.apk
+on v<version>-untested-android. The debug suffix is gone. The first move
+from an older debug-key install requires a one-time uninstall after data
+export. Later APKs signed with the same permanent key can install over
+it. On-device upgrade preservation remains a manual check, not something
+inferred from a successful compiler run. No in-app updater is included.
+
+Older entries saying stable signing is outstanding describe earlier
+builds and are superseded by this section. Do not regenerate a signing
+key on each runner or silently fall back to debug builds.
 
 ---
 
@@ -895,7 +929,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.137**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.138**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.

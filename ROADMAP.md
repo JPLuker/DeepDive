@@ -359,11 +359,19 @@ in TESTING.md for a real device.
    bounded timeout handling. Browser/PWA retains the wake-lock fallback.
    Backup controls now stack below their description on phones.
 
-   Next: verify the 2.9.137 APK build and direct download, then Joseph
-   tests switching apps, locking the screen, overlapping library/dive
-   work, completion, cancellation and notification permissions in
-   `TESTING.md`. 2.9.136 compiled and published its direct APK successfully. Stable signing remains outstanding;
-   ephemeral debug keys are not a reliable cross-run update identity.
+   **2.9.138:** Joseph supplied the permanent signing secrets. Android
+   now builds release APKs signed with that key and verifies the actual
+   certificate/package/version before publishing. Passwords stay in CI
+   environment variables, generated signing files are excluded from git,
+   and signing failures cannot fall back to temporary debug keys.
+   2.9.137 compiled and published successfully.
+
+   Next: confirm the first permanently signed release compiles and its
+   APK certificate matches the configured key. Joseph installs it after
+   a one-time migration from the old debug-key app, imports his backup,
+   then verifies that a subsequent signed build updates in place. Native
+   runtime checks in `TESTING.md` remain outstanding. Automatic in-app
+   updating is separate work and is not part of stable APK signing.
 7. **Rewrite `TESTING.md` against the final UI.** The rewrite is
    Claude's; the pass itself is Joseph's. Do this only once 1–6 have
    settled, or it is rewritten twice.
