@@ -3,9 +3,33 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.139.** If the build in `js/app.js` is well
+**Last updated at build 2.9.140.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## APK certificate verification formats — build 2.9.140
+
+Joseph corrected the GitHub secrets. Run 40702871721 attempt 2 passed
+keystore/alias validation and compiled/signed a release APK, but the
+certificate comparison rejected it. No APK was published. Do not ask
+him to change the password again: credential validation now passes.
+
+The verifier originally recognized only `Signer #N` labels. AOSP
+apksigner also emits `Signer (minSdkVersion=..., maxSdkVersion=...)`
+for v3.1 signatures. Accept SDK-range rows only when every row matches
+the same configured certificate, reject multiple declared/numbered
+signers, and normalize the configured certificate with X509Certificate
+before comparing. Public expected/actual fingerprints are now logged,
+so a real mismatch can be distinguished from an unsupported label.
+The new range-format test fails on the old parser. This does not yet
+establish which case the failed APK hit: inspect the next run's public
+fingerprint report before claiming the signature check has passed.
+
+Rust cache now saves on failed Android jobs too, so a post-compile
+verification failure does not discard the completed release compilation.
+The signing keystore stays in RUNNER_TEMP outside that cache.
 
 ---
 
@@ -947,7 +971,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.139**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.140**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.

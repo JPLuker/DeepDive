@@ -1,16 +1,26 @@
 // Verify the *finished* APK against the configured key, not merely the
 // presence of a Gradle signing block. Prints only public certificate data.
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { X509Certificate } from 'node:crypto';
 import { readdirSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+export function apkSigners(output) {
+  // apksigner v3.1 uses SDK-range labels instead of numbered signers.
+  // Each range must resolve to this same permanent certificate.
+  return [...output.matchAll(/^(Signer (?:#\d+|\([^\r\n]+\))) certificate SHA-256 digest:[ \t]*([a-fA-F0-9:]+)[ \t]*\r?$/gm)]
+    .map(match => ({ label: match[1], fingerprint: match[2].replaceAll(':', '').toLowerCase() }));
+}
 export function checkApkCertificate(output, expected) {
-  const certificates = [...output.matchAll(/^Signer #\d+ certificate SHA-256 digest:\s*([a-fA-F0-9:]+)\s*$/gm)]
-    .map(match => match[1].replaceAll(':', '').toLowerCase());
-  if (certificates.length !== 1 || certificates[0] !== expected.toLowerCase()) {
-    throw new Error('APK certificate does not match the permanent Android signing key. Refusing to publish.');
+  const rows = apkSigners(output);
+  const declared = output.match(/^Number of signers:[ \t]*(\d+)[ \t]*\r?$/m);
+  const numbered = rows.filter(row => /^Signer #/.test(row.label));
+  if (!rows.length || (declared && Number(declared[1]) !== 1)
+      || (numbered.length && rows.length !== 1)
+      || rows.some(row => row.fingerprint !== expected.toLowerCase())) {
+    throw new Error('APK certificate does not match the permanent Android signing key. Refusing to publish. Expected SHA-256: '
+      + expected + '; found: ' + (rows.map(row => row.fingerprint).join(', ') || 'no recognized signer certificate'));
   }
 }
 export function verifyApk(apk, env = process.env) {
@@ -27,8 +37,9 @@ export function verifyApk(apk, env = process.env) {
       '-storepass:env', 'ANDROID_KEYSTORE_PASSWORD', '-alias', env.ANDROID_KEY_ALIAS],
       { env, stdio: ['ignore','pipe','pipe'] });
   } catch { throw new Error('Cannot read the configured Android signing certificate'); }
-  const fingerprint = createHash('sha256').update(cert).digest('hex');
+  const fingerprint = new X509Certificate(cert).fingerprint256.replaceAll(':', '').toLowerCase();
   const output = execFileSync(join(root,version,'apksigner'), ['verify','--verbose','--print-certs',apk], { encoding:'utf8' });
+  console.log(JSON.stringify({ expectedFingerprint: fingerprint, apkSigners: apkSigners(output) }));
   checkApkCertificate(output, fingerprint);
   const metadata = execFileSync(join(root,version,'aapt'), ['dump','badging',apk], { encoding:'utf8' });
   const match = metadata.match(/^package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'/m);

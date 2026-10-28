@@ -48,6 +48,11 @@ try {
   checkApkCertificate(signer,fingerprint);check('expected signer accepted',true);
   rejects('another signer is rejected',()=>checkApkCertificate('Signer #1 certificate SHA-256 digest: aabb\n',fingerprint));
   rejects('unsigned APK is rejected',()=>checkApkCertificate('',fingerprint));
+  const ranged = `Number of signers: 1\nSigner (minSdkVersion=33, maxSdkVersion=2147483647) certificate SHA-256 digest: ${fingerprint}\nSigner (minSdkVersion=24, maxSdkVersion=32) certificate SHA-256 digest: ${fingerprint}\n`;
+  let rangedAccepted = true; try { checkApkCertificate(ranged,fingerprint); } catch { rangedAccepted=false; }
+  check('SDK-range signer format accepts the same certificate across Android versions',rangedAccepted);
+  rejects('SDK-range signer format still rejects another certificate',()=>checkApkCertificate(ranged.replace(fingerprint,'00'.repeat(32)),fingerprint));
+  rejects('multiple declared signers are rejected',()=>checkApkCertificate('Number of signers: 2\n'+signer,fingerprint));
   rejects('additional signers are rejected',()=>checkApkCertificate(signer+signer.replace('#1','#2'),fingerprint));
   // Execute the verifier with the real disposable certificate and fake
   // SDK tools. CI supplies real apksigner/aapt and the compiled APK.

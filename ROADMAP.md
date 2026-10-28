@@ -372,6 +372,12 @@ in TESTING.md for a real device.
    ahead of SDK/NDK work. The next run must establish which credential
    needs correction before requesting a change from Joseph.
 
+   **2.9.140:** corrected secrets now pass validation; the 2.9.139
+   retry compiled a signed release but its certificate comparison
+   rejected it. Verifier now handles AOSP SDK-range signer labels,
+   normalizes X.509 certificates and logs public fingerprints for a
+   precise comparison. Failed Android jobs also preserve Rust cache.
+
    Next: confirm the first permanently signed release compiles and its
    APK certificate matches the configured key. Joseph installs it after
    a one-time migration from the old debug-key app, imports his backup,
