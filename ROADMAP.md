@@ -311,8 +311,8 @@ What a future session can pick up without Joseph:
 - **Session 4 is done.** Its remaining bullets shipped long ago: 40-odd
   card types, playlist cleanup in Settings, Dip as the hour-long mix,
   custom covers.
-- If Joseph says yes to Quiet Precision for DeepDive, that restyle is
-  the next big piece of Claude work. Not before (DESIGN.md B0).
+- No restyle. Joseph, 15 Nov, on moving to Quiet Precision: "keep the
+  look, it looks fine".
 - `TESTING.md` will need trimming to the current build's checks before
   the 3.0 pass (WORKING-WITH-JOSEPH: at most 15 per build).
 
@@ -324,15 +324,13 @@ What a future session can pick up without Joseph:
    notification. Close #18 if the dip shows idk.
 2. **Try Refresh dive playlists** on your account (TESTING.md section
    11). It's the first feature that removes tracks from your playlists.
-3. **Decide:** move DeepDive to Quiet Precision (DESIGN.md Part B), or
-   keep its own look? B12 says to ask before touching its visuals.
-4. **Desktop builds:** 2.9.154 is published as UNTESTED Windows and
+3. **Desktop builds:** 2.9.154 is published as UNTESTED Windows and
    Linux releases, Linux in all five formats including Flatpak. Nobody
    has run them; elementary OS is the first test. Later ones: Native builds → Run workflow, platforms "desktop".
-5. The 20 Oct items still open: the quota experiment, private
+4. The 20 Oct items still open: the quota experiment, private
    vulnerability reporting, artist photo permission, landing Mixes copy,
    retaking the landing screenshots, the full `TESTING.md` pass.
-6. **Optional:** the 2.9.145 Android release still carries 2.9.143's
+5. **Optional:** the 2.9.145 Android release still carries 2.9.143's
    notes. This session can't edit releases; paste the 2.9.145 changelog
    section in if you want it right.
 
@@ -1234,6 +1232,10 @@ the concert discovery investigation.
 ---
 
 ## Rejected, with reasons
+
+- **Moving DeepDive to Quiet Precision (DESIGN.md Part B).** Joseph,
+  15 Nov: "keep the look, it looks fine." The current look is recorded
+  under Identity in `CLAUDE.md`.
 
 - **"What's new since I last dove"** — only useful proactively, which
   means one request per artist across the dived list: the exact pattern

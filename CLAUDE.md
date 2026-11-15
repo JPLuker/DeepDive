@@ -3,7 +3,7 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.149.** If the build in `js/app.js` is well
+**Last updated at build 2.9.154.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
 
@@ -1148,11 +1148,10 @@ It looked like rate limiting for two days.
 
 ## Identity
 
-- Visual style: project's own (Aurora-era) — recorded in DESIGN.md B12
-  as "DeepDive: Aurora-era, own identity". Moving to Quiet Precision
-  (DESIGN.md Part B) is Joseph's call and has not been asked yet; until
-  he says, small fixes stay within the current look and nothing gets
-  restyled.
+- Visual style: project's own (Aurora-era) — approved by Joseph
+  2026-11-15: "keep the look, it looks fine". Asked whether to move to
+  Quiet Precision (DESIGN.md Part B); he said no. Small fixes stay
+  within this look; nothing gets restyled without asking again.
 - Accent: blue — light `#0B54FF` / dark `#3E7BFF`
 - Neutrals: cool near-black (`#0B0C0F` base)
 - Semantic shifts: gold and teal secondaries
@@ -1179,8 +1178,8 @@ From InternalDesignGuidelines defaults, on purpose:
 > **The standards changed on 11 Nov.** DESIGN.md v2 split into Part A
 > (how screens behave, copy, Settings, accessibility: the default
 > everywhere) and Part B (Quiet Precision, an *option* only with
-> Joseph's yes). Aurora Glass is archived. So: Part A applies to
-> DeepDive now; Part B does not until Joseph says so. Ask before any
+> Joseph's yes). Aurora Glass is archived. Part A applies to DeepDive;
+> Part B does not: Joseph, 15 Nov, "keep the look, it looks fine". Ask before any
 > visual rework (DESIGN.md B0). The note below predates that.
 >
 > **Superseded. `JPLuker/InternalDesignGuidelines` wins.** Joseph's
@@ -1273,7 +1272,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.148**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.154**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.
