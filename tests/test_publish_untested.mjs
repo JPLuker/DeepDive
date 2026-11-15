@@ -15,8 +15,12 @@ const V = readFileSync(join(repo, 'docs/js/app.js'), 'utf8').match(/BUILD = "([^
 const stub = `#!/usr/bin/env bash
 echo "$*" >> "$STUB_LOG"
 if [ "$1" = "release" ] && [ "$2" = "create" ]; then
-  shift 2; for a in "$@"; do [ -f "$a" ] && echo "$(basename "$a") $(stat -c %s "$a") uploaded" >> "$STUB_STATE"; done
+  shift 2; : >> "$STUB_STATE"
   for a in "$@"; do case "$a" in --notes-file) n=1;; *) [ "\${n:-}" = 1 ] && cp "$a" "$STUB_NOTES"; n=;; esac; done
+  exit 0
+fi
+if [ "$1" = "release" ] && [ "$2" = "upload" ]; then
+  shift 2; for a in "$@"; do [ -f "$a" ] && echo "$(basename "$a") $(stat -c %s "$a") uploaded" >> "$STUB_STATE"; done
   exit 0
 fi
 if [ "$1" = "api" ]; then
@@ -47,7 +51,10 @@ const A = `DeepDive-${V}-Linux-x64-UNTESTED.AppImage`, D = `DeepDive-${V}-Linux-
 
 const ok = run({ [A]: 'aaaa', [D]: 'dddddd' }, [A, D]);
 check(`a complete set publishes (${ok.text.trim().split('\n').pop()})`, ok.code === 0);
-check('as a pre-release, never Latest', /--prerelease --latest=false/.test(ok.log));
+// 2.9.152: --latest=false dropped with the one-call create; GitHub never
+// marks a pre-release Latest, and the after-check reads the flag back.
+check('as a pre-release', /release create .*--prerelease/.test(ok.log));
+check('created first, files uploaded after (the sequence CI accepts)', /release create(?!.*\.AppImage)/.test(ok.log) && /release upload .*\.AppImage/.test(ok.log));
 check('titled UNTESTED first', /--title UNTESTED — Linux build for DeepDive/.test(ok.log));
 check('notes open with the warning block', ok.notes.startsWith('> ⚠️ **UNTESTED BUILD.** These Linux builds'));
 check('notes carry this version\'s changelog', /## What changed/.test(ok.notes) && ok.notes.length > 200);
@@ -74,5 +81,10 @@ const wf = readFileSync(join(repo, '.github/workflows/native.yml'), 'utf8');
 check('desktop builds publish their own Linux and Windows releases', /publish-untested\.sh Linux linux/.test(wf) && /publish-untested\.sh Windows windows/.test(wf));
 check('Windows ships installer, MSI and portable', /Windows-x64-Setup-UNTESTED\.exe/.test(wf) && /Windows-x64-UNTESTED\.msi/.test(wf) && /Windows-x64-portable-UNTESTED\.exe/.test(wf));
 
+// 2.9.151's Windows build failed in the version stamp: app.js holds
+// UTF-8 that Windows' default cp1252 can't decode.
+const stamps = wf.match(/read_text\([^)]*\)/g) || [];
+check('every file the stamp reads is read as UTF-8', stamps.length >= 6 && stamps.every((m) => /encoding="utf-8"/.test(m)));
+check('the stamp runs whichever Python actually works', (wf.match(/PY=python3; "\$PY" -c 1 2>\/dev\/null \|\| PY=python/g) || []).length === 2);
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

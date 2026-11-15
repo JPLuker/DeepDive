@@ -67,9 +67,14 @@ jobs:
         env:
           REQUESTED_VERSION: ${{ github.event.inputs.version }}
         run: |
-          python3 - <<'PY'
+          # The 2.9.151 Windows build died in this step with no message.
+          # Two suspects, both handled, neither confirmed: `python3` can be
+          # a Store stub on Windows, and reading a file there defaults to
+          # cp1252, which can't decode byte 0x9D in app.js (from "”").
+          PY=python3; "$PY" -c 1 2>/dev/null || PY=python
+          "$PY" - <<'PY'
           import json, re, os, pathlib
-          app = pathlib.Path("docs/js/app.js").read_text()
+          app = pathlib.Path("docs/js/app.js").read_text(encoding="utf-8")
           match = re.search(r'export const BUILD = "([^"]+)"', app)
           v = os.environ.get("REQUESTED_VERSION") or (match.group(1) if match else "")
           if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", v):
@@ -77,11 +82,11 @@ jobs:
           with open(os.environ["GITHUB_ENV"], "a") as env:
               env.write(f"BUILD_VERSION={v}\n")
           conf = pathlib.Path("src-tauri/tauri.conf.json")
-          data = json.loads(conf.read_text())
+          data = json.loads(conf.read_text(encoding="utf-8"))
           data["version"] = v
-          conf.write_text(json.dumps(data, indent=2) + "\n")
+          conf.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
           cargo = pathlib.Path("src-tauri/Cargo.toml")
-          cargo.write_text(re.sub(r'^version = "0\.0\.0"$', f'version = "{v}"', cargo.read_text(), count=1, flags=re.M))
+          cargo.write_text(re.sub(r'^version = "0\.0\.0"$', f'version = "{v}"', cargo.read_text(encoding="utf-8"), count=1, flags=re.M), encoding="utf-8")
           PY
 
       # The Tauri CLI directly rather than tauri-apps/tauri-action.
@@ -254,9 +259,14 @@ jobs:
         env:
           REQUESTED_VERSION: ${{ github.event.inputs.version }}
         run: |
-          python3 - <<'PY'
+          # The 2.9.151 Windows build died in this step with no message.
+          # Two suspects, both handled, neither confirmed: `python3` can be
+          # a Store stub on Windows, and reading a file there defaults to
+          # cp1252, which can't decode byte 0x9D in app.js (from "”").
+          PY=python3; "$PY" -c 1 2>/dev/null || PY=python
+          "$PY" - <<'PY'
           import json, re, os, pathlib
-          app = pathlib.Path("docs/js/app.js").read_text()
+          app = pathlib.Path("docs/js/app.js").read_text(encoding="utf-8")
           match = re.search(r'export const BUILD = "([^"]+)"', app)
           v = os.environ.get("REQUESTED_VERSION") or (match.group(1) if match else "")
           if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", v):
@@ -264,11 +274,11 @@ jobs:
           with open(os.environ["GITHUB_ENV"], "a") as env:
               env.write(f"BUILD_VERSION={v}\n")
           conf = pathlib.Path("src-tauri/tauri.conf.json")
-          data = json.loads(conf.read_text())
+          data = json.loads(conf.read_text(encoding="utf-8"))
           data["version"] = v
-          conf.write_text(json.dumps(data, indent=2) + "\n")
+          conf.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
           cargo = pathlib.Path("src-tauri/Cargo.toml")
-          cargo.write_text(re.sub(r'^version = "0\.0\.0"$', f'version = "{v}"', cargo.read_text(), count=1, flags=re.M))
+          cargo.write_text(re.sub(r'^version = "0\.0\.0"$', f'version = "{v}"', cargo.read_text(encoding="utf-8"), count=1, flags=re.M), encoding="utf-8")
           PY
 
       # The Gradle project is generated rather than committed, so it

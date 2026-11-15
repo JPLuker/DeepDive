@@ -25,9 +25,15 @@ Linux (AppImage, .deb, .rpm) on manual runs only. Flatpak and tar.gz
 aren't built yet. `test_publish_untested.mjs` drives every branch with
 a stub `gh`.
 
-The desktop jobs have never run since this change; the first manual run
-is the real test. If the portable .exe step fails, it says how many
-top-level .exe files it found.
+**First runs, 15 Nov.** 2.9.149's APK build compiled and verified but
+`gh release create` with the files and `--latest=false` in one call got
+"HTTP 403: Resource not accessible by integration" from CI's token;
+2.9.152 went back to create-then-upload, the sequence that published
+every APK through 2.9.148. 2.9.149 was never published and keeps its
+number. The 2.9.151 desktop run built Linux but Windows died in "Stamp
+the version" with no annotation; two suspects fixed in 2.9.152 (python3
+Store stub, cp1252 decoding app.js), neither confirmed. Linux's build
+succeeded but publish-desktop waits on both, so nothing was published.
 
 ---
 

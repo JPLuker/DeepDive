@@ -3,6 +3,14 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.152
+- The 2.9.149 APK never published: creating the release with its files
+  in one call was refused by CI's token (HTTP 403). Back to create, then
+  upload, which every earlier APK used. 2.9.149 stays unpublished; this
+  build carries everything since 2.9.148.
+- The 2.9.151 Windows build failed while stamping its version. The stamp
+  now reads files as UTF-8 and uses whichever Python runs.
+
 ## 2.9.151
 - 2.9.150 was pushed with one failing test, a stale check on the build
   workflow. The push gate matched any passing suite's own line; it now

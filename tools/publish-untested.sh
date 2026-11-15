@@ -47,11 +47,15 @@ CHANGES="$(node tools/release-notes.mjs "$V")"
 if gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" > /dev/null 2>&1; then
   echo "::error::$TAG already exists. A published number is never rebuilt; bump the version."; exit 1
 fi
+# Created first and uploaded to after, the sequence that published every
+# APK up to 2.9.148. 2.9.149 passed the files and --latest=false to
+# create in one call and CI's token got "HTTP 403: Resource not
+# accessible by integration". A pre-release is never Latest anyway.
 gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \
-  --target "$GITHUB_SHA" --prerelease --latest=false \
+  --target "$GITHUB_SHA" --prerelease \
   --title "UNTESTED — ${PLATFORM} build for DeepDive ${V}" \
-  --notes-file /tmp/untested-notes.md \
-  "$DIR"/*
+  --notes-file /tmp/untested-notes.md
+gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" "$DIR"/*
 
 # 6.2: fetch what was published and check it against what was built.
 PUBLISHED="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" \
