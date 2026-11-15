@@ -200,6 +200,8 @@ class BackgroundWorkService : Service() {
     val tap = PendingIntent.getActivity(this, 0, open,
       PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, CHANNEL) else Notification.Builder(this)
+    // The newest job leads. Ordering by latest update made the collapsed
+    // bar flip between two jobs' percentages several times a second.
     val active = jobs.values.maxByOrNull { it.order }
     val known = active != null && active.total > 0.0
     val ratio = active?.let { if (it.total > 0.0) (it.current / it.total).coerceIn(0.0, 1.0) else 0.0 } ?: 0.0
@@ -214,7 +216,13 @@ class BackgroundWorkService : Service() {
       .setProgress(1000, (ratio * 1000).toInt(), !known)
       .setSubText(if (known) "$percent%" else "Working")
       .setContentIntent(tap).setOngoing(true).setOnlyAlertOnce(true)
-      .setCategory(Notification.CATEGORY_PROGRESS).build()
+      .setCategory(Notification.CATEGORY_PROGRESS)
+      .apply {
+        // Android 12+ holds a foreground-service notification back for
+        // ten seconds. A dip finishes inside that, so it never appeared.
+        if (Build.VERSION.SDK_INT >= 31) setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
+      }
+      .build()
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -245,7 +253,6 @@ class BackgroundWorkService : Service() {
     job.current = if (current.isFinite()) current.coerceAtLeast(0.0) else 0.0
     if (job.total > 0.0) job.current = job.current.coerceAtMost(job.total)
     job.detail = detail
-    job.order = ++progressOrder
     if (!notificationQueued) {
       notificationQueued = true
       handler.postDelayed({

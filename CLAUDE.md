@@ -3,9 +3,31 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.144.** If the build in `js/app.js` is well
+**Last updated at build 2.9.145.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Progress redux — 2.9.145 (#19)
+
+Joseph: one dive's progress looked wrong, another showed no notification,
+and syncing songs showed two tasks. Three causes, all in
+`test_progress_redux.mjs`:
+
+- `runSearch`'s catalogue callback called `stageCb` and then `report()`,
+  and `report` sets the bar to the stage's *start*. Every tick reset it
+  to 25%. One call now carries both the fraction and the count.
+- `LibraryCache.getLikedTracks` took its own native lease even inside a
+  dive or scan. `withBackgroundWork(..., { join: true })` now rides on a
+  running job with no row and no progress of its own; with nothing
+  running it still owns one. `readLibraryFullScreen` still passes its
+  screen lease explicitly.
+- Android 12+ defers foreground-service notifications by ten seconds;
+  `FOREGROUND_SERVICE_IMMEDIATE` on API 31+. The collapsed notification
+  now follows the newest job by start order, not by latest update.
+
+Not run on a device. The APK is built by the `[native-build]` commit.
 
 ---
 

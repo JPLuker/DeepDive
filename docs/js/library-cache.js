@@ -190,7 +190,7 @@ export class LibraryCache {
         const completedTotal = this._lastProgress?.[1] || tracks.length;
         report(completedTotal, completedTotal);
         return tracks;
-      }, { lease: options.backgroundLease });
+      }, { lease: options.backgroundLease, join: true });
     } else if (listener && this._lastProgress) { try { listener(...this._lastProgress); } catch (e) {} }
     const running = this._inFlight;
     try { return await running; }

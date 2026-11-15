@@ -71,7 +71,16 @@ export async function beginBackgroundWork(label) {
     await request('end', { token });
   } };
 }
-export async function withBackgroundWork(label, run, { lease: parent = null } = {}) {
+// Work started inside a job someone can see (a dive, scan or library
+// screen) is part of that job. It used to take its own token, so a dive
+// showed "2 jobs" while it synced Liked Songs and the collapsed
+// notification flipped between the two bars (#19). `join` rides on the
+// running job without adding a row or competing progress; the screen
+// already reports that stage. With nothing running, it owns a lease.
+const JOINED = Object.freeze({ active: true, joined: true, update: async () => {}, release: async () => {} });
+export function backgroundWorkRunning() { return leases.size > 0; }
+export async function withBackgroundWork(label, run, { lease: parent = null, join = false } = {}) {
+  if (!parent && join && leases.size && supportsBackgroundWork()) return run(JOINED);
   // A denied/unsupported service should not prevent foreground use.
   let lease;
   try { lease = parent ? await parent : await beginBackgroundWork(label); }

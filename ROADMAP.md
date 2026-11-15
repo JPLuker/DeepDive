@@ -461,6 +461,12 @@ release with notes. Version numbers are Joseph's to take.
 
 ## Shipped since — build 2.9.120
 
+### 2.9.145 — Progress redux (#19)
+
+Dive bar moves through the catalogue read; nested library syncs join the
+running job instead of adding a second notification row; Android shows the
+notification immediately.
+
 ### 2.9.144 — Artist identity (#18)
 
 Dive entry points carry the picked artist's Spotify id; a name-only

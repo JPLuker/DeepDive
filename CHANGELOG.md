@@ -3,6 +3,16 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.145
+- Fixed (#19): the dive's bar sat at 25% for the whole catalogue read
+  and jumped at the end. Each release now moves it, in the app and in
+  the Android notification.
+- A Liked Songs sync inside a dive or scan is part of that job, not a
+  second one. The notification no longer says "2 jobs" or flips between
+  two bars.
+- Android shows the progress notification immediately. Android 12+ held
+  it back for ten seconds, so short jobs like a dip never showed one.
+
 ## 2.9.144
 - Fixed (#18): picking "idk" made a dip for "Artist Unknown". Every dive
   entry point passed a bare name and the dive searched Spotify again,

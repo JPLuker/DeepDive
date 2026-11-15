@@ -225,8 +225,11 @@ export async function runSearch(client, artistName, opts = {}) {
       const left = Math.max(0, total - done);
       const secs = typeof client.estimateSeconds === "function" ? client.estimateSeconds(left) : 0;
       const eta = secs > 5 ? ` — about ${fmtEta(secs)} left` : "";
-      stageCb("catalog", `Reading ${artist.name}'s releases…`)(done, total);
-      report(`Reading ${artist.name}'s releases… (${done}/${total})${eta}`);
+      // One call, carrying both the stage's share of the bar and the
+      // count. This used to set the bar with stageCb and then call
+      // report(), which reset it to the stage's start: the bar sat at
+      // 25% for the whole catalogue read and jumped at the end (#19).
+      stageCb("catalog", `Reading ${artist.name}'s releases… (${done}/${total})${eta}`)(done, total);
     },
     includeGroups,
     resumeState: catalogResume,
