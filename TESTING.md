@@ -17,7 +17,7 @@ Settings → Updates fetch it.
 9. [ ] Like one song from a dive playlist in Spotify, then Refresh: the review takes out just that one; Apply removes it
 10. [ ] With all playlists ticked, Add new releases is off and won't turn on; tick just one and it can, and the refresh re-dives that artist and adds only songs you haven't liked
 12. [ ] Export a backup on the web (Settings → Advanced). On a fresh install of the app, tap Restore from a backup on the first screen: it goes straight to Connect Spotify, and your crate is there after signing in
-11. [ ] On Lappy, the 2.9.154 Flatpak (or AppImage) installs, opens and signs in; Windows the same with the Setup .exe
+11. [ ] On Lappy, the 2.9.155 Flatpak (or AppImage) installs, opens and signs in; Windows the same with the Setup .exe
 
 ---
 

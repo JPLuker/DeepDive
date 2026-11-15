@@ -291,7 +291,7 @@ the pacing work. Neither has been looked at properly.
 
 ---
 
-## Stopping point, 15 Nov (build 2.9.154)
+## Stopping point, 15 Nov (build 2.9.155)
 
 Same ordering rule as 20 Oct: Claude's list first, then everything that
 needs Joseph in one place.
@@ -318,13 +318,13 @@ What a future session can pick up without Joseph:
 
 ### 2. Joseph's queue — collected
 
-1. **Install the newest APK, 2.9.154** (or let the updater fetch it) and check
+1. **Install the newest APK, 2.9.155** (or let the updater fetch it) and check
    #18 and #19 on the phone: dip "idk" from the search list; watch one
    dive's bar and notification; start a Dip and look for its
    notification. Close #18 if the dip shows idk.
 2. **Try Refresh dive playlists** on your account (TESTING.md section
    11). It's the first feature that removes tracks from your playlists.
-3. **Desktop builds:** 2.9.154 is published as UNTESTED Windows and
+3. **Desktop builds:** 2.9.155 is published as UNTESTED Windows and
    Linux releases, Linux in all five formats including Flatpak. Nobody
    has run them; elementary OS is the first test. Later ones: Native builds → Run workflow, platforms "desktop".
 4. The 20 Oct items still open: the quota experiment, private
