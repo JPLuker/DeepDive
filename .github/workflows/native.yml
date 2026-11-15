@@ -133,6 +133,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # First, before twenty minutes of SDK and Rust: a number already
+      # published is never rebuilt, and every build has changelog notes.
+      - name: Version guard
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REQUESTED_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          V="${REQUESTED_VERSION:-$(sed -n 's/^export const BUILD = "\([^"]*\)".*/\1/p' docs/js/app.js)}"
+          tools/ci-capture.sh "Version guard" bash tools/version-guard.sh "$V"
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

@@ -3,9 +3,27 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.146.** If the build in `js/app.js` is well
+**Last updated at build 2.9.148.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Release notes and the version guard — 2.9.148
+
+`tools/publish-android.sh` used to carry notes written for 2.9.143, so
+2.9.145 shipped describing 2.9.143, and the updater shows release notes
+as what's new. Notes now come from `CHANGELOG.md` through
+`tools/release-notes.mjs`: **every build needs a `## <version>` section
+before it can publish.** `tools/version-guard.sh` runs first in the
+Android job and fails if the APK for this number is already on its
+release (a 404 is the only "free" answer; any other lookup failure
+fails the build), or if the changelog has no section. `--clobber` is
+gone, so a published APK is never replaced.
+
+The 2.9.145 release body still has the old notes: this session type
+can't edit releases (HTTP 403). Joseph can paste the 2.9.145 changelog
+section into it, or leave it.
 
 ---
 

@@ -3,6 +3,14 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.148
+- Android release notes now come from this changelog. The 2.9.145 APK
+  went out with 2.9.143's notes, and the in-app updater showed them.
+- An Android build stops before compiling if its version is already
+  published or has no changelog entry. A published APK is never
+  replaced.
+- First APK with Refresh dive playlists and the 2.9.147 fixes.
+
 ## 2.9.147
 - Fixed: Export backup and Import backup were nearly invisible in the
   dark theme (1.18:1). They used a button class with no style. Now
