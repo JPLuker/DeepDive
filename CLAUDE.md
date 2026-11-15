@@ -47,7 +47,8 @@ Nobody has run any of them yet.
 GNOME 47 runtime, app id `io.github.jpluker.deepdive`) in the
 `flatpak` job; `publish-desktop` runs if the build succeeded even when
 Flatpak failed, and the Linux notes then say there's no Flatpak
-(RELEASES.md 6.4, decided: optional).
+(RELEASES.md 6.4, decided: optional). First run (43728525152) built all
+five Linux formats including the Flatpak, and published them.
 
 ---
 
