@@ -1,5 +1,25 @@
 # Testing notes
 
+## Check this build — 2.9.152
+
+Just this build's checks, so a round takes minutes. The full pass plan
+starts below. Install the APK from the 2.9.152 Android release, or let
+Settings → Updates fetch it.
+
+1. [ ] Installs over 2.9.148 (or earlier) without uninstalling; crate and history are still there
+2. [ ] Search "idk", pick it from the list, choose Dip: the dip is idk's, not "Artist Unknown" (#18)
+3. [ ] Type a name Spotify doesn't have exactly: the chooser says "Closest match on Spotify"
+4. [ ] Dive an artist with many releases: the bar climbs steadily through "Reading … releases" (#19)
+5. [ ] During that dive, pull down notifications: one job, and its percentage matches the app's (#19)
+6. [ ] Start a Dip and pull down notifications straight away: it's there (#19)
+7. [ ] Settings → Advanced, dark theme: Export backup and Import backup are readable filled buttons
+8. [ ] Dives → Refresh dive playlists lists your dive playlists, all ticked, no dips or mixes
+9. [ ] Like one song from a dive playlist in Spotify, then Refresh: the review takes out just that one; Apply removes it
+10. [ ] Refresh with Add new releases on: each artist is dived again and only songs you haven't liked are added
+11. [ ] Windows or Linux (2.9.152 UNTESTED desktop release): installs, opens, signs in
+
+---
+
 > ## How to use this file
 >
 > This is a **pass plan**, not a changelog. It was rewritten on 23 Oct

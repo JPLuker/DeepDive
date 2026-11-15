@@ -19,6 +19,13 @@ Newest first. Copy the block below for each new lesson.
 - **Harvested:** no
 -->
 
+### 2026-11-15 · Change one thing at a time in a step you can't watch
+- **What happened:** 2.9.149 rewrote the release step to pass files and `--latest=false` to `gh release create` in one call. CI's token answered "HTTP 403: Resource not accessible by integration", the APK never published, and from here there was no log to say which change caused it. Going back to the old create-then-upload sequence (2.9.152) published all three platforms.
+- **Lesson:** when a step only runs in CI and its logs are out of reach, keep its proven sequence and change one thing per run, so a failure points at its cause.
+- **Applies to:** every project
+- **What we changed:** `tools/publish-untested.sh` creates, then uploads; a comment says why.
+- **Harvested:** no
+
 ### 2026-11-15 · A push gate that greps for "0 failed" passes on any green suite
 - **What happened:** the documented gate was `grep -q " 0 failed"` over the runner's output. Every passing suite prints "N passed, 0 failed", so the grep matched whenever any suite passed, and 2.9.150 was pushed with a failing suite. The same line is in InternalDesignGuidelines SOP 9.3.
 - **Lesson:** gate on the test runner's exit code, not on text in its output; a check against output must anchor on the one summary line (L-2).

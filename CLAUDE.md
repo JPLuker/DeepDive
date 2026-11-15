@@ -35,6 +35,13 @@ the version" with no annotation; two suspects fixed in 2.9.152 (python3
 Store stub, cp1252 decoding app.js), neither confirmed. Linux's build
 succeeded but publish-desktop waits on both, so nothing was published.
 
+**2.9.152 published all three** (runs 43727225154 and 43727236234):
+`v2.9.152-untested-android`, `-linux` (AppImage, .deb, .rpm) and
+`-windows` (Setup .exe, .msi, portable .exe), each with SHA256SUMS.txt,
+pre-release, UNTESTED title and warning block. The updater's tag regex
+only matches `-untested-android`, so desktop releases can't confuse it.
+Nobody has run any of them yet.
+
 ---
 
 ## Release notes and the version guard — 2.9.148
