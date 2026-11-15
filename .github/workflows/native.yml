@@ -18,13 +18,18 @@ on:
       version:
         description: "Version to build, without the v (e.g. 3.0.0)"
         required: true
+      platforms:
+        description: "What to build"
+        type: choice
+        options: [all, desktop, android]
+        default: all
 
 permissions:
   contents: write
 
 jobs:
   build:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.platforms != 'android'
     strategy:
       fail-fast: false
       matrix:
@@ -168,7 +173,10 @@ jobs:
   # the SDK and the NDK, four Rust targets, and a generated Gradle
   # project that does not live in the repo.
   android:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[native-build]')
+    # A manual run can leave Android out: the push that marked this
+    # version [native-build] has usually published its APK already, and
+    # the version guard would (rightly) fail a second build of it.
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.platforms != 'desktop') || contains(github.event.head_commit.message, '[native-build]')
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4

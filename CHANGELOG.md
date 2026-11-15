@@ -3,6 +3,10 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.150
+- First Windows and Linux test builds published as UNTESTED releases.
+- Manual native builds can pick desktop, Android or both.
+
 ## 2.9.149
 - Windows and Linux builds now publish as their own UNTESTED
   pre-releases (installer, MSI and portable .exe; AppImage, .deb and
