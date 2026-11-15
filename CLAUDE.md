@@ -3,9 +3,31 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.148.** If the build in `js/app.js` is well
+**Last updated at build 2.9.149.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## One publisher for every untested build — 2.9.149
+
+`tools/publish-untested.sh <Platform> <suffix> <dir> <files...>` is the
+only way a native build reaches a release. It fails closed (RELEASES.md
+Part 6): every listed file must exist and be non-empty, no unlisted file
+may ride along, the version needs changelog notes, the tag must not
+exist yet; then SHA256SUMS.txt, a pre-release that is never Latest and
+titled `UNTESTED — <Platform> build for DeepDive <v>`, notes opening
+with the Part 2.3 warning, and an after-check that every asset is there
+at the size that was built. `publish-android.sh` is a one-line call to
+it, keeping the APK name the updater looks for. The `publish-desktop`
+job does the same for Windows (Setup .exe, .msi, portable .exe) and
+Linux (AppImage, .deb, .rpm) on manual runs only. Flatpak and tar.gz
+aren't built yet. `test_publish_untested.mjs` drives every branch with
+a stub `gh`.
+
+The desktop jobs have never run since this change; the first manual run
+is the real test. If the portable .exe step fails, it says how many
+top-level .exe files it found.
 
 ---
 
@@ -467,10 +489,16 @@ rejected.
 ## Working with Joseph
 
 **Handoff is GitHub Issues, not chat.** Per the standards repo's
-`WORKFLOW.md`: read the project's open issues at the start of every
-session, treat them as the to-do list, and close them from the commit
-with `Closes #N`. Work that only partly covers an issue gets a comment
-saying what is left, and stays open.
+`WORKFLOW.md` 1.1: read the open issues at the start of every session
+and treat them as the to-do list. **Agents close issues themselves**
+once the fix is pushed and proven (Joseph, 11 Nov), with the closing
+message in WORKFLOW.md 1.2: version, Eastern timestamp, commit, proof,
+what wasn't tested. `gh issue` is GraphQL and blocked here; use
+`gh api -X PATCH repos/JPLuker/DeepDive/issues/N -f state=closed -f
+state_reason=completed`. **A report you couldn't reproduce stays open**
+with a "possibly fixed" comment, so don't put `Closes #N` in that
+commit: GitHub closes it on push (it happened with #18, 15 Nov). Partly
+done gets a comment saying what's left.
 
 **Version numbers are Joseph's call.** Claimed 2.9 twice, then 3.0 once
 — that last from reading "3.0 was the new 2.9 target" as permission to
@@ -1087,8 +1115,43 @@ It looked like rate limiting for two days.
 
 ---
 
+## Identity
+
+- Visual style: project's own (Aurora-era) — recorded in DESIGN.md B12
+  as "DeepDive: Aurora-era, own identity". Moving to Quiet Precision
+  (DESIGN.md Part B) is Joseph's call and has not been asked yet; until
+  he says, small fixes stay within the current look and nothing gets
+  restyled.
+- Accent: blue — light `#0B54FF` / dark `#3E7BFF`
+- Neutrals: cool near-black (`#0B0C0F` base)
+- Semantic shifts: gold and teal secondaries
+- Display font: Martius, wordmark only (Geist everywhere else)
+- Shape: pill buttons, floating pill tab bar
+- Density: default
+- Signature detail: the full-bleed dive screen over the artist's photo
+
+## Deviations
+
+From InternalDesignGuidelines defaults, on purpose:
+
+- **Backup lives under Settings → Advanced**, not a top-level "Data &
+  storage" category (DESIGN.md A4). Joseph's call during the 2.9.143
+  phone review. Don't move it back out.
+- **Martius is a third font family** on the wordmark only (A9 allows
+  two plus "one brand display face", so this is within the rule now).
+- **Release tags are `v<version>-untested-android`** until 3.0, not a
+  bare `v<version>`: nothing has been through a full device pass yet
+  (RELEASES.md Part 2).
+
 ## Design direction
 
+> **The standards changed on 11 Nov.** DESIGN.md v2 split into Part A
+> (how screens behave, copy, Settings, accessibility: the default
+> everywhere) and Part B (Quiet Precision, an *option* only with
+> Joseph's yes). Aurora Glass is archived. So: Part A applies to
+> DeepDive now; Part B does not until Joseph says so. Ask before any
+> visual rework (DESIGN.md B0). The note below predates that.
+>
 > **Superseded. `JPLuker/InternalDesignGuidelines` wins.** Joseph's
 > call, 18 Oct: where the standards repo and this section disagree, the
 > standards repo is right. Read its `WORKFLOW.md` at the start of a
@@ -1179,7 +1242,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.142**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.148**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.

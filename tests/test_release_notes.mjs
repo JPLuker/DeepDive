@@ -19,11 +19,13 @@ check('a version without a section has no notes', notesFor(log, '2.9.14') === nu
 const BUILD = read('docs/js/app.js').match(/export const BUILD = "([^"]+)"/)[1];
 check(`the current build ${BUILD} has changelog notes`, !!notesFor(read('CHANGELOG.md'), BUILD));
 
-const pub = read('tools/publish-android.sh');
-check('publishing takes its notes from the changelog', /node tools\/release-notes\.mjs "\$BUILD_VERSION"/.test(pub));
-check('no hard-coded description of one build', !/genre shelf|in-app updater, a/.test(pub));
-check('an APK is never replaced in place', !/--clobber/.test(pub));
-check('the untested warning stays first', /^\s*echo "UNTESTED Android build\./m.test(pub));
+// 2.9.149: Android publishes through tools/publish-untested.sh, shared
+// with desktop; test_publish_untested.mjs drives it end to end.
+const pub = read('tools/publish-untested.sh');
+check('publishing takes its notes from the changelog', /node tools\/release-notes\.mjs "\$V"/.test(pub));
+check('no hard-coded description of one build', !/genre shelf|in-app updater, a/.test(pub + read('tools/publish-android.sh')));
+check('an APK is never replaced in place', !/--clobber/.test(pub + read('tools/publish-android.sh')));
+check('the untested warning stays first', /^\s*echo "> ⚠️ \*\*UNTESTED BUILD\.\*\*/m.test(pub));
 
 const wf = read('.github/workflows/native.yml');
 const guard = wf.indexOf('tools/version-guard.sh');

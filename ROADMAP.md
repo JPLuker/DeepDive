@@ -291,7 +291,61 @@ the pacing work. Neither has been looked at properly.
 
 ---
 
-## Stopping point, 20 Oct (build 2.9.120)
+## Stopping point, 15 Nov (build 2.9.149)
+
+Same ordering rule as 20 Oct: Claude's list first, then everything that
+needs Joseph in one place.
+
+### 1. Claude's queue
+
+**Empty, as of 2.9.149.** Everything in the 20 Oct queue below has
+shipped: Phase 1 (#14) by 2.9.125, Phase 2 repo furniture in 2.9.126,
+Phase 3's scan budget in 2.9.127, Phase 4 native builds through
+2.9.143 (signed Android with an updater), and the TESTING.md rewrite on
+23 Oct. This session (2.9.144 to 2.9.149) fixed #18 and #19, built
+Refresh dive playlists, fixed dark-mode backup buttons, took the em
+dashes out of UI copy, and made every native build publish as its own
+UNTESTED pre-release with notes from CHANGELOG.md.
+
+What a future session can pick up without Joseph:
+- **Session 4 is done.** Its remaining bullets shipped long ago: 40-odd
+  card types, playlist cleanup in Settings, Dip as the hour-long mix,
+  custom covers.
+- If Joseph says yes to Quiet Precision for DeepDive, that restyle is
+  the next big piece of Claude work. Not before (DESIGN.md B0).
+- `TESTING.md` will need trimming to the current build's checks before
+  the 3.0 pass (WORKING-WITH-JOSEPH: at most 15 per build).
+
+### 2. Joseph's queue — collected
+
+1. **Install the newest APK, 2.9.149** (or let the updater fetch it) and check
+   #18 and #19 on the phone: dip "idk" from the search list; watch one
+   dive's bar and notification; start a Dip and look for its
+   notification. Close #18 if the dip shows idk.
+2. **Try Refresh dive playlists** on your account (TESTING.md section
+   11). It's the first feature that removes tracks from your playlists.
+3. **Decide:** should "Add new releases" on Refresh default on? Claude
+   recommends off.
+4. **Decide:** move DeepDive to Quiet Precision (DESIGN.md Part B), or
+   keep its own look? B12 says to ask before touching its visuals.
+5. **Desktop builds:** run Native builds → Run workflow with version
+   2.9.149 (or later) to get UNTESTED Windows and Linux releases. They
+   have never been run by a person; elementary OS is the first test.
+6. The 20 Oct items still open: the quota experiment, private
+   vulnerability reporting, artist photo permission, landing Mixes copy,
+   retaking the landing screenshots, the full `TESTING.md` pass.
+7. **Optional:** the 2.9.145 Android release still carries 2.9.143's
+   notes. This session can't edit releases; paste the 2.9.145 changelog
+   section in if you want it right.
+
+### 3. Then the release
+
+Tag `v3.0.0`, rename the releases to the song-title convention, cut the
+release with notes. Version numbers are Joseph's to take.
+
+---
+
+## Stopping point, 20 Oct (build 2.9.120) — superseded by 15 Nov, kept for its notes
 
 **Ordering rule, Joseph's call on 20 Oct: everything Claude can do
 alone comes first.** He is usually at work while a session runs, so a
@@ -840,6 +894,10 @@ the Last.fm section.*
 ---
 
 ## Session 4 — Playlist generation, widened
+
+*Done, recorded 15 Nov: more card types (40-odd), cleanup in Settings
+(Find DeepDive playlists), the hour-long mix (Dip, 2.8.49) and custom
+covers all shipped. The bullets below are the original plan.*
 
 "Way more playlist generation options", requested before 3.0.
 

@@ -115,14 +115,54 @@ jobs:
             \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' -o -name '*.msi' -o -name '*.exe' \) \
             -print0 | while IFS= read -r -d '' f; do
               ext="${f##*.}"
-              cp "$f" "dist/DeepDive-${V}-${{ matrix.label }}-${{ matrix.arch }}-UNTESTED.${ext}"
+              # The NSIS .exe is the installer; Part 5.1 names it Setup so
+              # it can't be confused with the portable .exe below.
+              variant=""; [ "$ext" = "exe" ] && variant="-Setup"
+              cp "$f" "dist/DeepDive-${V}-${{ matrix.label }}-${{ matrix.arch }}${variant}-UNTESTED.${ext}"
             done
+          # The standalone .exe (RELEASES.md Part 1). Needs the WebView2
+          # runtime, which Windows 10 and 11 ship with.
+          # The CLI may name it after the crate or the productName, so
+          # take the one top-level .exe and refuse to guess between two.
+          if [ "${{ matrix.label }}" = "Windows" ]; then
+            mapfile -t exes < <(find src-tauri/target/release -maxdepth 1 -type f -iname '*.exe')
+            if [ "${#exes[@]}" -ne 1 ]; then
+              echo "::error title=Portable exe::Expected one .exe in target/release, found ${#exes[@]}: ${exes[*]}"
+              exit 1
+            fi
+            cp "${exes[0]}" "dist/DeepDive-${V}-Windows-x64-portable-UNTESTED.exe"
+          fi
           ls -la dist
 
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.label }}-${{ matrix.arch }}
           path: dist/*
+
+  # Desktop builds go to their own UNTESTED pre-releases, one per OS
+  # (RELEASES.md Part 2), after both have built. Before 2.9.149 they
+  # were only Actions artifacts, which download as ZIPs and which
+  # Joseph couldn't test without extracting.
+  publish-desktop:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Publish the untested desktop releases
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          V="$BUILD_VERSION"
+          tools/ci-capture.sh "Version guard (desktop)" node tools/release-notes.mjs "$V" > /dev/null
+          tools/ci-capture.sh "Publish Linux" bash tools/publish-untested.sh Linux linux artifacts/Linux-x64 \
+            "DeepDive-${V}-Linux-x64-UNTESTED.AppImage" "DeepDive-${V}-Linux-x64-UNTESTED.deb" "DeepDive-${V}-Linux-x64-UNTESTED.rpm"
+          tools/ci-capture.sh "Publish Windows" bash tools/publish-untested.sh Windows windows artifacts/Windows-x64 \
+            "DeepDive-${V}-Windows-x64-Setup-UNTESTED.exe" "DeepDive-${V}-Windows-x64-UNTESTED.msi" "DeepDive-${V}-Windows-x64-portable-UNTESTED.exe"
 
   # Android is its own job rather than a matrix row: it needs a JDK,
   # the SDK and the NDK, four Rust targets, and a generated Gradle

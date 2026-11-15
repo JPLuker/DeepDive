@@ -36,7 +36,7 @@ import * as refresh from "./refresh.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.148";
+export const BUILD = "2.9.149";
 
 // The public site. Needed only where a relative link cannot work: in a
 // native shell "../" is the bundle root, which has no landing page in

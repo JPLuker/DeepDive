@@ -3,6 +3,15 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.149
+- Windows and Linux builds now publish as their own UNTESTED
+  pre-releases (installer, MSI and portable .exe; AppImage, .deb and
+  .rpm) instead of ZIP-only Actions artifacts. Run Native builds by hand
+  to make one.
+- Every untested release opens with the warning block, is titled
+  UNTESTED, is never marked Latest, carries SHA256SUMS.txt, and is
+  checked again after publishing.
+
 ## 2.9.148
 - Android release notes now come from this changelog. The 2.9.145 APK
   went out with 2.9.143's notes, and the in-app updater showed them.
