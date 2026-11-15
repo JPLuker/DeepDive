@@ -236,7 +236,8 @@ check('a show does not set one, so it keeps every track', !/id: "show"[\s\S]{0,4
 // never had it.
 const spj = readFileSync(new URL('../docs/js/spotify.js', import.meta.url), 'utf8');
 check('there is one artist shape', /export function normaliseArtist/.test(spj));
-check('findArtist uses it', /return normaliseArtist\(exact \|\| items\[0\]\);/.test(spj));
+// 2.9.144 (#18): exact, then loose, then a flagged closest result; all one shape.
+check('findArtist uses it', /if \(exact\) return normaliseArtist\(exact\);/.test(spj) && /if \(near\) return normaliseArtist\(near\);/.test(spj) && /\.\.\.normaliseArtist\(items\[0\]\), closestMatch: true/.test(spj));
 check('and so does searchArtists', /return items\.map\(normaliseArtist\);/.test(spj));
 // Two mappings for one shape is what caused this in the first place.
 check('no second mapping was left behind', (spj.match(/image_url_large: images\.length/g) || []).length === 1);

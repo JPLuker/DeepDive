@@ -35,7 +35,7 @@ import * as cover from "./cover.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.143";
+export const BUILD = "2.9.144";
 
 // The public site. Needed only where a relative link cannot work: in a
 // native shell "../" is the bundle root, which has no landing page in
@@ -1795,6 +1795,34 @@ function lookupArtist(name) {
 }
 
 /**
+ * Pin a name to the artist the user actually picked.
+ *
+ * Every dive entry point used to hand over a bare name, and the dive
+ * then searched Spotify for it again. For a short or common name that
+ * second search can return someone else: picking "idk" from the search
+ * list produced a dip for "Artist Unknown" (#18). When the pick carries
+ * a Spotify id, that id is the identity and the name is only a label.
+ */
+function rememberArtistChoice(name, { id = null, artist = null } = {}) {
+  const key = (name || "").trim().toLowerCase();
+  if (!key) return;
+  if (artist && artist.id) {
+    _artistLookups.set(key, Promise.resolve(normaliseArtist(artist)));
+    return;
+  }
+  if (!id || demo.demoActive()) return;
+  const known = _artistLookups.get(key);
+  const p = (known || Promise.resolve(null)).catch(() => null).then((a) => {
+    if (a && a.id === id) return a;
+    return client.get(`artists/${id}`).then(normaliseArtist);
+  });
+  // A failed id lookup falls back to the name, so a deleted artist id
+  // in an old crate entry still dives rather than erroring.
+  p.catch(() => { if (_artistLookups.get(key) === p) _artistLookups.delete(key); });
+  _artistLookups.set(key, p);
+}
+
+/**
  * The artist's photo across the top of the chooser.
  *
  * The chooser is the first thing you see after naming someone, and it
@@ -1802,6 +1830,18 @@ function lookupArtist(name) {
  * it here costs nothing extra; the photo fades in when it arrives. If
  * there is no photo, or the lookup fails, the plain chooser remains.
  */
+/**
+ * When Spotify had no artist by the typed name, the chooser names who
+ * it found instead, so a dive never quietly becomes someone else's.
+ */
+function showClosestMatch(a) {
+  if (!a || !a.closestMatch) return;
+  const titleEl = document.getElementById("intent-title");
+  const sub = document.getElementById("intent-artist");
+  if (titleEl) titleEl.textContent = a.name;
+  if (sub) sub.textContent = `Closest match on Spotify for "${a.searchedFor}".`;
+}
+
 function paintIntentHero(artistName) {
   const hero = document.getElementById("intent-hero");
   const img = document.getElementById("intent-photo");
@@ -1822,6 +1862,7 @@ function paintIntentHero(artistName) {
   const current = () => _pendingArtist === artistName;
   lookupArtist(artistName).then((a) => {
     if (!current()) return;
+    showClosestMatch(a);
     const url = a && (a.image_url_large || a.image_url);
     if (!url) { plain(); return; }
     img.onload = () => { if (current()) img.classList.add("loaded"); };
@@ -2170,7 +2211,7 @@ function wireSearchBar() {
     inputId: "artist-input",
     listId: "autofill-list",
     source: (q) => demo.demoActive() ? demoSearchArtists(q, 6) : client.searchArtists(q, 6),
-    onChoose: (it) => startSearch(it.name),
+    onChoose: (it) => startSearch(it.name, { artist: it }),
     allowPin: true,
   });
 }
@@ -2466,9 +2507,9 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     ? `<img src="${esc(imageUrl)}" alt="" class="tile-art" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'tile-art-fallback',textContent:'${initial(name)}'}))">`
     : `<span class="tile-art-fallback">${initial(name)}</span>`;
 
-  const tile = (name, imageUrl, sub, actions, isPin) => `
+  const tile = (name, imageUrl, sub, actions, isPin, artistId = "") => `
     <div class="tile-wrap${isPin ? " is-pin" : ""}">
-      <button class="tile" data-search="${esc(name)}">
+      <button class="tile" data-search="${esc(name)}" data-artist-id="${esc(artistId || "")}">
         ${art(name, imageUrl)}
         <span class="tile-text">
           <span class="tile-title">${esc(name)}</span>
@@ -2488,7 +2529,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
       ${shownPins.map((p) => tile(p.name, p.image_url, null,
         `<button class="tile-btn${watchlist.isUpNext(p.name) ? " is-on" : ""}" data-upnext="${esc(p.name)}" title="${watchlist.isUpNext(p.name) ? "Remove from Up next" : "Add to Up next"}">${STAR_SVG}</button>
          <button class="tile-btn" data-block="${esc(p.name)}" data-sid="${esc(p.spotify_id || "")}" title="Never suggest this artist">&minus;</button>
-         <button class="tile-btn danger" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`, true)).join("")}
+         <button class="tile-btn danger" data-unpin="${esc(p.id)}" data-name="${esc(p.name)}" title="Unpin">&times;</button>`, true, p.spotify_id)).join("")}
     </div>
     ${extraPins > 0 ? `<div style="text-align:center;margin-top:10px;"><button class="btn btn-ghost btn-small" id="show-more-pins">Show ${extraPins} more</button></div>` : ""}` : "";
 
@@ -2505,7 +2546,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
       ${suggestions.map((sg) => tile(sg.name, sg.image_url, sg.reason,
         `<button class="tile-btn" data-upnext="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" data-img-big="${esc(sg.image_url_large || "")}" title="Add to Up next">${STAR_SVG}</button>
          <button class="tile-btn" data-pin="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" data-img="${esc(sg.image_url || "")}" data-img-big="${esc(sg.image_url_large || "")}" title="Add to your crate">+</button>
-         <button class="tile-btn danger" data-block="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" title="Never suggest this artist">&minus;</button>`)).join("")}
+         <button class="tile-btn danger" data-block="${esc(sg.name)}" data-sid="${esc(sg.id || "")}" title="Never suggest this artist">&minus;</button>`, false, sg.id)).join("")}
     </div>` : "";
 
   // Never leave the row silently blank — an empty area with no
@@ -2561,7 +2602,7 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
 
 
   el.querySelectorAll("[data-search]").forEach((b) =>
-    b.addEventListener("click", () => startSearch(b.dataset.search)));
+    b.addEventListener("click", () => startSearch(b.dataset.search, { id: b.dataset.artistId || null })));
 
   const redraw = () => renderSuggestionRow(_row.el, _row.pins, _row.suggestions, _row.showAllPins, _row.state);
   // Repaint pins alone — suggestions and their images stay untouched.
@@ -2639,7 +2680,9 @@ function renderSuggestionRow(el, pins, suggestions, showAllPins = false, state =
     const pool = suggestions.concat(pins);
     if (!pool.length) return flash("Nothing to pick from yet.");
     const pick = pool[Math.floor(Math.random() * pool.length)];
-    startSearch(pick.name);
+    // Pins keep their own entry id in `id`; only suggestions use it for
+    // the Spotify id.
+    startSearch(pick.name, { id: ("spotify_id" in pick ? pick.spotify_id : pick.id) || null });
   });
 
   el.querySelectorAll("[data-block]").forEach((b) => b.addEventListener("click", (ev) => {
@@ -2697,9 +2740,10 @@ async function preflight() {
  * tile did not. The dive now shows a loading field until the real photo
  * is ready, so no caller needs to supply artwork.
  */
-function startSearch(artistName) {
+function startSearch(artistName, identity = {}) {
   if (demo.demoActive()) return renderDemoChooser(artistName);
   if (blockedByRateLimit()) return;
+  rememberArtistChoice(artistName, identity);
   _lastDiveArtist = artistName;
   _haveArtistPhoto = false;
   openIntentModal(artistName);
@@ -6192,7 +6236,7 @@ function renderHistory() {
             </span>
           </span>
           <div class="watchlist-actions">
-            <button class="btn btn-ghost btn-small" data-redive="${esc(d.artistName)}">Dive again</button>
+            <button class="btn btn-ghost btn-small" data-redive="${esc(d.artistName)}" data-artist-id="${esc(d.artistId || "")}">Dive again</button>
           </div>
         </div>`).join("") : `<p class="empty-note">No dives yet.</p>`}
       ${dives.length ? `<div class="actions"><button class="btn btn-ghost btn-small" id="clear-dives">Clear dive history</button></div>` : ""}
@@ -6212,7 +6256,7 @@ function renderHistory() {
 
   root.querySelector("[data-home]")?.addEventListener("click", () => renderHome());
   root.querySelectorAll("[data-redive]").forEach((b) =>
-    b.addEventListener("click", () => startSearch(b.dataset.redive)));
+    b.addEventListener("click", () => startSearch(b.dataset.redive, { id: b.dataset.artistId || null })));
 
   const msg = document.getElementById("history-msg");
   const say = (text, isError) => {
@@ -6331,7 +6375,7 @@ function crateTile(e, dived) {
   const photo = e.image_url || e.image_url_large;
   return `
     <div class="crate-tile" data-crate="${esc(e.name)}">
-      <button class="crate-open" data-search="${esc(e.name)}">
+      <button class="crate-open" data-search="${esc(e.name)}" data-artist-id="${esc(e.spotify_id || "")}">
         ${photo
           ? `<img src="${esc(photo)}" alt="" loading="lazy" class="crate-art">`
           : `<span class="crate-art crate-art-blank">${esc((e.name || "?").charAt(0).toUpperCase())}</span>`}
@@ -6425,7 +6469,7 @@ function renderCrate() {
       flash(`${rm.dataset.name} is out of your crate.`);
       renderCrate();
     } else if (open) {
-      startSearch(open.dataset.search);
+      startSearch(open.dataset.search, { id: open.dataset.artistId || null });
     }
   });
 

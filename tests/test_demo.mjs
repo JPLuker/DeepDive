@@ -42,12 +42,13 @@ check('index lists every screen', DEMO_SCREENS.every(([id]) => typeof id === 'st
 // three checks is that the demo drives the real renderers rather than
 // a mock, which is unchanged, so they allow the await.
 check('chooser is a staged screenshot route', /screen === "chooser"\) return await renderDemoChooser\(\)/.test(src) && DEMO_SCREENS.some(([id]) => id === 'chooser'));
-check('demo artist selection opens the real chooser', /function startSearch\(artistName\) \{\s*if \(demo\.demoActive\(\)\) return renderDemoChooser\(artistName\)/.test(src));
+// 2.9.144 (#18): startSearch also takes the picked artist's identity.
+check('demo artist selection opens the real chooser', /function startSearch\(artistName, identity = \{\}\) \{\s*if \(demo\.demoActive\(\)\) return renderDemoChooser\(artistName\)/.test(src));
 check('chooser actions stay staged in demo', /if \(demo\.demoActive\(\)\) \{\s*if \(dip\) return renderDemoResults\(artist\);\s*return renderDemoDiveProgress\(artist\);/.test(src));
 check('results uses the real renderer', /return await renderResults\(demo\.resultsFrom\(artist, tracks\)\)/.test(src));
 check('results preloads full Spotify artist artwork', /client\.get\(`artists\/\$\{approved\.id\}`\)\.then\(normaliseArtist\)/.test(src) && /if \(photo\) await preloadPhoto\(photo\)/.test(src));
 check('results stage uneven counts and visible duplicates', /already_liked_count: 11/.test(dsrc) && /usable\.slice\(0, 3\)/.test(dsrc) && /new_tracks: usable\.slice\(3\)/.test(dsrc));
-check('demo artist taps cannot start a live dive', /function startSearch\(artistName\) \{\s*if \(demo\.demoActive\(\)\) return renderDemoChooser\(artistName\)/.test(src) && /onChoose: \(it\) => startSearch\(it\.name\)/.test(src));
+check('demo artist taps cannot start a live dive', /function startSearch\(artistName, identity = \{\}\) \{\s*if \(demo\.demoActive\(\)\) return renderDemoChooser\(artistName\)/.test(src) && /onChoose: \(it\) => startSearch\(it\.name, \{ artist: it \}\)/.test(src));
 check('home preview leads with a library-wide recipe', /id: "demo-home-random", title: "Surprise me"/.test(src) && !/id: `demo-mix-\$\{i\}`/.test(src));
 check('demo module import is cache-versioned', /import \* as demo from "\.\/demo\.js\?v=2\.9\.106"/.test(src));
 check('scan uses the real renderer', /return await renderScrubResults\(demo\.scanFrom\(groups\)\)/.test(src));

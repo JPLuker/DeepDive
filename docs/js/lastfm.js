@@ -103,6 +103,30 @@ async function call(method, params = {}) {
   return body;
 }
 
+/**
+ * An artist call with autocorrect, unless autocorrect lands on "[unknown]".
+ *
+ * Last.fm folds junk tags like "idk" and "unknown" into its "[unknown]"
+ * placeholder, so autocorrect turned the band idk into a pile of
+ * untagged scrobbles (#18). When the corrected name is the placeholder
+ * and the asked one isn't, ask again for the name exactly as given.
+ */
+const PLACEHOLDER = /^\s*\[?\s*unknown\s*\]?\s*$/i;
+export function correctedToPlaceholder(asked, corrected) {
+  return !!corrected && PLACEHOLDER.test(corrected) && !PLACEHOLDER.test(asked || "");
+}
+
+async function artistCall(method, rootKey, params) {
+  const body = await call(method, { ...params, autocorrect: 1 });
+  const attr = body && body[rootKey] && body[rootKey]["@attr"];
+  const corrected = attr && attr.artist;
+  if (correctedToPlaceholder(params.artist, corrected)) {
+    console.warn(`[DeepDive] Last.fm corrected "${params.artist}" to "${corrected}"; asking without autocorrect`);
+    return call(method, { ...params, autocorrect: 0 });
+  }
+  return body;
+}
+
 // ---------------------------------------------------------------------
 // Caching
 //
@@ -181,11 +205,21 @@ function fresh(entry) {
 }
 
 /** Read-through: cached if fresh, fetched and stored if not. */
+// Top tracks cached before the "[unknown]" guard belong to Last.fm's
+// placeholder, not the artist. They are refetched rather than served
+// for the rest of their week.
+function placeholderEntry(bucket, artist, data) {
+  if (bucket !== "toptracks" || !Array.isArray(data) || !data.length) return false;
+  return data.every((t) => correctedToPlaceholder(artist, t && t.artist));
+}
+
 async function cached(bucket, artist, fetcher) {
   const key = (artist || "").trim().toLowerCase();
   const c = await loadCache();
   if (!c[bucket]) c[bucket] = {};
-  if (fresh(c[bucket][key])) return c[bucket][key].data;
+  if (fresh(c[bucket][key]) && !placeholderEntry(bucket, artist, c[bucket][key].data)) {
+    return c[bucket][key].data;
+  }
   const data = await fetcher();
   c[bucket][key] = { at: Date.now(), data };
   await saveCache();
@@ -231,7 +265,7 @@ export async function topTracks(artist, limit = 50) {
 }
 
 async function fetchTopTracks(artist, limit) {
-  const body = await call("artist.getTopTracks", { artist, limit, autocorrect: 1 });
+  const body = await artistCall("artist.getTopTracks", "toptracks", { artist, limit });
   const raw = (body && body.toptracks && body.toptracks.track) || [];
   const list = Array.isArray(raw) ? raw : [raw];
   return list.map((t) => ({
@@ -249,7 +283,7 @@ export async function similarArtists(artist, limit = 20) {
 }
 
 async function fetchSimilar(artist, limit) {
-  const body = await call("artist.getSimilar", { artist, limit, autocorrect: 1 });
+  const body = await artistCall("artist.getSimilar", "similarartists", { artist, limit });
   const raw = (body && body.similarartists && body.similarartists.artist) || [];
   const list = Array.isArray(raw) ? raw : [raw];
   return list.map((a) => ({ name: a.name, match: parseFloat(a.match) || 0 }));
@@ -268,7 +302,7 @@ export async function topTags(artist, limit = 20) {
 }
 
 async function fetchTopTags(artist, limit) {
-  const body = await call("artist.getTopTags", { artist, limit, autocorrect: 1 });
+  const body = await artistCall("artist.getTopTags", "toptags", { artist, limit });
   const raw = (body && body.toptags && body.toptags.tag) || [];
   const list = Array.isArray(raw) ? raw : [raw];
   return list

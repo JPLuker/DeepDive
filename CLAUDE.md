@@ -3,9 +3,28 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.143.** If the build in `js/app.js` is well
+**Last updated at build 2.9.144.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Artist identity — 2.9.144 (#18)
+
+Picking "idk" produced a dip for "Artist Unknown". Dive entry points
+passed only a name and the dive re-searched Spotify, taking the top
+result when nothing matched. **A pick that knows its Spotify id passes
+it:** `startSearch(name, { artist })` or `{ id }`, and
+`rememberArtistChoice` seeds `_artistLookups` so every later
+`lookupArtist(name)` in that dive returns the chosen artist. Only typed
+text and the retry button start a dive by name alone, and
+`test_artist_identity.mjs` fails if another bare call appears.
+`findArtist` prefers an exact name, then a punctuation-only match, and
+otherwise returns the top result flagged `closestMatch`; the chooser
+then shows "Closest match on Spotify". Last.fm's autocorrect folding a
+name into "[unknown]" is re-asked without autocorrect (`artistCall` in
+`lastfm.js`). Not reproduced against live Spotify from here: which of
+the two routes Joseph hit is unconfirmed, so both are covered.
 
 ---
 
@@ -647,6 +666,12 @@ decay removed the accident and the original bug reappeared.
 
 *When something adaptive looks like it works, check whether it works or
 whether stale state is covering for it.*
+
+**A name is a label, not an identity.** The search list showed the
+user a specific artist, then handed only its name to the dive, which
+searched Spotify again and could land on somebody else (#18). When a
+pick already knows its id, carry the id; when a lookup falls back to
+"closest", say so on screen.
 
 **One shape per thing, normalised at the source.** `searchArtists`
 returned `{image_url, image_url_large}` and `findArtist` returned

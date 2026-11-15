@@ -571,16 +571,34 @@ export class SpotifyClient {
     return tracks;
   }
 
+  /**
+   * The artist a typed name most likely means.
+   *
+   * Spotify's search ranks loosely, so a short name can come back with
+   * someone else on top ("idk" returned "Artist Unknown", #18). An exact
+   * name wins, then a match ignoring punctuation and case. Anything else
+   * is only the closest result, and says so with `closestMatch` so the
+   * chooser can show who it found instead of silently diving someone
+   * else. Ten results, not five: the same one request, and fewer real
+   * matches fall off the end.
+   */
   async findArtist(name) {
-    let results = await this.get("search", { q: `artist:"${name}"`, type: "artist", limit: 5 });
+    const wanted = String(name || "").trim();
+    if (!wanted) return null;
+    let results = await this.get("search", { q: `artist:"${wanted}"`, type: "artist", limit: 10 });
     let items = (results.artists && results.artists.items) || [];
     if (!items.length) {
-      results = await this.get("search", { q: name, type: "artist", limit: 5 });
+      results = await this.get("search", { q: wanted, type: "artist", limit: 10 });
       items = (results.artists && results.artists.items) || [];
     }
     if (!items.length) return null;
-    const exact = items.find((a) => a.name.toLowerCase() === name.toLowerCase());
-    return normaliseArtist(exact || items[0]);
+    const exact = items.find((a) => (a.name || "").trim().toLowerCase() === wanted.toLowerCase());
+    if (exact) return normaliseArtist(exact);
+    const squash = (v) => normalizeForMatch(v).replace(/ /g, "");
+    const loose = squash(wanted);
+    const near = loose && items.find((a) => squash(a.name) === loose);
+    if (near) return normaliseArtist(near);
+    return { ...normaliseArtist(items[0]), closestMatch: true, searchedFor: wanted };
   }
 
   /**

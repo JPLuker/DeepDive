@@ -461,6 +461,11 @@ release with notes. Version numbers are Joseph's to take.
 
 ## Shipped since — build 2.9.120
 
+### 2.9.144 — Artist identity (#18)
+
+Dive entry points carry the picked artist's Spotify id; a name-only
+lookup that finds no exact match says "Closest match on Spotify"; Last.fm
+corrections to "[unknown]" are re-asked without autocorrect.
 
 ### 2.9.143 — Testing feedback and Android in-app updates
 

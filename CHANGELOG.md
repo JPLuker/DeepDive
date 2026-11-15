@@ -1,8 +1,62 @@
 # Changelog
 
-> Entries for the 2.x rewrite were never backfilled — the history below
-> stops at the Flask era. The 2.x record lives in the git log and
-> `ROADMAP.md`'s "Shipped since".
+> Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
+> record lives in the git log and `ROADMAP.md`'s "Shipped since".
+
+## 2.9.144
+- Fixed (#18): picking "idk" made a dip for "Artist Unknown". Every dive
+  entry point passed a bare name and the dive searched Spotify again,
+  taking the top result when nothing matched exactly. The search list,
+  Home tiles, crate tiles, Dive again and random picks now carry the
+  Spotify id. A typed name that finds no exact or punctuation-only match
+  shows "Closest match on Spotify" in the chooser instead of diving
+  someone else silently.
+- Last.fm's autocorrect folds names like "idk" into its "[unknown]"
+  placeholder. That correction is now asked again without autocorrect,
+  and placeholder top tracks already cached are refetched.
+
+## 2.9.143
+- Backup controls moved under Advanced, with feedback beside them.
+- Playlist names are automatic everywhere.
+- Mixes shows six top genres on a shelf; Browse genres opens a full
+  searchable list.
+- Results get a detached action dock; the chooser footer is transparent.
+- Android in-app updater: GitHub releases only, SHA-256 and signing
+  certificate checked before staging and before install.
+
+## 2.9.142
+- Phone tab-bar clearance fixed; import feedback shown beside the control.
+- Library reads get the full-screen job view and share one in-flight read.
+- Notifications show determinate progress with a percentage when totals
+  are known.
+
+## 2.9.141
+- APK signature check reads PEM certificate data. First release signed
+  with the permanent key.
+
+## 2.9.140
+- Signature verifier accepts apksigner's SDK-range signer rows.
+
+## 2.9.139
+- Signing secrets are validated before the SDK download, with a safe
+  message naming which input is wrong.
+
+## 2.9.138
+- Android release APKs signed with Joseph's permanent key; no debug
+  fallback.
+
+## 2.9.137
+- Android background work: a foreground service keeps library reads,
+  scans and dives running with the screen off.
+
+## 2.9.136
+- Android sign-in callback registered with the deep-link plugin at
+  runtime. APKs published as direct downloads on untested prereleases.
+
+## 2.9.135
+- Every outbound link opens in the system browser in native builds,
+  through the opener plugin's command rather than a global that doesn't
+  exist on a device. "Open in Spotify" links no longer open twice.
 
 ## 2.9.134
 - Android fits the WebView around measured system-bar, display-cutout
