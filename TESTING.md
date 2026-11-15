@@ -15,7 +15,7 @@ Settings → Updates fetch it.
 7. [ ] Settings → Advanced, dark theme: Export backup and Import backup are readable filled buttons
 8. [ ] Dives → Refresh dive playlists lists your dive playlists, all ticked, no dips or mixes
 9. [ ] Like one song from a dive playlist in Spotify, then Refresh: the review takes out just that one; Apply removes it
-10. [ ] Refresh with Add new releases on: each artist is dived again and only songs you haven't liked are added
+10. [ ] With all playlists ticked, Add new releases is off and won't turn on; tick just one and it can, and the refresh re-dives that artist and adds only songs you haven't liked
 11. [ ] Windows or Linux (2.9.152 UNTESTED desktop release): installs, opens, signs in
 
 ---

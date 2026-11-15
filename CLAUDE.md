@@ -78,6 +78,10 @@ the screen, job view and review are `renderRefresh`, `startRefresh` and
 /playlists/{id}/items` with `{ items: [{ uri }] }`, the current endpoint;
 it has not been run against a real account yet.
 
+**Add new releases is single-playlist only** (Joseph, 15 Nov):
+`canAddNewReleases(n)` in refresh.js; the screen disables and clears
+the toggle otherwise, and `planRefresh` ignores it for more than one.
+
 Dive playlists are identified by their description, which is what
 separates them from dips, mixes and Multi-Dips sharing the "DeepDive · "
 prefix. If the dive playlist name or description ever changes, change

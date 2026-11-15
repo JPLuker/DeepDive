@@ -63,6 +63,16 @@ export function pickDivePlaylists(playlists, divedNames = []) {
 }
 
 /**
+ * Whether "Add new releases" can run. Joseph, 15 Nov: "just have a
+ * toggle for scanning for new releases and only let it on single
+ * refreshes." A re-dive is a whole catalogue read, so it's one playlist
+ * at a time.
+ */
+export function canAddNewReleases(selectedCount) {
+  return selectedCount === 1;
+}
+
+/**
  * What to change in one playlist. Pure, so the rules are testable
  * without Spotify.
  *
@@ -99,6 +109,9 @@ export async function planRefresh(client, playlists, {
   getLiked, checkNew = false, dive = null, onProgress = () => {}, isCancelled = () => false,
 } = {}) {
   const total = playlists.length;
+  // The screen already holds this rule; checked here too so no caller
+  // can start a re-dive of every playlist.
+  if (checkNew && !canAddNewReleases(total)) checkNew = false;
   // Library first, so every plan is made against the same snapshot.
   onProgress({ step: "library", done: 0, total });
   const likedTracks = await getLiked();

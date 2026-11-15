@@ -3,6 +3,11 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.154
+- Refresh dive playlists: Add new releases now works only when one
+  playlist is ticked. With more ticked, the toggle is off and can't be
+  turned on.
+
 ## 2.9.153
 - Linux releases add a .tar.gz and a Flatpak, the last two Linux formats
   in the release standard. The Flatpak is elementary OS's own app

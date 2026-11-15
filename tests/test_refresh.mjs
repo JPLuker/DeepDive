@@ -3,7 +3,7 @@
 // asked, adding new-to-you songs from a fresh dive. Nothing changes on
 // Spotify until the plan is accepted.
 import { readFileSync } from 'node:fs';
-import { pickDivePlaylists, planPlaylist, planRefresh, applyRefresh } from '../docs/js/refresh.js';
+import { pickDivePlaylists, planPlaylist, planRefresh, applyRefresh, canAddNewReleases } from '../docs/js/refresh.js';
 const store = new Map();
 globalThis.localStorage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
 const { SpotifyClient } = await import('../docs/js/spotify.js');
@@ -68,6 +68,11 @@ const fakeClient = (lists, { failOn = null, quotaOn = null } = {}) => ({
   check('planning changes nothing on Spotify', !client.removed.length && !client.added.length);
 
   const byId = (id) => found.find((p) => p.id === id);
+  // Joseph, 15 Nov: new releases only on single refreshes.
+  check('new releases are allowed for one playlist only', canAddNewReleases(1) && !canAddNewReleases(0) && !canAddNewReleases(2));
+  const many = []; await planRefresh(client, [byId('a'), byId('d')], {
+    getLiked: async () => [], checkNew: true, dive: async (p) => { many.push(p.id); return { new_tracks: [] }; } });
+  check('asking for new releases on several playlists dives none of them', many.length === 0);
   const withNew = await planRefresh(client, [byId('a')], {
     getLiked: async () => [{ id: '2' }],
     checkNew: true,
@@ -107,6 +112,9 @@ const fakeClient = (lists, { failOn = null, quotaOn = null } = {}) => ({
 check('Dives links to the refresh screen', /id="go-refresh"/.test(src) && /getElementById\("go-refresh"\)\?\.addEventListener\("click", \(\) => renderRefresh\(\)\)/.test(src));
 check('every dive playlist starts selected, and there is select all', /: new Set\(ids\);/.test(src) && /id="refresh-all"/.test(src));
 check('new releases are opt-in', /let _refreshCheckNew = false;/.test(src));
+check('the toggle is disabled and cleared unless exactly one playlist is ticked',
+  /const allowed = refresh\.canAddNewReleases\(n\);\s*newBox\.disabled = !allowed;/.test(src) && /if \(!allowed && newBox\.checked\) \{ newBox\.checked = false; _refreshCheckNew = false; \}/.test(src));
+check('and the run checks it again', /const checkNew = _refreshCheckNew && refresh\.canAddNewReleases\(chosen\.length\);/.test(src));
 check('the run uses the job screen', /showDiveScreen\("Refreshing dive playlists…"/.test(src));
 const review = src.slice(src.indexOf('function renderRefreshReview'), src.indexOf('/** Mixes — what Playlists'));
 check('changes are applied only from the review screen', /refresh\.applyRefresh\(/.test(review) && (src.match(/refresh\.applyRefresh\(/g) || []).length === 1);

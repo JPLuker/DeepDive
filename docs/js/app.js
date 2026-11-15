@@ -36,7 +36,7 @@ import * as refresh from "./refresh.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.153";
+export const BUILD = "2.9.154";
 
 // The public site. Needed only where a relative link cannot work: in a
 // native shell "../" is the bundle root, which has no landing page in
@@ -602,11 +602,11 @@ async function renderRefresh() {
   root.innerHTML = `
     <div class="card">
       <h1>Refresh dive playlists</h1>
-      <p class="muted">Takes out songs you've liked since the dive. Turn on new releases to dive each artist again and add what's new.</p>
+      <p class="muted">Takes out songs you've liked since the dive.</p>
       <div class="set-group" style="margin-top:20px;">
         ${settingRow({
           title: "Add new releases",
-          detail: "Dives each artist again. One request per release, so it's slower.",
+          detail: "Dives the artist again. Pick one playlist to use it.",
           control: setSwitch('id="refresh-new"', _refreshCheckNew),
         })}
       </div>
@@ -628,6 +628,14 @@ async function renderRefresh() {
     const n = _refreshPicked.size;
     // The count lives in the ticks; in the label it wrapped on a phone.
     go.disabled = !n;
+    // New releases only for a single playlist (Joseph, 15 Nov).
+    const newBox = document.getElementById("refresh-new");
+    if (newBox) {
+      const allowed = refresh.canAddNewReleases(n);
+      newBox.disabled = !allowed;
+      newBox.closest(".set-row")?.classList.toggle("is-disabled", !allowed);
+      if (!allowed && newBox.checked) { newBox.checked = false; _refreshCheckNew = false; }
+    }
     if (allBtn && _refreshFound) {
       allBtn.textContent = n === _refreshFound.length ? "Select none" : "Select all";
     }
@@ -684,7 +692,7 @@ async function renderRefresh() {
 async function startRefresh() {
   const chosen = (_refreshFound || []).filter((p) => _refreshPicked.has(p.id));
   if (!chosen.length || blockedByRateLimit()) return;
-  const checkNew = _refreshCheckNew;
+  const checkNew = _refreshCheckNew && refresh.canAddNewReleases(chosen.length);
   _refreshCancelled = false;
   showDiveScreen("Refreshing dive playlists…", () => { _refreshCancelled = true; renderRefresh(); });
   setDiveHeading("Refreshing dive playlists");

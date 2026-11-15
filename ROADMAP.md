@@ -324,17 +324,15 @@ What a future session can pick up without Joseph:
    notification. Close #18 if the dip shows idk.
 2. **Try Refresh dive playlists** on your account (TESTING.md section
    11). It's the first feature that removes tracks from your playlists.
-3. **Decide:** should "Add new releases" on Refresh default on? Claude
-   recommends off.
-4. **Decide:** move DeepDive to Quiet Precision (DESIGN.md Part B), or
+3. **Decide:** move DeepDive to Quiet Precision (DESIGN.md Part B), or
    keep its own look? B12 says to ask before touching its visuals.
-5. **Desktop builds:** 2.9.152 is published as UNTESTED Windows and
+4. **Desktop builds:** 2.9.152 is published as UNTESTED Windows and
    Linux releases. Nobody has run them; elementary OS is the first
    test. Later ones: Native builds → Run workflow, platforms "desktop".
-6. The 20 Oct items still open: the quota experiment, private
+5. The 20 Oct items still open: the quota experiment, private
    vulnerability reporting, artist photo permission, landing Mixes copy,
    retaking the landing screenshots, the full `TESTING.md` pass.
-7. **Optional:** the 2.9.145 Android release still carries 2.9.143's
+6. **Optional:** the 2.9.145 Android release still carries 2.9.143's
    notes. This session can't edit releases; paste the 2.9.145 changelog
    section in if you want it right.
 
@@ -529,7 +527,10 @@ new releases" (off by default, one request per release) re-dives each
 artist and adds new-to-you songs. Review before Apply; removals before
 additions. `refresh.js`, `tools/e2e-refresh.mjs`.
 
-**Open, for Joseph:** whether "Add new releases" should default on.
+**Decided, Joseph, 15 Nov:** "I think just have a toggle for scanning
+for new releases and only let it on single refreshes." Built in
+2.9.154: the toggle is disabled and cleared unless exactly one playlist
+is ticked, and `planRefresh` ignores it for more than one.
 
 ### 2.9.145 — Progress redux (#19)
 

@@ -8,8 +8,8 @@
 //   node tools/e2e-refresh.mjs [outdir]
 //
 // Prints every non-trivial Spotify call it saw, so the DELETE bodies can
-// be checked, and any console errors. Desktop dark also turns on "Add
-// new releases" to exercise the re-dive path.
+// be checked, and any console errors. Desktop dark narrows to one playlist and turns on
+// "Add new releases" to exercise the re-dive path.
 import { chromium } from '/opt/npm-tools/node_modules/playwright/index.mjs';
 import { readFileSync, mkdirSync } from 'fs';
 const BASE = 'http://127.0.0.1:8231';
@@ -82,7 +82,16 @@ for (const vp of [{ name: 'phone', viewport: { width: 390, height: 844 }, isMobi
   await page.locator('#go-refresh').click();
   await page.waitForTimeout(1200);
   await page.screenshot({ path: `${OUT}/refresh-${name}-${theme}.png`, fullPage: true });
-  if (name === 'desktop' && theme === 'dark') { await page.locator('label.set-switch:has(#refresh-new)').click(); }
+  await page.screenshot({ path: `${OUT}/refresh-locked-${name}-${theme}.png` });
+  console.log('toggle disabled with all ticked:', await page.locator('#refresh-new').isDisabled());
+  if (name === 'desktop' && theme === 'dark') {
+    // New releases only on a single refresh: narrow to one, then turn it on.
+    await page.locator('#refresh-all').click();
+    await page.locator('label.track-row:has([data-refresh-pl="p1"])').click();
+    console.log('toggle enabled with one ticked:', await page.locator('#refresh-new').isEnabled());
+    await page.locator('label.set-switch:has(#refresh-new)').click();
+    await page.screenshot({ path: `${OUT}/refresh-single-${name}-${theme}.png` });
+  }
   await page.locator('#refresh-go').click();
   await page.waitForTimeout(name === 'desktop' && theme === 'dark' ? 9000 : 2500);
   await page.screenshot({ path: `${OUT}/review-${name}-${theme}.png`, fullPage: true });
