@@ -139,9 +139,20 @@ export function listCreatedPlaylists() {
  * Everything worth carrying between browsers. Deliberately excludes the
  * library cache — it's large, it's rebuildable from Spotify in one read,
  * and shipping thousands of tracks through a text file to save one sync
- * is a poor trade. Auth tokens are excluded too: they're credentials,
+ * is a poor trade. Sign-in tokens are excluded too: they're credentials,
  * and they'd be invalid on another device anyway.
+ *
+ * The Spotify Client ID and Last.fm key ARE included (2.9.155). Joseph,
+ * 15 Nov: "why can't I use my export import tool first thing to not set
+ * everything up?" Without them a restore still sent you through the
+ * whole setup, which is the part a backup should save you from,
+ * especially moving into the native app, whose storage starts empty.
+ * Neither is a secret in the way a token is: a Client ID is public in
+ * every PKCE request, and a Last.fm key only reads public data. The
+ * Backup row says the file holds both (PRIVACY.md 7).
  */
+export const SETUP_KEYS = ["deepdive_client_id", "deepdive_lastfm_key"];
+const SETUP_FORMAT = /^[0-9a-f]{32}$/i;
 const PORTABLE_KEYS = [
   "deepdive_watchlist",     // pins
   "deepdive_blocklist",
@@ -152,6 +163,7 @@ const PORTABLE_KEYS = [
   "deepdive_intent",
   "deepdive_intent_skip",
   "deepdive_intent_custom",
+  ...SETUP_KEYS,
 ];
 
 // The backup format's own version, written into every export and
@@ -196,7 +208,7 @@ export function importData(payload, { mode = "merge" } = {}) {
     throw new Error("This backup was saved by a newer version of DeepDive. Update DeepDive to open it.");
   }
   const incoming = payload.data;
-  const summary = { pins: 0, blocked: 0, dives: 0, settings: 0 };
+  const summary = { pins: 0, blocked: 0, dives: 0, settings: 0, actions: 0, clientId: false, lastfmKey: false };
 
   const mergeList = (key, matchOn) => {
     let theirs = [];
@@ -223,15 +235,30 @@ export function importData(payload, { mode = "merge" } = {}) {
   summary.pins = mergeList("deepdive_watchlist", "name");
   summary.blocked = mergeList("deepdive_blocklist", "name");
   summary.dives = mergeList("deepdive_dives", "artistName");
+  // Exported since the start and never read back, so a restore lost the
+  // record of every playlist DeepDive had made.
+  summary.actions = mergeList(ACTIONS_KEY, "id");
+
+  const has = (k) => { try { const v = localStorage.getItem(k); return v !== null && v !== ""; } catch (e) { return false; } };
+  const take = (k, v = incoming[k]) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } };
 
   for (const k of ["deepdive_theme", "deepdive_show_bmc", "deepdive_intent",
                    "deepdive_intent_skip", "deepdive_intent_custom"]) {
     if (incoming[k] === undefined) continue;
-    // Settings are single values, so merging is meaningless — only take
-    // them when explicitly replacing.
-    if (mode === "replace") {
-      try { localStorage.setItem(k, incoming[k]); summary.settings += 1; } catch (e) {}
-    }
+    // A single value: merge can't combine two, so it keeps what this
+    // device already chose and only fills what it doesn't have. Before
+    // 2.9.155 merge dropped them all, so a fresh install got none.
+    if ((mode === "replace" || !has(k)) && take(k)) summary.settings += 1;
+  }
+
+  // Setup values: same rule, and only in the shape they're checked for
+  // during setup, so a hand-edited file can't plant junk.
+  const setup = { deepdive_client_id: "clientId", deepdive_lastfm_key: "lastfmKey" };
+  for (const k of SETUP_KEYS) {
+    const v = typeof incoming[k] === "string" ? incoming[k].trim() : "";
+    if (!SETUP_FORMAT.test(v)) continue;
+    if (mode !== "replace" && has(k)) continue;
+    if (take(k, v)) summary[setup[k]] = true;
   }
   return summary;
 }

@@ -511,6 +511,13 @@ release with notes. Version numbers are Joseph's to take.
 
 ## Shipped since — build 2.9.120
 
+### 2.9.155 — Restore from a backup during setup
+
+Joseph, 15 Nov: "why can't I use my export import tool first thing to
+not set everything up?" Backups now carry the Client ID and Last.fm key;
+the first screen and step 1 offer Restore from a backup, which skips to
+Connect.
+
 ### 2.9.146 — Refresh dive playlists
 
 Joseph, 15 Nov: "Also I would like a playlist refresh features for full

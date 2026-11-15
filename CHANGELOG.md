@@ -3,6 +3,18 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.155
+- New: Restore from a backup on the first screen and on step 1 of setup.
+  A backup now carries your Spotify Client ID and Last.fm key, so a
+  restore goes straight to Connect Spotify. Your Spotify sign-in is
+  never in the file.
+- Restoring on a fresh install now brings your settings too. Before,
+  merging skipped every setting.
+- The record of playlists DeepDive made was saved in backups but never
+  restored. It is now.
+- A backup made before 2.9.155 still restores your crate and history;
+  setup then carries on as normal.
+
 ## 2.9.154
 - Refresh dive playlists: Add new releases now works only when one
   playlist is ticked. With more ticked, the toggle is off and can't be

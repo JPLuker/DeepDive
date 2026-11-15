@@ -90,8 +90,14 @@ No telemetry. No accounts required. Nothing is sold or shared.
 **What it stores, and where.** Everything lives in your browser's own
 storage for this site: your crate and blocklist, dive history, a cache
 of your Liked Songs, your Spotify Client ID and Last.fm key, and your
-settings. Clearing site data removes all of it. Settings → Data and
-storage will export it to a file, or clear it.
+settings. Clearing site data removes all of it.
+
+**Backups.** Settings → Advanced → Export backup saves a plain JSON file
+with your crate, blocklist, dive history, settings, Spotify Client ID
+and Last.fm key. It doesn't hold your Spotify sign-in or the Liked Songs
+cache. On a new browser or in the desktop and Android apps, choose
+**Restore from a backup** on the first screen to skip setup and go
+straight to connecting Spotify.
 
 **Every host DeepDive can contact.** If a connection is not in this
 table, the app does not make it.

@@ -36,7 +36,7 @@ import * as refresh from "./refresh.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.154";
+export const BUILD = "2.9.155";
 
 // The public site. Needed only where a relative link cannot work: in a
 // native shell "../" is the bundle root, which has no landing page in
@@ -205,6 +205,9 @@ function sortTracks(tracks, mode) {
   });
 
   if (mql) mql.addEventListener("change", () => { if (current() === "system") apply("system"); });
+  // A restored backup can bring a theme with it; show it now, not on
+  // the next reload.
+  document.addEventListener("deepdive-settings-restored", () => apply(current()));
 
   apply(current());
 })();
@@ -282,6 +285,49 @@ function onboardShell(step, body) {
     </div>`;
 }
 
+// ---- restore during setup ----
+//
+// Joseph, 15 Nov: "why can't I use my export import tool first thing
+// to not set everything up?" Offered on the first screen and on step 1.
+// A backup from 2.9.155 on carries the Client ID and Last.fm key, so a
+// restore skips the rest of setup. The Spotify app still needs this
+// shell's redirect URI (deepdive://callback in the native app); Connect
+// says what to do if Spotify refuses it.
+function restoreBlockHtml() {
+  return `
+    <div class="onboard-restore">
+      <p class="onboard-hint">Set up DeepDive before? Restore your backup to skip this.</p>
+      <button class="btn btn-secondary" id="onboard-restore">Restore from a backup</button>
+      <p class="onboard-check" id="onboard-restore-status" aria-live="polite"></p>
+      <input type="file" id="onboard-restore-file" accept="application/json,.json" class="hidden">
+    </div>`;
+}
+
+function wireRestore() {
+  wireBackupImport(document.getElementById("onboard-restore-file"), document.getElementById("onboard-restore"), {
+    importData: history.importData,
+    feedback: (text, error) => {
+      const note = document.getElementById("onboard-restore-status");
+      if (!note) return;
+      note.className = "onboard-check" + (error ? " bad" : "");
+      note.textContent = text;
+    },
+    onImported: () => {
+      document.dispatchEvent(new Event("deepdive-settings-restored"));
+      markLandingSeen();
+      if (!auth.getClientId()) {
+        // A backup from before 2.9.155 has the crate and history but no
+        // Client ID: keep them and carry on with setup.
+        renderSetup();
+        flash("Backup restored. It has no Client ID, so set up Spotify below.");
+        return;
+      }
+      if (lastfm.getKey()) renderConnect(); else renderLastfmStep();
+      flash("Backup restored. Connect Spotify to finish.");
+    },
+  });
+}
+
 /** Step 1: create the Spotify app. */
 function renderSetup() {
   setTitle("DeepDive · Set up");
@@ -301,7 +347,9 @@ function renderSetup() {
     <div class="onboard-actions">
       <a class="btn btn-ghost" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">Open the dashboard</a>
       <button class="btn btn-primary" id="onboard-next">I've done this</button>
-    </div>`);
+    </div>
+    ${restoreBlockHtml()}`);
+  wireRestore();
   document.getElementById("onboard-copy-btn").addEventListener("click", async (e) => {
     const btn = e.currentTarget;
     try { await navigator.clipboard.writeText(rUri); btn.textContent = "Copied"; }
@@ -6060,7 +6108,7 @@ function renderSettings() {
       ${settingRow({
         title: "Backup",
         block: true,
-        detail: "Export everything to a file, or restore from one.",
+        detail: "Your crate, history, settings, Spotify Client ID and Last.fm key, as a plain JSON file. Not your Spotify sign-in.",
         control: `<div class="backup-buttons"><button class="btn btn-secondary" id="set-export">Export backup</button>
           <button class="btn btn-secondary" id="set-import">Import backup</button></div>
           <p class="backup-status hidden" role="status" aria-live="polite" id="set-import-status"></p>
@@ -6831,8 +6879,10 @@ function renderLanding() {
         <button class="btn btn-primary" id="landing-start">Get started</button>
       </div>
       <p class="onboard-hint"><a href="${auth.isNativeShell() ? SITE_URL : "../"}" target="_blank" rel="noopener">See what DeepDive does</a></p>
+      ${restoreBlockHtml()}
     </div>`;
   document.getElementById("landing-start").addEventListener("click", () => { markLandingSeen(); renderSetup(); });
+  wireRestore();
 }
 
 // ---- demo screens ----

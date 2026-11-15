@@ -3,9 +3,30 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.154.** If the build in `js/app.js` is well
+**Last updated at build 2.9.155.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Restore from a backup during setup — 2.9.155
+
+Joseph, 15 Nov: "why can't I use my export import tool first thing to
+not set everything up?" Three reasons, all fixed: backups didn't carry
+the Client ID or Last.fm key (`SETUP_KEYS` in history.js now does), the
+setup screens had no import (`restoreBlockHtml`/`wireRestore` on the
+first screen and step 1), and merge mode dropped every setting. Merge
+now fills a setting or setup value only when this device has none;
+replace overwrites. Setup values must match the 32-hex format or they're
+skipped. `deepdive_actions` was exported but never imported; it merges
+by id now. Sign-in tokens are still never exported. Backup format stays
+version 1: the new keys are additive and older builds ignore them.
+
+After a restore with a Client ID: Last.fm step if no key, else Connect.
+In the native app the Spotify app still needs `deepdive://callback`;
+Connect's "Invalid redirect URI" hint covers that. Checked by driving a
+fresh browser profile through restore (good and bad files) with
+Playwright; the rules are in `test_restore_setup.mjs`.
 
 ---
 
