@@ -45,9 +45,10 @@ const commands = wf.replace(/^\s*#.*$/gm, '');
 check('CI installs the activity after init and before the APK build',
   commands.indexOf('cargo tauri android init') < commands.indexOf('node tools/android-activity.mjs')
   && commands.indexOf('node tools/android-activity.mjs') < commands.indexOf('cargo tauri android build'));
+// 2.9.150: manual runs gained a platforms choice (all, desktop, android).
 check('automatic APK builds require an explicit commit marker',
-  /if: github.event_name == 'workflow_dispatch' \|\| contains\(github.event.head_commit.message, '\[native-build\]'\)/.test(wf));
-check('desktop remains a manual build', /build:\s*\n\s*if: github.event_name == 'workflow_dispatch'/.test(wf));
+  /if: \(github.event_name == 'workflow_dispatch' && github.event.inputs.platforms != 'desktop'\) \|\| contains\(github.event.head_commit.message, '\[native-build\]'\)/.test(wf));
+check('desktop remains a manual build', /build:\s*\n\s*if: github.event_name == 'workflow_dispatch' && github.event.inputs.platforms != 'android'/.test(wf));
 check('automatic builds get the application version', /match = re.search\(r'export const BUILD/.test(wf));
 check('artifact name uses the stamped version', /V="\$BUILD_VERSION"/.test(wf));
 

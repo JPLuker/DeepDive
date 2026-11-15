@@ -3,6 +3,11 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.151
+- 2.9.150 was pushed with one failing test, a stale check on the build
+  workflow. The push gate matched any passing suite's own line; it now
+  uses the test runner's exit code.
+
 ## 2.9.150
 - First Windows and Linux test builds published as UNTESTED releases.
 - Manual native builds can pick desktop, Android or both.

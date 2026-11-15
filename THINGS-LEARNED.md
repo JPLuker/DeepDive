@@ -19,6 +19,13 @@ Newest first. Copy the block below for each new lesson.
 - **Harvested:** no
 -->
 
+### 2026-11-15 · A push gate that greps for "0 failed" passes on any green suite
+- **What happened:** the documented gate was `grep -q " 0 failed"` over the runner's output. Every passing suite prints "N passed, 0 failed", so the grep matched whenever any suite passed, and 2.9.150 was pushed with a failing suite. The same line is in InternalDesignGuidelines SOP 9.3.
+- **Lesson:** gate on the test runner's exit code, not on text in its output; a check against output must anchor on the one summary line (L-2).
+- **Applies to:** every project
+- **What we changed:** `CLAUDE.md` "Before you push" uses `if bash tests/run.sh …; then`. SOP 9.3 still needs the fix.
+- **Harvested:** no
+
 ### 2026-11-15 · A mocked API is the camera when the real one is out of reach
 - **What happened:** the sandbox can't reach Spotify, so the `?demo=` screens render error cards and a new feature (Refresh dive playlists, 2.9.146) had no way to be seen. A Playwright script with fake tokens in localStorage and `page.route` answering `api.spotify.com` drove the real screens with real data flow, and printed every DELETE body so the API calls could be checked too.
 - **Lesson:** when a flow needs a remote service the build environment can't reach, mock the service at the network layer and drive the real app, rather than staging a fake screen.

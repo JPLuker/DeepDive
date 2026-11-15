@@ -665,15 +665,21 @@ confirms them.
 1,750 assertions, 62 suites at 2.9.111, plus a syntax check and a boot
 check. It takes seconds.
 
-**Gate the push on the suite's own result.** `run.sh ... | tail -2 &&
+**Gate the push on the suite's exit code.** `run.sh ... | tail -2 &&
 git push` pushes whatever the suite said, because `tail` succeeds. That
 shipped a failing 2.9.45. Use this shape:
 
 ```bash
-bash tests/run.sh > /tmp/t.txt 2>&1
-if grep -q " 0 failed" /tmp/t.txt; then git add -A && git commit ... && git push ...
-else echo "SUITE FAILED, not pushing"; fi
+if bash tests/run.sh > /tmp/t.txt 2>&1; then git add -A && git commit ... && git push ...
+else echo "SUITE FAILED, not pushing"; grep "✗" /tmp/t.txt; fi
 ```
+
+**The gate this file used to show was vacuous.** It was `grep -q " 0
+failed" /tmp/t.txt`, and every passing suite prints its own line ending
+"N passed, 0 failed", so it matched whenever *any* suite passed. 2.9.150
+went out with a failing suite through it (15 Nov). `run.sh` exits 1 on
+any failure; use that. InternalDesignGuidelines SOP 9.3 shows the same
+grep and needs the same fix.
 
 **Prove every new check fails first.** Swap in the previous version of
 the file (`git show HEAD:path > path`), run the suite, restore. A check
