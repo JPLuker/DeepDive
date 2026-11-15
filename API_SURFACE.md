@@ -33,6 +33,7 @@ app. Two for two — `/albums?ids=` and `/artists/{id}/top-tracks` both
 | `GET /me/playlists` | current | — | Playlist reuse and cleanup. |
 | `GET /playlists/{id}/items` | current | 50 | Migrated off `/tracks`. |
 | `POST /playlists/{id}/items` | current | 100 uris | |
+| `DELETE /playlists/{id}/items` | current | 100 items | Refresh dive playlists. Body `{ items: [{ uri }] }`; replaces the deprecated `/tracks` removal. Not yet run against a real account. |
 | `PUT /me/library` | current | 40 uris | Liking tracks. |
 | `DELETE /me/library` | current | 40 uris | Unliking, and now playlist removal. |
 

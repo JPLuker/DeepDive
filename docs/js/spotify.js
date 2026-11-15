@@ -884,6 +884,37 @@ export class SpotifyClient {
     return out;
   }
 
+  /**
+   * Every playlist the user owns, as Spotify returns it (name,
+   * description, images, item count). The refresh screen decides which
+   * of them came from dives; see refresh.js.
+   */
+  async listOwnPlaylists() {
+    const me = await this.get("me");
+    const out = [];
+    let results = await this.get("me/playlists", { limit: 50 });
+    while (results) {
+      for (const p of results.items || []) {
+        if (p && p.id && (p.owner || {}).id === me.id) out.push(p);
+      }
+      results = results.next ? await this.get(results.next) : null;
+    }
+    return out;
+  }
+
+  /**
+   * Take tracks out of a playlist. `DELETE /playlists/{id}/items` with
+   * `{ items: [{ uri }] }`, 100 at a time: the current Remove Playlist
+   * Items endpoint, not the deprecated `/tracks` one. Every copy of a
+   * uri in the playlist goes, which is what a refresh wants.
+   */
+  async removeTracksFromPlaylist(playlistId, trackIds) {
+    for (const batch of chunk(trackIds, PLAYLIST_ADD_URIS_MAX)) {
+      const items = batch.map((tid) => ({ uri: `spotify:track:${tid}` }));
+      await this._call("DELETE", `playlists/${playlistId}/items`, { jsonBody: { items } });
+    }
+  }
+
   async findPlaylistByName(userId, name) {
     const target = name.trim().toLowerCase();
     let results = await this.get("me/playlists", { limit: 50 });

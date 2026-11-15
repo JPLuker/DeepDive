@@ -3,9 +3,30 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.145.** If the build in `js/app.js` is well
+**Last updated at build 2.9.146.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Refresh dive playlists — 2.9.146
+
+Joseph asked for it on 15 Nov (wording in ROADMAP "Shipped since"). The
+rules are in `docs/js/refresh.js`, pure and tested in `test_refresh.mjs`;
+the screen, job view and review are `renderRefresh`, `startRefresh` and
+`renderRefreshReview` in app.js. Removal uses `DELETE
+/playlists/{id}/items` with `{ items: [{ uri }] }`, the current endpoint;
+it has not been run against a real account yet.
+
+Dive playlists are identified by their description, which is what
+separates them from dips, mixes and Multi-Dips sharing the "DeepDive · "
+prefix. If the dive playlist name or description ever changes, change
+`DIVE_DESCRIPTION` with it.
+
+**`tools/e2e-refresh.mjs` drives the real app against a mocked Spotify**
+(fake tokens in localStorage, `page.route` answering api.spotify.com).
+The `?demo=` routes can't reach Spotify from the sandbox; this can, so
+it's the pattern to copy when a flow needs real data to render.
 
 ---
 

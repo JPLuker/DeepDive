@@ -213,6 +213,19 @@ shipped before.
 - [ ] It does not offer to remove playlists DeepDive did not create
 - [ ] Removing is confirmed before anything is deleted
 
+**Refresh dive playlists (2.9.146).** Dives → Refresh dive playlists.
+
+- [ ] Lists every playlist made from a dive, all ticked; dips, mixes and
+      Multi-Dips are not listed
+- [ ] Like a song from one dive playlist in Spotify, then Refresh: the
+      review says to take that one out, and nothing else
+- [ ] Nothing in Spotify changes until Apply; after Apply the liked song
+      is gone from that playlist and still in Liked Songs
+- [ ] Turn on Add new releases: each artist is dived again on the job
+      screen, and the review adds only songs you haven't liked
+- [ ] Untick a playlist: it is not read or changed
+- [ ] Cancel during a run stops it and reviews what was checked so far
+
 ## 12. Last.fm features
 
 Three of these shipped in one day and none has been checked against a
@@ -323,6 +336,15 @@ has to be checked on its own.
 **The newest code and the least observed.** Everything here is built
 by CI and has been run by a human only where ticked. An untested
 platform is untested, per `RELEASES.md` Part 2.
+
+### Progress and notifications — build 2.9.145 (#19)
+
+- [ ] A dive's bar moves steadily through "Reading X's releases" instead
+      of sitting at 25% and jumping
+- [ ] During a dive's Liked Songs sync the notification shows one job,
+      not "2 jobs"
+- [ ] A Dip (short job) shows its notification straight away
+- [ ] The collapsed notification's percentage matches the app's bar
 
 ### Phone feedback — build 2.9.142
 

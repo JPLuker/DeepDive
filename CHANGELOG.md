@@ -3,6 +3,14 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.146
+- New: Refresh dive playlists, on the Dives tab. Picks up every playlist
+  made from a dive, all selected, and takes out songs you've liked since.
+  Add new releases dives each artist again and adds what's new. A review
+  shows every change before anything happens on Spotify.
+- Playlists made from a dive's results are recorded in History, like
+  every other playlist DeepDive makes.
+
 ## 2.9.145
 - Fixed (#19): the dive's bar sat at 25% for the whole catalogue read
   and jumped at the end. Each release now moves it, in the app and in

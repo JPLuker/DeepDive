@@ -31,11 +31,12 @@ import * as history from "./history.js";
 import * as demo from "./demo.js?v=2.9.106";
 import * as lastfm from "./lastfm.js";
 import * as cover from "./cover.js";
+import * as refresh from "./refresh.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.145";
+export const BUILD = "2.9.146";
 
 // The public site. Needed only where a relative link cannot work: in a
 // native shell "../" is the bundle root, which has no landing page in
@@ -561,6 +562,7 @@ async function renderDives() {
       <div class="set-group-label">Your dives</div>
       ${navRow('id="go-pins"', "Crate", "Everyone you've put aside to get to, with Up next at the top.", { tone: "teal" })}
       ${navRow('id="go-history"', "Dive history", "What you've dived, what DeepDive built, and how to undo it.", { tone: "purple" })}
+      ${navRow('id="go-refresh"', "Refresh dive playlists", "Take out songs you've liked since, and add anything new.", { tone: "gold" })}
     </div>
     ${showIncomplete() ? `
     <div class="set-group">
@@ -574,9 +576,226 @@ async function renderDives() {
   document.getElementById("go-scrub")?.addEventListener("click", () => demo.demoActive() ? renderDemo("scan") : renderScrubForm());
   document.getElementById("go-show")?.addEventListener("click", () => demo.demoActive() ? renderDemo("multidip") : renderShow());
   document.getElementById("go-history")?.addEventListener("click", () => renderHistory());
+  document.getElementById("go-refresh")?.addEventListener("click", () => renderRefresh());
   document.getElementById("go-pins")?.addEventListener("click", () => demo.demoActive() ? renderDemo("crate") : renderCrate());
   if (demo.demoActive()) return;
   loadSuggestions({ showAllPins: true });
+}
+
+// ---- refresh dive playlists ----
+//
+// Joseph, 15 Nov: a refresh for full-dive playlists that runs over all
+// of them, or the ones picked, using the likes pulled in since. The
+// rules live in refresh.js; this is the screen, the job view and the
+// confirmation. Nothing changes on Spotify until the plan is accepted.
+
+// Kept across redraws of the picker, so a slow playlist read can't
+// reset what was ticked.
+let _refreshFound = null;
+let _refreshPicked = new Set();
+let _refreshCheckNew = false;
+let _refreshCancelled = false;
+
+async function renderRefresh() {
+  setTitle("DeepDive · Refresh dive playlists");
+  setActiveTab("dives");
+  root.innerHTML = `
+    <div class="card">
+      <h1>Refresh dive playlists</h1>
+      <p class="muted">Takes out songs you've liked since the dive. Turn on new releases to dive each artist again and add what's new.</p>
+      <div class="set-group" style="margin-top:20px;">
+        ${settingRow({
+          title: "Add new releases",
+          detail: "Dives each artist again. One request per release, so it's slower.",
+          control: setSwitch('id="refresh-new"', _refreshCheckNew),
+        })}
+      </div>
+      <div class="crate-header"><span class="label">Playlists</span>
+        <button class="btn-link hidden" id="refresh-all">Select all</button></div>
+      <div id="refresh-list"><p class="empty-note">Finding your dive playlists…</p></div>
+      <div class="flash hidden" id="refresh-msg"></div>
+      <div class="actions">
+        <button class="btn btn-primary" id="refresh-go" disabled>Refresh</button>
+        <button class="btn btn-ghost" data-tab="dives">Back</button>
+      </div>
+    </div>`;
+
+  document.getElementById("refresh-new")?.addEventListener("change", (e) => { _refreshCheckNew = e.target.checked; });
+  const list = document.getElementById("refresh-list");
+  const go = document.getElementById("refresh-go");
+  const allBtn = document.getElementById("refresh-all");
+  const sync = () => {
+    const n = _refreshPicked.size;
+    // The count lives in the ticks; in the label it wrapped on a phone.
+    go.disabled = !n;
+    if (allBtn && _refreshFound) {
+      allBtn.textContent = n === _refreshFound.length ? "Select none" : "Select all";
+    }
+  };
+  // Delegated once from the list, which is rebuilt rather than patched.
+  list.addEventListener("change", (e) => {
+    const box = e.target.closest("[data-refresh-pl]");
+    if (!box) return;
+    if (box.checked) _refreshPicked.add(box.dataset.refreshPl);
+    else _refreshPicked.delete(box.dataset.refreshPl);
+    sync();
+  });
+  allBtn?.addEventListener("click", () => {
+    if (!_refreshFound) return;
+    const all = _refreshPicked.size !== _refreshFound.length;
+    _refreshPicked = new Set(all ? _refreshFound.map((p) => p.id) : []);
+    list.querySelectorAll("[data-refresh-pl]").forEach((b) => { b.checked = all; });
+    sync();
+  });
+  go.addEventListener("click", () => startRefresh());
+
+  if (demo.demoActive()) {
+    list.innerHTML = `<p class="empty-note">Dive playlists show here with a Spotify connection.</p>`;
+    return;
+  }
+  try {
+    const own = await client.listOwnPlaylists();
+    const divedNames = history.listDives().map((d) => d.artistName);
+    const found = refresh.pickDivePlaylists(own, divedNames);
+    // A previous visit's selection survives only for playlists still there.
+    const ids = new Set(found.map((p) => p.id));
+    _refreshPicked = _refreshFound
+      ? new Set([..._refreshPicked].filter((id) => ids.has(id)))
+      : new Set(ids);
+    _refreshFound = found;
+    if (!document.body.contains(list)) return;
+    if (!found.length) {
+      list.innerHTML = `<p class="empty-note">No dive playlists yet. Make one from a dive's results.</p>`;
+      sync();
+      return;
+    }
+    list.innerHTML = found.map((p) => trackRow(
+      { id: p.id, name: p.artistName, album: { image_url: p.image, name: `${p.tracks} song${p.tracks === 1 ? "" : "s"}` } },
+      { cls: "refresh-row", attr: "data-refresh-pl" })).join("");
+    list.querySelectorAll("[data-refresh-pl]").forEach((b) => { b.checked = _refreshPicked.has(b.dataset.refreshPl); });
+    allBtn?.classList.remove("hidden");
+    sync();
+  } catch (e) {
+    const info = explainError(e);
+    list.innerHTML = `<p class="empty-note">Couldn't read your playlists. ${esc(info.headline)}.</p>`;
+  }
+}
+
+async function startRefresh() {
+  const chosen = (_refreshFound || []).filter((p) => _refreshPicked.has(p.id));
+  if (!chosen.length || blockedByRateLimit()) return;
+  const checkNew = _refreshCheckNew;
+  _refreshCancelled = false;
+  showDiveScreen("Refreshing dive playlists…", () => { _refreshCancelled = true; renderRefresh(); });
+  setDiveHeading("Refreshing dive playlists");
+  const dives = history.listDives();
+  const opts = optionsForIntent(savedIntentId(), savedCustomOpts());
+  // Each playlist is one slice of the bar; a re-dive fills its slice
+  // with the dive's own progress.
+  const slice = (i, frac) => Math.min(99, Math.round(5 + ((i + frac) / chosen.length) * 94));
+  let result;
+  try {
+    await preflight();
+    result = await refresh.planRefresh(client, chosen, {
+      checkNew,
+      isCancelled: () => _refreshCancelled,
+      getLiked: () => libraryCache.getLikedTracks({
+        onProgress: (done, total) => updateDiveScreen(total ? Math.min(5, Math.floor(done / total * 5)) : 0,
+          total ? `Syncing your Liked Songs… ${done} of ${total}` : "Syncing your Liked Songs…"),
+      }),
+      dive: async (p) => {
+        const i = chosen.indexOf(p);
+        const known = dives.find((d) => d.artistId && (d.artistName || "").toLowerCase() === p.artistName.toLowerCase());
+        if (known) rememberArtistChoice(p.artistName, { id: known.artistId });
+        const artist = await lookupArtist(p.artistName);
+        if (!artist) throw new Error(`Spotify couldn't find ${p.artistName}.`);
+        if (artist.closestMatch) throw new Error(`Spotify has no artist called ${p.artistName}.`);
+        const photo = largestImage(artist.images);
+        if (photo) showOnlyDiveImage(photo);
+        return search.runSearch(client, p.artistName, {
+          ...opts,
+          libraryCache,
+          resolvedArtist: artist,
+          isCancelled: () => _refreshCancelled,
+          onProgress: (pct, stage) => updateDiveScreen(slice(i, pct / 100), `${p.artistName} · ${stage}`),
+        });
+      },
+      onProgress: ({ step, done, total, playlist }) => {
+        if (step === "playlist") updateDiveScreen(slice(done, 0), `Checking ${playlist.artistName} · ${done + 1} of ${total}`);
+      },
+    });
+  } catch (e) {
+    hideDiveScreen();
+    if (!_refreshCancelled) renderProgressError(e.message || String(e), e);
+    return;
+  }
+  hideDiveScreen();
+  if (_refreshCancelled && !result.plans.length) return;
+  renderRefreshReview(result, { checkNew });
+}
+
+function renderRefreshReview({ plans, cancelled }, { checkNew }) {
+  setTitle("DeepDive · Refresh dive playlists");
+  const changing = plans.filter((p) => !p.error && (p.remove.length || p.add.length));
+  const removes = changing.reduce((n, p) => n + p.remove.length, 0);
+  const adds = changing.reduce((n, p) => n + p.add.length, 0);
+  const failed = plans.filter((p) => p.error);
+  const line = (p) => {
+    if (p.error) return `Couldn't check: ${p.error}`;
+    const parts = [];
+    if (p.remove.length) parts.push(`take out ${p.remove.length} you've liked`);
+    if (p.add.length) parts.push(`add ${p.add.length} new`);
+    return parts.length ? parts.join(", ").replace(/^./, (c) => c.toUpperCase()) : "Nothing to change";
+  };
+  const summary = [
+    removes ? `${removes} song${removes === 1 ? "" : "s"} to take out` : "",
+    adds ? `${adds} to add` : "",
+  ].filter(Boolean).join(", ");
+  root.innerHTML = `
+    <div class="card">
+      <h1>${changing.length ? summary : "Already up to date"}</h1>
+      <p class="muted">${cancelled ? `Stopped after ${plans.length} playlist${plans.length === 1 ? "" : "s"}. ` : ""}${changing.length
+        ? `${changing.length} of ${plans.length} playlist${plans.length === 1 ? "" : "s"} will change. Nothing changes until you apply it.`
+        : checkNew ? "No liked songs to take out and nothing new to add." : "No liked songs to take out."}</p>
+      <div id="refresh-plan">
+        ${plans.filter((p) => p.error || p.remove.length || p.add.length).map((p) => trackRow(
+          { id: p.playlist.id, name: p.playlist.artistName, album: { image_url: p.playlist.image, name: line(p) } },
+          { checkbox: false, cls: p.error ? "refresh-row is-error" : "refresh-row" })).join("")}
+      </div>
+      <div class="actions">
+        ${changing.length ? `<button class="btn btn-primary" id="refresh-apply">Apply</button>` : ""}
+        <button class="btn btn-ghost" id="refresh-back">Back</button>
+      </div>
+    </div>`;
+  document.getElementById("refresh-back").addEventListener("click", () => renderRefresh());
+  document.getElementById("refresh-apply")?.addEventListener("click", async (ev) => {
+    const btn = ev.currentTarget;
+    btn.disabled = true;
+    btn.textContent = "Applying…";
+    const results = await refresh.applyRefresh(client, changing, {
+      onProgress: ({ done, total }) => { btn.textContent = `Applying ${Math.min(done + 1, total)} of ${total}…`; },
+    });
+    const ok = results.filter((r) => !r.error);
+    const bad = results.filter((r) => r.error);
+    const out = ok.reduce((n, r) => n + r.removed, 0);
+    const added = ok.reduce((n, r) => n + r.added, 0);
+    if (ok.length) {
+      history.recordAction({
+        type: "refresh",
+        label: `Refreshed ${ok.length} dive playlist${ok.length === 1 ? "" : "s"}: ${out} out, ${added} in`,
+        undoable: false,
+      });
+    }
+    showActionResult({
+      headline: bad.length ? `${ok.length} of ${results.length} updated` : "Playlists updated",
+      detail: [`Took out ${out}`, added ? `added ${added}` : "",
+        bad.length ? `${bad.map((r) => r.playlist.artistName).join(", ")} failed: ${bad[0].error}` : ""]
+        .filter(Boolean).join(", ") + ".",
+      ok: !bad.length,
+    });
+    renderRefresh();
+  });
+  if (failed.length && !changing.length) flash(`${failed.length} playlist${failed.length === 1 ? "" : "s"} couldn't be checked.`, true);
 }
 
 /** Mixes — what Playlists were called — with the sampler alongside. */
@@ -3722,6 +3941,17 @@ async function applyResults(r, action) {
         title: (r.artist && r.artist.name) || playlistName,
         kind: "Dive",
       });
+      // Recorded like every other playlist DeepDive creates, so History
+      // can offer to remove it and Refresh can find it.
+      if (!res.reused && res.id) {
+        history.recordAction({
+          type: "playlist",
+          label: `Created "${playlistName}"`,
+          playlistId: res.id,
+          playlistUrl: res.url,
+          undoable: false,
+        });
+      }
       parts.push(`Playlist ${res.reused ? "updated" : "created"}: added ${res.added_count}${res.already_present_count ? `, ${res.already_present_count} already present` : ""}.`);
       btns.forEach((b) => (b.disabled = false));
       showActionResult({ headline: "Done", detail: parts.join(" "), url: res.url,

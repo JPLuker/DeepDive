@@ -461,6 +461,22 @@ release with notes. Version numbers are Joseph's to take.
 
 ## Shipped since — build 2.9.120
 
+### 2.9.146 — Refresh dive playlists
+
+Joseph, 15 Nov: "Also I would like a playlist refresh features for full
+dives that I can run and it hits all playlists/whatever is selected with
+my new like pulls."
+
+Built as: Dives → Refresh dive playlists. Finds dive playlists by the
+description dives write ("New-to-you tracks by X, found by DeepDive.")
+or by name for artists in dive history; all selected by default. One
+Liked Songs sync, then each playlist loses the songs liked since. "Add
+new releases" (off by default, one request per release) re-dives each
+artist and adds new-to-you songs. Review before Apply; removals before
+additions. `refresh.js`, `tools/e2e-refresh.mjs`.
+
+**Open, for Joseph:** whether "Add new releases" should default on.
+
 ### 2.9.145 — Progress redux (#19)
 
 Dive bar moves through the catalogue read; nested library syncs join the
