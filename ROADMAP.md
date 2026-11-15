@@ -291,18 +291,18 @@ the pacing work. Neither has been looked at properly.
 
 ---
 
-## Stopping point, 15 Nov (build 2.9.149)
+## Stopping point, 15 Nov (build 2.9.152)
 
 Same ordering rule as 20 Oct: Claude's list first, then everything that
 needs Joseph in one place.
 
 ### 1. Claude's queue
 
-**Empty, as of 2.9.149.** Everything in the 20 Oct queue below has
+**Empty, as of 2.9.152.** Everything in the 20 Oct queue below has
 shipped: Phase 1 (#14) by 2.9.125, Phase 2 repo furniture in 2.9.126,
 Phase 3's scan budget in 2.9.127, Phase 4 native builds through
 2.9.143 (signed Android with an updater), and the TESTING.md rewrite on
-23 Oct. This session (2.9.144 to 2.9.149) fixed #18 and #19, built
+23 Oct. This session (2.9.144 to 2.9.152) fixed #18 and #19, built
 Refresh dive playlists, fixed dark-mode backup buttons, took the em
 dashes out of UI copy, and made every native build publish as its own
 UNTESTED pre-release with notes from CHANGELOG.md.
@@ -318,7 +318,7 @@ What a future session can pick up without Joseph:
 
 ### 2. Joseph's queue — collected
 
-1. **Install the newest APK, 2.9.149** (or let the updater fetch it) and check
+1. **Install the newest APK, 2.9.152** (or let the updater fetch it) and check
    #18 and #19 on the phone: dip "idk" from the search list; watch one
    dive's bar and notification; start a Dip and look for its
    notification. Close #18 if the dip shows idk.
@@ -328,9 +328,9 @@ What a future session can pick up without Joseph:
    recommends off.
 4. **Decide:** move DeepDive to Quiet Precision (DESIGN.md Part B), or
    keep its own look? B12 says to ask before touching its visuals.
-5. **Desktop builds:** run Native builds → Run workflow with version
-   2.9.149 (or later) to get UNTESTED Windows and Linux releases. They
-   have never been run by a person; elementary OS is the first test.
+5. **Desktop builds:** 2.9.152 is published as UNTESTED Windows and
+   Linux releases. Nobody has run them; elementary OS is the first
+   test. Later ones: Native builds → Run workflow, platforms "desktop".
 6. The 20 Oct items still open: the quota experiment, private
    vulnerability reporting, artist photo permission, landing Mixes copy,
    retaking the landing screenshots, the full `TESTING.md` pass.
