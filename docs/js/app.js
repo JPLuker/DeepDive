@@ -36,7 +36,7 @@ import * as refresh from "./refresh.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.146";
+export const BUILD = "2.9.147";
 
 // The public site. Needed only where a relative link cannot work: in a
 // native shell "../" is the bundle root, which has no landing page in
@@ -1729,7 +1729,7 @@ async function renderCustomMix() {
     document.getElementById("cm-preview").innerHTML = typedMiss
       ? `<p class="empty-note">No artist called “${esc(document.getElementById("cm-artist").value.trim())}” in your library. The rest of the filters still apply.</p>`
       : n
-      ? `<p class="nav-hint"><strong>${n}</strong> track${n === 1 ? "" : "s"} match — ${esc(insights.describeCustom(f))}.
+      ? `<p class="nav-hint"><strong>${n}</strong> track${n === 1 ? "" : "s"} match. ${esc(insights.describeCustom(f))}.
          ${n > 300 ? `<br>Creating this would take about ${reqs} requests, one per hundred tracks. Building the list costs nothing; only creating the playlist talks to Spotify.` : ""}</p>`
       : `<p class="empty-note">Nothing matches that combination. Try loosening one of the filters.</p>`;
   };
@@ -3526,7 +3526,7 @@ function explainError(err) {
         "This is a limit on your own Spotify credentials, not a fault in DeepDive, " +
         "and it isn't something waiting a few seconds fixes. Spotify groups endpoints " +
         "into separate budgets, which is why the home screen can still load normally " +
-        "while a dive can't start — reading an artist's catalogue draws on a different " +
+        "while a dive can't start. Reading an artist's catalogue draws on a different " +
         "budget from your library and listening history. It refills on its own; try " +
         "again later. Dives that read compilations and guest appearances spend far " +
         "more of it than standard ones.",
@@ -3689,7 +3689,7 @@ function dupRow(d) {
     // from new tracks, since they're liked rather than added to a
     // playlist.
     attr: "data-dup",
-    match: matched ? `Matches “${matched}” — ${d.match_basis}` : d.match_basis,
+    match: matched ? `Matches “${matched}”, ${d.match_basis}` : d.match_basis,
   });
 }
 
@@ -4748,7 +4748,7 @@ async function renderAskSimilar() {
     if (mix.tracks.length < 5) {
       // Specific about why: the artist was found, the neighbours were
       // found, you just don't own them.
-      out.innerHTML = `<p class="empty-note">Last.fm found ${similar.length} artists like ${esc(name)}, but you own too few of them to build a mix${mix.artists.length ? ` — just ${esc(mix.artists.join(", "))}` : ""}.</p>`;
+      out.innerHTML = `<p class="empty-note">Last.fm found ${similar.length} artists like ${esc(name)}, but you own too few of them to build a mix${mix.artists.length ? `, just ${esc(mix.artists.join(", "))}` : ""}.</p>`;
       return;
     }
 
@@ -5137,7 +5137,7 @@ async function wholeDiscographyDip(artist, artistName, built, likedIds, opts) {
     id: `dip-${artist.id || artistName}`,
     forArtists: [artist.name || artistName],
     title: artist.name || artistName,
-    subtitle: `everything they've released — ${dip.tracks.length} tracks, about ${Math.round(dip.totalMs / 60000)} minutes, best known first${owned ? ` · you already own ${owned}` : ""}`,
+    subtitle: `everything they've released, ${dip.tracks.length} tracks, about ${Math.round(dip.totalMs / 60000)} minutes, best known first${owned ? ` · you already own ${owned}` : ""}`,
     art: {
       images: [largestImage(artist.images) || artist.image_url_large || artist.image_url].filter(Boolean),
       title: artist.name || artistName,
@@ -5524,13 +5524,13 @@ async function buildShowNow() {
         });
         continue;
       }
-      failed.push(`${a.name} — Last.fm doesn't know them well enough`);
+      failed.push(`${a.name}: Last.fm doesn't know them well enough`);
     } catch (e) {
       const quota = e && (e.quotaExhausted || e.status === 429);
-      failed.push(`${a.name} — ${quota ? "Spotify's limit was reached" : (e.message || e)}`);
+      failed.push(`${a.name}: ${quota ? "Spotify's limit was reached" : (e.message || e)}`);
       if (quota) {
         for (const rest of _showBill.slice(i + 1)) {
-          failed.push(`${rest.name} — not read, the limit was already reached`);
+          failed.push(`${rest.name}: not read, the limit was already reached`);
         }
         quotaStopped = true;
         break;
@@ -5560,7 +5560,7 @@ async function buildShowNow() {
       <p class="api-banner-detail">Built from ${show.sets.length} of ${_billSize} artists, so the night is shared between fewer people than you asked for.${quotaStopped ? " The limit refills on its own. Try again later." : ""}</p>
       <p class="api-banner-detail">${esc(failed.join(" · "))}</p>
     </div>` : ""}
-    <p class="nav-hint">${show.tracks.length} tracks, about ${Math.round(show.totalMs / 60000)} minutes — ${show.sets.map((s) => `${esc(s.artist.name)} ${s.tracks.length} tracks/${Math.round(s.totalMs / 60000)}min`).join(", ")}</p>
+    <p class="nav-hint">${show.tracks.length} tracks, about ${Math.round(show.totalMs / 60000)} minutes. ${show.sets.map((s) => `${esc(s.artist.name)} ${s.tracks.length} tracks/${Math.round(s.totalMs / 60000)}min`).join(", ")}</p>
 `;
 
   // Naming used to take the last name on the list and call them the
@@ -5908,7 +5908,7 @@ function probeVerdict(rows) {
   // and invisible unless it is said out loud: pacing is remembered
   // across sessions and only ever rises on its own.
   const pacingNote = paced >= 400
-    ? `<p class="nav-hint">DeepDive is currently waiting <strong>${paced}ms</strong> before every request, learned from an earlier rate limit. On an artist with 40 releases that alone adds about ${Math.round(paced * 40 / 1000)} seconds. If dives feel slow and nothing is being refused, this is why — clear it with Reset pacing above.</p>`
+    ? `<p class="nav-hint">DeepDive is currently waiting <strong>${paced}ms</strong> before every request, learned from an earlier rate limit. On an artist with 40 releases that alone adds about ${Math.round(paced * 40 / 1000)} seconds. If dives feel slow and nothing is being refused, this is why. Clear it with Reset pacing above.</p>`
     : "";
   if (!failed.length) {
     return pacingNote + `<p class="nav-hint">Every endpoint answered. If a dive still fails it's the number of requests, not the endpoints. Try a small artist.</p>`;
@@ -6078,7 +6078,7 @@ function renderSettings() {
 
       <div class="set-group">
         <div class="set-group-label">Unfinished</div>
-        <p class="set-note">Features that work but aren't finished. Right now that's the whole-library duplicate scan, which costs about one Spotify request per release across every artist you've liked — more than the quota reliably allows.</p>
+        <p class="set-note">Features that work but aren't finished. Right now that's the whole-library duplicate scan, which costs about one Spotify request per release across every artist you've liked. That's more than the quota reliably allows.</p>
         ${settingRow({
           title: "Show incomplete features",
           detail: "Adds them back to the Dives screen.",

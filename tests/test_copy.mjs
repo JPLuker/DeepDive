@@ -46,7 +46,8 @@ check('no hedged advice in errors', !/usually clears it|should probably|might wa
 // what the budget is for.
 {
   const dashes = (userText.match(/—/g) || []).length;
-  check(`em dashes held at or under 8 (found ${dashes})`, dashes <= 8);
+  // 2.9.147: down to the two diagnostics labels after an A2.4 pass.
+  check(`em dashes held at or under 2 (found ${dashes})`, dashes <= 2);
 }
 
 // Specific rewrites worth keeping rewritten.

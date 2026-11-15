@@ -180,6 +180,11 @@
   .btn-primary:hover { filter:brightness(0.92); }
   .btn-ghost { background:var(--tile); border:none; color:var(--ink); }
   .btn-ghost:hover { background:var(--tile-hover); }
+  /* A filled button that sits on a tile: ghost's fill is the tile itself,
+     so it vanished there. Defined in 2.9.147; 2.9.143 used the class
+     without a rule and the text fell back to the browser's black. */
+  .btn-secondary { background:var(--accent-soft-fill); color:var(--ink); }
+  .btn-secondary:hover { background:color-mix(in srgb, var(--accent-soft-fill), var(--ink) 6%); }
   .btn-small { min-height:36px; padding:8px 16px; font-size:13px; }
   .btn:disabled { opacity:0.5; cursor:default; }
 
@@ -1665,6 +1670,6 @@
   <div id="flash-slot" role="status" aria-live="polite" aria-atomic="true"></div>
   <div class="wrap" id="view-root"><!-- views render here --></div>
 
-  <script type="module" src="../js/app.js?v=2.9.146"></script>
+  <script type="module" src="../js/app.js?v=2.9.147"></script>
 </body>
 </html>

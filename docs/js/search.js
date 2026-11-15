@@ -224,7 +224,7 @@ export async function runSearch(client, artistName, opts = {}) {
     onProgress: (done, total) => {
       const left = Math.max(0, total - done);
       const secs = typeof client.estimateSeconds === "function" ? client.estimateSeconds(left) : 0;
-      const eta = secs > 5 ? ` — about ${fmtEta(secs)} left` : "";
+      const eta = secs > 5 ? `, about ${fmtEta(secs)} left` : "";
       // One call, carrying both the stage's share of the bar and the
       // count. This used to set the bar with stageCb and then call
       // report(), which reset it to the stage's start: the bar sat at

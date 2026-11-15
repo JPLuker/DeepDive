@@ -93,7 +93,8 @@ check('and each share is measured in time', /const frac = target \? Math\.min\(1
 // It kept the rest, but wrote the failure into the progress line that
 // the next artist immediately overwrote — so a bill of two quietly
 // became a bill of one with nothing said.
-check('one artist failing keeps the rest', /failed\.push\(`\$\{a\.name\} — /.test(src));
+// 2.9.147: the separator became a colon in the em-dash pass.
+check('one artist failing keeps the rest', /failed\.push\(`\$\{a\.name\}: /.test(src));
 check('and the ones left out are named', /Some of the bill is missing/.test(src));
 check('quota stops the run', /if \(quota\) \{/.test(src));
 check('and names the artists never attempted', /not read, the limit was already reached/.test(src));

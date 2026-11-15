@@ -3,6 +3,13 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.147
+- Fixed: Export backup and Import backup were nearly invisible in the
+  dark theme (1.18:1). They used a button class with no style. Now
+  filled, as intended in 2.9.143.
+- Copy: em dashes taken out of eleven on-screen sentences, including
+  the dive's time estimate and Multi-Dip's failure list.
+
 ## 2.9.146
 - New: Refresh dive playlists, on the Dives tab. Picks up every playlist
   made from a dive, all selected, and takes out songs you've liked since.
