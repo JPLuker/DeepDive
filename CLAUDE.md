@@ -42,6 +42,13 @@ pre-release, UNTESTED title and warning block. The updater's tag regex
 only matches `-untested-android`, so desktop releases can't confuse it.
 Nobody has run any of them yet.
 
+**2.9.153 adds .tar.gz and Flatpak to Linux.** The tarball is the .deb's
+`usr/` tree. The Flatpak repackages the .deb (`tools/flatpak-manifest.sh`,
+GNOME 47 runtime, app id `io.github.jpluker.deepdive`) in the
+`flatpak` job; `publish-desktop` runs if the build succeeded even when
+Flatpak failed, and the Linux notes then say there's no Flatpak
+(RELEASES.md 6.4, decided: optional).
+
 ---
 
 ## Release notes and the version guard — 2.9.148

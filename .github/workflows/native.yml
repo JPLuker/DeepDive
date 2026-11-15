@@ -142,6 +142,14 @@ jobs:
             fi
             cp "${exes[0]}" "dist/DeepDive-${V}-Windows-x64-portable-UNTESTED.exe"
           fi
+          # The .tar.gz (RELEASES.md Part 1) is the .deb's usr/ tree, so it
+          # can't drift from the package: unpack into / or ~/.local. Needs
+          # webkit2gtk-4.1 from the system, as the .deb declares.
+          if [ "${{ matrix.label }}" = "Linux" ]; then
+            tree="$(mktemp -d)"
+            dpkg-deb -x "dist/DeepDive-${V}-Linux-x64-UNTESTED.deb" "$tree"
+            tar -czf "dist/DeepDive-${V}-Linux-x64-UNTESTED.tar.gz" -C "$tree" usr
+          fi
           ls -la dist
 
       - uses: actions/upload-artifact@v4
@@ -153,8 +161,40 @@ jobs:
   # (RELEASES.md Part 2), after both have built. Before 2.9.149 they
   # were only Actions artifacts, which download as ZIPs and which
   # Joseph couldn't test without extracting.
-  publish-desktop:
+  # Flatpak, elementary OS's own app format, repackaged from the .deb.
+  # Optional (RELEASES.md 6.4): if it fails, the Linux release still
+  # goes out without it and its notes say so; the other formats work.
+  flatpak:
     needs: build
+    runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-47
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: Linux-x64
+          path: linux-dist
+      - name: Write the manifest
+        shell: bash
+        run: |
+          mkdir -p flatpak
+          tools/ci-capture.sh "Flatpak manifest" bash -c '
+            bash tools/flatpak-manifest.sh "linux-dist/DeepDive-${{ github.event.inputs.version }}-Linux-x64-UNTESTED.deb" \
+              > flatpak/io.github.jpluker.deepdive.yml
+            cat flatpak/io.github.jpluker.deepdive.yml
+          ' 
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: DeepDive-${{ github.event.inputs.version }}-Linux-x64-UNTESTED.flatpak
+          manifest-path: flatpak/io.github.jpluker.deepdive.yml
+          cache-key: flatpak-builder-${{ github.sha }}
+          upload-artifact: true
+
+  publish-desktop:
+    needs: [build, flatpak]
+    if: always() && needs.build.result == 'success'
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -169,8 +209,17 @@ jobs:
         run: |
           V="$BUILD_VERSION"
           tools/ci-capture.sh "Version guard (desktop)" node tools/release-notes.mjs "$V" > /dev/null
-          tools/ci-capture.sh "Publish Linux" bash tools/publish-untested.sh Linux linux artifacts/Linux-x64 \
-            "DeepDive-${V}-Linux-x64-UNTESTED.AppImage" "DeepDive-${V}-Linux-x64-UNTESTED.deb" "DeepDive-${V}-Linux-x64-UNTESTED.rpm"
+          LINUX=("DeepDive-${V}-Linux-x64-UNTESTED.AppImage" "DeepDive-${V}-Linux-x64-UNTESTED.deb"
+                 "DeepDive-${V}-Linux-x64-UNTESTED.rpm" "DeepDive-${V}-Linux-x64-UNTESTED.tar.gz")
+          FP="DeepDive-${V}-Linux-x64-UNTESTED.flatpak"
+          found="$(find artifacts -name "$FP" -type f | head -n1)"
+          if [ -n "$found" ]; then
+            cp "$found" "artifacts/Linux-x64/$FP"; LINUX+=("$FP")
+          else
+            echo "::warning::No Flatpak this run; publishing Linux without it."
+            export EXTRA_NOTE="No Flatpak in this release: its build failed. The other Linux formats are unaffected."
+          fi
+          tools/ci-capture.sh "Publish Linux" bash tools/publish-untested.sh Linux linux artifacts/Linux-x64 "${LINUX[@]}"
           tools/ci-capture.sh "Publish Windows" bash tools/publish-untested.sh Windows windows artifacts/Windows-x64 \
             "DeepDive-${V}-Windows-x64-Setup-UNTESTED.exe" "DeepDive-${V}-Windows-x64-UNTESTED.msi" "DeepDive-${V}-Windows-x64-portable-UNTESTED.exe"
 

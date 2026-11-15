@@ -36,8 +36,9 @@ CHANGES="$(node tools/release-notes.mjs "$V")"
   case "$SUFFIX" in
     android) echo "Install over the previous release to keep your data, or update from Settings → Updates (Testing channel)." ;;
     windows) echo "Not code-signed: Windows SmartScreen will say the publisher is unknown. Choose More info → Run anyway." ;;
-    linux)   echo "Not signed. The AppImage needs \`chmod +x\` before it runs." ;;
+    linux)   echo "Not signed. The AppImage needs \`chmod +x\` before it runs. The .tar.gz unpacks into / or ~/.local and needs webkit2gtk-4.1. Install the Flatpak with \`flatpak install --user\` and the file." ;;
   esac
+  if [ -n "${EXTRA_NOTE:-}" ]; then echo; echo "$EXTRA_NOTE"; fi
   echo
   echo "## What changed"
   echo

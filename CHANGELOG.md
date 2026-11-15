@@ -3,6 +3,12 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.153
+- Linux releases add a .tar.gz and a Flatpak, the last two Linux formats
+  in the release standard. The Flatpak is elementary OS's own app
+  format. If its build fails, the release goes out without it and says
+  so.
+
 ## 2.9.152
 - The 2.9.149 APK never published: creating the release with its files
   in one call was refused by CI's token (HTTP 403). Back to create, then

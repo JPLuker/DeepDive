@@ -86,5 +86,16 @@ check('Windows ships installer, MSI and portable', /Windows-x64-Setup-UNTESTED\.
 const stamps = wf.match(/read_text\([^)]*\)/g) || [];
 check('every file the stamp reads is read as UTF-8', stamps.length >= 6 && stamps.every((m) => /encoding="utf-8"/.test(m)));
 check('the stamp runs whichever Python actually works', (wf.match(/PY=python3; "\$PY" -c 1 2>\/dev\/null \|\| PY=python/g) || []).length === 2);
+// 2.9.153: the remaining RELEASES.md Part 1 Linux formats.
+check('Linux ships a .tar.gz unpacked from the .deb', /dpkg-deb -x "dist\/DeepDive-\$\{V\}-Linux-x64-UNTESTED\.deb"/.test(wf) && /Linux-x64-UNTESTED\.tar\.gz/.test(wf));
+check('Flatpak is built from the .deb and is optional for the release', /flatpak-builder@v6/.test(wf)
+  && /needs: \[build, flatpak\]/.test(wf) && /if: always\(\) && needs\.build\.result == 'success'/.test(wf) && /No Flatpak this run/.test(wf));
+{
+  const manifest = execFileSync('bash', ['tools/flatpak-manifest.sh', join(repo, 'README.md')], { cwd: repo, encoding: 'utf8' });
+  check('the manifest uses the fixed app id', /^id: io\.github\.jpluker\.deepdive$/m.test(manifest) && /^command: deepdive$/m.test(manifest));
+  check('the desktop file and icons are renamed to the app id', /Icon=io\.github\.jpluker\.deepdive/.test(manifest) && /apps\/io\.github\.jpluker\.deepdive\.png/.test(manifest));
+  check('the sign-in callback still routes back in (Exec takes %u)', /Exec=deepdive %u/.test(manifest));
+  check('network and a display are allowed, nothing broader', /--share=network/.test(manifest) && !/--filesystem=/.test(manifest));
+}
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
