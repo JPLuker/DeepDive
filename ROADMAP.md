@@ -511,6 +511,13 @@ release with notes. Version numbers are Joseph's to take.
 
 ## Shipped since — build 2.9.120
 
+### 2.9.156 — Desktop sign-in callback
+
+Linux sign-in looped back to Connect (Joseph, 18 Nov): the .desktop
+launcher dropped the URL, and nothing forwarded a second launch to the
+running app. Template with `%u`, single-instance plugin, AppImage
+registration.
+
 ### 2.9.155 — Restore from a backup during setup
 
 Joseph, 15 Nov: "why can't I use my export import tool first thing to

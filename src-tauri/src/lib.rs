@@ -32,14 +32,47 @@
 // trait is not in scope. Manager is deliberately not imported —
 // App::handle() is inherent, and importing it only earns a warning.
 use tauri::Emitter;
+#[cfg(desktop)]
+use tauri::Manager;
 use tauri_plugin_deep_link::DeepLinkExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    #[allow(unused_mut)]
+    let mut builder = tauri::Builder::default();
+
+    // Desktop: the Spotify callback starts a second process with the URL
+    // in its arguments. single-instance (registered first, as its docs
+    // require) hands that URL to this process's deep-link plugin and
+    // ends the second one, then brings this window forward so the person
+    // sees sign-in finish. Without it, Linux showed a fresh DeepDive
+    // stuck on Connect Spotify (18 Nov).
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }));
+    }
+
+    builder
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            // Packages register deepdive:// through their .desktop file or
+            // installer; an AppImage has neither, so register at runtime.
+            // Harmless when a package already did. A failure only means
+            // the AppImage can't receive the callback; say so in the log.
+            #[cfg(any(windows, target_os = "linux"))]
+            {
+                if let Err(error) = app.deep_link().register_all() {
+                    eprintln!("DeepDive: couldn't register deepdive:// links: {error}");
+                }
+            }
+
             // A single window, named so capabilities/default.json can
             // scope permissions to it.
             let handle = app.handle().clone();

@@ -1,9 +1,9 @@
 # Testing notes
 
-## Check this build — 2.9.155
+## Check this build — 2.9.156
 
 Just this build's checks, so a round takes minutes. The full pass plan
-starts below. Install the APK from the 2.9.155 Android release, or let
+starts below. Install the APK from the 2.9.156 Android release, or let
 Settings → Updates fetch it.
 
 1. [ ] Installs over 2.9.148 (or earlier) without uninstalling; crate and history are still there
@@ -17,7 +17,7 @@ Settings → Updates fetch it.
 9. [ ] Like one song from a dive playlist in Spotify, then Refresh: the review takes out just that one; Apply removes it
 10. [ ] With all playlists ticked, Add new releases is off and won't turn on; tick just one and it can, and the refresh re-dives that artist and adds only songs you haven't liked
 12. [ ] Export a backup on the web (Settings → Advanced). On a fresh install of the app, tap Restore from a backup on the first screen: it goes straight to Connect Spotify, and your crate is there after signing in
-11. [ ] On Lappy, the 2.9.155 Flatpak (or AppImage) installs, opens and signs in; Windows the same with the Setup .exe
+11. [ ] On Lappy, install the 2.9.156 .deb or Flatpak, sign in: after approving in the browser, the same DeepDive window comes forward and lands on Home (not Connect). Same on Windows with the Setup .exe
 
 ---
 

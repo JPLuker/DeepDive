@@ -41,7 +41,15 @@
     ],
     "category": "Music",
     "shortDescription": "Find what's missing from your Spotify library",
-    "longDescription": "DeepDive reconciles an artist's Spotify catalogue against your Liked Songs, finds the tracks you're missing, and builds playlists from your own library. No account, no server: everything stays on your device."
+    "longDescription": "DeepDive reconciles an artist's Spotify catalogue against your Liked Songs, finds the tracks you're missing, and builds playlists from your own library. No account, no server: everything stays on your device.",
+    "linux": {
+      "deb": {
+        "desktopTemplate": "linux/deepdive.desktop"
+      },
+      "rpm": {
+        "desktopTemplate": "linux/deepdive.desktop"
+      }
+    }
   },
   "plugins": {
     "deep-link": {

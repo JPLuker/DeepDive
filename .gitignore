@@ -17,3 +17,7 @@ dist-native/
 *.keystore
 keystore.properties
 src-tauri/gen/
+
+# cargo check output when the shell is compiled locally
+src-tauri/target/
+src-tauri/Cargo.lock

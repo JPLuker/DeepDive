@@ -3,9 +3,32 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.155.** If the build in `js/app.js` is well
+**Last updated at build 2.9.156.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Desktop sign-in callback — 2.9.156
+
+Joseph, 18 Nov, Linux: "I do the sign in but it keeps bringing me back
+to the last part of setup." The published 2.9.155 .deb's desktop file
+read `Exec=deepdive` with no `%u` (downloaded and unpacked it: Tauri's
+default template), so the browser's deepdive://callback launched
+DeepDive with no URL. `src-tauri/linux/deepdive.desktop` is our template
+with `%u`, used by the .deb and .rpm (`bundle.linux.*.desktopTemplate`).
+
+Second cause, Linux and Windows: a deep link always starts a new
+process. `tauri-plugin-single-instance` (desktop only, `deep-link`
+feature, registered before every other plugin) forwards the URL to the
+running app's deep-link plugin, which emits `deep-link://new-url` as on
+Android, and brings the `main` window forward. AppImages have no
+installed .desktop file, so `register_all()` runs at startup on Linux
+and Windows. `cargo check` passes locally (webkit2gtk dev packages
+installed in the sandbox); not run on a desktop. The Flatpak already
+had `%u` from `tools/flatpak-manifest.sh`, but needed single-instance
+too. Single-instance uses a D-Bus name under the app id, which Flatpak
+allows without extra permissions.
 
 ---
 

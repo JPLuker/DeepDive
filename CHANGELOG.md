@@ -3,6 +3,17 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.156
+- Fixed: on Linux, signing in brought you back to Connect Spotify. The
+  .deb and .rpm launcher dropped the sign-in link, so Spotify's callback
+  opened a fresh DeepDive with nothing to finish. The link is passed
+  through now.
+- On Linux and Windows the callback now goes to the DeepDive window you
+  signed in from, which comes to the front, instead of starting a second
+  copy.
+- The AppImage registers deepdive:// itself when it starts, so it can
+  receive the callback too.
+
 ## 2.9.155
 - New: Restore from a backup on the first screen and on step 1 of setup.
   A backup now carries your Spotify Client ID and Last.fm key, so a
