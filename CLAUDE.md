@@ -25,7 +25,16 @@ running app's deep-link plugin, which emits `deep-link://new-url` as on
 Android, and brings the `main` window forward. AppImages have no
 installed .desktop file, so `register_all()` runs at startup on Linux
 and Windows. `cargo check` passes locally (webkit2gtk dev packages
-installed in the sandbox); not run on a desktop. The Flatpak already
+installed in the sandbox).
+
+**Checked on the published 2.9.156 .deb** (downloaded through `gh api
+.../releases/assets/<id>` with `Accept: application/octet-stream`, run
+under `dbus-run-session -- xvfb-run`): its desktop file has `Exec=
+deepdive %u`; with one DeepDive running, launching `deepdive
+'deepdive://callback?...'` exits in under a second and the first stays
+up. The 2.9.155 binary under the same script started a second app that
+ran until killed at 20s. Not checked: that the first window's web layer
+completes sign-in with a real Spotify code. The Flatpak already
 had `%u` from `tools/flatpak-manifest.sh`, but needed single-instance
 too. Single-instance uses a D-Bus name under the app id, which Flatpak
 allows without extra permissions.
