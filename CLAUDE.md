@@ -41,9 +41,9 @@ Found by rendering it: `ev.currentTarget` is null after `await
 confirmDialog`, so bulk removal threw before its first delete. Take the
 button before awaiting. `tools/e2e-playlists.mjs` drives the screen,
 the 30-day removal, the single refresh and both export paths against a
-mocked Spotify and Last.fm. **Not checked:** the Kotlin compiles (no
-Android SDK here; the `[native-build]` CI run does), and anything on a
-device. Desktop builds still use the blob link; whether WebKitGTK and
+mocked Spotify and Last.fm. The Kotlin compiled and the APK published
+(run 45196267354, `v2.9.157-untested-android`). **Not checked:**
+anything on a device. Desktop builds still use the blob link; whether WebKitGTK and
 WebView2 save it is unverified.
 
 ---
