@@ -74,7 +74,9 @@ function check(l, c) { if (c) pass++; else { fail++; console.log('FAIL:', l); } 
   for (const host of ['https://api.spotify.com', 'https://accounts.spotify.com', 'https://ws.audioscrobbler.com']) {
     check(`connect-src allows ${host}`, csp.includes(host));
   }
-  check('images are limited to Spotify and data URIs', /img-src 'self' https:\/\/\*\.scdn\.co data:/.test(csp));
+  // 2.9.158: uploaded playlist covers (DeepDive uploads its own) are
+  // served from image-cdn-*.spotifycdn.com, which this used to block.
+  check('images are limited to Spotify and data URIs', /img-src 'self' https:\/\/\*\.scdn\.co https:\/\/\*\.spotifycdn\.com data:;/.test(csp));
   check('it cannot be framed', /frame-ancestors 'none'/.test(csp));
   check('capabilities are an allowlist, not a wildcard', Array.isArray(caps?.permissions) && !caps.permissions.includes('*'));
   check('and only name what the shell uses', caps.permissions.every((p) => /^(core:|deep-link:|opener:)/.test(p)));

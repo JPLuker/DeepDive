@@ -7,8 +7,13 @@
 // exposes DeepDiveFiles (MainActivity.kt), which writes the text into
 // Downloads through MediaStore and answers with an event.
 //
-// Result: { ok, place } where place is "downloads" when the native side
-// wrote it, "browser" when the browser took the download, or null.
+// In the app the user picks where it goes (Android's Save dialog, 2.9.158:
+// Joseph "would have preferred to pick"); Downloads is the fallback when
+// no picker is available.
+//
+// Result: { ok, place } where place is "picked" or "downloads" from the
+// native side, "browser" when the browser took the download, or null.
+// A dismissed picker is { ok: false, cancelled: true }.
 
 const NAME_OK = /^[A-Za-z0-9 ._-]{1,120}\.(csv|json)$/;
 const NATIVE_MIME = { csv: "text/csv", json: "application/json" };
@@ -31,17 +36,20 @@ function saveNative(w, filename, contents) {
   const ext = filename.split(".").pop().toLowerCase();
   return new Promise((resolve) => {
     const id = `f${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
-    const timer = setTimeout(() => { w.removeEventListener(REPLY, onReply); resolve({ ok: false, place: null, error: "Android didn't answer." }); }, 20000);
+    // Long enough to browse folders in the picker.
+    const timer = setTimeout(() => { w.removeEventListener(REPLY, onReply); resolve({ ok: false, place: null, error: "Android didn't answer." }); }, 10 * 60 * 1000);
     function onReply(e) {
       const d = e.detail || {};
       if (d.id !== id) return;
       clearTimeout(timer);
       w.removeEventListener(REPLY, onReply);
-      resolve(d.result ? { ok: true, place: "downloads" } : { ok: false, place: null, error: d.error || "" });
+      if (d.result) resolve({ ok: true, place: d.place === "picked" ? "picked" : "downloads" });
+      else if (d.place === "cancelled") resolve({ ok: false, place: null, cancelled: true });
+      else resolve({ ok: false, place: null, error: d.error || "" });
     }
     w.addEventListener(REPLY, onReply);
     try {
-      w.DeepDiveFiles.postMessage(JSON.stringify({ id, name: filename, mime: NATIVE_MIME[ext], content: contents }));
+      w.DeepDiveFiles.postMessage(JSON.stringify({ id, name: filename, mime: NATIVE_MIME[ext], content: contents, pick: true }));
     } catch (e) {
       clearTimeout(timer);
       w.removeEventListener(REPLY, onReply);
@@ -78,6 +86,7 @@ export async function saveFile(filename, contents, mime, { w = globalThis.window
 
 /** "Backup saved." / "Backup saved to Downloads." / failure line. */
 export function savedLine(result, what) {
+  if (result && result.cancelled) return "Not saved.";
   if (!result || !result.ok) return `Couldn't save the file.${result && result.error ? ` ${result.error}` : ""}`;
   return result.place === "downloads" ? `${what} saved to Downloads.` : `${what} saved.`;
 }

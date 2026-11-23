@@ -80,11 +80,13 @@ check('bulk removals confirm', (screen.match(/confirmDialog\(/g) || []).length =
 // Found rendering it: ev.currentTarget is null after the confirm's await.
 check('bulk buttons are taken before the confirm', !/removeMany\(targets, ev\.currentTarget/.test(screen) && (screen.match(/const btn = ev\.currentTarget;/g) || []).length === 2);
 check('single removal does not confirm', /data-pl-remove/.test(screen) && !/data-pl-remove[\s\S]{0,200}confirmDialog/.test(screen.slice(screen.indexOf('const rm = '))));
-check('dive rows offer a refresh of just that playlist', /data-pl-refresh/.test(src) && /renderRefresh\(\{ from: "playlists", only: ref\.dataset\.plRefresh \}\)/.test(screen));
+// 2.9.158 (Joseph: "didn't just do the playlist I said"): the row's
+// Refresh runs that playlist straight away instead of opening the picker.
+check('dive rows refresh just that playlist, straight away', /data-pl-refresh/.test(src) && /if \(p && p\.dive\) refreshOne\(p\);/.test(screen) && /startRefresh\(\[\{ id: p\.id/.test(fnBody('refreshOne')));
+check('a cancelled or finished single refresh returns to the list', /if \(_refreshFrom === "playlists"\) renderPlaylists\(\);/.test(fnBody('refreshDone')) && /refreshDone\(\)/.test(fnBody('renderRefreshReview')));
 check('date lookups stop on a rate limit', /status === 429\) break/.test(screen));
 check('date lookups are kept', /saveDates\(stored\)/.test(screen));
 const rr = fnBody('renderRefresh');
-check('refresh can preselect one playlist', /only && ids\.has\(only\) \? new Set\(\[only\]\)/.test(rr));
 check('refresh Back returns where it came from', /_refreshFrom === "playlists"\) renderPlaylists\(\)/.test(rr) && !/data-tab="dives">Back/.test(rr));
 check('row styles exist', /\.ddpl-row \{/.test(html) && /\.ddpl-actions \{/.test(html));
 
@@ -140,6 +142,10 @@ const bridge = kt.slice(kt.indexOf('// Exports. A WebView'), kt.indexOf('"DeepDi
 check('the file bridge checks the bundled page first', /if \(!bundledPage\(\)\) return@post/.test(bridge));
 check('only csv/json names and types', /SAVE_NAME\.matches\(name\)/.test(bridge) && /mime in SAVE_TYPES/.test(bridge) && /setOf\("text\/csv", "application\/json"\)/.test(kt));
 check('writes go through MediaStore Downloads', /MediaStore\.Downloads\.EXTERNAL_CONTENT_URI/.test(kt) && /IS_PENDING, 0/.test(kt));
+check('the app lets you pick where it goes', /ACTION_CREATE_DOCUMENT/.test(kt) && /pick: true/.test(readFileSync(new URL('../docs/js/files.js', import.meta.url), 'utf8')));
+check('a dismissed picker is not an error', /resultCode != RESULT_OK[\s\S]{0,80}"cancelled"/.test(kt) && files.savedLine({ ok: false, cancelled: true }, 'x') === 'Not saved.');
+check('export result is shown as a toast too', /flash\(line, /.test(ex));
+check('a cover that fails to load gets the note tile', /document\.addEventListener\("error", [\s\S]{0,200}track-art[\s\S]{0,200}ART_FALLBACK/.test(src));
 check('the write is off the main thread', /Thread \{[\s\S]{0,120}saveDownload/.test(bridge));
 check('no storage permission requested', !/WRITE_EXTERNAL_STORAGE"/.test(kt));
 

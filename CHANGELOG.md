@@ -3,6 +3,16 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.158
+- Fixed: playlist covers showed as broken images in the app. Covers
+  uploaded to Spotify come from a host the app wasn't allowed to load.
+  A cover that still can't load shows the music note instead.
+- Refresh on a playlist in Tidy up playlists now refreshes just that
+  one straight away, instead of opening the picker. The review still
+  comes first, and Back returns to the list.
+- In the app, exports open Android's Save dialog so you choose where
+  the file goes. Saved or not, a message now says so.
+
 ## 2.9.157
 - New: Settings → Export Liked Songs saves every liked song as a
   spreadsheet (CSV), laid out like Exportify's. With a Last.fm key it

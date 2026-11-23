@@ -14,7 +14,7 @@ const icon = readFileSync(new URL('../docs/assets/icon-192.png', import.meta.url
 const me = { id: 'joe', display_name: 'Joe' };
 const day = 864e5;
 const ago = (d) => new Date(Date.now() - d * day).toISOString();
-const mk = (id, name, description, total, made) => ({ id, name, description, owner: me, tracks: { total }, images: id === 'p1' ? [{ url: 'https://i.scdn.co/image/a' }] : [], external_urls: { spotify: `https://open.spotify.com/playlist/${id}` }, made });
+const mk = (id, name, description, total, made) => ({ id, name, description, owner: me, tracks: { total }, images: id === 'p1' ? [{ url: 'https://i.scdn.co/image/a' }] : id === 'p2' ? [{ url: 'https://image-cdn-ak.spotifycdn.com/image/broken' }] : [], external_urls: { spotify: `https://open.spotify.com/playlist/${id}` }, made });
 const playlists = [
   mk('p1', 'DeepDive · Pop Smoke', 'New-to-you tracks by Pop Smoke, found by DeepDive.', 41, 2),
   mk('p2', 'DeepDive · IDK', 'New-to-you tracks by IDK, found by DeepDive.', 18, 12),
@@ -50,6 +50,7 @@ for (const vp of [{ name: 'phone', viewport: { width: 390, height: 844 }, isMobi
     const a = new URL(r.request().url()).searchParams.get('artist') || '';
     r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ toptags: { tag: [{ name: a === 'Houseghost' ? 'shoegaze' : 'punk', count: 100 }, { name: 'hardcore', count: 60 }] } }) });
   });
+  await ctx.route('https://image-cdn-ak.spotifycdn.com/**', (r) => r.fulfill({ status: 404, body: '' }));
   await ctx.route('https://i.scdn.co/**', (r) => r.fulfill({ status: 200, contentType: 'image/png', body: icon }));
   await ctx.route('https://api.spotify.com/**', async (route) => {
     const req = route.request();
@@ -89,10 +90,10 @@ for (const vp of [{ name: 'phone', viewport: { width: 390, height: 844 }, isMobi
     await page.screenshot({ path: `${OUT}/playlists-after-${name}-${theme}.png`, fullPage: true });
     console.log('rows left:', await page.locator('.ddpl-row').count());
     await page.locator('[data-pl-refresh]').first().click();
-    await page.waitForTimeout(1200);
+    await page.waitForTimeout(2500);
     await page.screenshot({ path: `${OUT}/playlists-refresh-${name}-${theme}.png` });
-    console.log('ticked on refresh:', await page.locator('[data-refresh-pl]:checked').count(), 'of', await page.locator('[data-refresh-pl]').count());
-    await page.locator('#refresh-out').click();
+    console.log('single refresh skips the picker:', await page.locator('[data-refresh-pl]').count() === 0, '| review:', await page.locator('#refresh-back').count() === 1);
+    await page.locator('#refresh-back').click();
     await page.waitForTimeout(800);
     console.log('back lands on playlists:', await page.locator('#pl-list').count() === 1);
   }

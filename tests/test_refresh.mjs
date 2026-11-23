@@ -116,7 +116,9 @@ check('every dive playlist starts selected, and there is select all', /: new Set
 check('new releases are opt-in', /let _refreshCheckNew = false;/.test(src));
 check('the toggle is disabled and cleared unless exactly one playlist is ticked',
   /const allowed = refresh\.canAddNewReleases\(n\);\s*newBox\.disabled = !allowed;/.test(src) && /if \(!allowed && newBox\.checked\) \{ newBox\.checked = false; _refreshCheckNew = false; \}/.test(src));
-check('and the run checks it again', /const checkNew = _refreshCheckNew && refresh\.canAddNewReleases\(chosen\.length\);/.test(src));
+// 2.9.158: a single refresh from the playlists screen passes checkNew
+// itself; the rule is still applied to whatever was chosen.
+check('and the run checks it again', /const checkNew = \(forceNew === null \? _refreshCheckNew : forceNew\) && refresh\.canAddNewReleases\(chosen\.length\);/.test(src));
 check('the run uses the job screen', /showDiveScreen\("Refreshing dive playlists…"/.test(src));
 const review = src.slice(src.indexOf('function renderRefreshReview'), src.indexOf('/** Mixes — what Playlists'));
 check('changes are applied only from the review screen', /refresh\.applyRefresh\(/.test(review) && (src.match(/refresh\.applyRefresh\(/g) || []).length === 1);

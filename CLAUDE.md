@@ -3,9 +3,37 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.157.** If the build in `js/app.js` is well
+**Last updated at build 2.9.158.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Covers, single refresh, Save dialog — 2.9.158
+
+From Joseph's first 2.9.157 run on his phone, 23 Nov:
+
+- **Broken covers.** The native CSP's `img-src` allowed only
+  `*.scdn.co`. Covers uploaded through the API (DeepDive uploads its
+  own) are served from `image-cdn-*.spotifycdn.com`, so every one was
+  blocked; the web app has no CSP and showed them. `*.spotifycdn.com`
+  is allowed now, and a capture-phase `error` listener swaps any
+  `img.track-art` that fails for the note tile (inline `onerror` would
+  break `script-src 'self'`). Refresh's picker had the same broken
+  covers since 2.9.146; nobody had seen it in the app.
+- **Row Refresh runs that playlist.** 2.9.157 opened the picker with one
+  ticked, which read as not doing what he asked. `refreshOne(p)` calls
+  `startRefresh([entry], { checkNew: false })` directly; `refreshDone()`
+  sends cancel, review Back and Apply back to the playlists screen.
+  New releases stays off for these (a whole catalogue read); the
+  picker under Dives still has the toggle.
+- **Save dialog.** Exports send `pick: true`; MainActivity opens
+  `ACTION_CREATE_DOCUMENT` (legacy `startActivityForResult`, which needs
+  no registration before `onCreate`) and writes to the chosen URI.
+  Dismissed → `place: "cancelled"` → "Not saved." Downloads stays the
+  fallback if no picker exists. The export's message is a toast too:
+  Settings' own message line is at the bottom of the page and he never
+  saw it.
 
 ---
 
@@ -1364,7 +1392,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.157**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.158**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.

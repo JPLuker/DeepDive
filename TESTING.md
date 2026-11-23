@@ -1,10 +1,14 @@
 # Testing notes
 
-## Check this build — 2.9.157
+## Check this build — 2.9.158
 
 Just this build's checks, so a round takes minutes. The full pass plan
-starts below. Install the APK from the 2.9.157 Android release, or let
-Settings → Updates fetch it. 13 to 18 are new; the rest carry over.
+starts below. Install the APK from the 2.9.158 Android release, or let
+Settings → Updates fetch it. 13 to 21 are new; the rest carry over.
+
+19. [ ] Tidy up playlists: covers show (DeepDive's own uploaded ones included), no broken-image icons anywhere
+20. [ ] Tap the circular arrows on one dive playlist: it refreshes just that one with no picker, shows the review, and Back returns to the list
+21. [ ] Export Liked Songs and Export backup open Android's Save dialog; pick a folder and the file is there, with a message saying it saved. Back out of the dialog: "Not saved."
 
 13. [ ] Settings → Tidy up playlists opens its own screen: newest first, each with songs and how long ago; dates fill in over a few seconds the first time
 14. [ ] Tap a playlist's name: it opens in Spotify. Tap the bin on one: it goes, with no question asked

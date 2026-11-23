@@ -139,21 +139,63 @@ class MainActivity : TauriActivity() {
             require(mime in SAVE_TYPES) { "That file type isn't allowed." }
             require(content.length <= SAVE_MAX_CHARS) { "The file is too large." }
             val replyId = id
+            if (args.optBoolean("pick") && pickLocation(replyId, name, mime, content)) return@post
             Thread {
               val error = try { saveDownload(name, mime, content); null }
                 catch (e: Exception) { e.message ?: "Android couldn't save the file." }
-              workHandler.post { fileReply(replyId, error) }
+              workHandler.post { fileReply(replyId, error, "downloads") }
             }.start()
           } catch (error: Exception) {
-            fileReply(id, error.message ?: "Android couldn't save the file.")
+            fileReply(id, error.message ?: "Android couldn't save the file.", "downloads")
           }
         }
       }
     }, "DeepDiveFiles")
   }
 
-  private fun fileReply(id: String, error: String?) {
-    val detail = JSONObject().put("id", id).put("result", error == null)
+  // Joseph, 23 Nov: "I would have preferred to pick". Android's own
+  // Save dialog; nothing is written until a place is chosen, and no
+  // storage permission is involved. One export at a time.
+  private var pendingSave: Array<String>? = null
+
+  private fun pickLocation(id: String, name: String, mime: String, content: String): Boolean {
+    pendingSave?.let { fileReply(it[0], "cancelled", "cancelled") }
+    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+      .addCategory(Intent.CATEGORY_OPENABLE)
+      .setType(mime)
+      .putExtra(Intent.EXTRA_TITLE, name)
+    return try {
+      pendingSave = arrayOf(id, content)
+      @Suppress("DEPRECATION")
+      startActivityForResult(intent, PICK_SAVE_REQUEST)
+      true
+    } catch (e: Exception) {
+      pendingSave = null
+      false
+    }
+  }
+
+  @Deprecated("Activity result API needs registration before onCreate; this needs none")
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    @Suppress("DEPRECATION")
+    super.onActivityResult(requestCode, resultCode, data)
+    if (requestCode != PICK_SAVE_REQUEST) return
+    val pending = pendingSave ?: return
+    pendingSave = null
+    val uri = data?.data
+    if (resultCode != RESULT_OK || uri == null) { fileReply(pending[0], "cancelled", "cancelled"); return }
+    Thread {
+      val error = try {
+        val out = contentResolver.openOutputStream(uri, "wt") ?: throw IllegalStateException("Android wouldn't open the file.")
+        out.use { it.write(pending[1].toByteArray(Charsets.UTF_8)) }
+        null
+      } catch (e: Exception) { e.message ?: "Android couldn't save the file." }
+      workHandler.post { fileReply(pending[0], error, "picked") }
+    }.start()
+  }
+
+  private fun fileReply(id: String, error: String?, place: String) {
+    val detail = JSONObject().put("id", id).put("result", error == null).put("place", place)
     if (error != null) detail.put("error", error)
     workWebView?.evaluateJavascript(
       "window.dispatchEvent(new CustomEvent('deepdive-file-saved',{detail:$detail}))", null)
@@ -194,6 +236,7 @@ class MainActivity : TauriActivity() {
     private val SAVE_NAME = Regex("^[A-Za-z0-9 ._-]{1,120}\\.(csv|json)$")
     private val SAVE_TYPES = setOf("text/csv", "application/json")
     private const val SAVE_MAX_CHARS = 20_000_000
+    private const val PICK_SAVE_REQUEST = 2042
   }
 
   private var askedNotifications = false

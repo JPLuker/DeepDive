@@ -511,6 +511,13 @@ release with notes. Version numbers are Joseph's to take.
 
 ## Shipped since — build 2.9.120
 
+### 2.9.158 — Covers, single refresh, pick where exports go
+
+Joseph's 2.9.157 phone screenshots, 23 Nov: every cover broken ("Not
+loading"), and the row's Refresh opened the picker with one ticked
+("didn't just do the playlist I said"). On the export: "It didn't tell
+me where the export went (I would have preferred to pick)".
+
 ### 2.9.157 — Playlists screen, Liked Songs export
 
 Joseph, 23 Nov, with a screenshot of the inline list: "Add exportify AND

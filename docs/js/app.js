@@ -39,7 +39,7 @@ import { saveFile, savedLine } from "./files.js";
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.157";
+export const BUILD = "2.9.158";
 
 // The public site. Needed only where a relative link cannot work: in a
 // native shell "../" is the bundle root, which has no landing page in
@@ -646,12 +646,11 @@ let _refreshFound = null;
 let _refreshPicked = new Set();
 let _refreshCheckNew = false;
 let _refreshCancelled = false;
-// Where Back goes: Dives, or the DeepDive playlists screen when a
-// single playlist's Refresh opened it. Internal redraws pass nothing
-// and keep it.
+// Where a refresh goes back to: the picker (from Dives), or the
+// DeepDive playlists screen when one row's Refresh started it.
 let _refreshFrom = "dives";
 
-async function renderRefresh({ from = null, only = null } = {}) {
+async function renderRefresh({ from = null } = {}) {
   if (from) _refreshFrom = from;
   setTitle("DeepDive · Refresh dive playlists");
   setActiveTab(_refreshFrom === "playlists" ? "settings" : "dives");
@@ -727,10 +726,9 @@ async function renderRefresh({ from = null, only = null } = {}) {
     const found = refresh.pickDivePlaylists(own, divedNames);
     // A previous visit's selection survives only for playlists still there.
     const ids = new Set(found.map((p) => p.id));
-    _refreshPicked = only && ids.has(only) ? new Set([only])
-      : _refreshFound
-        ? new Set([..._refreshPicked].filter((id) => ids.has(id)))
-        : new Set(ids);
+    _refreshPicked = _refreshFound
+      ? new Set([..._refreshPicked].filter((id) => ids.has(id)))
+      : new Set(ids);
     _refreshFound = found;
     if (!document.body.contains(list)) return;
     if (!found.length) {
@@ -750,12 +748,28 @@ async function renderRefresh({ from = null, only = null } = {}) {
   }
 }
 
-async function startRefresh() {
-  const chosen = (_refreshFound || []).filter((p) => _refreshPicked.has(p.id));
+/** After a refresh, or a cancelled one: back to where it started. */
+function refreshDone() {
+  if (_refreshFrom === "playlists") renderPlaylists();
+  else renderRefresh();
+}
+
+/**
+ * One playlist, straight from the DeepDive playlists screen. Joseph,
+ * 23 Nov: opening the picker with one ticked "didn't just do the
+ * playlist I said". The review still comes before anything changes.
+ */
+function refreshOne(p) {
+  _refreshFrom = "playlists";
+  startRefresh([{ id: p.id, name: p.name, artistName: p.dive.artistName, url: p.url, tracks: p.tracks, image: p.image }], { checkNew: false });
+}
+
+async function startRefresh(only = null, { checkNew: forceNew = null } = {}) {
+  const chosen = only || (_refreshFound || []).filter((p) => _refreshPicked.has(p.id));
   if (!chosen.length || blockedByRateLimit()) return;
-  const checkNew = _refreshCheckNew && refresh.canAddNewReleases(chosen.length);
+  const checkNew = (forceNew === null ? _refreshCheckNew : forceNew) && refresh.canAddNewReleases(chosen.length);
   _refreshCancelled = false;
-  showDiveScreen("Refreshing dive playlists…", () => { _refreshCancelled = true; renderRefresh(); });
+  showDiveScreen("Refreshing dive playlists…", () => { _refreshCancelled = true; refreshDone(); });
   setDiveHeading("Refreshing dive playlists");
   const dives = history.listDives();
   const opts = optionsForIntent(savedIntentId(), savedCustomOpts());
@@ -836,7 +850,7 @@ function renderRefreshReview({ plans, cancelled }, { checkNew }) {
         <button class="btn btn-ghost" id="refresh-back">Back</button>
       </div>
     </div>`;
-  document.getElementById("refresh-back").addEventListener("click", () => renderRefresh());
+  document.getElementById("refresh-back").addEventListener("click", () => refreshDone());
   document.getElementById("refresh-apply")?.addEventListener("click", async (ev) => {
     const btn = ev.currentTarget;
     btn.disabled = true;
@@ -862,7 +876,7 @@ function renderRefreshReview({ plans, cancelled }, { checkNew }) {
         .filter(Boolean).join(", ") + ".",
       ok: !bad.length,
     });
-    renderRefresh();
+    refreshDone();
   });
   if (failed.length && !changing.length) flash(`${failed.length} playlist${failed.length === 1 ? "" : "s"} couldn't be checked.`, true);
 }
@@ -1018,7 +1032,11 @@ async function renderPlaylists() {
   // Delegated once: the list is repainted as dates arrive.
   list.addEventListener("click", async (e) => {
     const ref = e.target.closest("[data-pl-refresh]");
-    if (ref) return renderRefresh({ from: "playlists", only: ref.dataset.plRefresh });
+    if (ref) {
+      const p = shown.find((x) => x.id === ref.dataset.plRefresh);
+      if (p && p.dive) refreshOne(p);
+      return;
+    }
     const rm = e.target.closest("[data-pl-remove]");
     if (!rm) return;
     rm.disabled = true;
@@ -1108,7 +1126,11 @@ async function exportLikedSongs(btn, say) {
     }
     const res = await downloadFile(likedExport.likedFileName(),
       likedExport.likedSongsCsv(tracks, _genreTags), "text/csv;charset=utf-8");
-    say(savedLine(res, `${tracks.length} liked songs`), !res.ok);
+    // A toast as well: Settings' own message line is at the bottom of
+    // the page, out of sight from this row (Joseph: "it didn't tell me").
+    const line = savedLine(res, `${tracks.length} liked songs`);
+    say(line, !res.ok && !res.cancelled);
+    flash(line, !res.ok && !res.cancelled);
   } catch (e) {
     if (e.name !== "AbortError") say(`Couldn't export: ${e.message || e}`, true);
   } finally {
@@ -2173,7 +2195,7 @@ function openCardModal(card) {
       if (!list.length) return;
       const safe = ((playlistName || card.title) + "").replace(/[^\w\d\- ]+/g, "").trim() || "deepdive";
       const done = await downloadFile(`${safe}.csv`, tracksToCsv(list), "text/csv;charset=utf-8");
-      btn.textContent = done.ok ? (done.place === "downloads" ? "In Downloads" : "Saved") : "Failed";
+      btn.textContent = done.ok ? (done.place === "downloads" ? "In Downloads" : "Saved") : done.cancelled ? "Export" : "Failed";
       setTimeout(() => { btn.textContent = "Export"; }, 1600);
     });
   }
@@ -6646,7 +6668,8 @@ function renderSettings() {
     const stamp = new Date().toISOString().slice(0, 10);
     const res = await downloadFile(`deepdive-backup-${stamp}.json`,
       JSON.stringify(history.exportData(), null, 2), "application/json");
-    say(savedLine(res, "Backup"), !res.ok);
+    say(savedLine(res, "Backup"), !res.ok && !res.cancelled);
+    flash(savedLine(res, "Backup"), !res.ok && !res.cancelled);
   });
   wireBackupImport(document.getElementById("set-import-file"), document.getElementById("set-import"), {
     importData: history.importData,
@@ -6786,7 +6809,8 @@ function renderHistory() {
     const stamp = new Date().toISOString().slice(0, 10);
     const res = await downloadFile(`deepdive-backup-${stamp}.json`,
       JSON.stringify(history.exportData(), null, 2), "application/json");
-    say(savedLine(res, "Backup"), !res.ok);
+    say(savedLine(res, "Backup"), !res.ok && !res.cancelled);
+    flash(savedLine(res, "Backup"), !res.ok && !res.cancelled);
   });
 
   wireBackupImport(document.getElementById("import-file"), document.getElementById("import-data"), {
@@ -7563,6 +7587,18 @@ function moveTabSelection() {
 // has to be re-measured. Not debounced beyond the rAF gate above:
 // resize fires in bursts and each one collapses into the same frame.
 window.addEventListener("resize", moveTabSelection);
+
+// A cover that won't load becomes the note tile rather than a broken
+// image. Joseph's 2.9.157 screenshots had a broken icon on every
+// playlist: the app's CSP blocked uploaded covers on *.spotifycdn.com.
+// Capture phase, because error events don't bubble.
+const ART_FALLBACK = `<span class="track-art-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>`;
+document.addEventListener("error", (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement) || !img.classList.contains("track-art")) return;
+  console.warn("[DeepDive] cover didn't load", img.currentSrc || img.src);
+  img.outerHTML = ART_FALLBACK;
+}, true);
 
 (function initTabs() {
   document.addEventListener("click", (e) => {
