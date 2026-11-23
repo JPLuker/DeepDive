@@ -511,6 +511,23 @@ release with notes. Version numbers are Joseph's to take.
 
 ## Shipped since — build 2.9.120
 
+### 2.9.157 — Playlists screen, Liked Songs export
+
+Joseph, 23 Nov, with a screenshot of the inline list: "Add exportify AND
+a way for me to refresh dives and fix the appearance for this - I
+pressed the button and they appeared below, I would want it to be a
+different screen, also I would want to dump older dives (maybe older
+than 30 days button?)". He'd tried Exportify and it didn't work; the
+CSV is for sorting his library into radio stations (a separate,
+self-hosted project).
+
+Built as: Settings → Export Liked Songs (Exportify-style columns plus
+Last.fm genres); Tidy up playlists → its own screen with dates, per-row
+Refresh on dive playlists, Remove older than 30 days, Remove all.
+"Older dives" was read as the DeepDive playlists on that screen, not
+Dive history entries; ask before adding the same to History.
+Refresh dive playlists already existed on Dives (2.9.146) and stays.
+
 ### 2.9.156 — Desktop sign-in callback
 
 Linux sign-in looped back to Connect (Joseph, 18 Nov): the .desktop

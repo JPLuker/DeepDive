@@ -1114,6 +1114,35 @@
   .set-row-nav.dive-gold { --dive-tone:var(--gold); }
   .set-row-nav:disabled { opacity:0.5; cursor:default; }
   .refresh-row.is-error .track-sub { color:var(--danger); }
+  /* DeepDive playlists (2.9.157): a track-row look with its own shape,
+     since the left side opens Spotify and the right holds buttons. */
+  .ddpl-row {
+    display:flex; align-items:center; gap:8px;
+    background:var(--tile); border-radius:var(--r-sm);
+    overflow:hidden; margin-bottom:8px; min-height:56px; padding-right:8px;
+  }
+  .ddpl-open {
+    display:flex; align-items:center; gap:12px; flex:1; min-width:0;
+    color:var(--ink); text-decoration:none; align-self:stretch;
+  }
+  .ddpl-open:hover .track-name { text-decoration:underline; }
+  .ddpl-open:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+  .ddpl-open .track-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ddpl-actions { display:flex; gap:2px; flex-shrink:0; }
+  .ddpl-icon {
+    width:44px; height:44px; border:none; border-radius:50%; background:transparent;
+    color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:background .15s ease, color .15s ease;
+  }
+  .ddpl-icon:hover { background:var(--tile-hover); color:var(--ink); }
+  .ddpl-icon:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .ddpl-icon:disabled { opacity:0.4; cursor:default; }
+  .ddpl-icon svg { width:20px; height:20px; display:block; }
+  #pl-bulk { margin:4px 0 16px; }
+  @media (max-width: 640px) {
+    /* Stacked: side by side, "older than 30 days" wrapped to two lines. */
+    #pl-bulk { flex-direction:column; align-items:stretch; gap:8px; }
+  }
   .set-row.is-disabled .set-switch { opacity:0.45; cursor:default; }
   .set-row-nav:disabled:hover { background:var(--tile); }
   .show-needs { margin:0; font-size:13px; color:var(--muted); text-align:center; }
@@ -1673,6 +1702,6 @@
   <div id="flash-slot" role="status" aria-live="polite" aria-atomic="true"></div>
   <div class="wrap" id="view-root"><!-- views render here --></div>
 
-  <script type="module" src="../js/app.js?v=2.9.156"></script>
+  <script type="module" src="../js/app.js?v=2.9.157"></script>
 </body>
 </html>

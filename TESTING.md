@@ -1,10 +1,17 @@
 # Testing notes
 
-## Check this build — 2.9.156
+## Check this build — 2.9.157
 
 Just this build's checks, so a round takes minutes. The full pass plan
-starts below. Install the APK from the 2.9.156 Android release, or let
-Settings → Updates fetch it.
+starts below. Install the APK from the 2.9.157 Android release, or let
+Settings → Updates fetch it. 13 to 18 are new; the rest carry over.
+
+13. [ ] Settings → Tidy up playlists opens its own screen: newest first, each with songs and how long ago; dates fill in over a few seconds the first time
+14. [ ] Tap a playlist's name: it opens in Spotify. Tap the bin on one: it goes, with no question asked
+15. [ ] Remove older than 30 days: asks first, then removes only those, and the count updates
+16. [ ] Tap the circular arrows on a dive playlist: Refresh opens with only that one ticked; Back returns to the playlists screen
+17. [ ] In the Android app, Settings → Export Liked Songs: a CSV lands in Downloads and opens in Sheets with one row per liked song. With a Last.fm key, say yes to looking up genres and the Genres column is filled
+18. [ ] In the Android app, Settings → Advanced → Export backup: "Backup saved to Downloads." and the .json is there
 
 1. [ ] Installs over 2.9.148 (or earlier) without uninstalling; crate and history are still there
 2. [ ] Search "idk", pick it from the list, choose Dip: the dip is idk's, not "Artist Unknown" (#18)

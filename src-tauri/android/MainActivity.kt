@@ -5,11 +5,14 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.os.Environment
+import android.provider.MediaStore
 import android.app.Service
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.content.pm.PackageManager
@@ -117,6 +120,80 @@ class MainActivity : TauriActivity() {
         }
       }
     }, "DeepDiveBackground")
+    // Exports. A WebView ignores a blob: download link, so the web layer
+    // hands the text here and it goes into Downloads. Same origin check
+    // as above; only .csv/.json names and those two types are accepted.
+    webView.addJavascriptInterface(object {
+      @JavascriptInterface
+      fun postMessage(message: String) {
+        workHandler.post {
+          if (!bundledPage()) return@post
+          var id = ""
+          try {
+            val args = JSONObject(message)
+            id = args.getString("id")
+            val name = args.getString("name")
+            val mime = args.getString("mime")
+            val content = args.getString("content")
+            require(SAVE_NAME.matches(name)) { "That file name isn't allowed." }
+            require(mime in SAVE_TYPES) { "That file type isn't allowed." }
+            require(content.length <= SAVE_MAX_CHARS) { "The file is too large." }
+            val replyId = id
+            Thread {
+              val error = try { saveDownload(name, mime, content); null }
+                catch (e: Exception) { e.message ?: "Android couldn't save the file." }
+              workHandler.post { fileReply(replyId, error) }
+            }.start()
+          } catch (error: Exception) {
+            fileReply(id, error.message ?: "Android couldn't save the file.")
+          }
+        }
+      }
+    }, "DeepDiveFiles")
+  }
+
+  private fun fileReply(id: String, error: String?) {
+    val detail = JSONObject().put("id", id).put("result", error == null)
+    if (error != null) detail.put("error", error)
+    workWebView?.evaluateJavascript(
+      "window.dispatchEvent(new CustomEvent('deepdive-file-saved',{detail:$detail}))", null)
+  }
+
+  /** Write text into the shared Downloads folder. No storage permission needed on 10+. */
+  private fun saveDownload(name: String, mime: String, content: String) {
+    val bytes = content.toByteArray(Charsets.UTF_8)
+    if (Build.VERSION.SDK_INT >= 29) {
+      val resolver = contentResolver
+      val values = ContentValues().apply {
+        put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+        put(MediaStore.MediaColumns.MIME_TYPE, mime)
+        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+        put(MediaStore.MediaColumns.IS_PENDING, 1)
+      }
+      val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+        ?: throw IllegalStateException("Android wouldn't create the file.")
+      try {
+        val out = resolver.openOutputStream(uri) ?: throw IllegalStateException("Android wouldn't open the file.")
+        out.use { it.write(bytes) }
+        values.clear()
+        values.put(MediaStore.MediaColumns.IS_PENDING, 0)
+        resolver.update(uri, values, null, null)
+      } catch (e: Exception) {
+        resolver.delete(uri, null, null)
+        throw e
+      }
+    } else {
+      // Android 9 and older: the app's own Downloads folder, which needs
+      // no permission. Shared Downloads would need WRITE_EXTERNAL_STORAGE.
+      val dir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: filesDir
+      java.io.File(dir, name).writeBytes(bytes)
+    }
+  }
+
+  companion object {
+    private val SAVE_NAME = Regex("^[A-Za-z0-9 ._-]{1,120}\\.(csv|json)$")
+    private val SAVE_TYPES = setOf("text/csv", "application/json")
+    private const val SAVE_MAX_CHARS = 20_000_000
   }
 
   private var askedNotifications = false

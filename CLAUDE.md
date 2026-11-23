@@ -3,9 +3,48 @@
 Written for a future session with no memory of this one. Read this
 before touching anything.
 
-**Last updated at build 2.9.156.** If the build in `js/app.js` is well
+**Last updated at build 2.9.157.** If the build in `js/app.js` is well
 ahead of that, treat this file with suspicion and verify against the
 code — then bring it up to date.
+
+---
+
+## Playlists screen, Liked Songs export, Android file saving — 2.9.157
+
+Joseph, 23 Nov (wording in ROADMAP "Shipped since"). Three parts:
+
+- **Tidy up playlists is a screen**, `renderPlaylists` in app.js, rules
+  in `playlists.js`. Spotify keeps no creation date on a playlist, so a
+  date is history's record (last 20 actions only) or else the first
+  item's `added_at` (`playlistFirstAddedAt`, one `limit=1` request),
+  stored in `deepdive_playlist_dates` so each playlist costs it once.
+  Empty playlists store `""`: known, undated, never "old". Dive rows get
+  a Refresh icon that calls `renderRefresh({ from: "playlists", only })`;
+  `_refreshFrom` decides where its Back goes. Bulk removals confirm,
+  single ones don't (as before).
+- **Export Liked Songs** (`exportLikedSongs`, layout in
+  `liked-export.js`): syncs the cache, then Exportify-style columns plus
+  Genres from cached Last.fm tags. More than `GENRE_AUTO_TOPUP` untagged
+  artists asks before a lookup on the dive screen. Spotify genres were
+  not used: batch `?ids=` is 403, so it would be one request per artist.
+- **Exports did nothing in the Android app.** A WebView ignores a
+  `blob:` download link (no DownloadListener, and one can't fetch blob:
+  anyway), so backup and mix exports "succeeded" silently. `files.js`
+  sends the text to `DeepDiveFiles` in MainActivity.kt, which checks the
+  bundled page, allows only `.csv`/`.json` names and those two types,
+  and writes into Downloads through MediaStore off the main thread
+  (app-specific Downloads on Android 9 and older; no storage
+  permission). It answers with a `deepdive-file-saved` event.
+  `downloadFile` is now async and returns `{ ok, place }`.
+
+Found by rendering it: `ev.currentTarget` is null after `await
+confirmDialog`, so bulk removal threw before its first delete. Take the
+button before awaiting. `tools/e2e-playlists.mjs` drives the screen,
+the 30-day removal, the single refresh and both export paths against a
+mocked Spotify and Last.fm. **Not checked:** the Kotlin compiles (no
+Android SDK here; the `[native-build]` CI run does), and anything on a
+device. Desktop builds still use the blob link; whether WebKitGTK and
+WebView2 save it is unverified.
 
 ---
 
@@ -1325,7 +1364,7 @@ Modernised in 2.8–2.9 against Spotify and stats.fm as references.
 
 ## Where things stand
 
-Build **2.9.154**, all 2.9.x. **3.0 is the final release, not a next
+Build **2.9.157**, all 2.9.x. **3.0 is the final release, not a next
 step**, and its number is Joseph's to take. The live picture, including
 what to pick up next, is the "Stopping point" section at the top of
 `ROADMAP.md`.

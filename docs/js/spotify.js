@@ -915,6 +915,21 @@ export class SpotifyClient {
     }
   }
 
+  /**
+   * When the first song went into a playlist, or null if it's empty.
+   * Spotify keeps no creation date; DeepDive fills a playlist as it
+   * makes it, so this stands in for one. One small request.
+   */
+  async playlistFirstAddedAt(playlistId) {
+    const page = await this.get(`playlists/${playlistId}/items`, {
+      fields: "items.added_at",
+      additional_types: "track",
+      limit: 1,
+    });
+    const first = page && page.items && page.items[0];
+    return (first && first.added_at) || null;
+  }
+
   async findPlaylistByName(userId, name) {
     const target = name.trim().toLowerCase();
     let results = await this.get("me/playlists", { limit: 50 });

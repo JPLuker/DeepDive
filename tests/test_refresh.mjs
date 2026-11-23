@@ -109,7 +109,9 @@ const fakeClient = (lists, { failOn = null, quotaOn = null } = {}) => ({
 }
 
 // --- the screen ---------------------------------------------------------
-check('Dives links to the refresh screen', /id="go-refresh"/.test(src) && /getElementById\("go-refresh"\)\?\.addEventListener\("click", \(\) => renderRefresh\(\)\)/.test(src));
+// 2.9.157: the Dives entry says where it came from, so Back returns
+// there rather than to the DeepDive playlists screen.
+check('Dives links to the refresh screen', /id="go-refresh"/.test(src) && /getElementById\("go-refresh"\)\?\.addEventListener\("click", \(\) => renderRefresh\(\{ from: "dives" \}\)\)/.test(src));
 check('every dive playlist starts selected, and there is select all', /: new Set\(ids\);/.test(src) && /id="refresh-all"/.test(src));
 check('new releases are opt-in', /let _refreshCheckNew = false;/.test(src));
 check('the toggle is disabled and cleared unless exactly one playlist is ticked',

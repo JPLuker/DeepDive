@@ -32,11 +32,14 @@ import * as demo from "./demo.js?v=2.9.106";
 import * as lastfm from "./lastfm.js";
 import * as cover from "./cover.js";
 import * as refresh from "./refresh.js";
+import * as ddPlaylists from "./playlists.js";
+import * as likedExport from "./liked-export.js";
+import { saveFile, savedLine } from "./files.js";
 
 // Build marker. Twice now, diagnosing a problem has meant reasoning
 // about which version was actually loaded from indirect evidence — slow
 // and easy to get wrong. Showing it removes the guesswork.
-export const BUILD = "2.9.156";
+export const BUILD = "2.9.157";
 
 // The public site. Needed only where a relative link cannot work: in a
 // native shell "../" is the bundle root, which has no landing page in
@@ -624,7 +627,7 @@ async function renderDives() {
   document.getElementById("go-scrub")?.addEventListener("click", () => demo.demoActive() ? renderDemo("scan") : renderScrubForm());
   document.getElementById("go-show")?.addEventListener("click", () => demo.demoActive() ? renderDemo("multidip") : renderShow());
   document.getElementById("go-history")?.addEventListener("click", () => renderHistory());
-  document.getElementById("go-refresh")?.addEventListener("click", () => renderRefresh());
+  document.getElementById("go-refresh")?.addEventListener("click", () => renderRefresh({ from: "dives" }));
   document.getElementById("go-pins")?.addEventListener("click", () => demo.demoActive() ? renderDemo("crate") : renderCrate());
   if (demo.demoActive()) return;
   loadSuggestions({ showAllPins: true });
@@ -643,10 +646,15 @@ let _refreshFound = null;
 let _refreshPicked = new Set();
 let _refreshCheckNew = false;
 let _refreshCancelled = false;
+// Where Back goes: Dives, or the DeepDive playlists screen when a
+// single playlist's Refresh opened it. Internal redraws pass nothing
+// and keep it.
+let _refreshFrom = "dives";
 
-async function renderRefresh() {
+async function renderRefresh({ from = null, only = null } = {}) {
+  if (from) _refreshFrom = from;
   setTitle("DeepDive · Refresh dive playlists");
-  setActiveTab("dives");
+  setActiveTab(_refreshFrom === "playlists" ? "settings" : "dives");
   root.innerHTML = `
     <div class="card">
       <h1>Refresh dive playlists</h1>
@@ -664,7 +672,7 @@ async function renderRefresh() {
       <div class="flash hidden" id="refresh-msg"></div>
       <div class="actions">
         <button class="btn btn-primary" id="refresh-go" disabled>Refresh</button>
-        <button class="btn btn-ghost" data-tab="dives">Back</button>
+        <button class="btn btn-ghost" id="refresh-out">Back</button>
       </div>
     </div>`;
 
@@ -704,6 +712,10 @@ async function renderRefresh() {
     sync();
   });
   go.addEventListener("click", () => startRefresh());
+  document.getElementById("refresh-out").addEventListener("click", () => {
+    if (_refreshFrom === "playlists") renderPlaylists();
+    else renderDives();
+  });
 
   if (demo.demoActive()) {
     list.innerHTML = `<p class="empty-note">Dive playlists show here with a Spotify connection.</p>`;
@@ -715,9 +727,10 @@ async function renderRefresh() {
     const found = refresh.pickDivePlaylists(own, divedNames);
     // A previous visit's selection survives only for playlists still there.
     const ids = new Set(found.map((p) => p.id));
-    _refreshPicked = _refreshFound
-      ? new Set([..._refreshPicked].filter((id) => ids.has(id)))
-      : new Set(ids);
+    _refreshPicked = only && ids.has(only) ? new Set([only])
+      : _refreshFound
+        ? new Set([..._refreshPicked].filter((id) => ids.has(id)))
+        : new Set(ids);
     _refreshFound = found;
     if (!document.body.contains(list)) return;
     if (!found.length) {
@@ -852,6 +865,256 @@ function renderRefreshReview({ plans, cancelled }, { checkNew }) {
     renderRefresh();
   });
   if (failed.length && !changing.length) flash(`${failed.length} playlist${failed.length === 1 ? "" : "s"} couldn't be checked.`, true);
+}
+
+// ---- DeepDive playlists ----
+//
+// Joseph, 23 Nov: "I pressed the button and they appeared below, I
+// would want it to be a different screen", plus a refresh for dives and
+// a way to drop ones older than 30 days. Rules in playlists.js.
+
+let _plDating = null;  // the running date lookup, so a redraw doesn't start a second
+
+// Songs and age only. The name says dip or mix, and the refresh
+// button marks a dive; a kind label pushed the date off a phone.
+function playlistSub(p, dates) {
+  return [`${p.tracks} song${p.tracks === 1 ? "" : "s"}`, ddPlaylists.ageLabel(dates[p.id])].filter(Boolean).join(" · ");
+}
+
+const ICON_REFRESH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/></svg>`;
+const ICON_REMOVE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>`;
+
+function playlistRowHtml(p, dates) {
+  const shown = p.name.replace(/^deepdive\s*·\s*/i, "") || p.name;
+  const sub = playlistSub(p, dates);
+  const art = p.image
+    ? `<img src="${esc(p.image)}" alt="" class="track-art" loading="lazy">`
+    : `<span class="track-art-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>`;
+  const open = p.url ? `href="${esc(p.url)}" data-spotify` : "";
+  return `
+    <div class="ddpl-row" data-pl-row="${esc(p.id)}">
+      <a class="ddpl-open" ${open} aria-label="Open ${esc(shown)} in Spotify">
+        ${art}
+        <span class="track-meta">
+          <span class="track-name">${esc(shown)}</span>
+          <span class="track-sub" data-pl-sub>${esc(sub)}</span>
+        </span>
+      </a>
+      <div class="ddpl-actions">
+        ${p.dive ? `<button class="ddpl-icon" data-pl-refresh="${esc(p.id)}" aria-label="Refresh ${esc(shown)}" title="Refresh">${ICON_REFRESH}</button>` : ""}
+        <button class="ddpl-icon" data-pl-remove="${esc(p.id)}" aria-label="Remove ${esc(shown)}" title="Remove">${ICON_REMOVE}</button>
+      </div>
+    </div>`;
+}
+
+async function renderPlaylists() {
+  setTitle("DeepDive · Playlists");
+  setActiveTab("settings");
+  root.innerHTML = `
+    <div class="card">
+      <h1>DeepDive playlists</h1>
+      <p class="muted" id="pl-count">Finding them…</p>
+      <div class="actions hidden" id="pl-bulk">
+        <button class="btn btn-ghost btn-small hidden" id="pl-rm-old"></button>
+        <button class="btn btn-ghost btn-small" id="pl-rm-all"></button>
+      </div>
+      <div id="pl-list"></div>
+      <div class="actions"><button class="btn btn-ghost" data-tab="settings">Back to settings</button></div>
+    </div>`;
+  const list = document.getElementById("pl-list");
+  const count = document.getElementById("pl-count");
+  if (demo.demoActive()) {
+    count.textContent = "Your DeepDive playlists show here with a Spotify connection.";
+    return;
+  }
+
+  let found;
+  try {
+    const own = await client.listOwnPlaylists();
+    found = ddPlaylists.deepdivePlaylists(own, history.listDives().map((d) => d.artistName));
+  } catch (e) {
+    const info = explainError(e);
+    if (document.body.contains(count)) count.textContent = `Couldn't read your playlists. ${info.headline}.`;
+    return;
+  }
+  if (!document.body.contains(list)) return;
+
+  const dates = ddPlaylists.knownDates(found, ddPlaylists.loadDates(), history.listCreatedPlaylists());
+  let shown = ddPlaylists.sortByDate(found, dates);
+
+  const paint = () => {
+    count.textContent = shown.length
+      ? `${shown.length} playlist${shown.length === 1 ? "" : "s"}`
+      : "No DeepDive playlists.";
+    list.innerHTML = shown.map((p) => playlistRowHtml(p, dates)).join("");
+    paintBulk();
+  };
+  const paintBulk = () => {
+    const bulk = document.getElementById("pl-bulk");
+    const oldBtn = document.getElementById("pl-rm-old");
+    const allBtn = document.getElementById("pl-rm-all");
+    if (!bulk || bulk.dataset.busy) return;
+    bulk.classList.toggle("hidden", shown.length < 2);
+    allBtn.textContent = `Remove all ${shown.length}`;
+    const old = ddPlaylists.oldPlaylists(shown, dates);
+    const pending = ddPlaylists.needsDate(shown, dates).length;
+    oldBtn.classList.toggle("hidden", !old.length && !pending);
+    oldBtn.disabled = !old.length;
+    oldBtn.textContent = old.length
+      ? `Remove ${old.length} older than ${ddPlaylists.OLD_DAYS} days`
+      : `Checking dates… ${shown.length - pending} of ${shown.length}`;
+  };
+  paint();
+
+  const removeMany = async (targets, btn, label) => {
+    const bulk = document.getElementById("pl-bulk");
+    bulk.dataset.busy = "1";
+    bulk.querySelectorAll("button").forEach((b) => { b.disabled = true; });
+    let done = 0, failed = 0;
+    for (const p of targets) {
+      btn.textContent = `Removing ${done + failed + 1} of ${targets.length}…`;
+      try {
+        await client.deletePlaylist(p.id);
+        done++;
+        shown = shown.filter((x) => x.id !== p.id);
+        document.querySelector(`[data-pl-row="${CSS.escape(p.id)}"]`)?.remove();
+      } catch (e) {
+        failed++;
+        console.warn("[DeepDive] couldn't remove playlist", p.id, e);
+        if (e && e.status === 429) break;
+      }
+    }
+    delete bulk.dataset.busy;
+    if (!document.body.contains(list)) return;
+    paint();
+    flash(failed
+      ? `Removed ${done}. ${failed} couldn't be removed.`
+      : `Removed ${done} ${label}${done === 1 ? "" : "s"}.`, !!failed);
+  };
+
+  // currentTarget is null once the handler awaits, so take the button first.
+  document.getElementById("pl-rm-all").addEventListener("click", async (ev) => {
+    const btn = ev.currentTarget;
+    const targets = [...shown];
+    const ok = await confirmDialog({
+      title: `Remove all ${targets.length} playlists?`,
+      body: "They'll be removed from your Spotify library. This can't be undone from here.",
+      confirmLabel: "Remove all", danger: true,
+    });
+    if (ok) removeMany(targets, btn, "playlist");
+  });
+  document.getElementById("pl-rm-old").addEventListener("click", async (ev) => {
+    const btn = ev.currentTarget;
+    const targets = ddPlaylists.oldPlaylists(shown, dates);
+    if (!targets.length) return;
+    const ok = await confirmDialog({
+      title: `Remove ${targets.length} older than ${ddPlaylists.OLD_DAYS} days?`,
+      body: "They'll be removed from your Spotify library. This can't be undone from here.",
+      confirmLabel: "Remove", danger: true,
+    });
+    if (ok) removeMany(targets, btn, "playlist");
+  });
+
+  // Delegated once: the list is repainted as dates arrive.
+  list.addEventListener("click", async (e) => {
+    const ref = e.target.closest("[data-pl-refresh]");
+    if (ref) return renderRefresh({ from: "playlists", only: ref.dataset.plRefresh });
+    const rm = e.target.closest("[data-pl-remove]");
+    if (!rm) return;
+    rm.disabled = true;
+    try {
+      await client.deletePlaylist(rm.dataset.plRemove);
+      shown = shown.filter((x) => x.id !== rm.dataset.plRemove);
+      rm.closest(".ddpl-row")?.remove();
+      count.textContent = `${shown.length} playlist${shown.length === 1 ? "" : "s"}`;
+      paintBulk();
+      flash("Playlist removed.");
+    } catch (err) {
+      const info = explainError(err);
+      flash(`${info.headline}. ${info.detail}`, true);
+      rm.disabled = false;
+    }
+  });
+
+  // Dates nobody has looked up yet: one small request each, kept after.
+  const missing = ddPlaylists.needsDate(shown, dates);
+  if (!missing.length || _plDating || limitedUntil() > Date.now()) return;
+  _plDating = (async () => {
+    const stored = ddPlaylists.loadDates();
+    for (const p of missing) {
+      if (!document.body.contains(list)) break;
+      try {
+        const at = await client.playlistFirstAddedAt(p.id);
+        dates[p.id] = at || "";
+        stored[p.id] = at || "";
+        ddPlaylists.saveDates(stored);
+      } catch (e) {
+        console.warn("[DeepDive] couldn't date playlist", p.id, e);
+        if (e && e.status === 429) break;
+        continue;
+      }
+      const sub = list.querySelector(`[data-pl-row="${CSS.escape(p.id)}"] [data-pl-sub]`);
+      if (sub) sub.textContent = playlistSub(p, dates);
+      paintBulk();
+    }
+  })().finally(() => {
+    _plDating = null;
+    if (!document.body.contains(list)) return;
+    // Newest first once everything has a date.
+    shown = ddPlaylists.sortByDate(shown, dates);
+    paint();
+  });
+}
+
+// ---- export Liked Songs ----
+//
+// Joseph, 23 Nov: Exportify didn't work, and he wants the list to sort
+// into radio stations. Layout and the Genres column: liked-export.js.
+
+async function exportLikedSongs(btn, say) {
+  if (!auth.isLoggedIn()) { flash("Connect Spotify first.", true); return; }
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = "Exporting…";
+  try {
+    await readLibraryFullScreen();
+    const tracks = (await libraryCache.peek()).filter((t) => t && t.id);
+    if (!tracks.length) { say("No liked songs to export.", true); return; }
+    if (lastfm.hasKey()) {
+      await hydrateFromCache("tags", _genreTags);
+      const missing = likedExport.untaggedArtists(tracks, _genreTags);
+      let lookUp = missing.length > 0 && missing.length <= GENRE_AUTO_TOPUP;
+      if (missing.length > GENRE_AUTO_TOPUP) {
+        lookUp = await confirmDialog({
+          title: `Look up genres for ${missing.length} artists?`,
+          body: "Last.fm fills in the Genres column. It takes a few minutes.",
+          confirmLabel: "Look them up",
+          cancelLabel: "Export without",
+        });
+      }
+      if (lookUp && !_genreFetching) {
+        showDiveScreen("Finding your genres…", cancelGenreFetch);
+        setDiveHeading("Finding your genres");
+        try {
+          await fetchGenreTags(missing, (done, total) => updateDiveScreen(
+            Math.round((done / total) * 100), `Asking Last.fm about ${total} artists… ${done} done`));
+        } catch (e) {
+          flash(e.suspended ? "Last.fm rejected the key. Exporting without genres."
+            : `Last.fm couldn't be reached. Exporting what it had.`, true);
+        } finally {
+          hideDiveScreen();
+        }
+      }
+    }
+    const res = await downloadFile(likedExport.likedFileName(),
+      likedExport.likedSongsCsv(tracks, _genreTags), "text/csv;charset=utf-8");
+    say(savedLine(res, `${tracks.length} liked songs`), !res.ok);
+  } catch (e) {
+    if (e.name !== "AbortError") say(`Couldn't export: ${e.message || e}`, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
+  }
 }
 
 /** Mixes — what Playlists were called — with the sampler alongside. */
@@ -1458,24 +1721,12 @@ function tracksToCsv(tracks) {
   return rows.join("\n");
 }
 
-/** Trigger a download without a server. */
+/**
+ * Save an export. On the web a download; in the Android app a file in
+ * Downloads (files.js says why the link alone did nothing there).
+ */
 function downloadFile(filename, contents, mime) {
-  try {
-    const blob = new Blob([contents], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    // Revoke on the next tick; revoking immediately can cancel the
-    // download in some browsers.
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    return true;
-  } catch (e) {
-    return false;
-  }
+  return saveFile(filename, contents, mime);
 }
 
 const CARD_LENGTHS = PLAYLIST_LENGTHS;
@@ -1917,12 +2168,12 @@ function openCardModal(card) {
   const oldExport = document.getElementById("card-export");
   if (oldExport) {
     const btn = oldExport.cloneNode(true); oldExport.replaceWith(btn);
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       const list = tracksFor();
       if (!list.length) return;
       const safe = ((playlistName || card.title) + "").replace(/[^\w\d\- ]+/g, "").trim() || "deepdive";
-      const done = downloadFile(`${safe}.csv`, tracksToCsv(list), "text/csv;charset=utf-8");
-      btn.textContent = done ? "Saved" : "Failed";
+      const done = await downloadFile(`${safe}.csv`, tracksToCsv(list), "text/csv;charset=utf-8");
+      btn.textContent = done.ok ? (done.place === "downloads" ? "In Downloads" : "Saved") : "Failed";
       setTimeout(() => { btn.textContent = "Export"; }, 1600);
     });
   }
@@ -6084,12 +6335,11 @@ function renderSettings() {
         control: `<button class="btn btn-ghost btn-small" id="set-refresh"${demo.demoActive() ? " disabled" : ""}>Refresh</button>`,
       })}
       ${settingRow({
-        title: "Tidy up playlists",
-        detail: "Includes ones made before DeepDive kept a record.",
-        control: `<button class="btn btn-ghost btn-small" id="find-playlists">Find them</button>`,
+        title: "Export Liked Songs",
+        detail: lastfm.hasKey() ? "Every liked song as a spreadsheet, with genres." : "Every liked song as a spreadsheet.",
+        control: `<button class="btn btn-ghost btn-small" id="set-export-liked"${demo.demoActive() ? " disabled" : ""}>Export</button>`,
       })}
-      <div id="playlist-cleanup"></div>
-      <div id="playlist-cleanup-all"></div>
+      ${navRow('id="find-playlists"', "Tidy up playlists", "Every playlist DeepDive made, including ones from before it kept a record.")}
       ${settingRow({
         title: "Disconnect",
         detail: "Sign out of Spotify. Your crate and history stay.",
@@ -6392,80 +6642,20 @@ function renderSettings() {
     flash("Pacing cleared. The next dive starts at full speed.");
   });
 
-  document.getElementById("set-export")?.addEventListener("click", () => {
+  document.getElementById("set-export")?.addEventListener("click", async () => {
     const stamp = new Date().toISOString().slice(0, 10);
-    const ok = downloadFile(`deepdive-backup-${stamp}.json`,
+    const res = await downloadFile(`deepdive-backup-${stamp}.json`,
       JSON.stringify(history.exportData(), null, 2), "application/json");
-    say(ok ? "Backup saved." : "Couldn't save the file.", !ok);
+    say(savedLine(res, "Backup"), !res.ok);
   });
   wireBackupImport(document.getElementById("set-import-file"), document.getElementById("set-import"), {
     importData: history.importData,
     feedback: (text, error, toast) => importFeedback("set-import-status", text, error, toast),
   });
 
-  // Cleanup searches by name, because playlists created before DeepDive
-  // recorded them have no stored id to look up.
-  const findBtn = document.getElementById("find-playlists");
-  findBtn?.addEventListener("click", async () => {
-    const slot = document.getElementById("playlist-cleanup");
-    findBtn.disabled = true; findBtn.textContent = "Searching…";
-    try {
-      const found = await client.findOwnPlaylistsByPrefix("DeepDive");
-      if (!found.length) { slot.innerHTML = `<p class="empty-note">No DeepDive playlists found.</p>`; return; }
-      slot.innerHTML = found.map((p) => `
-        <div class="watchlist-row">
-          <span class="watchlist-name"><span>
-            <span style="display:block;">${esc(p.name)}</span>
-          </span></span>
-          <div class="watchlist-actions">
-            ${p.url ? `<a class="btn btn-ghost btn-small" href="${esc(p.url)}" data-spotify>Open</a>` : ""}
-            <button class="btn btn-ghost btn-small" data-rm-pl="${esc(p.id)}" data-nm="${esc(p.name)}">Remove</button>
-          </div>
-        </div>`).join("");
-      // A bulk action is where a confirmation genuinely earns its place —
-      // removing thirty playlists by accident is a bad afternoon,
-      // whereas removing one is a click to rebuild.
-      const allSlot = document.getElementById("playlist-cleanup-all");
-      if (allSlot) {
-        allSlot.innerHTML = `<div class="actions"><button class="btn btn-ghost btn-small" id="rm-all-pl">Remove all ${found.length}</button></div>`;
-        document.getElementById("rm-all-pl")?.addEventListener("click", async () => {
-          const ok = await confirmDialog({
-            title: `Remove all ${found.length} playlists?`,
-            body: "They'll be removed from your Spotify library. This can't be undone from here.",
-            confirmLabel: "Remove all", danger: true,
-          });
-          if (!ok) return;
-          const btn = document.getElementById("rm-all-pl");
-          btn.disabled = true;
-          let done = 0;
-          for (const p of found) {
-            btn.textContent = `Removing ${++done}/${found.length}…`;
-            try { await client.deletePlaylist(p.id); } catch (e) { /* keep going */ }
-          }
-          slot.innerHTML = "";
-          allSlot.innerHTML = "";
-          flash(`Removed ${done} playlist${done === 1 ? "" : "s"}.`);
-        });
-      }
-
-      slot.querySelectorAll("[data-rm-pl]").forEach((b) => b.addEventListener("click", async () => {
-                b.disabled = true; b.textContent = "Removing…";
-        try {
-          await client.deletePlaylist(b.dataset.rmPl);
-          b.closest(".watchlist-row")?.remove();
-          flash("Playlist removed.");
-        } catch (e) {
-          const info = explainError(e);
-          say(`${info.headline}. ${info.detail}`, true);
-          b.disabled = false; b.textContent = "Remove";
-        }
-      }));
-    } catch (e) {
-      const info = explainError(e);
-      say(`${info.headline}. ${info.detail}`, true);
-    } finally {
-      findBtn.disabled = false; findBtn.textContent = "Find DeepDive playlists";
-    }
+  document.getElementById("find-playlists")?.addEventListener("click", () => renderPlaylists());
+  document.getElementById("set-export-liked")?.addEventListener("click", (ev) => {
+    if (!demo.demoActive()) exportLikedSongs(ev.currentTarget, say);
   });
 }
 
@@ -6592,11 +6782,11 @@ function renderHistory() {
     renderHistory();
   });
 
-  document.getElementById("export-data")?.addEventListener("click", () => {
+  document.getElementById("export-data")?.addEventListener("click", async () => {
     const stamp = new Date().toISOString().slice(0, 10);
-    const ok = downloadFile(`deepdive-backup-${stamp}.json`,
+    const res = await downloadFile(`deepdive-backup-${stamp}.json`,
       JSON.stringify(history.exportData(), null, 2), "application/json");
-    say(ok ? "Backup saved." : "Couldn't save the file.", !ok);
+    say(savedLine(res, "Backup"), !res.ok);
   });
 
   wireBackupImport(document.getElementById("import-file"), document.getElementById("import-data"), {

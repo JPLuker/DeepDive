@@ -3,6 +3,21 @@
 > Entries before 2.9.133 for the 2.x rewrite were never backfilled. That
 > record lives in the git log and `ROADMAP.md`'s "Shipped since".
 
+## 2.9.157
+- New: Settings → Export Liked Songs saves every liked song as a
+  spreadsheet (CSV), laid out like Exportify's. With a Last.fm key it
+  fills in a Genres column; if many artists have no genres yet, it asks
+  before looking them up.
+- Tidy up playlists opens its own screen instead of listing everything
+  under the button. Each playlist shows its song count and when it was
+  made, newest first. Tap one to open it in Spotify.
+- New: Remove older than 30 days on that screen, alongside Remove all.
+  Both ask first.
+- Dive playlists there have a Refresh button that opens Refresh dive
+  playlists with just that one picked. Back returns to the list.
+- Fixed: in the Android app, Export backup and a mix's Export did
+  nothing. Files now save to Downloads.
+
 ## 2.9.156
 - Fixed: on Linux, signing in brought you back to Connect Spotify. The
   .deb and .rpm launcher dropped the sign-in link, so Spotify's callback
