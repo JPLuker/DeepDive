@@ -35,6 +35,9 @@ From Joseph's first 2.9.157 run on his phone, 23 Nov:
   Settings' own message line is at the bottom of the page and he never
   saw it.
 
+Compiled and published: run 45203016325, `v2.9.158-untested-android`.
+Not run on a device.
+
 ---
 
 ## Playlists screen, Liked Songs export, Android file saving — 2.9.157
